@@ -22,8 +22,11 @@ export class AnimatedGameEntity extends GameEntity {
     entityId: 'isa' | 'stev',
     services?: IEntityServices
   ) {
-    // Get animation manager from scene registry
-    const animManager = scene.registry.get('animationManager') as AnimationManager;
+    // Get animation manager from scene registry with proper type checking
+    const animManager = scene.registry.get('animationManager');
+    if (!animManager || !(animManager instanceof AnimationManager)) {
+      logAutopoiesis.error(`AnimationManager not found or invalid type for entity ${entityId}`);
+    }
     
     // Initialize with base spritesheet instead of static sprite
     const initialSpriteKey = entityId === 'isa' ? 'isa_happy_anim' : 'stev_happy_anim';
@@ -43,18 +46,25 @@ export class AnimatedGameEntity extends GameEntity {
       logAutopoiesis.warn(`Spritesheet ${initialSpriteKey} not found, using fallback`);
     }
     
-    this.animationManager = animManager;
+    // Type-safe assignment of animation manager
+    this.animationManager = animManager instanceof AnimationManager ? animManager : undefined;
     
     if (this.animationManager) {
       // Start with appropriate initial animation
       const initialAnimation = entityId === 'isa' ? 'isa_happy' : 'stev_happy';
-      this.currentAnimationKey = initialAnimation;
-      this.animationManager.playAnimation(this, initialAnimation);
       
-      logAutopoiesis.info(`AnimatedGameEntity ${entityId} created with animation`, {
-        initialAnimation,
-        spriteKey: initialSpriteKey
-      });
+      // Validate animation exists before playing
+      if (this.animationManager.hasAnimation(initialAnimation)) {
+        this.currentAnimationKey = initialAnimation;
+        this.animationManager.playAnimation(this, initialAnimation);
+        
+        logAutopoiesis.info(`AnimatedGameEntity ${entityId} created with animation`, {
+          initialAnimation,
+          spriteKey: initialSpriteKey
+        });
+      } else {
+        logAutopoiesis.warn(`Animation ${initialAnimation} not found for ${entityId}`);
+      }
     } else {
       logAutopoiesis.warn(`AnimationManager not available for ${entityId}, falling back to static sprites`);
     }
@@ -140,17 +150,40 @@ export class AnimatedGameEntity extends GameEntity {
   }
 
   /**
-   * Play specific animation with fallback handling
+   * Play specific animation with comprehensive validation and fallback handling
    */
   public playAnimation(animationKey: string, force: boolean = false): boolean {
+    // Validate animation manager availability
     if (!this.animationManager) {
       logAutopoiesis.warn(`Cannot play animation ${animationKey}: AnimationManager not available`);
       return false;
     }
 
+    // Validate animation key format
+    if (!animationKey || typeof animationKey !== 'string') {
+      logAutopoiesis.error(`Invalid animation key: ${animationKey}`);
+      return false;
+    }
+
     // Check if animation exists
     if (!this.animationManager.hasAnimation(animationKey)) {
-      logAutopoiesis.warn(`Animation not found: ${animationKey}`);
+      logAutopoiesis.warn(`Animation not found: ${animationKey}, attempting fallback`);
+      
+      // Try fallback animation based on entity type
+      const entityId = this.getEntityData().id;
+      const fallbackAnimation = `${entityId}_happy`;
+      
+      if (this.animationManager.hasAnimation(fallbackAnimation)) {
+        logAutopoiesis.info(`Using fallback animation: ${fallbackAnimation}`);
+        return this.playAnimation(fallbackAnimation, force);
+      }
+      
+      return false;
+    }
+
+    // Validate sprite has animation component
+    if (!this.anims) {
+      logAutopoiesis.error(`Sprite lacks animation component for ${animationKey}`);
       return false;
     }
 
@@ -162,7 +195,8 @@ export class AnimatedGameEntity extends GameEntity {
         
         logAutopoiesis.debug(`Animation played: ${animationKey}`, {
           entityId: this.getEntityData().id,
-          force
+          force,
+          previousAnimation: this.currentAnimationKey
         });
       }
       
@@ -170,7 +204,9 @@ export class AnimatedGameEntity extends GameEntity {
     } catch (error) {
       logAutopoiesis.error(`Failed to play animation ${animationKey}`, {
         error: String(error),
-        entityId: this.getEntityData().id
+        entityId: this.getEntityData().id,
+        hasAnimComponent: !!this.anims,
+        hasAnimManager: !!this.animationManager
       });
       return false;
     }
@@ -237,10 +273,7 @@ export class AnimatedGameEntity extends GameEntity {
         this.anims.stop();
       }
       
-      // Remove animation event listeners to prevent memory leaks
-      if (this.anims) {
-        this.anims.removeAllListeners();
-      }
+      // Animation cleanup is handled by Phaser's destroy method
     }
     
     // Clear reference to animation manager

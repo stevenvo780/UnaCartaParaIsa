@@ -8,7 +8,7 @@
 import type { Zone, MapElement, EntityStats } from '../types';
 import { logAutopoiesis } from './logger';
 import { BiomeSystem, getWorldPreset, createCustomWorldConfig } from '../world';
-import type { WorldGenConfig } from '../world/types';
+import type { WorldGenConfig, GeneratedWorld } from '../world/types';
 
 export const createDefaultZones = (): Zone[] => {
   return [
@@ -465,13 +465,18 @@ const getMoodZoneCompatibility = (mood: string, zoneType: string): number => {
 export const generateSimpleMap = (
   useNewBiomeSystem: boolean = true,
   worldConfig?: Partial<WorldGenConfig>
-): { zones: Zone[]; mapElements: MapElement[] } => {
+): { zones: Zone[]; mapElements: MapElement[]; generatedWorld?: GeneratedWorld } => {
   
   if (useNewBiomeSystem) {
     return generateBiomeBasedMap(worldConfig);
   } else {
     // Fallback al sistema legacy
-    return generateLegacyMap();
+    const legacyData = generateLegacyMap();
+    return {
+      zones: legacyData.zones,
+      mapElements: legacyData.mapElements,
+      generatedWorld: undefined
+    };
   }
 };
 
@@ -480,7 +485,7 @@ export const generateSimpleMap = (
  */
 const generateBiomeBasedMap = (
   worldConfig?: Partial<WorldGenConfig>
-): { zones: Zone[]; mapElements: MapElement[] } => {
+): { zones: Zone[]; mapElements: MapElement[]; generatedWorld: GeneratedWorld } => {
   
   logAutopoiesis.info('🌍 Generando mapa con sistema de biomas avanzado');
   
@@ -493,7 +498,7 @@ const generateBiomeBasedMap = (
   const biomeSystem = new BiomeSystem(config);
   
   // Generar mundo con biomas
-  biomeSystem.generateWorld();
+  const generatedWorld = biomeSystem.generateWorld();
   
   // Crear zonas funcionales básicas (adaptadas)
   const baseZones = createDefaultZones();
@@ -516,7 +521,8 @@ const generateBiomeBasedMap = (
   
   return { 
     zones: biomeDrivenZones, 
-    mapElements: allElements 
+    mapElements: allElements,
+    generatedWorld
   };
 };
 
@@ -610,8 +616,13 @@ export const validateMapIntegrity = (zones: Zone[], mapElements: MapElement[]): 
 
 /**
  * Función principal para generar mapas con validación
+ * Ahora también retorna datos del mundo generado para tilemaps
  */
-export const generateValidatedMap = (): { zones: Zone[]; mapElements: MapElement[] } => {
+export const generateValidatedMap = (): { 
+  zones: Zone[]; 
+  mapElements: MapElement[];
+  generatedWorld?: GeneratedWorld;
+} => {
   const mapData = generateSimpleMap();
   
   if (!validateMapIntegrity(mapData.zones, mapData.mapElements)) {
@@ -619,11 +630,16 @@ export const generateValidatedMap = (): { zones: Zone[]; mapElements: MapElement
 
     return {
       zones: createDefaultZones().slice(0, 4),
-      mapElements: createDefaultMapElements().slice(0, 8)
+      mapElements: createDefaultMapElements().slice(0, 8),
+      generatedWorld: undefined
     };
   }
 
-  return mapData;
+  return {
+    zones: mapData.zones,
+    mapElements: mapData.mapElements,
+    generatedWorld: mapData.generatedWorld
+  };
 };
 
 /**

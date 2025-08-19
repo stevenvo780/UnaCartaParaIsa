@@ -489,10 +489,7 @@ export class AnimationManager {
         if (sprite.anims && sprite.anims.isPlaying) {
           sprite.anims.stop();
         }
-        // Remove listeners to prevent memory leaks
-        if (sprite.anims) {
-          sprite.anims.removeAllListeners();
-        }
+        // Animation cleanup is handled by Phaser's sprite.destroy()
         sprite.destroy();
       }
     });

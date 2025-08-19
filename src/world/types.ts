@@ -32,6 +32,15 @@ export interface BiomeDefinition {
       secondary: string[]; // Assets secundarios para variación
       weight: number[]; // Pesos para cada asset
     };
+    
+    // IDs de tiles para uso eficiente con TilesetManager
+    tileIds?: {
+      terrain: number[]; // IDs de tiles de terreno
+      water?: number[]; // IDs de tiles de agua
+      autotiles?: number[]; // IDs de autotiles para transiciones
+      decorations?: number[]; // IDs de decoraciones
+    };
+    
     trees: {
       primary: string[];
       rare: string[]; // Árboles especiales/raros

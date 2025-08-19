@@ -1,12 +1,15 @@
 /**
  * World Renderer - Maneja todo el rendering visual del mundo
- * Separado de la lógica de juego para mejor organización
+ * Ahora usa sistema profesional de tilemaps de Phaser
  */
 
 import type { Zone, MapElement, GameState } from '../types';
 import { GAME_BALANCE } from '../constants/gameBalance';
 import { logAutopoiesis } from '../utils/logger';
 import { AnimationManager } from './AnimationManager';
+import { TilemapRenderer } from '../world/TilemapRenderer';
+import { initializeTilesets } from '../world/TilesetManager';
+import type { GeneratedWorld } from '../world/types';
 
 export class WorldRenderer {
   private scene: Phaser.Scene;
@@ -14,22 +17,81 @@ export class WorldRenderer {
   private renderedObjects: Map<string, Phaser.GameObjects.GameObject> = new Map();
   private zoneGraphics: Phaser.GameObjects.Graphics[] = [];
   private animationManager?: AnimationManager;
+  private decorationSprites: Phaser.GameObjects.Sprite[] = [];
+  private lastCullingUpdate: number = 0;
+  private readonly CULLING_UPDATE_INTERVAL = 100; // Update every 100ms
+  
+  // Sistema profesional de tilemaps
+  private tilemapRenderer?: TilemapRenderer;
+  private useProfessionalTilemaps: boolean = true;
 
   constructor(scene: Phaser.Scene, gameState: GameState) {
     this.scene = scene;
     this.gameState = gameState;
     
-    // Get animation manager from scene registry
-    this.animationManager = scene.registry.get('animationManager') as AnimationManager;
-    if (!this.animationManager) {
+    // Inicializar sistema de tilesets
+    initializeTilesets();
+    
+    // Crear renderizador de tilemaps profesional
+    this.tilemapRenderer = new TilemapRenderer(scene);
+    
+    // Get animation manager from scene registry with type safety
+    const animManager = scene.registry.get('animationManager');
+    if (animManager && animManager instanceof AnimationManager) {
+      this.animationManager = animManager;
+      logAutopoiesis.info('AnimationManager available in WorldRenderer, using animated decorations');
+    } else {
+      this.animationManager = undefined;
       logAutopoiesis.warn('AnimationManager not available in WorldRenderer, using static decorations');
+    }
+
+    logAutopoiesis.info('WorldRenderer inicializado con sistema profesional de tilemaps');
+  }
+
+  /**
+   * Render the complete world - ahora con soporte para ambos sistemas
+   */
+  public async renderWorld(generatedWorld?: GeneratedWorld): Promise<void> {
+    if (this.useProfessionalTilemaps && generatedWorld && this.tilemapRenderer) {
+      // Usar sistema profesional de tilemaps
+      await this.renderWorldWithTilemaps(generatedWorld);
+    } else {
+      // Fallback al sistema anterior
+      this.renderWorldLegacy();
     }
   }
 
   /**
-   * Render the complete world
+   * Renderiza el mundo usando el sistema profesional de tilemaps
    */
-  public renderWorld(): void {
+  private async renderWorldWithTilemaps(world: GeneratedWorld): Promise<void> {
+    logAutopoiesis.info('🗺️ Renderizando mundo con sistema profesional de tilemaps');
+    
+    try {
+      // Renderizar usando TilemapRenderer
+      await this.tilemapRenderer!.renderWorld(world);
+      
+      // Renderizar zonas encima del tilemap
+      this.renderZones();
+      
+      // Renderizar elementos interactivos
+      this.renderMapElements();
+      
+      // Renderizar decoraciones animadas
+      this.renderDecorations();
+      
+      logAutopoiesis.info('✅ Mundo renderizado exitosamente con tilemaps profesionales');
+      
+    } catch (error) {
+      logAutopoiesis.error('❌ Error renderizando con tilemaps, fallback a sistema anterior', error);
+      this.renderWorldLegacy();
+    }
+  }
+
+  /**
+   * Renderiza el mundo usando el sistema anterior (fallback)
+   */
+  private renderWorldLegacy(): void {
     this.createWorldBackground();
     this.renderZones();
     this.renderMapElements();
@@ -179,8 +241,8 @@ export class WorldRenderer {
     animatedDecorations.forEach((deco, index) => {
       let decoration: Phaser.GameObjects.Sprite;
       
-      // Try to create animated decoration
-      if (this.animationManager) {
+      // Try to create animated decoration with validation
+      if (this.animationManager && this.animationManager.hasAnimation(deco.animation)) {
         const animatedSprite = this.animationManager.createAnimatedSprite(
           deco.x, 
           deco.y, 
@@ -195,16 +257,12 @@ export class WorldRenderer {
             y: deco.y
           });
         } else {
-          // Fallback to static sprite
-          decoration = this.scene.add.sprite(deco.x, deco.y, deco.fallbackSprite);
-          logAutopoiesis.debug(`Fallback to static decoration: ${deco.fallbackSprite}`, {
-            x: deco.x, 
-            y: deco.y
-          });
+          // Fallback to static sprite if animation creation failed
+          decoration = this.createFallbackDecoration(deco);
         }
       } else {
-        // No animation manager, use static sprite
-        decoration = this.scene.add.sprite(deco.x, deco.y, deco.fallbackSprite);
+        // No animation manager or animation not found, use static sprite
+        decoration = this.createFallbackDecoration(deco);
       }
       
       // Set common properties
@@ -216,13 +274,46 @@ export class WorldRenderer {
       const scaleVariation = 0.8 + Math.random() * 0.4;
       decoration.setScale(GAME_BALANCE.DECORATIONS.CAMPFIRE_SCALE * scaleVariation);
       
+      // Store decoration in both maps for tracking
       this.renderedObjects.set(`decoration_${index}`, decoration);
+      this.decorationSprites.push(decoration);
     });
 
     logAutopoiesis.info('Animated decorations rendered', { 
       count: animatedDecorations.length,
       animated: !!this.animationManager
     });
+  }
+
+  /**
+   * Create fallback decoration with validation
+   */
+  private createFallbackDecoration(deco: { x: number; y: number; fallbackSprite: string; animation: string }): Phaser.GameObjects.Sprite {
+    // Check if fallback sprite exists
+    if (this.scene.textures.exists(deco.fallbackSprite)) {
+      const decoration = this.scene.add.sprite(deco.x, deco.y, deco.fallbackSprite);
+      logAutopoiesis.debug(`Created fallback decoration: ${deco.fallbackSprite}`, {
+        x: deco.x,
+        y: deco.y,
+        originalAnimation: deco.animation
+      });
+      return decoration;
+    } else {
+      // Ultimate fallback - create a simple colored rectangle
+      logAutopoiesis.warn(`Fallback sprite ${deco.fallbackSprite} not found, creating placeholder`);
+      const placeholder = this.scene.add.sprite(deco.x, deco.y, '__DEFAULT');
+      
+      // Create a default texture if it doesn't exist
+      if (!this.scene.textures.exists('__DEFAULT')) {
+        this.scene.add.graphics()
+          .fillStyle(0x8bc34a)
+          .fillRect(0, 0, 16, 16)
+          .generateTexture('__DEFAULT', 16, 16);
+      }
+      
+      placeholder.setTexture('__DEFAULT');
+      return placeholder;
+    }
   }
 
   /**
@@ -283,11 +374,83 @@ export class WorldRenderer {
   }
 
   /**
-   * Update visual elements that change over time
+   * Update visual elements that change over time including culling optimization
    */
   public updateVisuals(): void {
+    const now = Date.now();
+    
+    // Perform culling optimization at regular intervals
+    if (now - this.lastCullingUpdate > this.CULLING_UPDATE_INTERVAL) {
+      this.performDecorationCulling();
+      this.lastCullingUpdate = now;
+    }
+  }
 
+  /**
+   * Optimize decorations by culling off-screen sprites and pausing animations
+   */
+  private performDecorationCulling(): void {
+    if (!this.scene.cameras || !this.scene.cameras.main) {
+      return;
+    }
 
+    const camera = this.scene.cameras.main;
+    const cameraView = camera.worldView;
+    
+    // Add margin to prevent popping when sprites are just outside view
+    const margin = 100;
+    const extendedView = new Phaser.Geom.Rectangle(
+      cameraView.x - margin,
+      cameraView.y - margin,
+      cameraView.width + margin * 2,
+      cameraView.height + margin * 2
+    );
+
+    let visibleCount = 0;
+    let pausedCount = 0;
+
+    this.decorationSprites.forEach(decoration => {
+      if (!decoration || !decoration.scene) {
+        return; // Skip destroyed sprites
+      }
+
+      const inView = extendedView.contains(decoration.x, decoration.y);
+      
+      if (inView) {
+        // Sprite is visible
+        visibleCount++;
+        
+        if (!decoration.visible) {
+          decoration.setVisible(true);
+        }
+        
+        // Resume animation if it was paused
+        if (decoration.anims && decoration.anims.isPaused) {
+          decoration.anims.resume();
+        }
+      } else {
+        // Sprite is off-screen
+        if (decoration.visible) {
+          decoration.setVisible(false);
+        }
+        
+        // Pause animation to save performance
+        if (decoration.anims && decoration.anims.isPlaying) {
+          decoration.anims.pause();
+          pausedCount++;
+        }
+      }
+    });
+
+    // Log culling stats occasionally
+    if (Math.random() < 0.1) { // 10% chance to log
+      logAutopoiesis.debug('Decoration culling performed', {
+        totalDecorations: this.decorationSprites.length,
+        visible: visibleCount,
+        paused: pausedCount,
+        cullingEfficiency: ((this.decorationSprites.length - visibleCount) / this.decorationSprites.length * 100).toFixed(1) + '%'
+      });
+    }
   }
 
   /**
@@ -317,11 +480,11 @@ export class WorldRenderer {
     this.renderedObjects.forEach(obj => {
       if (obj && obj.destroy) {
         // For animated sprites, stop animations first
-        if ('anims' in obj && obj.anims) {
-          if (obj.anims.isPlaying) {
-            obj.anims.stop();
+        if ('anims' in obj && obj.anims && typeof obj.anims === 'object') {
+          const animState = obj.anims as any;
+          if (animState.isPlaying && typeof animState.stop === 'function') {
+            animState.stop();
           }
-          obj.anims.removeAllListeners();
         }
         obj.destroy();
       }
@@ -336,10 +499,15 @@ export class WorldRenderer {
     this.renderedObjects.clear();
     this.zoneGraphics.length = 0;
     
+    // Clear decoration tracking
+    this.decorationSprites.length = 0;
+    
     // Clear reference to animation manager
     this.animationManager = undefined;
     
-    logAutopoiesis.info('WorldRenderer destroyed');
+    logAutopoiesis.info('WorldRenderer destroyed', {
+      decorationsCleared: this.decorationSprites.length
+    });
   }
 
   /**

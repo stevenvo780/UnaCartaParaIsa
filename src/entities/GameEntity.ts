@@ -24,7 +24,8 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     services?: IEntityServices
   ) {
 
-    const initialSprite = entityId === 'isa' ? 'isa-happy' : 'stev-happy';
+    // Use fallback sprites since main entity sprites are now handled by AnimatedGameEntity
+    const initialSprite = entityId === 'isa' ? 'woman' : 'man';
     super(scene, x, y, initialSprite);
 
     this.services = services || EntityServicesFactory.create();
@@ -256,8 +257,8 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   }
 
   private updateVisualState() {
-
-    let newSprite: string;
+    // Base GameEntity uses simple fallback sprites
+    // AnimatedGameEntity will override this method for animation handling
     const avgStat = (
       this.entityData.stats.happiness + 
       this.entityData.stats.energy + 
@@ -265,24 +266,16 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       (100 - this.entityData.stats.boredom)
     ) / 4;
 
-    const prefix = this.entityData.id === 'isa' ? 'isa' : 'stev';
-    
-    if (avgStat < GAME_BALANCE.EFFECTS.DYING_THRESHOLD || 
-        this.entityData.stats.health < GAME_BALANCE.EFFECTS.LOW_HEALTH_THRESHOLD) {
-      newSprite = `${prefix}-dying`;
-    } else if (avgStat < GAME_BALANCE.EFFECTS.SAD_THRESHOLD) {
-      newSprite = `${prefix}-sad`;
-    } else {
-      newSprite = `${prefix}-happy`;
-    }
-
+    // For base GameEntity, just use simple fallback sprites
+    const newSprite = this.entityData.id === 'isa' ? 'woman' : 'man';
 
     if (newSprite !== this.currentSprite) {
       this.currentSprite = newSprite;
-      this.setTexture(newSprite);
-      this.services.logger.info(`${this.entityData.id} sprite changed`, {
-        from: this.currentSprite,
-        to: newSprite,
+      if (this.scene.textures.exists(newSprite)) {
+        this.setTexture(newSprite);
+      }
+      this.services.logger.info(`${this.entityData.id} sprite updated`, {
+        sprite: newSprite,
         avgStat: avgStat.toFixed(1),
         health: this.entityData.stats.health
       });

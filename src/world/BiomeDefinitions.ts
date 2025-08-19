@@ -1,6 +1,6 @@
 /**
- * Definiciones de biomas basadas en los assets disponibles
- * Cada bioma está configurado para usar assets específicos encontrados en el directorio public/assets
+ * Definiciones de biomas optimizadas para uso con TilesetManager
+ * Cada bioma especifica rangos de IDs de tiles en lugar de nombres de archivos
  */
 
 import { BiomeType } from './types';
@@ -28,6 +28,14 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         secondary: ['Grass_Middle.png', 'TexturedGrass.png'],
         weight: [0.7, 0.15, 0.1, 0.05]
       },
+      
+      // IDs de tiles del TilesetManager para mayor eficiencia
+      tileIds: {
+        terrain: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], // cesped1-10
+        autotiles: [200, 201, 202, 203], // grass edges
+        decorations: [33, 34] // grass_middle, textured_grass
+      },
+      
       trees: {
         primary: ['oak_tree.png'],
         rare: ['tree_emerald_1.png', 'tree_emerald_2.png'],
@@ -35,7 +43,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         clustering: 0.3
       },
       shrubs: {
-        assets: [], // Se llenarán cuando exploremos shrubs/
+        assets: [],
         density: 0.1
       },
       props: {
@@ -82,6 +90,13 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         secondary: ['TexturedGrass.png'],
         weight: [0.8, 0.2]
       },
+      
+      tileIds: {
+        terrain: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19], // cesped11-20
+        autotiles: [200, 201, 202, 203],
+        decorations: [34] // textured_grass
+      },
+      
       trees: {
         primary: [
           'tree_emerald_1.png', 'tree_emerald_2.png', 'tree_emerald_3.png', 'tree_emerald_4.png',
@@ -97,7 +112,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.3
       },
       props: {
-        common: ['mushrooms'], // Se expandirá cuando explore mushrooms/
+        common: ['mushrooms'],
         rare: [],
         density: 0.15
       },
@@ -141,6 +156,13 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         secondary: [],
         weight: [1.0]
       },
+      
+      tileIds: {
+        terrain: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30], // cesped21-31
+        autotiles: [200, 201, 202, 203],
+        decorations: []
+      },
+      
       trees: {
         primary: [
           'luminous_tree1.png', 'luminous_tree2.png', 'luminous_tree3.png', 'luminous_tree4.png',
@@ -197,12 +219,20 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
     assets: {
       terrain: {
         primary: [
-          'cesped1.png', 'cesped2.png', 'cesped3.png', // Césped húmedo
-          'Water_Middle.png' // Mezclar con agua
+          'cesped1.png', 'cesped2.png', 'cesped3.png',
+          'Water_Middle.png'
         ],
         secondary: [],
         weight: [0.6, 0.4]
       },
+      
+      tileIds: {
+        terrain: [0, 1, 2], // césped húmedo
+        water: [100, 101, 102, 103, 104], // water tiles
+        autotiles: [204, 205, 206, 207, 208, 209, 210, 211], // water edges and corners
+        decorations: []
+      },
+      
       trees: {
         primary: [
           'willow1.png', 'willow2.png', 'willow3.png',
@@ -217,7 +247,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.4
       },
       props: {
-        common: ['mushrooms'], // Se expandirá
+        common: ['mushrooms'],
         rare: [],
         density: 0.3
       },
@@ -255,11 +285,18 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
     assets: {
       terrain: {
         primary: [
-          'cesped15.png', 'cesped16.png', 'cesped17.png', 'cesped18.png' // Césped más árido
+          'cesped15.png', 'cesped16.png', 'cesped17.png', 'cesped18.png'
         ],
         secondary: ['dirt_patch_01.png'],
         weight: [0.7, 0.3]
       },
+      
+      tileIds: {
+        terrain: [14, 15, 16, 17], // césped árido
+        autotiles: [200, 201, 202, 203],
+        decorations: []
+      },
+      
       trees: {
         primary: ['mega_tree1.png', 'mega_tree2.png', 'oak_tree.png'],
         rare: ['curved_tree1.png', 'curved_tree2.png'],
@@ -271,7 +308,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.05
       },
       props: {
-        common: [], // Se añadirán rocks cuando explore
+        common: [],
         rare: [],
         density: 0.4
       },
@@ -316,11 +353,18 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
     assets: {
       terrain: {
         primary: [
-          'cesped1.png', 'cesped2.png', 'cesped3.png', 'cesped4.png', 'cesped5.png' // Césped cuidado
+          'cesped1.png', 'cesped2.png', 'cesped3.png', 'cesped4.png', 'cesped5.png'
         ],
-        secondary: [], // Se añadirán roads cuando explore
+        secondary: [],
         weight: [1.0]
       },
+      
+      tileIds: {
+        terrain: [0, 1, 2, 3, 4], // césped cuidado
+        autotiles: [200, 201, 202, 203],
+        decorations: [33, 34] // grass_middle, textured_grass
+      },
+      
       trees: {
         primary: ['oak_tree.png', 'tree_emerald_1.png'],
         rare: [],

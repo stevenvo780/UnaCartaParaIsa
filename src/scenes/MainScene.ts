@@ -17,6 +17,9 @@ export class MainScene extends Phaser.Scene {
   private dialogueSystem!: DialogueSystem;
   private gameLogicManager!: GameLogicManager;
   private worldRenderer!: WorldRenderer;
+  private controlledEntity: 'isa' | 'stev' | 'none' = 'none';
+  private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
+  private generatedWorldData?: any; // Datos del mundo generado para tilemaps
 
   constructor() {
     super({ key: 'MainScene' });
@@ -27,6 +30,10 @@ export class MainScene extends Phaser.Scene {
     
 
     const mapData = generateValidatedMap();
+    
+    // Guardar datos del mundo generado para el renderizador de tilemaps
+    this.generatedWorldData = mapData.generatedWorld;
+    
     this.gameState = {
       entities: [],
       resonance: 0,
@@ -61,14 +68,14 @@ export class MainScene extends Phaser.Scene {
     this.registry.set('gameState', this.gameState);
   }
 
-  create() {
+  async create() {
     logAutopoiesis.info('Creating main game world');
 
 
     this.entities = this.physics.add.group();
 
 
-    this.initializeManagers();
+    await this.initializeManagers();
 
 
     this.dialogueSystem = new DialogueSystem(this);
@@ -76,8 +83,11 @@ export class MainScene extends Phaser.Scene {
 
     this.createInitialEntities();
 
-
     this.setupCamera();
+    
+    this.setupInput();
+    
+    this.setupUIEvents();
 
     logAutopoiesis.info('MainScene created successfully', {
       entities: this.entities.children.size,
@@ -89,14 +99,14 @@ export class MainScene extends Phaser.Scene {
   /**
    * Initialize all managers
    */
-  private initializeManagers(): void {
+  private async initializeManagers(): Promise<void> {
 
     this.gameLogicManager = new GameLogicManager(this, this.gameState);
     this.gameLogicManager.initialize();
 
 
     this.worldRenderer = new WorldRenderer(this, this.gameState);
-    this.worldRenderer.renderWorld();
+    await this.worldRenderer.renderWorld(this.generatedWorldData);
     
 
     this.gameLogicManager.on('gameLogicUpdate', (data: any) => {
@@ -186,10 +196,88 @@ export class MainScene extends Phaser.Scene {
   }
 
   update() {
-
     if (this.worldRenderer) {
       this.worldRenderer.updateVisuals();
     }
+    
+    this.handleManualControl();
+    this.updateUI();
+  }
+  
+  private setupInput() {
+    this.cursors = this.input.keyboard?.createCursorKeys();
+    
+    const wasd = this.input.keyboard?.addKeys('W,S,A,D') as any;
+    this.input.keyboard?.on('keydown-SPACE', () => {
+      if (this.controlledEntity !== 'none') {
+        this.handleEntityAction();
+      }
+    });
+  }
+  
+  private setupUIEvents() {
+    this.events.on('changeEntityControl', (entity: 'isa' | 'stev' | 'none') => {
+      this.controlledEntity = entity;
+      logAutopoiesis.info(`Manual control switched to: ${entity}`);
+    });
+  }
+  
+  private handleManualControl() {
+    if (this.controlledEntity === 'none' || !this.cursors) return;
+    
+    const entity = this.controlledEntity === 'isa' ? this.isaEntity : this.stevEntity;
+    if (!entity || !entity.body) return;
+    
+    const speed = 150;
+    let velocityX = 0;
+    let velocityY = 0;
+    
+    if (this.cursors.left.isDown) velocityX = -speed;
+    else if (this.cursors.right.isDown) velocityX = speed;
+    
+    if (this.cursors.up.isDown) velocityY = -speed;
+    else if (this.cursors.down.isDown) velocityY = speed;
+    
+    entity.setVelocity(velocityX, velocityY);
+    
+    // Override control mode for manual movement
+    const entityData = entity.getEntityData();
+    if (velocityX !== 0 || velocityY !== 0) {
+      (entityData as any).controlMode = 'manual';
+    } else {
+      (entityData as any).controlMode = 'autonomous';
+    }
+  }
+  
+  private handleEntityAction() {
+    // Simple interaction when spacebar is pressed
+    if (this.controlledEntity !== 'none') {
+      this.handlePlayerInteraction(this.controlledEntity, 'manual_action');
+    }
+  }
+  
+  private updateUI() {
+    // Send entity data to UI
+    const entityData = {
+      isa: this.isaEntity ? {
+        stats: this.isaEntity.getStats(),
+        activity: this.isaEntity.getCurrentActivity(),
+        mood: this.isaEntity.getMood(),
+        position: this.isaEntity.getPosition()
+      } : null,
+      stev: this.stevEntity ? {
+        stats: this.stevEntity.getStats(),
+        activity: this.stevEntity.getCurrentActivity(),
+        mood: this.stevEntity.getMood(),
+        position: this.stevEntity.getPosition()
+      } : null
+    };
+    
+    this.events.emit('gameLogicUpdate', {
+      cycles: this.gameState.cycles,
+      resonance: this.gameState.resonance,
+      entities: entityData
+    });
   }
 
   /**
