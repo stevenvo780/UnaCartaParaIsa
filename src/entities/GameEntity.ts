@@ -1,17 +1,11 @@
 import Phaser from 'phaser';
 import type { Entity, EntityStats, ActivityType, MoodType } from '../types';
-import { gameConfig } from '../config/gameConfig';
-import { 
-  applyHybridDecay, 
-  applySurvivalCosts, 
-  applyActivityEffectsWithTimeModifiers
-} from '../utils/activityDynamics';
-import { 
-  calculateProximityResonanceChange,
-  calculateResonanceModifiers
-} from '../utils/resonanceCalculations';
-import { makeIntelligentDecision } from '../utils/aiDecisionEngine';
-import { logAutopoiesis } from '../utils/logger';
+import { GAME_BALANCE } from '../constants/gameBalance';
+import type { 
+  IEntityServices, 
+  IResonancePartner 
+} from '../interfaces/EntityServices';
+import { EntityServicesFactory } from '../interfaces/EntityServices';
 
 export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private entityData: Entity;
@@ -20,8 +14,18 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private resonance: number;
   private partnerEntity: GameEntity | null = null;
   private currentSprite: string = '';
+  private services: IEntityServices;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, entityId: 'isa' | 'stev') {
+  constructor(
+    scene: Phaser.Scene, 
+    x: number, 
+    y: number, 
+    entityId: 'isa' | 'stev',
+    services?: IEntityServices
+  ) {
+    // Initialize services (use provided or create default)
+    this.services = services || EntityServicesFactory.create();
+
     // Initialize with a default sprite based on entity type
     const initialSprite = entityId === 'isa' ? 'isa-happy' : 'stev-happy';
     super(scene, x, y, initialSprite);
@@ -32,21 +36,21 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    // Initialize entity data
+    // Initialize entity data using injected config
     this.entityData = {
       id: entityId,
       position: { x, y },
       state: 'idle',
       activity: 'WANDERING',
       stats: {
-        hunger: gameConfig.entityInitialStats,
-        sleepiness: gameConfig.entityInitialStats,
-        loneliness: gameConfig.entityInitialStats,
-        happiness: gameConfig.entityInitialStats,
-        energy: gameConfig.entityInitialStats,
-        boredom: gameConfig.entityInitialStats,
-        money: gameConfig.entityInitialMoney,
-        health: gameConfig.entityInitialHealth
+        hunger: this.services.config.entityInitialStats,
+        sleepiness: this.services.config.entityInitialStats,
+        loneliness: this.services.config.entityInitialStats,
+        happiness: this.services.config.entityInitialStats,
+        energy: this.services.config.entityInitialStats,
+        boredom: this.services.config.entityInitialStats,
+        money: this.services.config.entityInitialMoney,
+        health: this.services.config.entityInitialHealth
       },
       lastStateChange: Date.now(),
       lastActivityChange: Date.now(),
@@ -61,7 +65,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
     this.lastUpdateTime = Date.now();
     this.activityStartTime = Date.now();
-    this.resonance = gameConfig.initialResonance;
+    this.resonance = this.services.config.initialResonance;
 
     // Create visual representation
     this.createVisuals();
@@ -69,21 +73,24 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     // Setup physics
     this.setupPhysics();
 
-    logAutopoiesis.info(`Entity ${entityId} created`, this.entityData);
+    this.services.logger.info(`Entity ${entityId} created`, this.entityData);
   }
 
   private createVisuals() {
-    // Set initial sprite scale and properties
-    this.setScale(1.5); // Make entities a bit larger
-    this.setOrigin(0.5, 0.5); // Center the sprite
+    // Set initial sprite scale and properties using constants
+    this.setScale(GAME_BALANCE.VISUALS.ENTITY_SCALE);
+    this.setOrigin(0.5, 0.5);
     
     // Set depth for proper layering
-    this.setDepth(10);
+    this.setDepth(GAME_BALANCE.VISUALS.ENTITY_DEPTH);
     
     // Update sprite based on initial mood
     this.updateVisualState();
     
-    logAutopoiesis.info(`${this.entityData.id} visuals created with sprite: ${this.currentSprite}`);
+    this.services.logger.info(`${this.entityData.id} visuals created`, {
+      sprite: this.currentSprite,
+      scale: GAME_BALANCE.VISUALS.ENTITY_SCALE
+    });
   }
 
   private setupPhysics() {
@@ -91,9 +98,12 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     this.setBounce(0.2);
     
     if (this.entityData.id === 'isa') {
-      this.setCircle(15);
+      this.setCircle(GAME_BALANCE.MOVEMENT.ENTITY_COLLISION_RADIUS);
     } else {
-      this.setSize(30, 30);
+      this.setSize(
+        GAME_BALANCE.MOVEMENT.SQUARE_ENTITY_SIZE, 
+        GAME_BALANCE.MOVEMENT.SQUARE_ENTITY_SIZE
+      );
     }
   }
 
@@ -136,18 +146,21 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       hour
     };
 
-    // Apply hybrid decay
-    this.entityData.stats = applyHybridDecay(
+    // Apply hybrid decay using service
+    this.entityData.stats = this.services.activityCalculator.applyHybridDecay(
       this.entityData.stats,
       this.entityData.activity,
       deltaTimeMs
     );
 
-    // Apply survival costs
-    this.entityData.stats = applySurvivalCosts(this.entityData.stats, deltaTimeMs);
+    // Apply survival costs using service
+    this.entityData.stats = this.services.activityCalculator.applySurvivalCosts(
+      this.entityData.stats, 
+      deltaTimeMs
+    );
 
-    // Apply activity effects with time modifiers
-    this.entityData.stats = applyActivityEffectsWithTimeModifiers(
+    // Apply activity effects with time modifiers using service
+    this.entityData.stats = this.services.activityCalculator.applyActivityEffectsWithTimeModifiers(
       this.entityData.activity,
       this.entityData.stats,
       deltaTimeMs,
@@ -172,8 +185,8 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       // Get companion entity for social decisions
       const companion = this.partnerEntity ? this.partnerEntity.getEntityData() : null;
       
-      // Use intelligent decision engine
-      const suggestedActivity = makeIntelligentDecision(
+      // Use intelligent decision engine service
+      const suggestedActivity = this.services.aiDecisionEngine.makeIntelligentDecision(
         this.entityData,
         companion,
         Date.now()
@@ -191,14 +204,18 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     this.entityData.lastActivityChange = Date.now();
     this.activityStartTime = Date.now();
 
-    logAutopoiesis.info(`${this.entityData.id} changed activity: ${oldActivity} → ${newActivity}`);
+    this.services.logger.info(`${this.entityData.id} changed activity`, {
+      from: oldActivity,
+      to: newActivity,
+      timestamp: Date.now()
+    });
   }
 
   private updateMovement(_deltaTime: number) {
-    // Simple wandering movement
-    if (Math.random() < 0.02) { // 2% chance per frame to change direction
+    // Simple wandering movement using constants
+    if (Math.random() < GAME_BALANCE.MOVEMENT.DIRECTION_CHANGE_PROBABILITY) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = gameConfig.movement.baseSpeed;
+      const speed = this.services.config.movement.baseSpeed;
       
       this.setVelocity(
         Math.cos(angle) * speed,
@@ -209,8 +226,8 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     // Apply friction
     if (this.body) {
       this.setVelocity(
-        this.body.velocity.x * gameConfig.movement.friction,
-        this.body.velocity.y * gameConfig.movement.friction
+        this.body.velocity.x * this.services.config.movement.friction,
+        this.body.velocity.y * this.services.config.movement.friction
       );
     }
 
@@ -228,10 +245,10 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     const alpha = 0.5 + (healthRatio * 0.5); // Fade when low health
     this.setAlpha(alpha);
 
-    // Pulse effect based on activity
-    this.entityData.pulsePhase += 0.1;
-    const basePulse = 1.5; // Base scale
-    const pulse = basePulse + Math.sin(this.entityData.pulsePhase) * 0.1;
+    // Pulse effect based on activity using constants
+    this.entityData.pulsePhase += GAME_BALANCE.VISUALS.PULSE_SPEED;
+    const basePulse = GAME_BALANCE.VISUALS.BASE_PULSE_SCALE;
+    const pulse = basePulse + Math.sin(this.entityData.pulsePhase) * GAME_BALANCE.VISUALS.PULSE_AMPLITUDE;
     this.setScale(pulse);
 
     // Tint based on mood for additional visual feedback
@@ -251,9 +268,10 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
     const prefix = this.entityData.id === 'isa' ? 'isa' : 'stev';
     
-    if (avgStat < 20 || this.entityData.stats.health < 15) {
+    if (avgStat < GAME_BALANCE.EFFECTS.DYING_THRESHOLD || 
+        this.entityData.stats.health < GAME_BALANCE.EFFECTS.LOW_HEALTH_THRESHOLD) {
       newSprite = `${prefix}-dying`;
-    } else if (avgStat < 50) {
+    } else if (avgStat < GAME_BALANCE.EFFECTS.SAD_THRESHOLD) {
       newSprite = `${prefix}-sad`;
     } else {
       newSprite = `${prefix}-happy`;
@@ -263,7 +281,12 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     if (newSprite !== this.currentSprite) {
       this.currentSprite = newSprite;
       this.setTexture(newSprite);
-      logAutopoiesis.info(`${this.entityData.id} sprite changed to: ${newSprite}`);
+      this.services.logger.info(`${this.entityData.id} sprite changed`, {
+        from: this.currentSprite,
+        to: newSprite,
+        avgStat: avgStat.toFixed(1),
+        health: this.entityData.stats.health
+      });
     }
   }
 
@@ -300,16 +323,25 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       this.entityData.isDead = true;
       this.entityData.timeOfDeath = Date.now();
       this.entityData.state = 'dead';
-      logAutopoiesis.warn(`${this.entityData.id} has died!`, stats);
+      this.services.logger.warn(`${this.entityData.id} has died!`, { stats });
     }
     
-    // Check for critical states
-    if (stats.hunger > 90) {
-      logAutopoiesis.warn(`${this.entityData.id} is starving!`, { hunger: stats.hunger });
+    // Check for critical states using constants would be ideal
+    const CRITICAL_HUNGER = 90;
+    const CRITICAL_ENERGY = 10;
+    
+    if (stats.hunger > CRITICAL_HUNGER) {
+      this.services.logger.warn(`${this.entityData.id} is starving!`, { 
+        hunger: stats.hunger,
+        threshold: CRITICAL_HUNGER
+      });
     }
     
-    if (stats.energy < 10) {
-      logAutopoiesis.warn(`${this.entityData.id} is exhausted!`, { energy: stats.energy });
+    if (stats.energy < CRITICAL_ENERGY) {
+      this.services.logger.warn(`${this.entityData.id} is exhausted!`, { 
+        energy: stats.energy,
+        threshold: CRITICAL_ENERGY
+      });
     }
   }
 
@@ -351,7 +383,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     const myStats = this.getStats();
     const partnerStats = this.partnerEntity.getStats();
 
-    const result = calculateProximityResonanceChange(
+    const result = this.services.resonanceCalculator.calculateProximityResonanceChange(
       myPosition,
       partnerPosition,
       myStats,
@@ -364,7 +396,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     this.resonance = Math.max(0, Math.min(100, this.resonance + result.resonanceChange));
 
     // Apply resonance modifiers to stats
-    const modifiers = calculateResonanceModifiers(this.resonance, result.closeness);
+    const modifiers = this.services.resonanceCalculator.calculateResonanceModifiers(this.resonance, result.closeness);
     
     // Apply happiness boost
     this.entityData.stats.happiness = Math.min(100, 
@@ -388,11 +420,11 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
     // Log significant resonance changes
     if (Math.abs(result.resonanceChange) > 0.5) {
-      logAutopoiesis.info(`${this.entityData.id} resonance ${result.effect}`, {
-        resonanceChange: result.resonanceChange,
-        newResonance: this.resonance,
-        closeness: result.closeness,
-        effect: result.effect
+      this.services.logger.info(`${this.entityData.id} resonance updated`, {
+        effect: result.effect,
+        resonanceChange: result.resonanceChange.toFixed(2),
+        newResonance: this.resonance.toFixed(2),
+        closeness: result.closeness.toFixed(2)
       });
     }
   }
