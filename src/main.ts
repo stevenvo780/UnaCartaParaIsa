@@ -34,10 +34,10 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [BootScene, MainScene, UIScene],
   callbacks: {
     postBoot: function (game) {
-      // Setup global game configuration
+
       game.registry.set('gameConfig', gameConfig);
       
-      // Debug helpers in development
+
       if (gameConfig.debugMode) {
         (window as any).game = game;
         (window as any).scenes = {
@@ -53,7 +53,7 @@ const config: Phaser.Types.Core.GameConfig = {
   }
 };
 
-// Inicializar el juego
+
 const game = new Phaser.Game(config);
 
 export default game;

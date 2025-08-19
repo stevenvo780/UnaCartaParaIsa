@@ -50,7 +50,7 @@ export class UIElementPool<T extends PoolableUIElement> {
     this.createElementFn = createElementFn;
     this.poolName = poolName;
     
-    // Pre-llenar el pool
+
     for (let i = 0; i < initialSize; i++) {
       this.pool.push(this.createElementFn());
     }

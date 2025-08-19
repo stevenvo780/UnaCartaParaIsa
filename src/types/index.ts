@@ -40,15 +40,15 @@ export type EntityStateType =
   | 'fading';
 
 export type MoodType =
-  | '😊' // HAPPY/CONTENT
-  | '😢' // SAD  
-  | '😡' // ANGRY
-  | '😌' // CALM
-  | '🤩' // EXCITED
-  | '😑' // BORED
-  | '😔' // LONELY
-  | '😰' // ANXIOUS
-  | '😴'; // TIRED
+  | '😊'
+  | '😢'
+  | '😡'
+  | '😌'
+  | '🤩'
+  | '😑'
+  | '😔'
+  | '😰'
+  | '😴';
 
 export interface Position {
   x: number;
@@ -210,7 +210,7 @@ export interface GameState {
   mapElements: MapElement[];
   mapSeed?: string;
   currentConversation: ConversationState;
-  // New unified map fields
+
   terrainTiles: TerrainTile[];
   roads: RoadPolyline[];
   objectLayers: ObjectLayer[];

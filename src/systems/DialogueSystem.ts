@@ -79,7 +79,7 @@ export class DialogueSystem {
   private setupAutoDialogueSystem(): void {
     if (!this.isInitialized) return;
 
-    // Auto-diálogos cada 8-15 segundos
+
     const baseInterval = 8000;
     const variableInterval = Math.random() * 7000;
     
@@ -101,15 +101,15 @@ export class DialogueSystem {
   private evaluateAutoDialogue(): void {
     if (!this.isInitialized || this.conversationState.isActive) return;
 
-    // Obtener entidades válidas para diálogo
+
     const entities = this.getAvailableEntities();
     if (entities.length === 0) return;
 
-    // Seleccionar entidad aleatoria con distribución ponderada
+
     const selectedEntity = this.selectEntityForDialogue(entities);
     if (!selectedEntity) return;
 
-    // Generar diálogo contextual
+
     this.generateContextualDialogue(selectedEntity);
   }
 
@@ -117,7 +117,7 @@ export class DialogueSystem {
    * Obtener entidades disponibles para diálogo
    */
   private getAvailableEntities(): Entity[] {
-    // Simular entidades del juego - en el juego real vendrían del GameState
+
     return [
       { id: 'isa_entity', x: 100, y: 100, activity: 'SOCIALIZING', emotion: 'NEUTRAL' },
       { id: 'stev_entity', x: 200, y: 150, activity: 'SOCIALIZING', emotion: 'CURIOUS' }
@@ -130,7 +130,7 @@ export class DialogueSystem {
   private selectEntityForDialogue(entities: Entity[]): Entity | null {
     if (entities.length === 0) return null;
 
-    // Si hay un último hablante, priorizar respuesta
+
     if (this.conversationState.lastSpeaker) {
       const otherEntities = entities.filter(e => 
         getSpeakerForEntity(e.id) !== this.conversationState.lastSpeaker
@@ -141,11 +141,11 @@ export class DialogueSystem {
       }
     }
 
-    // Selección aleatoria ponderada por tiempo sin hablar
+
     const now = Date.now();
     const weights = entities.map(entity => {
       const timeSinceLastInteraction = now - (entity.lastInteraction || 0);
-      return Math.min(timeSinceLastInteraction / 10000, 2.0); // Max weight de 2.0
+      return Math.min(timeSinceLastInteraction / 10000, 2.0);
     });
 
     const totalWeight = weights.reduce((sum, w) => sum + w, 0);
@@ -169,13 +169,13 @@ export class DialogueSystem {
     
     let dialogue: DialogueEntry | null = null;
 
-    // Si hay un diálogo previo, intentar generar respuesta contextual
+
     if (this.conversationState.lastDialogue && 
         this.conversationState.lastSpeaker !== speaker) {
       dialogue = getResponseWriter(speaker, this.conversationState.lastDialogue);
     }
 
-    // Si no se pudo generar respuesta, obtener diálogo general
+
     if (!dialogue) {
       dialogue = getNextDialogue(speaker, emotion, entity.activity);
     }
@@ -195,10 +195,10 @@ export class DialogueSystem {
     const entity = this.getAvailableEntities().find(e => e.id === entityId);
     if (!entity) return;
 
-    // Crear contenedor de burbuja
+
     const bubbleContainer = this.scene.add.container(entity.x, entity.y - 60);
 
-    // Crear fondo de burbuja
+
     const bubbleWidth = Math.min(dialogue.text.length * 8 + 40, 300);
     const bubbleHeight = 60;
     
@@ -208,7 +208,7 @@ export class DialogueSystem {
     bubble.fillRoundedRect(-bubbleWidth/2, -bubbleHeight/2, bubbleWidth, bubbleHeight, 15);
     bubble.strokeRoundedRect(-bubbleWidth/2, -bubbleHeight/2, bubbleWidth, bubbleHeight, 15);
 
-    // Crear texto del diálogo
+
     const dialogueText = this.scene.add.text(0, 0, dialogue.text, {
       fontSize: '14px',
       fontFamily: 'Arial',
@@ -217,14 +217,14 @@ export class DialogueSystem {
       wordWrap: { width: bubbleWidth - 20 }
     }).setOrigin(0.5);
 
-    // Indicador de speaker
+
     const speakerColor = dialogue.speaker === 'ISA' ? 0xff6b9d : 0x4ecdc4;
     const speakerIndicator = this.scene.add.circle(-bubbleWidth/2 + 15, -bubbleHeight/2 + 15, 8, speakerColor);
 
-    // Ensamblar burbuja
+
     bubbleContainer.add([bubble, dialogueText, speakerIndicator]);
 
-    // Animación de aparición
+
     bubbleContainer.setAlpha(0);
     bubbleContainer.setScale(0.5);
     
@@ -237,20 +237,20 @@ export class DialogueSystem {
       ease: 'Back.easeOut'
     });
 
-    // Guardar referencia
+
     this.dialogueBubbles.set(entityId, bubbleContainer);
 
-    // Auto-remover después de duración calculada
+
     const displayDuration = Math.max(dialogue.text.length * 80, 3000);
     this.scene.time.delayedCall(displayDuration, () => {
       this.removeDialogueBubble(entityId);
     });
 
-    // Actualizar estado de conversación
+
     this.conversationState.lastSpeaker = dialogue.speaker;
     this.conversationState.lastDialogue = dialogue;
     
-    // Log para telemetría
+
     logAutopoiesis.info('Diálogo mostrado', {
       entityId,
       speaker: dialogue.speaker,
@@ -295,7 +295,7 @@ export class DialogueSystem {
     if (dialogue) {
       this.showDialogue(entityId, dialogue);
       
-      // Actualizar actividad de la entidad
+
       const entity = this.getAvailableEntities().find(e => e.id === entityId);
       if (entity) {
         entity.lastInteraction = Date.now();
@@ -325,7 +325,7 @@ export class DialogueSystem {
     this.conversationState.isActive = false;
     this.conversationState.participants = [];
     
-    // Limpiar todas las burbujas
+
     this.dialogueBubbles.forEach((_, entityId) => {
       this.removeDialogueBubble(entityId);
     });

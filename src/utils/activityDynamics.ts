@@ -1,3 +1,4 @@
+/*\n * Documentación científica (resumen):\n * - Eficiencia temporal por actividad: curva en campana por tramos alrededor de una duración óptima.\n * - Prioridad: w(v,α)=1−(v/100)^α (α∈[0.1,10]) para modelar urgencia no lineal.\n * - Decaimiento híbrido lineal estable y costes de supervivencia por minuto.\n * - Modificadores circadianos: multiplicadores nocturnos para descanso/energía.\n */
 import type { EntityStats, EntityActivity, ActivityType, ZoneType } from '../types';
 import { gameConfig } from '../config/gameConfig';
 
@@ -7,7 +8,7 @@ interface TimeOfDayModifiers {
   hour: number;
 }
 
-// Constantes de activity del proyecto original (preservadas exactamente)
+
 const ACTIVITY_OPTIMAL_DURATIONS = {
   WANDERING: 120000,
   MEDITATING: 300000,
@@ -166,7 +167,7 @@ export const getActivityDynamics = () => ({
   COOKING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.COOKING }
 });
 
-// Función para obtener modificadores de actividad según la hora del día
+
 export const getTimeOfDayActivityModifiers = (timeOfDay: TimeOfDayModifiers) => {
   const { isNight, phase, hour } = timeOfDay;
 
@@ -479,7 +480,7 @@ export const applyActivityEffectsWithTimeModifiers = (
   if (effects) {
     const minutesElapsed = (deltaTimeMs / 60000) * gameConfig.gameSpeedMultiplier;
 
-    // Aplicar efectos inmediatos
+
     Object.entries(effects.immediate).forEach(([stat, value]) => {
       const statKey = stat as keyof EntityStats;
       if (statKey in newStats) {
@@ -491,7 +492,7 @@ export const applyActivityEffectsWithTimeModifiers = (
       }
     });
 
-    // Aplicar efectos por minuto
+
     Object.entries(effects.perMinute).forEach(([stat, value]) => {
       const statKey = stat as keyof EntityStats;
       if (statKey in newStats) {
@@ -505,7 +506,7 @@ export const applyActivityEffectsWithTimeModifiers = (
     });
   }
 
-  // Aplicar modificadores de tiempo del día
+
   const modifiers = getTimeOfDayActivityModifiers(timeOfDay);
   const activityModifier = modifiers[activity as keyof typeof modifiers];
 

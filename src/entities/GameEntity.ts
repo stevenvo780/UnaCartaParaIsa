@@ -23,20 +23,20 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     entityId: 'isa' | 'stev',
     services?: IEntityServices
   ) {
-    // Initialize services (use provided or create default)
+
     this.services = services || EntityServicesFactory.create();
 
-    // Initialize with a default sprite based on entity type
+
     const initialSprite = entityId === 'isa' ? 'isa-happy' : 'stev-happy';
     super(scene, x, y, initialSprite);
     
     this.currentSprite = initialSprite;
     
-    // Add to scene
+
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    // Initialize entity data using injected config
+
     this.entityData = {
       id: entityId,
       position: { x, y },
@@ -56,7 +56,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       lastActivityChange: Date.now(),
       lastInteraction: Date.now(),
       pulsePhase: 0,
-      colorHue: entityId === 'isa' ? 300 : 220, // Pink for Isa, Blue for Stev
+      colorHue: entityId === 'isa' ? 300 : 220,
       mood: '😊',
       thoughts: [],
       isDead: false,
@@ -67,24 +67,24 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     this.activityStartTime = Date.now();
     this.resonance = this.services.config.initialResonance;
 
-    // Create visual representation
+
     this.createVisuals();
 
-    // Setup physics
+
     this.setupPhysics();
 
     this.services.logger.info(`Entity ${entityId} created`, this.entityData);
   }
 
   private createVisuals() {
-    // Set initial sprite scale and properties using constants
+
     this.setScale(GAME_BALANCE.VISUALS.ENTITY_SCALE);
     this.setOrigin(0.5, 0.5);
     
-    // Set depth for proper layering
+
     this.setDepth(GAME_BALANCE.VISUALS.ENTITY_DEPTH);
     
-    // Update sprite based on initial mood
+
     this.updateVisualState();
     
     this.services.logger.info(`${this.entityData.id} visuals created`, {
@@ -111,26 +111,26 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     const now = Date.now();
     const timeSinceLastUpdate = now - this.lastUpdateTime;
     
-    // Apply autopoiesis systems
+
     this.applyAutopoiesis(timeSinceLastUpdate);
     
-    // Update resonance with partner if available
+
     this.updateResonanceWithPartner(timeSinceLastUpdate);
     
-    // Update AI decision making
+
     this.updateAI(deltaTime);
     
-    // Update movement
+
     this.updateMovement(deltaTime);
     
-    // Update visuals
+
     this.updateVisuals();
     
     this.lastUpdateTime = now;
   }
 
   private applyAutopoiesis(deltaTimeMs: number) {
-    // Get current time of day (simplified for now)
+
     const hour = new Date().getHours();
     const getPhase = (): 'dawn' | 'day' | 'dusk' | 'night' => {
       if (hour < 6) return 'night';
@@ -146,20 +146,20 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       hour
     };
 
-    // Apply hybrid decay using service
+
     this.entityData.stats = this.services.activityCalculator.applyHybridDecay(
       this.entityData.stats,
       this.entityData.activity,
       deltaTimeMs
     );
 
-    // Apply survival costs using service
+
     this.entityData.stats = this.services.activityCalculator.applySurvivalCosts(
       this.entityData.stats, 
       deltaTimeMs
     );
 
-    // Apply activity effects with time modifiers using service
+
     this.entityData.stats = this.services.activityCalculator.applyActivityEffectsWithTimeModifiers(
       this.entityData.activity,
       this.entityData.stats,
@@ -167,25 +167,25 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       timeOfDay
     );
 
-    // Update mood based on stats
+
     this.updateMood();
 
-    // Check for critical states
+
     this.checkCriticalStates();
   }
 
   private updateAI(_deltaTime: number) {
-    // Intelligent AI decision making using personality, mood, and softmax
+
     const timeInCurrentActivity = Date.now() - this.activityStartTime;
     
-    // Check if we should consider changing activity (every 3-5 seconds)
+
     const checkInterval = 3000 + Math.random() * 2000;
     if (timeInCurrentActivity > checkInterval) {
       
-      // Get companion entity for social decisions
+
       const companion = this.partnerEntity ? this.partnerEntity.getEntityData() : null;
       
-      // Use intelligent decision engine service
+
       const suggestedActivity = this.services.aiDecisionEngine.makeIntelligentDecision(
         this.entityData,
         companion,
@@ -212,7 +212,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   }
 
   private updateMovement(_deltaTime: number) {
-    // Simple wandering movement using constants
+
     if (Math.random() < GAME_BALANCE.MOVEMENT.DIRECTION_CHANGE_PROBABILITY) {
       const angle = Math.random() * Math.PI * 2;
       const speed = this.services.config.movement.baseSpeed;
@@ -223,7 +223,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       );
     }
 
-    // Apply friction
+
     if (this.body) {
       this.setVelocity(
         this.body.velocity.x * this.services.config.movement.friction,
@@ -231,33 +231,33 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       );
     }
 
-    // Update position in entity data
+
     this.entityData.position.x = this.x;
     this.entityData.position.y = this.y;
   }
 
   private updateVisuals() {
-    // Update sprite based on current state
+
     this.updateVisualState();
     
-    // Update transparency based on health
+
     const healthRatio = this.entityData.stats.health / 100;
-    const alpha = 0.5 + (healthRatio * 0.5); // Fade when low health
+    const alpha = 0.5 + (healthRatio * 0.5);
     this.setAlpha(alpha);
 
-    // Pulse effect based on activity using constants
+
     this.entityData.pulsePhase += GAME_BALANCE.VISUALS.PULSE_SPEED;
     const basePulse = GAME_BALANCE.VISUALS.BASE_PULSE_SCALE;
     const pulse = basePulse + Math.sin(this.entityData.pulsePhase) * GAME_BALANCE.VISUALS.PULSE_AMPLITUDE;
     this.setScale(pulse);
 
-    // Tint based on mood for additional visual feedback
+
     const tint = this.getMoodTint();
     this.setTint(tint);
   }
 
   private updateVisualState() {
-    // Determine which sprite to use based on entity state
+
     let newSprite: string;
     const avgStat = (
       this.entityData.stats.happiness + 
@@ -277,7 +277,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       newSprite = `${prefix}-happy`;
     }
 
-    // Only change sprite if it's different to avoid unnecessary updates
+
     if (newSprite !== this.currentSprite) {
       this.currentSprite = newSprite;
       this.setTexture(newSprite);
@@ -291,7 +291,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   }
 
   private getMoodTint(): number {
-    // Tint based on overall wellbeing
+
     const avgStat = (
       this.entityData.stats.happiness + 
       this.entityData.stats.energy + 
@@ -299,9 +299,9 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       (100 - this.entityData.stats.boredom)
     ) / 4;
 
-    if (avgStat > 70) return 0xffffff; // White (normal)
-    if (avgStat > 40) return 0xffaa77; // Slight orange tint
-    return 0xff7777; // Red tint (stressed)
+    if (avgStat > 70) return 0xffffff;
+    if (avgStat > 40) return 0xffaa77;
+    return 0xff7777;
   }
 
   private updateMood() {
@@ -318,7 +318,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private checkCriticalStates() {
     const stats = this.entityData.stats;
     
-    // Check for death
+
     if (stats.health <= 0 && !this.entityData.isDead) {
       this.entityData.isDead = true;
       this.entityData.timeOfDeath = Date.now();
@@ -326,7 +326,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       this.services.logger.warn(`${this.entityData.id} has died!`, { stats });
     }
     
-    // Check for critical states using constants would be ideal
+
     const CRITICAL_HUNGER = 90;
     const CRITICAL_ENERGY = 10;
     
@@ -345,7 +345,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  // Public getters
+
   public getEntityData(): Entity {
     return { ...this.entityData };
   }
@@ -370,7 +370,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     return { x: this.x, y: this.y };
   }
 
-  // Resonance system methods
+
   public setPartnerEntity(partner: GameEntity): void {
     this.partnerEntity = partner;
   }
@@ -392,33 +392,33 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       deltaTime
     );
 
-    // Update resonance
+
     this.resonance = Math.max(0, Math.min(100, this.resonance + result.resonanceChange));
 
-    // Apply resonance modifiers to stats
+
     const modifiers = this.services.resonanceCalculator.calculateResonanceModifiers(this.resonance, result.closeness);
     
-    // Apply happiness boost
+
     this.entityData.stats.happiness = Math.min(100, 
       this.entityData.stats.happiness * modifiers.happinessMultiplier
     );
     
-    // Apply energy boost
+
     this.entityData.stats.energy = Math.min(100, 
       this.entityData.stats.energy * modifiers.energyMultiplier
     );
     
-    // Apply health boost
+
     this.entityData.stats.health = Math.min(100, 
       this.entityData.stats.health * modifiers.healthMultiplier
     );
     
-    // Reduce loneliness
+
     this.entityData.stats.loneliness = Math.max(0, 
       this.entityData.stats.loneliness * modifiers.lonelinessPenalty
     );
 
-    // Log significant resonance changes
+
     if (Math.abs(result.resonanceChange) > 0.5) {
       this.services.logger.info(`${this.entityData.id} resonance updated`, {
         effect: result.effect,
@@ -434,7 +434,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   }
 
   public destroy() {
-    // Clean up sprite resources
+
     super.destroy();
   }
 }

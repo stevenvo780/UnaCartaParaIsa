@@ -17,42 +17,42 @@ export class UIScene extends Phaser.Scene {
   create() {
     console.log('🎨 Creating UI overlay');
     
-    // Initialize UI element pools
+
     this.initializePools();
 
-    // Create UI background
+
     const uiBackground = this.add.graphics();
     uiBackground.fillStyle(0x000000, GAME_BALANCE.UI.BACKGROUND_ALPHA);
     uiBackground.fillRect(0, 0, GAME_BALANCE.UI.PANEL_WIDTH, GAME_BALANCE.UI.PANEL_HEIGHT);
     uiBackground.setScrollFactor(0);
 
-    // Stats display
+
     this.statsText = this.add.text(GAME_BALANCE.UI.TEXT_MARGIN, GAME_BALANCE.UI.TEXT_MARGIN, 'Iniciando...', {
       fontSize: '16px',
       color: '#ffffff',
       fontFamily: 'Arial'
     }).setScrollFactor(0);
 
-    // Cycle counter
+
     this.cycleText = this.add.text(GAME_BALANCE.UI.TEXT_MARGIN, 40, 'Ciclos: 0', {
       fontSize: '14px',
       color: '#ecf0f1',
       fontFamily: 'Arial'
     }).setScrollFactor(0);
 
-    // Resonance bar
+
     this.resonanceBar = this.add.graphics();
     this.resonanceBar.setScrollFactor(0);
     this.updateResonanceBar(0);
 
-    // Listen for game updates
+
     const mainScene = this.scene.get('MainScene');
     mainScene.events.on('gameLogicUpdate', this.updateUI, this);
 
-    // Debug controls
+
     this.createDebugControls();
 
-    // Setup cleanup on scene shutdown
+
     this.events.on('shutdown', this.destroy, this);
     
     console.log('✅ UI Scene created');
@@ -75,12 +75,12 @@ export class UIScene extends Phaser.Scene {
    * Actualizar label de resonancia usando pool
    */
   private updateResonanceLabel(x: number, y: number, resonance: number): void {
-    // Liberar label anterior si existe
+
     if (this.currentResonanceLabel) {
       this.resonanceLabelPool.release(this.currentResonanceLabel);
     }
     
-    // Obtener nuevo label del pool
+
     this.currentResonanceLabel = this.resonanceLabelPool.acquire();
     this.currentResonanceLabel.setup(x, y, `${resonance.toFixed(1)}%`);
     this.currentResonanceLabel.gameObject.setOrigin(0, 0.5);
@@ -90,7 +90,7 @@ export class UIScene extends Phaser.Scene {
     this.cycleText.setText(`Ciclos: ${data.cycles}`);
     this.updateResonanceBar(data.resonance);
     
-    // Update entity stats (placeholder for now)
+
     this.statsText.setText([
       `🌟 Una Carta Para Isa`,
       `Resonancia: ${data.resonance.toFixed(2)}`,
@@ -106,11 +106,11 @@ export class UIScene extends Phaser.Scene {
     const barWidth = GAME_BALANCE.RESONANCE.BAR_WIDTH;
     const barHeight = GAME_BALANCE.RESONANCE.BAR_HEIGHT;
     
-    // Background bar
+
     this.resonanceBar.fillStyle(0x34495e, 0.8);
     this.resonanceBar.fillRect(barX, barY, barWidth, barHeight);
     
-    // Resonance fill
+
     const fillWidth = Math.max(0, Math.min(barWidth, resonance * GAME_BALANCE.RESONANCE.BAR_SCALE));
     const color = resonance > GAME_BALANCE.RESONANCE.THRESHOLD_HIGH ? 
       GAME_BALANCE.RESONANCE.COLOR_HIGH : 
@@ -121,11 +121,11 @@ export class UIScene extends Phaser.Scene {
     this.resonanceBar.fillStyle(color, 0.9);
     this.resonanceBar.fillRect(barX, barY, fillWidth, barHeight);
     
-    // Border
+
     this.resonanceBar.lineStyle(2, 0xecf0f1, 0.8);
     this.resonanceBar.strokeRect(barX, barY, barWidth, barHeight);
     
-    // Use pooled label
+
     this.updateResonanceLabel(barX + barWidth + 10, barY + barHeight / 2, resonance);
   }
 
@@ -133,7 +133,7 @@ export class UIScene extends Phaser.Scene {
     const gameConfig = this.registry.get('gameConfig');
     
     if (gameConfig.debugMode) {
-      // Speed controls
+
       this.add.text(GAME_BALANCE.UI.TEXT_MARGIN, 150, 'Velocidad del juego:', {
         fontSize: '12px',
         color: '#bdc3c7',
@@ -166,7 +166,7 @@ export class UIScene extends Phaser.Scene {
    * Limpieza al destruir la escena
    */
   destroy(): void {
-    // Liberar todos los elementos del pool
+
     if (this.resonanceLabelPool) {
       this.resonanceLabelPool.destroy();
     }

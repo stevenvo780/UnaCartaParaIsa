@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { GameState } from '../types';
 import { gameConfig } from '../config/gameConfig';
 import { GAME_BALANCE } from '../constants/gameBalance';
-import { GameEntity } from '../entities/GameEntity';
+import { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
 import { DialogueSystem } from '../systems/DialogueSystem';
 import { GameLogicManager } from '../managers/GameLogicManager';
 import { WorldRenderer } from '../managers/WorldRenderer';
@@ -25,7 +25,7 @@ export class MainScene extends Phaser.Scene {
   init() {
     logAutopoiesis.info('MainScene initialized');
     
-    // Initialize game state with generated map
+
     const mapData = generateValidatedMap();
     this.gameState = {
       entities: [],
@@ -57,26 +57,26 @@ export class MainScene extends Phaser.Scene {
       generatorVersion: '2.0.0'
     };
 
-    // Store in registry for access from other scenes
+
     this.registry.set('gameState', this.gameState);
   }
 
   create() {
     logAutopoiesis.info('Creating main game world');
 
-    // Setup physics groups
+
     this.entities = this.physics.add.group();
 
-    // Initialize managers
+
     this.initializeManagers();
 
-    // Initialize dialogue system
+
     this.dialogueSystem = new DialogueSystem(this);
 
-    // Create initial entities (Isa and Stev)
+
     this.createInitialEntities();
 
-    // Setup camera
+
     this.setupCamera();
 
     logAutopoiesis.info('MainScene created successfully', {
@@ -90,15 +90,15 @@ export class MainScene extends Phaser.Scene {
    * Initialize all managers
    */
   private initializeManagers(): void {
-    // Initialize game logic manager
+
     this.gameLogicManager = new GameLogicManager(this, this.gameState);
     this.gameLogicManager.initialize();
 
-    // Initialize world renderer
+
     this.worldRenderer = new WorldRenderer(this, this.gameState);
     this.worldRenderer.renderWorld();
     
-    // Connect game logic events to UI scene
+
     this.gameLogicManager.on('gameLogicUpdate', (data: any) => {
       this.events.emit('gameLogicUpdate', data);
     });
@@ -123,7 +123,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private createInitialEntities() {
-    // Create Isa (circle entity)
+
     this.isaEntity = new GameEntity(
       this, 
       gameConfig.entityCircleInitialX, 
@@ -131,7 +131,7 @@ export class MainScene extends Phaser.Scene {
       'isa'
     );
     
-    // Create Stev (square entity) 
+
     this.stevEntity = new GameEntity(
       this, 
       gameConfig.entitySquareInitialX, 
@@ -139,15 +139,15 @@ export class MainScene extends Phaser.Scene {
       'stev'
     );
 
-    // Add to physics group
+
     this.entities.add(this.isaEntity);
     this.entities.add(this.stevEntity);
 
-    // Setup resonance partnership
+
     this.isaEntity.setPartnerEntity(this.stevEntity);
     this.stevEntity.setPartnerEntity(this.isaEntity);
 
-    // Register entities with game logic manager
+
     this.gameLogicManager.registerEntity('isa', this.isaEntity);
     this.gameLogicManager.registerEntity('stev', this.stevEntity);
 
@@ -157,26 +157,26 @@ export class MainScene extends Phaser.Scene {
     });
   }
 
-  // Game loop is now handled by GameLogicManager
 
-  // Game logic updates are now handled by GameLogicManager
 
-  // World creation is now handled by WorldRenderer
 
-  // Environmental decorations are now handled by WorldRenderer
 
-  // Activity zones are now handled by WorldRenderer
 
-  // Zone visualization is now handled by WorldRenderer
+
+
+
+
+
+
 
   /**
    * Maneja interacciones del jugador
    */
   public handlePlayerInteraction(entityId: string, interactionType: string) {
-    // Handle through game logic manager
+
     this.gameLogicManager.handlePlayerInteraction(entityId, interactionType);
     
-    // Also handle dialogue
+
     this.dialogueSystem.handlePlayerInteraction(entityId, interactionType);
     
     logAutopoiesis.info('Player interaction handled', {
@@ -186,7 +186,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   update() {
-    // Update world renderer visuals
+
     if (this.worldRenderer) {
       this.worldRenderer.updateVisuals();
     }
@@ -219,7 +219,7 @@ export class MainScene extends Phaser.Scene {
    * Cleanup when scene is destroyed
    */
   destroy(): void {
-    // Cleanup managers
+
     if (this.gameLogicManager) {
       this.gameLogicManager.destroy();
     }

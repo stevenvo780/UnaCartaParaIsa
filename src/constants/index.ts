@@ -196,10 +196,10 @@ export const ACTIVITIES = {
   }
 } as const;
 
-// Alias adicionales necesarios
+
 export const ACTIVITY_TYPES = ACTIVITIES.TYPES;
 
-// MOVEMENT_CONFIG para sistema de movimiento
+
 export const MOVEMENT_CONFIG = {
   ENTITY_SIZE: 32,
   MIN_DISTANCE_BETWEEN_ENTITIES: 50,
@@ -207,7 +207,7 @@ export const MOVEMENT_CONFIG = {
   REPULSION_FORCE: 2
 } as const;
 
-// NEED_TO_ZONE_MAPPING para comportamiento de entidades
+
 export const NEED_TO_ZONE_MAPPING = {
   hunger: 'kitchen',
   thirst: 'kitchen',
@@ -222,17 +222,17 @@ export const NEED_TO_ZONE_MAPPING = {
   health: 'bedroom'
 } as const;
 
-// RESONANCE_THRESHOLDS para interacciones
+
 export const RESONANCE_THRESHOLDS = {
   LOW: 0.3,
   MEDIUM: 0.6,
   HIGH: 0.8
 } as const;
 
-// Tipos para el sistema de zonas
+
 export type ZoneType = 'kitchen' | 'bedroom' | 'living' | 'bathroom' | 'outdoor';
 
-// EntityStateType permanece en constants para compatibilidad
+
 export type EntityStateType = 'idle' | 'moving' | 'interacting' | 'resting' | 'seeking';
 
 export const {

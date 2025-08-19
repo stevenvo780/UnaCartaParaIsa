@@ -1,3 +1,4 @@
+/*\n * Documentación científica (resumen):\n * - Atracción de zonas: score = 10·atractividad + necesidades ponderadas − distancia/500 + compatibilidad de ánimo.\n * - Distancia euclidiana para proximidad; colisión por aproximación de radios mínimos con obstáculos rectangulares.\n */
 /**
  * Sistema de Generación de Mapas para Una Carta Para Isa
  * Adaptado al motor Phaser - Preserva la lógica de zonas y elementos
@@ -148,7 +149,7 @@ export const createDefaultZones = (): Zone[] => {
 
 export const createDefaultMapElements = (): MapElement[] => {
   return [
-    // Obstáculos naturales
+
     {
       id: 'central_wisdom_stone',
       type: 'obstacle',
@@ -174,7 +175,7 @@ export const createDefaultMapElements = (): MapElement[] => {
       metadata: { assetId: 'harmony_tree', interactive: false }
     },
 
-    // Elementos de zona de comida/nutrición
+
     {
       id: 'crystal_flower_1',
       type: 'food_zone',
@@ -200,7 +201,7 @@ export const createDefaultMapElements = (): MapElement[] => {
       metadata: { assetId: 'azure_bloom', nutrition: 6 }
     },
 
-    // Elementos de zona de descanso
+
     {
       id: 'quantum_bed_primary',
       type: 'rest_zone',
@@ -218,7 +219,7 @@ export const createDefaultMapElements = (): MapElement[] => {
       metadata: { assetId: 'levitating_cushion', comfort: 15 }
     },
 
-    // Elementos de zona social
+
     {
       id: 'resonance_fountain',
       type: 'social_zone',
@@ -244,7 +245,7 @@ export const createDefaultMapElements = (): MapElement[] => {
       metadata: { assetId: 'connection_bench', social_boost: 10 }
     },
 
-    // Elementos de zona de juego
+
     {
       id: 'cosmic_light_pole_1',
       type: 'play_zone',
@@ -270,7 +271,7 @@ export const createDefaultMapElements = (): MapElement[] => {
       metadata: { assetId: 'dimensional_swing', fun_factor: 15 }
     },
 
-    // Elementos de zona de trabajo
+
     {
       id: 'productivity_beacon',
       type: 'work_zone',
@@ -280,7 +281,7 @@ export const createDefaultMapElements = (): MapElement[] => {
       metadata: { assetId: 'productivity_beacon', efficiency: 12 }
     },
 
-    // Elementos de meditación
+
     {
       id: 'serenity_flower_1',
       type: 'comfort_zone',
@@ -372,9 +373,9 @@ export const getAttractionTarget = (
   let bestScore = -Infinity;
 
   for (const zone of zones) {
-    let score = zone.attractiveness * 10; // Base attractiveness
+    let score = zone.attractiveness * 10;
 
-    // Calcular urgencia basada en stats
+
     if (zone.effects?.hunger && entityStats.hunger < 35) {
       score += (35 - entityStats.hunger) * 0.8;
     }
@@ -394,13 +395,13 @@ export const getAttractionTarget = (
       score += (30 - entityStats.money) * 0.5;
     }
 
-    // Bonus por mood compatible
+
     if (entityMood) {
       const moodZoneBonus = getMoodZoneCompatibility(entityMood, zone.type);
       score += moodZoneBonus;
     }
 
-    // Penalización por distancia (menor peso)
+
     const zoneCenter = {
       x: zone.bounds.x + zone.bounds.width / 2,
       y: zone.bounds.y + zone.bounds.height / 2
@@ -409,9 +410,9 @@ export const getAttractionTarget = (
       Math.pow(currentPosition.x - zoneCenter.x, 2) +
       Math.pow(currentPosition.y - zoneCenter.y, 2)
     );
-    score -= distance / 500; // Reducir impacto de distancia
+    score -= distance / 500;
 
-    // Bonus por prioridad de zona
+
     if (zone.metadata?.priority) {
       score += (5 - zone.metadata.priority) * 2;
     }
@@ -423,7 +424,7 @@ export const getAttractionTarget = (
   }
 
   if (bestZone) {
-    // Añadir algo de variabilidad al target dentro de la zona
+
     const variationX = (Math.random() - 0.5) * bestZone.bounds.width * 0.3;
     const variationY = (Math.random() - 0.5) * bestZone.bounds.height * 0.3;
     
@@ -442,14 +443,14 @@ export const getAttractionTarget = (
  */
 const getMoodZoneCompatibility = (mood: string, zoneType: string): number => {
   const compatibilityMap: Record<string, Record<string, number>> = {
-    '😊': { play: 15, social: 12, food: 8 }, // HAPPY
-    '😢': { comfort: 20, rest: 15, social: 10 }, // SAD
-    '😌': { comfort: 18, rest: 12, play: 8 }, // CALM
-    '🤩': { play: 20, social: 15, energy: 10 }, // EXCITED
-    '😑': { play: 15, energy: 12, work: 8 }, // BORED
-    '😔': { social: 18, comfort: 15, play: 10 }, // LONELY
-    '😴': { rest: 25, comfort: 15, energy: 8 }, // TIRED
-    '😰': { comfort: 20, rest: 12, social: 8 } // ANXIOUS
+    '😊': { play: 15, social: 12, food: 8 },
+    '😢': { comfort: 20, rest: 15, social: 10 },
+    '😌': { comfort: 18, rest: 12, play: 8 },
+    '🤩': { play: 20, social: 15, energy: 10 },
+    '😑': { play: 15, energy: 12, work: 8 },
+    '😔': { social: 18, comfort: 15, play: 10 },
+    '😴': { rest: 25, comfort: 15, energy: 8 },
+    '😰': { comfort: 20, rest: 12, social: 8 }
   };
 
   return compatibilityMap[mood]?.[zoneType] || 0;
@@ -475,13 +476,13 @@ export const generateSimpleMap = (): { zones: Zone[]; mapElements: MapElement[] 
  * Valida que el mapa generado tenga elementos esenciales
  */
 export const validateMapIntegrity = (zones: Zone[], mapElements: MapElement[]): boolean => {
-  // Verificar que existan zonas esenciales
+
   const essentialZoneTypes = ['food', 'rest', 'social'];
   const hasEssentialZones = essentialZoneTypes.every(type =>
     zones.some(zone => zone.type === type)
   );
 
-  // Verificar que las zonas no se superpongan excesivamente
+
   const hasValidBounds = zones.every(zone => 
     zone.bounds.width > 0 && 
     zone.bounds.height > 0 &&
@@ -489,7 +490,7 @@ export const validateMapIntegrity = (zones: Zone[], mapElements: MapElement[]): 
     zone.bounds.y >= 0
   );
 
-  // Verificar que haya elementos interactivos
+
   const hasInteractiveElements = mapElements.length > 5;
 
   const isValid = hasEssentialZones && hasValidBounds && hasInteractiveElements;
@@ -515,10 +516,10 @@ export const generateValidatedMap = (): { zones: Zone[]; mapElements: MapElement
   
   if (!validateMapIntegrity(mapData.zones, mapData.mapElements)) {
     logAutopoiesis.error('Mapa generado no pasó validación, usando fallback');
-    // En caso de fallo, retornar configuración mínima viable
+
     return {
-      zones: createDefaultZones().slice(0, 4), // Solo zonas esenciales
-      mapElements: createDefaultMapElements().slice(0, 8) // Elementos básicos
+      zones: createDefaultZones().slice(0, 4),
+      mapElements: createDefaultMapElements().slice(0, 8)
     };
   }
 

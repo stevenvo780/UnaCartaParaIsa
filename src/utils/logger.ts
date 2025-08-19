@@ -1,4 +1,4 @@
-// Simple logging system for development
+
 export const logger = {
   debug: (message: string, data?: any) => {
     if (console.debug) {
@@ -19,7 +19,7 @@ export const logger = {
   }
 };
 
-// Autopoiesis logging (simplified for now)
+
 export const logAutopoiesis = {
   debug: (message: string, data?: any) => {
     logger.debug(`[Autopoiesis] ${message}`, data);

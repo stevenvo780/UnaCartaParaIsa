@@ -1,3 +1,4 @@
+/*\n * Documentación científica (resumen):\n * - Índice inicial pseudoaleatorio (LCG), búsqueda circular filtrando por speaker/emoción/actividad.\n * - Degradación progresiva de filtros y fallback; hash de interacción para variar actividad objetivo.\n */
 /**
  * Sistema de Selección de Diálogos para Una Carta Para Isa
  * Carga y selecciona diálogos reales de conversaciones entre Isa y Stev
@@ -25,7 +26,7 @@ export const loadDialogueData = async (): Promise<void> => {
     
     dialogueData = await response.json();
     
-    // Índice inicial aleatorio basado en timestamp
+
     const seed = Date.now();
     currentIndex = Math.floor((seed * 1664525 + 1013904223) % 2147483647) % dialogueData.length;
     
@@ -79,32 +80,32 @@ export const getNextDialogue = (
       const activityMatch = !activity || dialogue.activity === activity;
 
       if (speakerMatch && emotionMatch && activityMatch) {
-        currentIndex = localIndex; // Actualizar índice principal
+        currentIndex = localIndex;
         return dialogue;
       }
     }
     return null;
   };
 
-  // Estrategia de búsqueda en orden de prioridad:
 
-  // 1. Coincidencia perfecta (speaker + emotion + activity)
+
+
   let dialogue = findDialogue(preferredSpeaker, preferredEmotion, preferredActivity);
   if (dialogue) return dialogue;
 
-  // 2. Speaker + activity (ignora emotion)
+
   dialogue = findDialogue(preferredSpeaker, undefined, preferredActivity);
   if (dialogue) return dialogue;
 
-  // 3. Speaker + emotion (ignora activity)
+
   dialogue = findDialogue(preferredSpeaker, preferredEmotion, undefined);
   if (dialogue) return dialogue;
 
-  // 4. Solo speaker
+
   dialogue = findDialogue(preferredSpeaker, undefined, undefined);
   if (dialogue) return dialogue;
 
-  // 5. Fallback: cualquier diálogo aleatorio
+
   const fallbackIndex = (Date.now() * 1664525 + 1013904223) % 2147483647;
   const selectedDialogue = dialogueData[Math.floor(fallbackIndex) % dialogueData.length];
 
@@ -147,7 +148,7 @@ export const getResponseWriter = (
 ): DialogueEntry | null => {
   const possibleEmotions = responseMap[lastDialogue.emotion] || responseMap.DEFAULT;
 
-  // Intentar con cada emoción posible
+
   for (const emotion of possibleEmotions) {
     const response = getNextDialogue(responderSpeaker, emotion, lastDialogue.activity);
     if (response) {
@@ -155,7 +156,7 @@ export const getResponseWriter = (
     }
   }
 
-  // Fallback: cualquier diálogo del responder
+
   return getNextDialogue(responderSpeaker);
 };
 
@@ -196,7 +197,7 @@ export const getDialogueForInteraction = (
 ): DialogueEntry | null => {
   const speaker = getSpeakerForEntity(entityId);
 
-  // Mapeo de interacciones a emociones y contextos
+
   const interactionMap: Record<
     string,
     { emotions: string[]; activities: string[]; priority?: string[] }
@@ -241,7 +242,7 @@ export const getDialogueForInteraction = (
   const config = interactionMap[interactionType.toUpperCase()];
   if (!config) return null;
 
-  // Priorizar emociones específicas si están definidas
+
   const emotionsToTry = config.priority
     ? [...config.priority, ...config.emotions]
     : config.emotions;
@@ -252,13 +253,13 @@ export const getDialogueForInteraction = (
   const activityIndex = Math.abs(interactionHash) % config.activities.length;
   const targetActivity = config.activities[activityIndex];
 
-  // Intentar con emociones prioritarias primero
+
   for (const emotion of emotionsToTry) {
     const dialogue = getNextDialogue(speaker, emotion, targetActivity);
     if (dialogue) return dialogue;
   }
 
-  // Si no encontramos nada específico, buscar con cualquier emoción válida
+
   return getNextDialogue(speaker, undefined, targetActivity);
 };
 

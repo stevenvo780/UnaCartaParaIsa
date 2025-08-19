@@ -19,7 +19,7 @@ export class GameLogicManager {
   private scene: Phaser.Scene;
   private gameState: GameState;
   private gameLoopTimer?: Phaser.Time.TimerEvent;
-  private entities: Map<string, any> = new Map(); // Will hold GameEntity instances
+  private entities: Map<string, any> = new Map();
   private eventEmitter: Phaser.Events.EventEmitter;
 
   constructor(scene: Phaser.Scene, initialGameState: GameState) {
@@ -59,20 +59,20 @@ export class GameLogicManager {
    * Main game logic update - separated from rendering
    */
   private updateGameLogic(): void {
-    // Update game cycles
+
     this.gameState.cycles++;
     
-    // Update all registered entities
+
     this.entities.forEach((entity, entityId) => {
       if (entity.updateEntity && typeof entity.updateEntity === 'function') {
         entity.updateEntity(gameConfig.timing.mainGameLogic);
       }
     });
 
-    // Calculate resonance between entities
+
     this.updateResonance();
     
-    // Emit update event for observers (UI, etc.)
+
     const updateData: GameUpdateData = {
       cycles: this.gameState.cycles,
       resonance: this.gameState.resonance,
@@ -82,7 +82,7 @@ export class GameLogicManager {
     
     this.eventEmitter.emit('gameLogicUpdate', updateData);
 
-    // Log periodic status
+
     if (this.gameState.cycles % GAME_BALANCE.CYCLE_LOG_FREQUENCY === 0) {
       this.logGameStatus();
     }
@@ -96,21 +96,21 @@ export class GameLogicManager {
     const stevEntity = this.entities.get('stev');
 
     if (isaEntity && stevEntity) {
-      // Get resonance from entities (they handle their own resonance calculations)
+
       const isaResonance = isaEntity.getResonance?.() || 0;
       const stevResonance = stevEntity.getResonance?.() || 0;
       
-      // Average resonance between entities
+
       this.gameState.resonance = (isaResonance + stevResonance) / 2;
       
-      // Update together time if entities are close
+
       const isaPos = isaEntity.getPosition?.() || { x: 0, y: 0 };
       const stevPos = stevEntity.getPosition?.() || { x: 0, y: 0 };
       const distance = Math.sqrt(
         Math.pow(isaPos.x - stevPos.x, 2) + Math.pow(isaPos.y - stevPos.y, 2)
       );
       
-      if (distance < 100) { // Close together
+      if (distance < 100) {
         this.gameState.togetherTime += gameConfig.timing.mainGameLogic;
       }
     }
@@ -144,7 +144,7 @@ export class GameLogicManager {
       return;
     }
 
-    // Update game state for interaction
+
     this.gameState.connectionAnimation = {
       active: true,
       startTime: Date.now(),
@@ -152,7 +152,7 @@ export class GameLogicManager {
       entityId
     };
 
-    // Emit interaction event
+
     this.eventEmitter.emit('playerInteraction', {
       entityId,
       interactionType,

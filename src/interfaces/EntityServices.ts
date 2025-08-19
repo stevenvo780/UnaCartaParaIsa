@@ -113,7 +113,7 @@ export interface IEntityServices {
  */
 export class EntityServicesFactory {
   static create(): IEntityServices {
-    // Lazy imports para evitar dependencias circulares
+
     const { gameConfig } = require('../config/gameConfig');
     const { logAutopoiesis } = require('../utils/logger');
     const activityDynamics = require('../utils/activityDynamics');

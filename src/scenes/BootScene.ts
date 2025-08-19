@@ -1,58 +1,87 @@
 import Phaser from 'phaser';
+import { AssetManager } from '../managers/AssetManager';
+import { AnimationManager } from '../managers/AnimationManager';
+import { logAutopoiesis } from '../utils/logger';
 
 export class BootScene extends Phaser.Scene {
+  private assetManager!: AssetManager;
+  private animationManager!: AnimationManager;
+
   constructor() {
     super({ key: 'BootScene' });
   }
 
-  preload() {
-    // Hide loading screen once boot is complete
-    const loadingElement = document.getElementById('loading');
-    if (loadingElement) {
-      loadingElement.classList.add('fade-out');
-      setTimeout(() => {
-        loadingElement.style.display = 'none';
-      }, 500);
-    }
+  async preload() {
+    // Initialize managers
+    this.assetManager = new AssetManager(this);
+    this.animationManager = new AnimationManager(this);
 
-    // Load entity sprites
-    this.load.image('isa-happy', 'assets/animated_entities/entidad_circulo_happy_anim.png');
-    this.load.image('isa-sad', 'assets/animated_entities/entidad_circulo_sad_anim.png');
-    this.load.image('isa-dying', 'assets/animated_entities/entidad_circulo_dying_anim.png');
-    this.load.image('stev-happy', 'assets/animated_entities/entidad_square_happy_anim.png');
-    this.load.image('stev-sad', 'assets/animated_entities/entidad_square_sad_anim.png');
-    this.load.image('stev-dying', 'assets/animated_entities/entidad_square_dying_anim.png');
+    // Hide loading screen
+    this.hideLoadingScreen();
+    
+    try {
+      // Validate assets first
+      const missingAssets = await this.assetManager.validateAssets();
+      if (missingAssets.length > 0) {
+singAssets.length} assets, will use fallbacks`);
+      }
+      
+      // Load sprite sheets for animations
+adAllSpriteSheets();
+      
+      // Load all assets with fallbacks
+      const loadResult = await this.assetManager.loadAllAssets();
+      
 
-    // Load person sprites as alternatives
-    this.load.image('woman', 'assets/entities/ent_woman.png');
-    this.load.image('man', 'assets/entities/ent_man.png');
+        logAutopoiesis.error('Critical asset loading failure', loadResult);
+        this.showAssetError(loadResult.failedAssets);
+        return;
+      }
+      
+tions after assets are loaded
+      this.animationManager.createAllAnimations();
+      
+      // Store animation manager globally for other scenes
+      this.registry.set('animationManager', this.animationManager);
+      
+      logAutopoiesis.info('Boot completed successfully', {
+        assets: {
+          loaded: loadResult.loadedAssets.length,
+          fallbacks: loadResult.fallbacksUsed.length
+        },
+        animations: this.animationManager.getStats()
+      });
 
-    // Load environment assets
-    this.load.image('campfire', 'assets/animated_entities/campfire.png');
-    this.load.image('flowers-red', 'assets/animated_entities/flowers_red.png');
-    this.load.image('flowers-white', 'assets/animated_entities/flowers_white.png');
-
-    // Load terrain and background assets
-    this.load.image('grass-1', 'assets/terrain/base/cesped1.png');
-    this.load.image('grass-2', 'assets/terrain/base/cesped2.png');
-    this.load.image('grass-3', 'assets/terrain/base/cesped3.png');
-    this.load.image('grass-base', 'assets/terrain/base/Grass_Middle.png');
-
-    // Progress indicator
-    this.load.on('progress', (progress: number) => {
-      console.log(`🔄 Loading assets: ${Math.round(progress * 100)}%`);
-    });
-
-    this.load.on('complete', () => {
-      console.log('🚀 Boot complete, starting main scene');
+      // Proceed to main scenes
+      console.log('🚀 Boot complete with animations, starting main scene');
       this.scene.start('MainScene');
       this.scene.launch('UIScene');
-    });
+      
+    } catch (error) {
+      logAutopoiesis.error('Boot scene critical error', { error: error.toString() });
+      this.showCriticalError(error);
+    }
   }
 
   create() {
     // Setup global events and initial state
     this.events.emit('bootComplete');
+    
+    // Test animation system
+    if (this.animationManager) {
+      const stats = this.animationManager.getStats();
+      const animations = this.animationManager.getAnimationsByCategory();
+      
+      logAutopoiesis.info('Animation system ready', {
+        stats,
+        categories: {
+          entities: animations.entities.length,
+          environment: animations.environment.length,
+          ui: animations.ui.length,
+          animals: animations.animals.length
+        }
+      });
+    }
   }
   
   /**
@@ -112,9 +141,12 @@ export class BootScene extends Phaser.Scene {
   }
   
   /**
-   * Get loading statistics
+   * Get loading statistics including animations
    */
-  public getAssetStats() {
-    return this.assetManager?.getLoadingStats() || { loaded: 0, failed: 0, fallbacks: 0 };
+  public getBootStats() {
+    return {
+      assets: this.assetManager?.getLoadingStats() || { loaded: 0, failed: 0, fallbacks: 0 },
+      animations: this.animationManager?.getStats() || { createdAnimations: 0, loadedSpriteSheets: 0 }
+    };
   }
 }

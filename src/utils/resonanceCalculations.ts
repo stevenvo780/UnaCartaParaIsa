@@ -1,9 +1,10 @@
+/*\n * Documentación científica (resumen):\n * - Sigmoide: s(x,k)=1/(1+e^{-k·x}) para mapear armonía a [0,1].\n * - Decaimiento exponencial: e^{-λ·x} para atenuar distancia/tiempo.\n * - Normalización log: log(1 + d/D)/log(2) evita saturación a largas distancias.\n * - Cercanía logística centrada en d0 con escala s: 1/(1+e^{(dist-d0)/s}).\n * - ΔResonancia = (ganancia − separación − estrés)·(Δt/1000), acotada con clamp y redondeo preciso.\n */
 /**
  * Sistema de cálculos de resonancia matemática entre entidades
  * Migrado de Dúo Eterno - preserva exactitud científica
  */
 
-// Constantes para precisión matemática
+
 export const PRECISION_CONSTANTS = {
   HIGH_PRECISION_EPSILON: 1e-12,
   EFFECTIVE_ZERO: 1e-10,
@@ -180,7 +181,7 @@ export const calculateCloseness = (
     return 0;
   }
 
-  // Función sigmoide para cercanía: 1 / (1 + exp((distance - bondDistance) / distanceScale))
+
   return 1 / (1 + Math.exp((distance - bondDistance) / distanceScale));
 };
 
@@ -203,7 +204,7 @@ export const calculateProximityResonanceChange = (
   effect: 'BONDING' | 'SEPARATION' | 'NEUTRAL';
   closeness: number;
 } => {
-  // Calcular distancia euclidiana
+
   const distance = Math.sqrt(
     Math.pow(isaPosition.x - stevPosition.x, 2) +
     Math.pow(isaPosition.y - stevPosition.y, 2)
@@ -211,36 +212,36 @@ export const calculateProximityResonanceChange = (
 
   const closeness = calculateCloseness(distance);
 
-  // Calcular bonus de ánimo basado en las estadísticas
+
   const isaMood = (isaStats.happiness + isaStats.energy + isaStats.health) / 3;
   const stevMood = (stevStats.happiness + stevStats.energy + stevStats.health) / 3;
-  const moodBonus = (isaMood + stevMood) / 200; // Normalizado 0-1
+  const moodBonus = (isaMood + stevMood) / 200;
 
-  // Calcular sinergia (compatibilidad de estados)
+
   const statDifference = Math.abs(isaMood - stevMood);
   const synergy = Math.max(0, 1 - statDifference / 100);
 
-  // Constantes de configuración
+
   const BOND_GAIN_PER_SEC = 2.5;
   const SEPARATION_DECAY = 1.8;
   const STRESS_DECAY = 0.7;
 
-  // Calcular ganancia por cercanía
+
   const gain = BOND_GAIN_PER_SEC * closeness * moodBonus * synergy * (1 - currentResonance / 100);
 
-  // Calcular pérdida por separación
+
   const separation = SEPARATION_DECAY * (1 - closeness) * (currentResonance / 100);
 
-  // Calcular pérdida por estrés (si las estadísticas están críticas)
+
   const criticalStatsCount = [isaStats, stevStats].reduce((count, stats) => {
     return count + Object.values(stats).filter(stat => stat < 20).length;
   }, 0);
   const stress = STRESS_DECAY * criticalStatsCount * (currentResonance / 100);
 
-  // Cambio total en resonancia
+
   const resonanceChange = (gain - separation - stress) * (deltaTime / 1000);
 
-  // Determinar efecto dominante
+
   let effect: 'BONDING' | 'SEPARATION' | 'NEUTRAL';
   if (resonanceChange > 0.1) {
     effect = 'BONDING';
@@ -275,14 +276,14 @@ export const calculateResonanceModifiers = (
   const resonanceNormalized = safeClamp(resonance, 0, 100) / 100;
   const proximityNormalized = safeClamp(proximity, 0, 1);
 
-  // Los efectos de resonancia son más fuertes cuando hay proximidad
+
   const effectStrength = resonanceNormalized * proximityNormalized;
 
   return {
-    happinessMultiplier: 1 + effectStrength * 0.3, // Hasta 30% boost
-    energyMultiplier: 1 + effectStrength * 0.2,    // Hasta 20% boost
-    healthMultiplier: 1 + effectStrength * 0.15,   // Hasta 15% boost
-    lonelinessPenalty: 1 - effectStrength * 0.5    // Hasta 50% reducción
+    happinessMultiplier: 1 + effectStrength * 0.3,
+    energyMultiplier: 1 + effectStrength * 0.2,
+    healthMultiplier: 1 + effectStrength * 0.15,
+    lonelinessPenalty: 1 - effectStrength * 0.5
   };
 };
 

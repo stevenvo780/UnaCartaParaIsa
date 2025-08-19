@@ -42,16 +42,16 @@ export class WorldRenderer {
     const worldWidth = this.gameState.worldSize.width;
     const worldHeight = this.gameState.worldSize.height;
 
-    // Create grass background tiles
+
     for (let x = 0; x < worldWidth; x += tileSize) {
       for (let y = 0; y < worldHeight; y += tileSize) {
-        // Randomly choose between different grass tiles for variety
+
         const grassTypes = ['grass-1', 'grass-2', 'grass-3', 'grass-base'];
         const randomGrass = grassTypes[Math.floor(Math.random() * grassTypes.length)];
         
         const grassTile = this.scene.add.image(x + tileSize/2, y + tileSize/2, randomGrass);
         grassTile.setDisplaySize(tileSize, tileSize);
-        grassTile.setDepth(0); // Background layer
+        grassTile.setDepth(0);
         
         this.renderedObjects.set(`grass_${x}_${y}`, grassTile);
       }
@@ -75,8 +75,8 @@ export class WorldRenderer {
    * Render a single zone
    */
   private renderSingleZone(zone: Zone, index: number): void {
-    // Parse color string to hex number
-    let colorValue = GAME_BALANCE.ZONES.SOCIAL_COLOR; // Default
+
+    let colorValue = GAME_BALANCE.ZONES.SOCIAL_COLOR;
     if (zone.color.startsWith('rgba(')) {
       const rgbaMatch = zone.color.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);
       if (rgbaMatch) {
@@ -85,7 +85,7 @@ export class WorldRenderer {
       }
     }
 
-    // Create zone rectangle
+
     const zoneRect = this.scene.add.rectangle(
       zone.bounds.x + zone.bounds.width / 2,
       zone.bounds.y + zone.bounds.height / 2,
@@ -101,7 +101,7 @@ export class WorldRenderer {
     );
     zoneRect.setDepth(GAME_BALANCE.ZONES.DEPTH);
 
-    // Zone label
+
     const label = this.scene.add.text(
       zone.bounds.x + zone.bounds.width / 2,
       zone.bounds.y + zone.bounds.height / 2,
@@ -118,7 +118,7 @@ export class WorldRenderer {
     label.setDepth(3);
     label.setStroke('#000000', 3);
 
-    // Store references
+
     this.renderedObjects.set(`zone_${zone.id}`, zoneRect);
     this.renderedObjects.set(`zone_label_${zone.id}`, label);
   }
@@ -157,7 +157,7 @@ export class WorldRenderer {
    * Create decorative elements
    */
   private renderDecorations(): void {
-    // Predefined decorations for a beautiful world
+
     const decorations = [
       { x: 150, y: 120, sprite: 'flowers-red' },
       { x: 300, y: 180, sprite: 'flowers-white' },
@@ -182,7 +182,7 @@ export class WorldRenderer {
    * Create activity zones with improved visuals
    */
   public createActivityZones(): void {
-    // Enhanced visual zones
+
     const activityZones = [
       { 
         x: 100, y: 100, width: 200, height: 150, 
@@ -202,7 +202,7 @@ export class WorldRenderer {
     ];
 
     activityZones.forEach((zone, index) => {
-      // Create zone background
+
       const zoneRect = this.scene.add.rectangle(
         zone.x + zone.width / 2,
         zone.y + zone.height / 2,
@@ -214,7 +214,7 @@ export class WorldRenderer {
       zoneRect.setStrokeStyle(3, zone.color, 0.6);
       zoneRect.setDepth(2);
       
-      // Add zone label
+
       const label = this.scene.add.text(
         zone.x + zone.width / 2,
         zone.y + zone.height / 2,
@@ -239,8 +239,8 @@ export class WorldRenderer {
    * Update visual elements that change over time
    */
   public updateVisuals(): void {
-    // Add any visual updates that need to happen each frame
-    // For example, pulsing effects, color changes, etc.
+
+
   }
 
   /**
