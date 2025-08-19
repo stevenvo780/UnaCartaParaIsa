@@ -2,7 +2,7 @@
  * Tipos relacionados con actividades de entidades
  */
 
-export type ActivityType = 
+export type ActivityType =
   | 'RESTING'
   | 'MEDITATING'
   | 'SOCIALIZING'

@@ -7,7 +7,7 @@ import { logAutopoiesis } from '../utils/logger';
 
 /*
  * Documentación científica (resumen):
- * - Carga validada con fallbacks programáticos para estabilidad. 
+ * - Carga validada con fallbacks programáticos para estabilidad.
  * - Spritesheets + creación de animaciones tras la fase de carga.
  * - Flujo: validar → preparar spritesheets → cargar → crear animaciones → cambiar de escena.
  */
@@ -36,13 +36,13 @@ export class BootScene extends Phaser.Scene {
 
       // FASE 1: Cargar solo assets críticos para iniciar rápido
       await this.lazyLoader.loadCriticalAssets();
-      
+
       // FASE 2: Preparar spritesheets críticos para animaciones
       this.animationManager.loadCriticalSpriteSheets();
-      
+
       // FASE 3: Crear animaciones básicas
       this.animationManager.createCriticalAnimations();
-      
+
       // FASE 4: Cargar assets esenciales de comida
       await this.foodAssetManager.loadEssentialFoodAssets();
 
@@ -53,24 +53,25 @@ export class BootScene extends Phaser.Scene {
 
       // Obtener stats de carga inicial
       const lazyStats = this.lazyLoader.getLoadingStats();
-      
+
       logAutopoiesis.info('Boot rápido completado', {
         criticalAssets: lazyStats.loadedAssets,
         totalAssets: lazyStats.totalAssets,
-        loadProgress: lazyStats.loadProgress.toFixed(1) + '%',
-        remainingAssets: lazyStats.pendingAssets
+        loadProgress: `${lazyStats.loadProgress.toFixed(1)}%`,
+        remainingAssets: lazyStats.pendingAssets,
       });
 
       // Cambiar a escenas principales inmediatamente
       this.scene.start('MainScene');
       this.scene.launch('UIScene');
-      
+
       // FASE 4: Cargar assets restantes en background
       this.startBackgroundLoading();
-
     } catch (error: any) {
-      logAutopoiesis.error('Error crítico en BootScene optimizado', { error: error?.toString?.() || String(error) });
-      
+      logAutopoiesis.error('Error crítico en BootScene optimizado', {
+        error: error?.toString?.() || String(error),
+      });
+
       // Fallback: usar sistema tradicional
       await this.fallbackToTraditionalLoading();
     }
@@ -84,24 +85,24 @@ export class BootScene extends Phaser.Scene {
     setTimeout(async () => {
       try {
         logAutopoiesis.info('🔄 Iniciando carga en background...');
-        
+
         // Cargar prioridad media
         await this.lazyLoader.loadAssetsByPriority('medium');
-        
+
         // Luego prioridad baja
         setTimeout(async () => {
           await this.lazyLoader.loadAssetsByPriority('low');
-          
+
           const finalStats = this.lazyLoader.getLoadingStats();
           logAutopoiesis.info('✅ Carga completa finalizada', {
             totalLoaded: finalStats.loadedAssets,
-            loadProgress: finalStats.loadProgress.toFixed(1) + '%'
+            loadProgress: `${finalStats.loadProgress.toFixed(1)}%`,
           });
-          
         }, 2000); // Esperar 2 segundos antes de cargar prioridad baja
-        
       } catch (error) {
-        logAutopoiesis.warn('Error en carga background', { error: String(error) });
+        logAutopoiesis.warn('Error en carga background', {
+          error: String(error),
+        });
       }
     }, 1000); // Empezar carga background después de 1 segundo
   }
@@ -111,12 +112,15 @@ export class BootScene extends Phaser.Scene {
    */
   private async fallbackToTraditionalLoading(): Promise<void> {
     logAutopoiesis.warn('🔄 Usando carga tradicional como fallback...');
-    
+
     try {
       // Validar assets tradicionales
       const missingAssets = await this.assetManager.validateAssets();
       if (missingAssets.length > 0) {
-        logAutopoiesis.warn(`Assets faltantes: ${missingAssets.length}, se usarán fallbacks`, { missingAssets });
+        logAutopoiesis.warn(
+          `Assets faltantes: ${missingAssets.length}, se usarán fallbacks`,
+          { missingAssets }
+        );
       }
 
       // Cargar con sistema tradicional
@@ -136,9 +140,10 @@ export class BootScene extends Phaser.Scene {
       // Iniciar juego
       this.scene.start('MainScene');
       this.scene.launch('UIScene');
-
     } catch (error) {
-      logAutopoiesis.error('Fallo completo en carga de assets', { error: String(error) });
+      logAutopoiesis.error('Fallo completo en carga de assets', {
+        error: String(error),
+      });
       this.showCriticalError(error);
     }
   }
@@ -156,8 +161,8 @@ export class BootScene extends Phaser.Scene {
           entities: animations.entities.length,
           environment: animations.environment.length,
           ui: animations.ui.length,
-          animals: animations.animals.length
-        }
+          animals: animations.animals.length,
+        },
       });
     }
   }
@@ -180,7 +185,7 @@ export class BootScene extends Phaser.Scene {
       `Falló la carga de: ${failedAssets.slice(0, 3).join(', ')}`,
       failedAssets.length > 3 ? `y ${failedAssets.length - 3} más...` : '',
       '',
-      'Presiona cualquier tecla para continuar con fallbacks'
+      'Presiona cualquier tecla para continuar con fallbacks',
     ].filter(Boolean);
 
     const errorText = this.add
@@ -188,7 +193,7 @@ export class BootScene extends Phaser.Scene {
         fontSize: '16px',
         color: '#e74c3c',
         align: 'center',
-        fontFamily: 'Arial'
+        fontFamily: 'Arial',
       })
       .setOrigin(0.5);
 
@@ -212,13 +217,13 @@ export class BootScene extends Phaser.Scene {
           '',
           `Error: ${message}`,
           '',
-          'Recarga la página para intentar de nuevo'
+          'Recarga la página para intentar de nuevo',
         ].join('\n'),
         {
           fontSize: '14px',
           color: '#c0392b',
           align: 'center',
-          fontFamily: 'Arial'
+          fontFamily: 'Arial',
         }
       )
       .setOrigin(0.5);
@@ -227,14 +232,17 @@ export class BootScene extends Phaser.Scene {
   // Estadísticas de boot
   public getBootStats() {
     return {
-      assets: this.assetManager?.getLoadingStats() || { loaded: 0, failed: 0, fallbacks: 0 },
+      assets: this.assetManager?.getLoadingStats() || {
+        loaded: 0,
+        failed: 0,
+        fallbacks: 0,
+      },
       animations: this.animationManager?.getStats() || {
         loadedSpriteSheets: 0,
         createdAnimations: 0,
         totalConfigs: 0,
-        successRate: 0
-      }
+        successRate: 0,
+      },
     };
   }
 }
-

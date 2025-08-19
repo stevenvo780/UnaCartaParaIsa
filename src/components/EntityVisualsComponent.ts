@@ -3,23 +3,23 @@
  * Separa la lógica visual del GameEntity
  */
 
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 import type { MoodType } from '../types';
 import { GAME_BALANCE } from '../constants/gameBalance';
 
 export class EntityVisualsComponent {
   private sprite: Phaser.Physics.Arcade.Sprite;
   private currentSprite: string;
-  private pulsePhase: number = 0;
+  private pulsePhase = 0;
 
   constructor(
     sprite: Phaser.Physics.Arcade.Sprite,
-    entityId: 'isa' | 'stev',
+    _entityId: 'isa' | 'stev',
     initialSprite: string
   ) {
     this.sprite = sprite;
     this.currentSprite = initialSprite;
-    
+
     this.setupVisuals();
   }
 
@@ -30,7 +30,7 @@ export class EntityVisualsComponent {
     this.sprite.setScale(GAME_BALANCE.VISUALS.ENTITY_SCALE);
     this.sprite.setOrigin(0.5, 0.5);
     this.sprite.setInteractive();
-    
+
     // Configuración de físicas
     if (this.sprite.body) {
       this.sprite.body.setSize(
@@ -59,18 +59,18 @@ export class EntityVisualsComponent {
    */
   updateMoodVisuals(mood: MoodType): void {
     const moodColors = {
-      '😊': 0x90EE90, // Light Green
-      '😢': 0x4682B4, // Steel Blue
-      '😡': 0xFF6347, // Tomato
-      '😌': 0xDDA0DD, // Plum
-      '🤩': 0xFFD700, // Gold
+      '😊': 0x90ee90, // Light Green
+      '😢': 0x4682b4, // Steel Blue
+      '😡': 0xff6347, // Tomato
+      '😌': 0xdda0dd, // Plum
+      '🤩': 0xffd700, // Gold
       '😑': 0x808080, // Gray
-      '😔': 0x483D8B, // Dark Slate Blue
-      '😰': 0xFF4500, // Orange Red
-      '😴': 0x6A5ACD  // Slate Blue
+      '😔': 0x483d8b, // Dark Slate Blue
+      '😰': 0xff4500, // Orange Red
+      '😴': 0x6a5acd, // Slate Blue
     };
 
-    const tint = moodColors[mood] || 0xFFFFFF;
+    const tint = moodColors[mood] || 0xffffff;
     this.sprite.setTint(tint);
   }
 
@@ -96,7 +96,7 @@ export class EntityVisualsComponent {
   getPosition(): { x: number; y: number } {
     return {
       x: this.sprite.x,
-      y: this.sprite.y
+      y: this.sprite.y,
     };
   }
 
@@ -105,7 +105,7 @@ export class EntityVisualsComponent {
    */
   setVelocity(x: number, y: number): void {
     if (this.sprite.body && 'setVelocity' in this.sprite.body) {
-      (this.sprite.body as Phaser.Physics.Arcade.Body).setVelocity(x, y);
+      this.sprite.body.setVelocity(x, y);
     }
   }
 

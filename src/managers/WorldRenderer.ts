@@ -13,35 +13,41 @@ import type { GeneratedWorld } from '../world/types';
 export class WorldRenderer {
   private scene: Phaser.Scene;
   private gameState: GameState;
-  private renderedObjects: Map<string, Phaser.GameObjects.GameObject> = new Map();
+  private renderedObjects = new Map<string, Phaser.GameObjects.GameObject>();
   private zoneGraphics: Phaser.GameObjects.Graphics[] = [];
   private animationManager?: AnimationManager;
   private decorationSprites: Phaser.GameObjects.Sprite[] = [];
-  private lastCullingUpdate: number = 0;
+  private lastCullingUpdate = 0;
   private readonly CULLING_UPDATE_INTERVAL = 100; // Update every 100ms
-  
+
   // Sistema simplificado de assets creativos
   private biomeAssetRenderer?: BiomeAssetRenderer;
-  private useCreativeAssets: boolean = true;
+  private useCreativeAssets = true;
 
   constructor(scene: Phaser.Scene, gameState: GameState) {
     this.scene = scene;
     this.gameState = gameState;
-    
+
     // Crear renderizador de assets creativos
     this.biomeAssetRenderer = new BiomeAssetRenderer(scene);
-    
+
     // Get animation manager from scene registry with type safety
     const animManager = scene.registry.get('animationManager');
     if (animManager && animManager instanceof AnimationManager) {
       this.animationManager = animManager;
-      logAutopoiesis.info('AnimationManager available in WorldRenderer, using animated decorations');
+      logAutopoiesis.info(
+        'AnimationManager available in WorldRenderer, using animated decorations'
+      );
     } else {
       this.animationManager = undefined;
-      logAutopoiesis.warn('AnimationManager not available in WorldRenderer, using static decorations');
+      logAutopoiesis.warn(
+        'AnimationManager not available in WorldRenderer, using static decorations'
+      );
     }
 
-    logAutopoiesis.info('WorldRenderer inicializado con sistema de assets creativos');
+    logAutopoiesis.info(
+      'WorldRenderer inicializado con sistema de assets creativos'
+    );
   }
 
   /**
@@ -60,26 +66,32 @@ export class WorldRenderer {
   /**
    * Renderiza el mundo usando assets creativos reales
    */
-  private async renderWorldWithCreativeAssets(world: GeneratedWorld): Promise<void> {
+  private async renderWorldWithCreativeAssets(
+    world: GeneratedWorld
+  ): Promise<void> {
     logAutopoiesis.info('🎨 Renderizando mundo con assets creativos reales');
-    
+
     try {
       // Renderizar usando BiomeAssetRenderer
       await this.biomeAssetRenderer!.renderWorldWithRealAssets(world);
-      
+
       // Renderizar zonas encima de los assets
       this.renderZones();
-      
+
       // Renderizar elementos interactivos
       this.renderMapElements();
-      
+
       // Renderizar decoraciones animadas
       this.renderDecorations();
-      
-      logAutopoiesis.info('✅ Mundo renderizado exitosamente con assets creativos');
-      
+
+      logAutopoiesis.info(
+        '✅ Mundo renderizado exitosamente con assets creativos'
+      );
     } catch (error) {
-      logAutopoiesis.error('❌ Error renderizando con assets creativos, fallback a sistema anterior', error);
+      logAutopoiesis.error(
+        '❌ Error renderizando con assets creativos, fallback a sistema anterior',
+        error
+      );
       this.renderWorldLegacy();
     }
   }
@@ -92,11 +104,11 @@ export class WorldRenderer {
     this.renderZones();
     this.renderMapElements();
     this.renderDecorations();
-    
+
     logAutopoiesis.info('World rendering completed', {
       zones: this.gameState.zones.length,
       elements: this.gameState.mapElements.length,
-      objects: this.renderedObjects.size
+      objects: this.renderedObjects.size,
     });
   }
 
@@ -108,23 +120,27 @@ export class WorldRenderer {
     const worldWidth = this.gameState.worldSize.width;
     const worldHeight = this.gameState.worldSize.height;
 
-
     for (let x = 0; x < worldWidth; x += tileSize) {
       for (let y = 0; y < worldHeight; y += tileSize) {
-
         const grassTypes = ['grass-1', 'grass-2', 'grass-3', 'grass-base'];
-        const randomGrass = grassTypes[Math.floor(Math.random() * grassTypes.length)];
-        
-        const grassTile = this.scene.add.image(x + tileSize/2, y + tileSize/2, randomGrass);
+        const randomGrass =
+          grassTypes[Math.floor(Math.random() * grassTypes.length)];
+
+        const grassTile = this.scene.add.image(
+          x + tileSize / 2,
+          y + tileSize / 2,
+          randomGrass
+        );
         grassTile.setDisplaySize(tileSize, tileSize);
         grassTile.setDepth(0);
-        
+
         this.renderedObjects.set(`grass_${x}_${y}`, grassTile);
       }
     }
 
     logAutopoiesis.debug('World background created', {
-      tileCount: Math.ceil(worldWidth / tileSize) * Math.ceil(worldHeight / tileSize)
+      tileCount:
+        Math.ceil(worldWidth / tileSize) * Math.ceil(worldHeight / tileSize),
     });
   }
 
@@ -141,16 +157,14 @@ export class WorldRenderer {
    * Render a single zone
    */
   private renderSingleZone(zone: Zone, _index: number): void {
-
     let colorValue: number = GAME_BALANCE.ZONES.SOCIAL_COLOR;
     if (zone.color.startsWith('rgba(')) {
-      const rgbaMatch = zone.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      const rgbaMatch = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(zone.color);
       if (rgbaMatch) {
         const [, r, g, b] = rgbaMatch.map(Number);
         colorValue = (r << 16) | (g << 8) | b;
       }
     }
-
 
     const zoneRect = this.scene.add.rectangle(
       zone.bounds.x + zone.bounds.width / 2,
@@ -167,7 +181,6 @@ export class WorldRenderer {
     );
     zoneRect.setDepth(GAME_BALANCE.ZONES.DEPTH);
 
-
     const label = this.scene.add.text(
       zone.bounds.x + zone.bounds.width / 2,
       zone.bounds.y + zone.bounds.height / 2,
@@ -177,13 +190,12 @@ export class WorldRenderer {
         color: '#ffffff',
         fontFamily: 'Arial',
         fontStyle: 'bold',
-        align: 'center'
+        align: 'center',
       }
     );
     label.setOrigin(0.5);
     label.setDepth(3);
     label.setStroke('#000000', 3);
-
 
     this.renderedObjects.set(`zone_${zone.id}`, zoneRect);
     this.renderedObjects.set(`zone_label_${zone.id}`, label);
@@ -202,8 +214,10 @@ export class WorldRenderer {
    * Render a single map element
    */
   private renderSingleMapElement(element: MapElement, _index: number): void {
-    const colorValue = typeof element.color === 'string' ? 
-      parseInt(element.color.replace('#', ''), 16) : element.color;
+    const colorValue =
+      typeof element.color === 'string'
+        ? parseInt(element.color.replace('#', ''), 16)
+        : element.color;
 
     const elementRect = this.scene.add.rectangle(
       element.position.x + element.size.width / 2,
@@ -224,34 +238,77 @@ export class WorldRenderer {
    */
   private renderDecorations(): void {
     const animatedDecorations = [
-      { x: 150, y: 120, animation: 'flowers_red_sway', fallbackSprite: 'flowers-red' },
-      { x: 300, y: 180, animation: 'flowers_white_sway', fallbackSprite: 'flowers-white' },
-      { x: 500, y: 250, animation: 'campfire_burning', fallbackSprite: 'campfire' },
-      { x: 650, y: 150, animation: 'flowers_red_sway', fallbackSprite: 'flowers-red' },
-      { x: 800, y: 300, animation: 'flowers_white_sway', fallbackSprite: 'flowers-white' },
-      { x: 200, y: 400, animation: 'campfire_burning', fallbackSprite: 'campfire' },
-      { x: 750, y: 450, animation: 'flag_wave', fallbackSprite: 'checkpoint-flag' },
-      { x: 600, y: 500, animation: 'flag_wave', fallbackSprite: 'checkpoint-flag' }
+      {
+        x: 150,
+        y: 120,
+        animation: 'flowers_red_sway',
+        fallbackSprite: 'flowers-red',
+      },
+      {
+        x: 300,
+        y: 180,
+        animation: 'flowers_white_sway',
+        fallbackSprite: 'flowers-white',
+      },
+      {
+        x: 500,
+        y: 250,
+        animation: 'campfire_burning',
+        fallbackSprite: 'campfire',
+      },
+      {
+        x: 650,
+        y: 150,
+        animation: 'flowers_red_sway',
+        fallbackSprite: 'flowers-red',
+      },
+      {
+        x: 800,
+        y: 300,
+        animation: 'flowers_white_sway',
+        fallbackSprite: 'flowers-white',
+      },
+      {
+        x: 200,
+        y: 400,
+        animation: 'campfire_burning',
+        fallbackSprite: 'campfire',
+      },
+      {
+        x: 750,
+        y: 450,
+        animation: 'flag_wave',
+        fallbackSprite: 'checkpoint-flag',
+      },
+      {
+        x: 600,
+        y: 500,
+        animation: 'flag_wave',
+        fallbackSprite: 'checkpoint-flag',
+      },
     ];
 
     animatedDecorations.forEach((deco, index) => {
       let decoration: Phaser.GameObjects.Sprite;
-      
+
       // Try to create animated decoration with validation
-      if (this.animationManager && this.animationManager.hasAnimation(deco.animation)) {
+      if (this.animationManager?.hasAnimation(deco.animation)) {
         const animatedSprite = this.animationManager.createAnimatedSprite(
-          deco.x, 
-          deco.y, 
-          deco.animation, 
+          deco.x,
+          deco.y,
+          deco.animation,
           true
         );
-        
+
         if (animatedSprite) {
           decoration = animatedSprite;
-          logAutopoiesis.debug(`Created animated decoration: ${deco.animation}`, {
-            x: deco.x, 
-            y: deco.y
-          });
+          logAutopoiesis.debug(
+            `Created animated decoration: ${deco.animation}`,
+            {
+              x: deco.x,
+              y: deco.y,
+            }
+          );
         } else {
           // Fallback to static sprite if animation creation failed
           decoration = this.createFallbackDecoration(deco);
@@ -260,53 +317,70 @@ export class WorldRenderer {
         // No animation manager or animation not found, use static sprite
         decoration = this.createFallbackDecoration(deco);
       }
-      
+
       // Set common properties
       decoration.setScale(GAME_BALANCE.DECORATIONS.CAMPFIRE_SCALE);
       decoration.setDepth(GAME_BALANCE.DECORATIONS.DECORATION_DEPTH);
-      
+
       // Add random slight variations
       decoration.setRotation((Math.random() - 0.5) * 0.2);
       const scaleVariation = 0.8 + Math.random() * 0.4;
-      decoration.setScale(GAME_BALANCE.DECORATIONS.CAMPFIRE_SCALE * scaleVariation);
-      
+      decoration.setScale(
+        GAME_BALANCE.DECORATIONS.CAMPFIRE_SCALE * scaleVariation
+      );
+
       // Store decoration in both maps for tracking
       this.renderedObjects.set(`decoration_${index}`, decoration);
       this.decorationSprites.push(decoration);
     });
 
-    logAutopoiesis.info('Animated decorations rendered', { 
+    logAutopoiesis.info('Animated decorations rendered', {
       count: animatedDecorations.length,
-      animated: !!this.animationManager
+      animated: !!this.animationManager,
     });
   }
 
   /**
    * Create fallback decoration with validation
    */
-  private createFallbackDecoration(deco: { x: number; y: number; fallbackSprite: string; animation: string }): Phaser.GameObjects.Sprite {
+  private createFallbackDecoration(deco: {
+    x: number;
+    y: number;
+    fallbackSprite: string;
+    animation: string;
+  }): Phaser.GameObjects.Sprite {
     // Check if fallback sprite exists
     if (this.scene.textures.exists(deco.fallbackSprite)) {
-      const decoration = this.scene.add.sprite(deco.x, deco.y, deco.fallbackSprite);
-      logAutopoiesis.debug(`Created fallback decoration: ${deco.fallbackSprite}`, {
-        x: deco.x,
-        y: deco.y,
-        originalAnimation: deco.animation
-      });
+      const decoration = this.scene.add.sprite(
+        deco.x,
+        deco.y,
+        deco.fallbackSprite
+      );
+      logAutopoiesis.debug(
+        `Created fallback decoration: ${deco.fallbackSprite}`,
+        {
+          x: deco.x,
+          y: deco.y,
+          originalAnimation: deco.animation,
+        }
+      );
       return decoration;
     } else {
       // Ultimate fallback - create a simple colored rectangle
-      logAutopoiesis.warn(`Fallback sprite ${deco.fallbackSprite} not found, creating placeholder`);
+      logAutopoiesis.warn(
+        `Fallback sprite ${deco.fallbackSprite} not found, creating placeholder`
+      );
       const placeholder = this.scene.add.sprite(deco.x, deco.y, '__DEFAULT');
-      
+
       // Create a default texture if it doesn't exist
       if (!this.scene.textures.exists('__DEFAULT')) {
-        this.scene.add.graphics()
+        this.scene.add
+          .graphics()
           .fillStyle(0x8bc34a)
           .fillRect(0, 0, 16, 16)
           .generateTexture('__DEFAULT', 16, 16);
       }
-      
+
       placeholder.setTexture('__DEFAULT');
       return placeholder;
     }
@@ -316,27 +390,34 @@ export class WorldRenderer {
    * Create activity zones with improved visuals
    */
   public createActivityZones(): void {
-
     const activityZones = [
-      { 
-        x: 100, y: 100, width: 200, height: 150, 
-        color: GAME_BALANCE.ZONES.FOOD_COLOR, 
-        name: 'Rest Zone' 
+      {
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 150,
+        color: GAME_BALANCE.ZONES.FOOD_COLOR,
+        name: 'Rest Zone',
       },
-      { 
-        x: 400, y: 200, width: 180, height: 120, 
-        color: GAME_BALANCE.ZONES.REST_COLOR, 
-        name: 'Food Zone' 
+      {
+        x: 400,
+        y: 200,
+        width: 180,
+        height: 120,
+        color: GAME_BALANCE.ZONES.REST_COLOR,
+        name: 'Food Zone',
       },
-      { 
-        x: 700, y: 300, width: 200, height: 160, 
-        color: GAME_BALANCE.ZONES.SOCIAL_COLOR, 
-        name: 'Social Zone' 
-      }
+      {
+        x: 700,
+        y: 300,
+        width: 200,
+        height: 160,
+        color: GAME_BALANCE.ZONES.SOCIAL_COLOR,
+        name: 'Social Zone',
+      },
     ];
 
     activityZones.forEach((zone, index) => {
-
       const zoneRect = this.scene.add.rectangle(
         zone.x + zone.width / 2,
         zone.y + zone.height / 2,
@@ -347,7 +428,6 @@ export class WorldRenderer {
       );
       zoneRect.setStrokeStyle(3, zone.color, 0.6);
       zoneRect.setDepth(2);
-      
 
       const label = this.scene.add.text(
         zone.x + zone.width / 2,
@@ -357,7 +437,7 @@ export class WorldRenderer {
           fontSize: '16px',
           color: '#ffffff',
           fontFamily: 'Arial',
-          fontStyle: 'bold'
+          fontStyle: 'bold',
         }
       );
       label.setOrigin(0.5);
@@ -374,7 +454,7 @@ export class WorldRenderer {
    */
   public updateVisuals(): void {
     const now = Date.now();
-    
+
     // Perform culling optimization at regular intervals
     if (now - this.lastCullingUpdate > this.CULLING_UPDATE_INTERVAL) {
       this.performDecorationCulling();
@@ -386,13 +466,13 @@ export class WorldRenderer {
    * Optimize decorations by culling off-screen sprites and pausing animations
    */
   private performDecorationCulling(): void {
-    if (!this.scene.cameras || !this.scene.cameras.main) {
+    if (!this.scene.cameras?.main) {
       return;
     }
 
     const camera = this.scene.cameras.main;
     const cameraView = camera.worldView;
-    
+
     // Add margin to prevent popping when sprites are just outside view
     const margin = 100;
     const extendedView = new Phaser.Geom.Rectangle(
@@ -406,20 +486,20 @@ export class WorldRenderer {
     let pausedCount = 0;
 
     this.decorationSprites.forEach(decoration => {
-      if (!decoration || !decoration.scene) {
+      if (!decoration?.scene) {
         return; // Skip destroyed sprites
       }
 
       const inView = extendedView.contains(decoration.x, decoration.y);
-      
+
       if (inView) {
         // Sprite is visible
         visibleCount++;
-        
+
         if (!decoration.visible) {
           decoration.setVisible(true);
         }
-        
+
         // Resume animation if it was paused
         if (decoration.anims && decoration.anims.isPaused) {
           decoration.anims.resume();
@@ -429,7 +509,7 @@ export class WorldRenderer {
         if (decoration.visible) {
           decoration.setVisible(false);
         }
-        
+
         // Pause animation to save performance
         if (decoration.anims && decoration.anims.isPlaying) {
           decoration.anims.pause();
@@ -439,12 +519,17 @@ export class WorldRenderer {
     });
 
     // Log culling stats occasionally
-    if (Math.random() < 0.1) { // 10% chance to log
+    if (Math.random() < 0.1) {
+      // 10% chance to log
       logAutopoiesis.debug('Decoration culling performed', {
         totalDecorations: this.decorationSprites.length,
         visible: visibleCount,
         paused: pausedCount,
-        cullingEfficiency: ((this.decorationSprites.length - visibleCount) / this.decorationSprites.length * 100).toFixed(1) + '%'
+        cullingEfficiency: `${(
+          ((this.decorationSprites.length - visibleCount) /
+            this.decorationSprites.length) *
+          100
+        ).toFixed(1)}%`,
       });
     }
   }
@@ -485,35 +570,39 @@ export class WorldRenderer {
         obj.destroy();
       }
     });
-    
+
     this.zoneGraphics.forEach(graphic => {
       if (graphic && graphic.destroy) {
         graphic.destroy();
       }
     });
-    
+
     this.renderedObjects.clear();
     this.zoneGraphics.length = 0;
-    
+
     // Clear decoration tracking
     this.decorationSprites.length = 0;
-    
+
     // Clear reference to animation manager
     this.animationManager = undefined;
-    
+
     logAutopoiesis.info('WorldRenderer destroyed', {
-      decorationsCleared: this.decorationSprites.length
+      decorationsCleared: this.decorationSprites.length,
     });
   }
 
   /**
    * Get rendering statistics
    */
-  public getStats(): { renderedObjects: number; zones: number; elements: number } {
+  public getStats(): {
+    renderedObjects: number;
+    zones: number;
+    elements: number;
+  } {
     return {
       renderedObjects: this.renderedObjects.size,
       zones: this.gameState.zones.length,
-      elements: this.gameState.mapElements.length
+      elements: this.gameState.mapElements.length,
     };
   }
 }

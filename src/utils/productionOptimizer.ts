@@ -48,7 +48,7 @@ export class ProductionOptimizer {
         reducedParticles: true,
         compactDialogues: true,
         maxConcurrentLoads: 2, // Reducido para producción
-        memoryThreshold: 50 * 1024 * 1024 // 50MB límite
+        memoryThreshold: 50 * 1024 * 1024, // 50MB límite
       };
     } else {
       return {
@@ -59,7 +59,7 @@ export class ProductionOptimizer {
         reducedParticles: false,
         compactDialogues: false,
         maxConcurrentLoads: 5, // Más alto para desarrollo
-        memoryThreshold: 200 * 1024 * 1024 // 200MB límite
+        memoryThreshold: 200 * 1024 * 1024, // 200MB límite
       };
     }
   }
@@ -76,7 +76,7 @@ export class ProductionOptimizer {
 
     logAutopoiesis.info('Production optimizer initialized', {
       isProduction: this.isProduction,
-      settings: this.settings
+      settings: this.settings,
     });
   }
 
@@ -103,7 +103,7 @@ export class ProductionOptimizer {
     const originalConsole = {
       log: console.log,
       debug: console.debug,
-      info: console.info
+      info: console.info,
     };
 
     // En producción, solo mostrar warnings y errores
@@ -130,15 +130,16 @@ export class ProductionOptimizer {
    */
   private setupServiceWorker(): void {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker
+        .register('/sw.js')
         .then(registration => {
-          logAutopoiesis.info('Service Worker registered', { 
-            scope: registration.scope 
+          logAutopoiesis.info('Service Worker registered', {
+            scope: registration.scope,
           });
         })
         .catch(error => {
-          logAutopoiesis.warn('Service Worker registration failed', { 
-            error: String(error) 
+          logAutopoiesis.warn('Service Worker registration failed', {
+            error: String(error),
           });
         });
     }
@@ -150,15 +151,15 @@ export class ProductionOptimizer {
   private setupMemoryMonitoring(): void {
     if ((performance as any).memory) {
       setInterval(() => {
-        const memory = (performance as any).memory;
+        const { memory } = performance as any;
         const usedMB = memory.usedJSHeapSize / 1024 / 1024;
-        
+
         if (usedMB > this.settings.memoryThreshold / 1024 / 1024) {
           logAutopoiesis.warn('High memory usage detected', {
             used: `${usedMB.toFixed(2)}MB`,
-            limit: `${(this.settings.memoryThreshold / 1024 / 1024).toFixed(2)}MB`
+            limit: `${(this.settings.memoryThreshold / 1024 / 1024).toFixed(2)}MB`,
           });
-          
+
           this.triggerMemoryOptimization();
         }
       }, 30000); // Check every 30 seconds
@@ -193,7 +194,7 @@ export class ProductionOptimizer {
    * Configurar observer para carga lazy
    */
   private setupIntersectionObserver(): void {
-    const observer = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           // Trigger lazy loading
@@ -217,7 +218,7 @@ export class ProductionOptimizer {
     // Limpiar caches no esenciales
     this.cleanupUnusedAssets();
     this.compactDialogueCache();
-    
+
     // Forzar garbage collection si es posible
     if ((window as any).gc) {
       (window as any).gc();
@@ -266,21 +267,21 @@ export class ProductionOptimizer {
       // Optimizaciones específicas de producción
       baseConfig.render = {
         antialias: false, // Disable antialiasing for performance
-        pixelArt: true,   // Optimize for pixel art
-        powerPreference: 'high-performance'
+        pixelArt: true, // Optimize for pixel art
+        powerPreference: 'high-performance',
       };
 
       baseConfig.fps = {
         target: 60,
-        forceSetTimeOut: true
+        forceSetTimeOut: true,
       };
 
       baseConfig.physics = {
         default: 'arcade',
         arcade: {
           fps: 60,
-          fixedStep: true
-        }
+          fixedStep: true,
+        },
       };
     }
 
@@ -300,7 +301,7 @@ export class ProductionOptimizer {
       maxConcurrent: this.settings.maxConcurrentLoads,
       timeout: this.isProduction ? 8000 : 15000,
       retries: this.isProduction ? 2 : 3,
-      preloadCritical: this.isProduction
+      preloadCritical: this.isProduction,
     };
   }
 
@@ -326,18 +327,18 @@ export class ProductionOptimizer {
               test: /dialogos.*\.json$/,
               name: 'dialogues',
               chunks: 'all',
-            }
-          }
+            },
+          },
         },
         minimize: true,
-        usedExports: true
+        usedExports: true,
       },
       resolve: {
         alias: {
           // Usar versiones minificadas en producción
-          'phaser': 'phaser/dist/phaser.min.js'
-        }
-      }
+          phaser: 'phaser/dist/phaser.min.js',
+        },
+      },
     };
   }
 }

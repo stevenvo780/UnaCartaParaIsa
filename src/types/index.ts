@@ -7,10 +7,40 @@
 export type { Position, Size, Rect, Color } from './core';
 
 // Domain-specific types
-export type { ActivityType, EntityActivity, ActivityModifiers, ActivityDefinition } from './activities';
-export type { ZoneType } from './zones';
-export type { EntityStateType, MoodType, EntityStats, Entity } from './entities';
-export type { FoodCategory, FoodItem, FoodInventoryItem, EatingAction } from './food';
+export type {
+  ActivityType,
+  EntityActivity,
+  ActivityModifiers,
+  ActivityDefinition,
+} from './activities';
+export type { ZoneType, Zone as ZoneDefinition } from './zones';
+export type {
+  EntityStateType,
+  MoodType,
+  EntityStats,
+  Entity,
+} from './entities';
+export type {
+  FoodCategory,
+  FoodItem,
+  FoodInventoryItem,
+  EatingAction,
+} from './food';
+
+// Event system types
+export type {
+  GameEvents,
+  GameLogicUpdateData,
+  LoadErrorData,
+  FoodStoreData,
+  DialogueCriteria,
+  GeneratedWorldData,
+  NoiseConfig,
+  CriticalError,
+  PlayerInteractionData,
+  TypedEventEmitter,
+  IGameLogicManager,
+} from './events';
 
 // Game-specific types that remain centralized
 export type InteractionType =

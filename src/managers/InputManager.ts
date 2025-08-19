@@ -3,8 +3,8 @@
  * Extrae la lógica de input del MainScene
  */
 
-import Phaser from 'phaser';
-import { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
+import type Phaser from 'phaser';
+import type { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
 import { logAutopoiesis } from '../utils/logger';
 
 export type ControlledEntity = 'isa' | 'stev' | 'none';
@@ -30,12 +30,21 @@ export class InputManager {
     this.cursors = this.scene.input.keyboard.createCursorKeys();
 
     // Controles WASD
-    this.wasdKeys = this.scene.input.keyboard.addKeys('W,S,A,D') as Record<string, Phaser.Input.Keyboard.Key>;
+    this.wasdKeys = this.scene.input.keyboard.addKeys('W,S,A,D') as Record<
+      string,
+      Phaser.Input.Keyboard.Key
+    >;
 
     // Controles de cambio de entidad
-    this.scene.input.keyboard.on('keydown-ONE', () => this.setControlledEntity('isa'));
-    this.scene.input.keyboard.on('keydown-TWO', () => this.setControlledEntity('stev'));
-    this.scene.input.keyboard.on('keydown-ZERO', () => this.setControlledEntity('none'));
+    this.scene.input.keyboard.on('keydown-ONE', () => {
+      this.setControlledEntity('isa');
+    });
+    this.scene.input.keyboard.on('keydown-TWO', () => {
+      this.setControlledEntity('stev');
+    });
+    this.scene.input.keyboard.on('keydown-ZERO', () => {
+      this.setControlledEntity('none');
+    });
 
     logAutopoiesis.info('Input controls configured');
   }
@@ -58,11 +67,18 @@ export class InputManager {
   /**
    * Procesa los inputs de movimiento
    */
-  processMovementInput(isaEntity: AnimatedGameEntity, stevEntity: AnimatedGameEntity): void {
+  processMovementInput(
+    isaEntity: AnimatedGameEntity,
+    stevEntity: AnimatedGameEntity
+  ): void {
     if (!this.cursors || !this.wasdKeys) return;
 
-    const currentEntity = this.controlledEntity === 'isa' ? isaEntity : 
-                         this.controlledEntity === 'stev' ? stevEntity : null;
+    const currentEntity =
+      this.controlledEntity === 'isa'
+        ? isaEntity
+        : this.controlledEntity === 'stev'
+          ? stevEntity
+          : null;
 
     if (!currentEntity) return;
 

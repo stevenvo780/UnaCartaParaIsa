@@ -19,26 +19,28 @@ let totalDialogues = 0;
 export const loadDialogueData = async (): Promise<void> => {
   try {
     logAutopoiesis.info('🗣️ Inicializando sistema de diálogos optimizado...');
-    
+
     await dialogueChunkLoader.initialize();
     const stats = dialogueChunkLoader.getStats();
     totalDialogues = stats.totalEntries;
-    
+
     // Establecer índice inicial aleatorio
     const seed = Date.now();
-    currentIndex = Math.floor((seed * 1664525 + 1013904223) % 2147483647) % totalDialogues;
-    
+    currentIndex =
+      Math.floor((seed * 1664525 + 1013904223) % 2147483647) % totalDialogues;
+
     isLoaded = true;
-    
+
     logAutopoiesis.info('Sistema de diálogos inicializado', {
-      totalDialogues: totalDialogues,
+      totalDialogues,
       totalChunks: stats.totalChunks,
       startIndex: currentIndex,
-      cacheSize: stats.cacheSize
+      cacheSize: stats.cacheSize,
     });
-    
   } catch (error) {
-    logAutopoiesis.error('Error inicializando sistema de diálogos', { error: String(error) });
+    logAutopoiesis.error('Error inicializando sistema de diálogos', {
+      error: String(error),
+    });
     isLoaded = false;
     totalDialogues = 0;
   }
@@ -65,7 +67,7 @@ export const getNextDialogue = async (
       speaker: preferredSpeaker,
       emotion: preferredEmotion,
       textContains: preferredActivity ? undefined : undefined, // Mantener lógica original
-      limit: 1
+      limit: 1,
     });
 
     if (searchResult.length > 0) {
@@ -74,17 +76,25 @@ export const getNextDialogue = async (
 
     // Fallback: búsqueda con criterios relajados
     const fallbackCriteria = [
-      { speaker: preferredSpeaker, emotion: undefined, activity: preferredActivity },
-      { speaker: preferredSpeaker, emotion: preferredEmotion, activity: undefined },
+      {
+        speaker: preferredSpeaker,
+        emotion: undefined,
+        activity: preferredActivity,
+      },
+      {
+        speaker: preferredSpeaker,
+        emotion: preferredEmotion,
+        activity: undefined,
+      },
       { speaker: preferredSpeaker, emotion: undefined, activity: undefined },
-      { speaker: undefined, emotion: undefined, activity: undefined }
+      { speaker: undefined, emotion: undefined, activity: undefined },
     ];
 
     for (const criteria of fallbackCriteria) {
       const result = await dialogueChunkLoader.searchDialogues({
         speaker: criteria.speaker,
         emotion: criteria.emotion,
-        limit: 1
+        limit: 1,
       });
 
       if (result.length > 0) {
@@ -99,12 +109,14 @@ export const getNextDialogue = async (
     if (fallbackDialogue) {
       logAutopoiesis.warn('Usando diálogo aleatorio fallback', {
         requested: { preferredSpeaker, preferredEmotion, preferredActivity },
-        selected: { speaker: fallbackDialogue.speaker, emotion: fallbackDialogue.emotion }
+        selected: {
+          speaker: fallbackDialogue.speaker,
+          emotion: fallbackDialogue.emotion,
+        },
       });
     }
 
     return fallbackDialogue;
-
   } catch (error) {
     logAutopoiesis.error('Error obteniendo diálogo', { error: String(error) });
     return null;
@@ -130,7 +142,7 @@ const responseMap: Record<string, string[]> = {
   PAIN: ['LOVE', 'CARING'],
   CARING: ['GRATITUDE', 'LOVE'],
   CONTEMPLATING: ['CURIOUS', 'NEUTRAL'],
-  DEFAULT: ['NEUTRAL', 'CURIOUS', 'LOVE', 'PLAYFUL']
+  DEFAULT: ['NEUTRAL', 'CURIOUS', 'LOVE', 'PLAYFUL'],
 };
 
 /**
@@ -140,16 +152,19 @@ export const getResponseWriter = (
   responderSpeaker: 'ISA' | 'STEV',
   lastDialogue: DialogueEntry
 ): DialogueEntry | null => {
-  const possibleEmotions = responseMap[lastDialogue.emotion] || responseMap.DEFAULT;
-
+  const possibleEmotions =
+    responseMap[lastDialogue.emotion] || responseMap.DEFAULT;
 
   for (const emotion of possibleEmotions) {
-    const response = getNextDialogue(responderSpeaker, emotion, lastDialogue.activity);
+    const response = getNextDialogue(
+      responderSpeaker,
+      emotion,
+      lastDialogue.activity
+    );
     if (response) {
       return response;
     }
   }
-
 
   return getNextDialogue(responderSpeaker);
 };
@@ -166,17 +181,17 @@ export const getSpeakerForEntity = (entityId: string): 'ISA' | 'STEV' => {
  */
 export const getEmotionForActivity = (activity: string): string => {
   const activityEmotionMap: Record<string, string> = {
-    'SOCIALIZING': 'PLAYFUL',
-    'RESTING': 'NEUTRAL',
-    'EATING': 'GRATITUDE',
-    'PLAYING': 'PLAYFUL',
-    'WORKING': 'NEUTRAL',
-    'EXERCISING': 'CURIOUS',
-    'MEDITATING': 'CONTEMPLATING',
-    'WANDERING': 'CURIOUS',
-    'EXPLORING': 'CURIOUS',
-    'DANCING': 'PLAYFUL',
-    'WRITING': 'CONTEMPLATING'
+    SOCIALIZING: 'PLAYFUL',
+    RESTING: 'NEUTRAL',
+    EATING: 'GRATITUDE',
+    PLAYING: 'PLAYFUL',
+    WORKING: 'NEUTRAL',
+    EXERCISING: 'CURIOUS',
+    MEDITATING: 'CONTEMPLATING',
+    WANDERING: 'CURIOUS',
+    EXPLORING: 'CURIOUS',
+    DANCING: 'PLAYFUL',
+    WRITING: 'CONTEMPLATING',
   };
 
   return activityEmotionMap[activity] || 'NEUTRAL';
@@ -191,7 +206,6 @@ export const getDialogueForInteraction = (
 ): DialogueEntry | null => {
   const speaker = getSpeakerForEntity(entityId);
 
-
   const interactionMap: Record<
     string,
     { emotions: string[]; activities: string[]; priority?: string[] }
@@ -199,43 +213,42 @@ export const getDialogueForInteraction = (
     FEED: {
       emotions: ['LOVE', 'PLAYFUL', 'NEUTRAL'],
       activities: ['SOCIALIZING'],
-      priority: ['LOVE']
+      priority: ['LOVE'],
     },
     PLAY: {
       emotions: ['PLAYFUL', 'LOVE', 'CURIOUS'],
       activities: ['SOCIALIZING'],
-      priority: ['PLAYFUL']
+      priority: ['PLAYFUL'],
     },
     COMFORT: {
       emotions: ['LOVE', 'NEUTRAL', 'SADNESS'],
       activities: ['SOCIALIZING'],
-      priority: ['LOVE']
+      priority: ['LOVE'],
     },
     DISTURB: {
       emotions: ['SADNESS', 'NEUTRAL', 'CURIOUS'],
       activities: ['SOCIALIZING'],
-      priority: ['NEUTRAL']
+      priority: ['NEUTRAL'],
     },
     NOURISH: {
       emotions: ['LOVE', 'PLAYFUL', 'CURIOUS'],
       activities: ['SOCIALIZING'],
-      priority: ['LOVE']
+      priority: ['LOVE'],
     },
     SLEEP: {
       emotions: ['NEUTRAL', 'LOVE'],
       activities: ['SOCIALIZING'],
-      priority: ['NEUTRAL']
+      priority: ['NEUTRAL'],
     },
     EXERCISE: {
       emotions: ['PLAYFUL', 'CURIOUS', 'NEUTRAL'],
       activities: ['SOCIALIZING'],
-      priority: ['PLAYFUL']
-    }
+      priority: ['PLAYFUL'],
+    },
   };
 
   const config = interactionMap[interactionType.toUpperCase()];
   if (!config) return null;
-
 
   const emotionsToTry = config.priority
     ? [...config.priority, ...config.emotions]
@@ -247,12 +260,10 @@ export const getDialogueForInteraction = (
   const activityIndex = Math.abs(interactionHash) % config.activities.length;
   const targetActivity = config.activities[activityIndex];
 
-
   for (const emotion of emotionsToTry) {
     const dialogue = getNextDialogue(speaker, emotion, targetActivity);
     if (dialogue) return dialogue;
   }
-
 
   return getNextDialogue(speaker, undefined, targetActivity);
 };
@@ -264,20 +275,22 @@ export const getDialogueStats = () => {
   if (!isLoaded) return null;
 
   const chunkStats = dialogueChunkLoader.getStats();
-  
+
   return {
     total: totalDialogues,
     currentIndex,
-    chunkStats: chunkStats,
+    chunkStats,
     isLoaded,
-    memoryOptimized: true
+    memoryOptimized: true,
   };
 };
 
 /**
  * Obtiene una muestra aleatoria de diálogos para testing
  */
-export const getRandomDialogueSample = async (count: number = 5): Promise<DialogueEntry[]> => {
+export const getRandomDialogueSample = async (
+  count = 5
+): Promise<DialogueEntry[]> => {
   if (!isLoaded || totalDialogues === 0) return [];
 
   try {
@@ -297,7 +310,9 @@ export const getRandomDialogueSample = async (count: number = 5): Promise<Dialog
 
     return sample;
   } catch (error) {
-    logAutopoiesis.error('Error getting random dialogue sample', { error: String(error) });
+    logAutopoiesis.error('Error getting random dialogue sample', {
+      error: String(error),
+    });
     return [];
   }
 };

@@ -17,22 +17,20 @@ interface PersonalityProfile {
   energyEfficiency: number;
 }
 
-
 const ENTITY_PERSONALITIES: Record<'isa' | 'stev', PersonalityProfile> = {
   isa: {
     socialPreference: 0.7,
     activityPersistence: 0.6,
     riskTolerance: 0.4,
-    energyEfficiency: 0.5
+    energyEfficiency: 0.5,
   },
   stev: {
     socialPreference: 0.5,
     activityPersistence: 0.8,
     riskTolerance: 0.6,
-    energyEfficiency: 0.7
-  }
+    energyEfficiency: 0.7,
+  },
 };
-
 
 const MOOD_MODIFIERS: Record<
   MoodType,
@@ -43,17 +41,61 @@ const MOOD_MODIFIERS: Record<
     energyConservation: number;
   }
 > = {
-  '😊': { activityChange: 0.3, socialSeek: 0.7, riskTaking: 0.6, energyConservation: 0.3 },
-  '🤩': { activityChange: 0.8, socialSeek: 0.8, riskTaking: 0.8, energyConservation: 0.2 },
-  '😌': { activityChange: 0.1, socialSeek: 0.4, riskTaking: 0.3, energyConservation: 0.6 },
-  '😢': { activityChange: 0.4, socialSeek: 0.9, riskTaking: 0.2, energyConservation: 0.7 },
-  '😰': { activityChange: 0.7, socialSeek: 0.6, riskTaking: 0.1, energyConservation: 0.8 },
-  '😡': { activityChange: 0.6, socialSeek: 0.3, riskTaking: 0.7, energyConservation: 0.4 },
-  '😑': { activityChange: 0.8, socialSeek: 0.4, riskTaking: 0.5, energyConservation: 0.3 },
-  '😔': { activityChange: 0.5, socialSeek: 0.9, riskTaking: 0.3, energyConservation: 0.6 },
-  '😴': { activityChange: 0.1, socialSeek: 0.2, riskTaking: 0.1, energyConservation: 0.9 }
+  '😊': {
+    activityChange: 0.3,
+    socialSeek: 0.7,
+    riskTaking: 0.6,
+    energyConservation: 0.3,
+  },
+  '🤩': {
+    activityChange: 0.8,
+    socialSeek: 0.8,
+    riskTaking: 0.8,
+    energyConservation: 0.2,
+  },
+  '😌': {
+    activityChange: 0.1,
+    socialSeek: 0.4,
+    riskTaking: 0.3,
+    energyConservation: 0.6,
+  },
+  '😢': {
+    activityChange: 0.4,
+    socialSeek: 0.9,
+    riskTaking: 0.2,
+    energyConservation: 0.7,
+  },
+  '😰': {
+    activityChange: 0.7,
+    socialSeek: 0.6,
+    riskTaking: 0.1,
+    energyConservation: 0.8,
+  },
+  '😡': {
+    activityChange: 0.6,
+    socialSeek: 0.3,
+    riskTaking: 0.7,
+    energyConservation: 0.4,
+  },
+  '😑': {
+    activityChange: 0.8,
+    socialSeek: 0.4,
+    riskTaking: 0.5,
+    energyConservation: 0.3,
+  },
+  '😔': {
+    activityChange: 0.5,
+    socialSeek: 0.9,
+    riskTaking: 0.3,
+    energyConservation: 0.6,
+  },
+  '😴': {
+    activityChange: 0.1,
+    socialSeek: 0.2,
+    riskTaking: 0.1,
+    energyConservation: 0.9,
+  },
 };
-
 
 interface ActivitySession {
   activity: ActivityType;
@@ -64,9 +106,7 @@ interface ActivitySession {
   interruptions: number;
 }
 
-
 const activitySessions = new Map<string, ActivitySession>();
-
 
 const habitBias = new Map<string, Map<ActivityType, number>>();
 
@@ -91,18 +131,19 @@ const applyMoodModifiers = (
   const modifiers = MOOD_MODIFIERS[mood];
   let score = baseScore;
 
-
   if (activity === 'SOCIALIZING') {
     score += modifiers.socialSeek * 15;
   }
-
 
   if (activity === 'RESTING' || activity === 'MEDITATING') {
     score += modifiers.energyConservation * 10;
   }
 
-
-  if (activity === 'WANDERING' || activity === 'EXPLORING' || activity === 'DANCING') {
+  if (
+    activity === 'WANDERING' ||
+    activity === 'EXPLORING' ||
+    activity === 'DANCING'
+  ) {
     score += modifiers.riskTaking * 8;
   }
 
@@ -124,22 +165,18 @@ const calculateActivityInertia = (
   const elapsedTime = currentTime - session.startTime;
   const progress = Math.min(1, elapsedTime / session.plannedDuration);
 
-
   let inertia = personality.activityPersistence;
-
 
   if (session.effectiveness > 0.7) {
     inertia += 0.2;
   }
 
-
   if (session.interruptions > 2) {
     inertia -= 0.3;
   }
 
-
   const bonus = gameConfig.ai.activityInertiaBonus || 0.1;
-  inertia *= (1 + bonus);
+  inertia *= 1 + bonus;
 
   return Math.max(0, Math.min(1, inertia * progress));
 };
@@ -150,7 +187,7 @@ const calculateActivityInertia = (
 const getHabitBias = (entityId: string, activity: ActivityType): number => {
   const entityHabits = habitBias.get(entityId);
   if (!entityHabits) return 0;
-  
+
   return entityHabits.get(activity) || 0;
 };
 
@@ -168,11 +205,10 @@ const updateHabitBias = (
 
   const entityHabits = habitBias.get(entityId)!;
   const currentBias = entityHabits.get(activity) || 0;
-  
 
   const change = satisfaction > 0.7 ? 0.5 : -0.2;
   const newBias = Math.max(-5, Math.min(5, currentBias + change));
-  
+
   entityHabits.set(activity, newBias);
 };
 
@@ -186,10 +222,9 @@ const shouldChangeActivity = (
 ): boolean => {
   const inertia = calculateActivityInertia(entity, currentTime);
   const threshold = gameConfig.ai.decisionChangeThreshold || 5;
-  
 
-  const adjustedThreshold = threshold + (inertia * 10);
-  
+  const adjustedThreshold = threshold + inertia * 10;
+
   return urgencyScore > adjustedThreshold;
 };
 
@@ -199,20 +234,17 @@ const shouldChangeActivity = (
  * τ (tau) controla exploración: menor τ → elecciones más “greedy”.
  */
 const softmaxPick = (
-  scores: Array<{ activity: ActivityType; score: number }>,
-  temperature: number = 0.7
+  scores: { activity: ActivityType; score: number }[],
+  temperature = 0.7
 ): ActivityType => {
   const tau = Math.max(0.1, temperature);
   const maxScore = Math.max(...scores.map(s => s.score));
-  
 
   const exps = scores.map(s => Math.exp((s.score - maxScore) / tau));
   const sum = exps.reduce((a, b) => a + b, 0);
 
-
   const seed = (Date.now() * 1664525 + 1013904223) % 2147483647;
   let random = (seed / 2147483647) * sum;
-
 
   for (let i = 0; i < scores.length; i++) {
     random -= exps[i];
@@ -220,7 +252,7 @@ const softmaxPick = (
       return scores[i].activity;
     }
   }
-  
+
   return scores[0].activity;
 };
 
@@ -233,18 +265,17 @@ const startActivitySession = (
   currentTime: number
 ): void => {
   const personality = getPersonalityProfile(entityId);
-  
 
   const baseDuration = 30000;
   const persistenceMultiplier = 1 + personality.activityPersistence;
-  
+
   activitySessions.set(entityId, {
     activity,
     startTime: currentTime,
     plannedDuration: baseDuration * persistenceMultiplier,
     effectiveness: 0.5,
     satisfactionLevel: 0.5,
-    interruptions: 0
+    interruptions: 0,
   });
 };
 
@@ -258,23 +289,23 @@ export const makeIntelligentDecision = (
   currentTime: number
 ): ActivityType => {
   const personality = getPersonalityProfile(entity.id);
-  
 
-  const activityScores: Array<{ activity: ActivityType; score: number }> = [];
+  const activityScores: { activity: ActivityType; score: number }[] = [];
 
   for (const activity of ACTIVITY_TYPES) {
-
     const baseScore = calculateActivityPriority(
       activity,
       entity.stats,
       currentTime - (entity.lastActivityChange || 0)
     );
 
-
-    const moodModifiedScore = applyMoodModifiers(baseScore, activity, entity.mood);
+    const moodModifiedScore = applyMoodModifiers(
+      baseScore,
+      activity,
+      entity.mood
+    );
 
     let personalityModifiedScore = moodModifiedScore;
-
 
     if (activity === 'SOCIALIZING' && companion && !companion.isDead) {
       const personalityInfluence = gameConfig.ai.personalityInfluence || 0.5;
@@ -288,7 +319,11 @@ export const makeIntelligentDecision = (
         personality.energyEfficiency * 10 * personalityInfluence;
     }
 
-    if (activity === 'WANDERING' || activity === 'EXERCISING' || activity === 'EXPLORING') {
+    if (
+      activity === 'WANDERING' ||
+      activity === 'EXERCISING' ||
+      activity === 'EXPLORING'
+    ) {
       const personalityInfluence = gameConfig.ai.personalityInfluence || 0.5;
       personalityModifiedScore +=
         personality.riskTolerance * 8 * personalityInfluence;
@@ -297,20 +332,16 @@ export const makeIntelligentDecision = (
     activityScores.push({ activity, score: personalityModifiedScore });
   }
 
-
   const biasedScores = activityScores.map(s => ({
     activity: s.activity,
-    score: s.score + getHabitBias(entity.id, s.activity)
+    score: s.score + getHabitBias(entity.id, s.activity),
   }));
 
-
   biasedScores.sort((a, b) => b.score - a.score);
-
 
   const tau = gameConfig.ai.softmaxTau || 0.7;
   const chosen = softmaxPick(biasedScores, tau);
   const chosenScore = biasedScores.find(a => a.activity === chosen)?.score ?? 0;
-
 
   if (Math.random() < 0.1) {
     logAutopoiesis.info(`${entity.id} AI decision`, {
@@ -318,33 +349,30 @@ export const makeIntelligentDecision = (
       chosen,
       chosenScore: chosenScore.toFixed(2),
       mood: entity.mood,
-      personalityType: entity.id
+      personalityType: entity.id,
     });
   }
 
-
   if (chosen !== entity.activity) {
     if (shouldChangeActivity(entity, currentTime, chosenScore)) {
-
       const oldSession = activitySessions.get(entity.id);
       if (oldSession) {
-        const satisfaction = oldSession.effectiveness * 0.7 + Math.random() * 0.3;
+        const satisfaction =
+          oldSession.effectiveness * 0.7 + Math.random() * 0.3;
         updateHabitBias(entity.id, oldSession.activity, satisfaction);
       }
 
-
       startActivitySession(entity.id, chosen, currentTime);
-      
+
       logAutopoiesis.info(`${entity.id} activity change`, {
         from: entity.activity,
         to: chosen,
         urgency: chosenScore.toFixed(1),
-        reason: 'AI decision'
+        reason: 'AI decision',
       });
 
       return chosen;
     } else {
-
       return entity.activity;
     }
   }
@@ -379,5 +407,5 @@ export const aiDecisionEngine = {
   makeIntelligentDecision,
   updateSessionEffectiveness,
   recordSessionInterruption,
-  getPersonalityProfile
+  getPersonalityProfile,
 };

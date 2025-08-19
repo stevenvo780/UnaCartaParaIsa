@@ -1,5 +1,9 @@
 import Phaser from 'phaser';
-import type { GameState } from '../types';
+import type {
+  GameState,
+  GeneratedWorldData,
+  GameLogicUpdateData,
+} from '../types';
 import { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
 import { DialogueSystem } from '../systems/DialogueSystem';
 import { GameLogicManager } from '../managers/GameLogicManager';
@@ -20,7 +24,7 @@ export class MainScene extends Phaser.Scene {
   private inputManager!: InputManager;
   private foodAssetManager!: FoodAssetManager;
   private foodSystem!: FoodSystem;
-  private generatedWorldData?: any;
+  private generatedWorldData?: GeneratedWorldData;
 
   constructor() {
     super({ key: 'MainScene' });
@@ -28,7 +32,7 @@ export class MainScene extends Phaser.Scene {
 
   init() {
     logAutopoiesis.info('MainScene initialized');
-    
+
     const initResult = SceneInitializationManager.initialize();
     this.gameState = initResult.gameState;
     this.generatedWorldData = initResult.generatedWorldData;
@@ -49,13 +53,15 @@ export class MainScene extends Phaser.Scene {
     await this.initializeManagers();
 
     // Create entities using EntityManager
-    const { isaEntity, stevEntity } = this.entityManager.createEntities(this.gameState);
+    const { isaEntity, stevEntity } = this.entityManager.createEntities(
+      this.gameState
+    );
 
     // Setup partner relationships and register with GameLogicManager
     isaEntity.setPartnerEntity(stevEntity);
     stevEntity.setPartnerEntity(isaEntity);
-    this.gameLogicManager.registerEntity('isa', isaEntity);
-    this.gameLogicManager.registerEntity('stev', stevEntity);
+    this.gameLogicManager.registerEntity('isa', isaEntity.getEntity());
+    this.gameLogicManager.registerEntity('stev', stevEntity.getEntity());
 
     // Setup spacebar action for current controlled entity
     this.input.keyboard?.on('keydown-SPACE', () => {
@@ -69,7 +75,7 @@ export class MainScene extends Phaser.Scene {
     logAutopoiesis.info('MainScene created successfully', {
       entities: this.entityManager.getEntitiesGroup().children.size,
       zones: this.gameState.zones.length,
-      worldSize: this.gameState.worldSize
+      worldSize: this.gameState.worldSize,
     });
   }
 
@@ -77,19 +83,16 @@ export class MainScene extends Phaser.Scene {
    * Initialize all managers
    */
   private async initializeManagers(): Promise<void> {
-
     this.gameLogicManager = new GameLogicManager(this, this.gameState);
     this.gameLogicManager.initialize();
 
-
     this.worldRenderer = new WorldRenderer(this, this.gameState);
     await this.worldRenderer.renderWorld(this.generatedWorldData);
-    
 
-    this.gameLogicManager.on('gameLogicUpdate', (data: any) => {
+    this.gameLogicManager.on('gameLogicUpdate', (data: GameLogicUpdateData) => {
       this.events.emit('gameLogicUpdate', data);
     });
-    
+
     logAutopoiesis.debug('All managers initialized');
   }
 
@@ -98,44 +101,31 @@ export class MainScene extends Phaser.Scene {
    */
   private setupCamera(): void {
     this.cameras.main.setBounds(
-      0, 0, 
-      this.gameState.worldSize.width, 
+      0,
+      0,
+      this.gameState.worldSize.width,
       this.gameState.worldSize.height
     );
     this.cameras.main.setZoom(1);
-    
+
     logAutopoiesis.debug('Camera configured', {
-      bounds: this.gameState.worldSize
+      bounds: this.gameState.worldSize,
     });
   }
 
   // Método obsoleto - ahora manejado por EntityManager
 
-
-
-
-
-
-
-
-
-
-
-
-
   /**
    * Maneja interacciones del jugador
    */
   public handlePlayerInteraction(entityId: string, interactionType: string) {
-
     this.gameLogicManager.handlePlayerInteraction(entityId, interactionType);
-    
 
     this.dialogueSystem.handlePlayerInteraction(entityId, interactionType);
-    
+
     logAutopoiesis.info('Player interaction handled', {
       entityId,
-      interactionType
+      interactionType,
     });
   }
 
@@ -143,30 +133,30 @@ export class MainScene extends Phaser.Scene {
     if (this.worldRenderer) {
       this.worldRenderer.updateVisuals();
     }
-    
+
     this.handleManualControl();
     this.updateFoodSystem();
     this.updateUI();
   }
-  
+
   // Método obsoleto - ahora manejado por InputManager
-  
+
   private setupUIEvents() {
     this.events.on('changeEntityControl', (entity: ControlledEntity) => {
       this.inputManager.setControlledEntity(entity);
       logAutopoiesis.info(`Manual control switched to: ${entity}`);
     });
   }
-  
+
   private handleManualControl() {
     const isaEntity = this.entityManager.getEntity('isa');
     const stevEntity = this.entityManager.getEntity('stev');
-    
+
     if (isaEntity && stevEntity) {
       this.inputManager.processMovementInput(isaEntity, stevEntity);
     }
   }
-  
+
   private handleEntityAction() {
     const controlledEntity = this.inputManager.getControlledEntity();
     if (controlledEntity !== 'none') {
@@ -188,19 +178,19 @@ export class MainScene extends Phaser.Scene {
    */
   private updateFoodSystem(): void {
     const completedActions = this.foodSystem.updateEatingActions();
-    
+
     // Aplicar efectos de comida completada
     completedActions.forEach(({ entityId, food }) => {
       const entity = this.entityManager.getEntity(entityId as 'isa' | 'stev');
       if (entity) {
         const currentStats = entity.getStats();
         const newStats = this.foodSystem.applyFoodEffects(currentStats, food);
-        
+
         // Actualizar stats de la entidad (esto debería hacerse a través de un método en la entidad)
-        logAutopoiesis.info('Aplicando efectos de comida', { 
-          entityId, 
-          foodId: food.id, 
-          statsChange: newStats 
+        logAutopoiesis.info('Aplicando efectos de comida', {
+          entityId,
+          foodId: food.id,
+          statsChange: newStats,
         });
       }
     });
@@ -233,10 +223,10 @@ export class MainScene extends Phaser.Scene {
     if (!food) {
       const purchaseResult = this.foodSystem.buyFood(foodId, 1, stats.money);
       if (!purchaseResult.success) {
-        logAutopoiesis.warn('No se pudo comprar comida', { 
-          entityId, 
-          foodId, 
-          money: stats.money 
+        logAutopoiesis.warn('No se pudo comprar comida', {
+          entityId,
+          foodId,
+          money: stats.money,
         });
         return;
       }
@@ -246,11 +236,11 @@ export class MainScene extends Phaser.Scene {
     const success = this.foodSystem.startEating(entityId, foodId, position);
     if (success) {
       // Cambiar actividad a EATING
-      const activityComponent = (entity as any).activityComponent;
+      const { activityComponent } = entity as any;
       if (activityComponent) {
         activityComponent.setActivity('EATING');
       }
-      
+
       logAutopoiesis.info('Entidad empezó a comer', { entityId, foodId });
     }
   }
@@ -263,42 +253,50 @@ export class MainScene extends Phaser.Scene {
     const storePositions = [
       { x: 600, y: 300, foods: ['bread', 'sandwich', 'apple_pie'] },
       { x: 900, y: 500, foods: ['burger', 'pizza', 'hotdog', 'frenchfries'] },
-      { x: 300, y: 600, foods: ['icecream', 'chocolate_cake', 'donut', 'cookies'] }
+      {
+        x: 300,
+        y: 600,
+        foods: ['icecream', 'chocolate_cake', 'donut', 'cookies'],
+      },
     ];
 
     storePositions.forEach((store, index) => {
       this.foodSystem.createFoodStore(store.x, store.y, store.foods);
-      logAutopoiesis.info('Tienda de comida creada', { 
-        index, 
+      logAutopoiesis.info('Tienda de comida creada', {
+        index,
         position: { x: store.x, y: store.y },
-        foods: store.foods
+        foods: store.foods,
       });
     });
   }
-  
+
   private updateUI() {
     const isaEntity = this.entityManager.getEntity('isa');
     const stevEntity = this.entityManager.getEntity('stev');
-    
+
     const entityData = {
-      isa: isaEntity ? {
-        stats: isaEntity.getStats(),
-        activity: isaEntity.getCurrentActivity(),
-        mood: isaEntity.getMood(),
-        position: isaEntity.getPosition()
-      } : null,
-      stev: stevEntity ? {
-        stats: stevEntity.getStats(),
-        activity: stevEntity.getCurrentActivity(),
-        mood: stevEntity.getMood(),
-        position: stevEntity.getPosition()
-      } : null
+      isa: isaEntity
+        ? {
+            stats: isaEntity.getStats(),
+            activity: isaEntity.getCurrentActivity(),
+            mood: isaEntity.getMood(),
+            position: isaEntity.getPosition(),
+          }
+        : null,
+      stev: stevEntity
+        ? {
+            stats: stevEntity.getStats(),
+            activity: stevEntity.getCurrentActivity(),
+            mood: stevEntity.getMood(),
+            position: stevEntity.getPosition(),
+          }
+        : null,
     };
-    
+
     this.events.emit('gameLogicUpdate', {
       cycles: this.gameState.cycles,
       resonance: this.gameState.resonance,
-      entities: entityData
+      entities: entityData,
     });
   }
 
@@ -311,17 +309,21 @@ export class MainScene extends Phaser.Scene {
       renderer: this.worldRenderer?.getStats(),
       entities: {
         total: this.entities.children.size,
-        isa: this.isaEntity ? {
-          activity: this.isaEntity.getCurrentActivity(),
-          mood: this.isaEntity.getMood(),
-          alive: !this.isaEntity.isDead()
-        } : null,
-        stev: this.stevEntity ? {
-          activity: this.stevEntity.getCurrentActivity(),
-          mood: this.stevEntity.getMood(),
-          alive: !this.stevEntity.isDead()
-        } : null
-      }
+        isa: this.isaEntity
+          ? {
+              activity: this.isaEntity.getCurrentActivity(),
+              mood: this.isaEntity.getMood(),
+              alive: !this.isaEntity.isDead(),
+            }
+          : null,
+        stev: this.stevEntity
+          ? {
+              activity: this.stevEntity.getCurrentActivity(),
+              mood: this.stevEntity.getMood(),
+              alive: !this.stevEntity.isDead(),
+            }
+          : null,
+      },
     };
   }
 
@@ -329,19 +331,18 @@ export class MainScene extends Phaser.Scene {
    * Cleanup when scene is destroyed
    */
   destroy(): void {
-
     if (this.gameLogicManager) {
       this.gameLogicManager.destroy();
     }
-    
+
     if (this.worldRenderer) {
       this.worldRenderer.destroy();
     }
-    
+
     if (this.dialogueSystem) {
       this.dialogueSystem.destroy();
     }
-    
+
     logAutopoiesis.info('MainScene destroyed');
   }
 }

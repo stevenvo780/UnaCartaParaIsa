@@ -23,7 +23,7 @@ export const MATH = {
 
   HIGH_PRECISION_EPSILON: Number.EPSILON,
   ULTRA_PRECISION_EPSILON: 1e-15,
-  EFFECTIVE_ZERO: 1e-10
+  EFFECTIVE_ZERO: 1e-10,
 } as const;
 
 export const TIMING = {
@@ -51,8 +51,8 @@ export const TIMING = {
     NORMAL: 1.0,
     FAST: 2.0,
     ULTRA_FAST: 5.0,
-    INSTANT: 20.0
-  }
+    INSTANT: 20.0,
+  },
 } as const;
 
 export const SURVIVAL = {
@@ -63,7 +63,7 @@ export const SURVIVAL = {
     HAPPINESS: 10,
     SLEEPINESS: 80,
     BOREDOM: 80,
-    LONELINESS: 70
+    LONELINESS: 70,
   },
 
   DEGRADATION_RATES: {
@@ -73,13 +73,13 @@ export const SURVIVAL = {
     SLEEPINESS: 0.04,
     BOREDOM: 0.06,
     LONELINESS: 0.02,
-    HEALTH: 0.01
+    HEALTH: 0.01,
   },
 
   LIVING_COSTS: {
     BASIC: 1.5,
     ACTIVITY: 0.5,
-    LUXURY: 2.0
+    LUXURY: 2.0,
   },
 
   ACTIVITY_MULTIPLIERS: {
@@ -91,7 +91,7 @@ export const SURVIVAL = {
     EXERCISING: 1.8,
     SOCIALIZING: 0.9,
     WORKING: 1.3,
-    PLAYING: 0.7
+    PLAYING: 0.7,
   },
 
   RECOVERY_RATES: {
@@ -99,8 +99,8 @@ export const SURVIVAL = {
     SLEEPING_ENERGY: 6.0,
     SOCIALIZING_LONELINESS: 4.0,
     RESTING_ALL: 1.5,
-    MEDITATING_HAPPINESS: 3.0
-  }
+    MEDITATING_HAPPINESS: 3.0,
+  },
 } as const;
 
 export const PHYSICS = {
@@ -119,15 +119,15 @@ export const PHYSICS = {
     MAX_PATH_LENGTH: 50,
     RECALCULATION_THRESHOLD: 30,
     OBSTACLE_AVOIDANCE_DISTANCE: 60,
-    WANDER_RADIUS: 100
+    WANDER_RADIUS: 100,
   },
 
   STEERING_WEIGHTS: {
     SEEK: 1.0,
     AVOID: 2.0,
     SEPARATE: 1.5,
-    WANDER: 0.5
-  }
+    WANDER: 0.5,
+  },
 } as const;
 
 export const ACTIVITIES = {
@@ -144,7 +144,7 @@ export const ACTIVITIES = {
     'DANCING',
     'HIDING',
     'SHOPPING',
-    'COOKING'
+    'COOKING',
   ] as const,
 
   OPTIMAL_DURATION: {
@@ -160,7 +160,7 @@ export const ACTIVITIES = {
     DANCING: 180000,
     HIDING: 240000,
     SHOPPING: 120000,
-    COOKING: 180000
+    COOKING: 180000,
   },
 
   EFFECTS: {
@@ -176,7 +176,7 @@ export const ACTIVITIES = {
     DANCING: { happiness: 4, boredom: -3, energy: -1.5 },
     HIDING: { loneliness: 2, happiness: -1, energy: 0.5 },
     SHOPPING: { happiness: 2, boredom: -1, money: -1 },
-    COOKING: { hunger: -4, happiness: 1, boredom: -1 }
+    COOKING: { hunger: -4, happiness: 1, boredom: -1 },
   },
 
   PREFERRED_ZONES: {
@@ -192,21 +192,18 @@ export const ACTIVITIES = {
     DANCING: 'social',
     HIDING: 'comfort',
     SHOPPING: 'work',
-    COOKING: 'food'
-  }
+    COOKING: 'food',
+  },
 } as const;
 
-
 export const ACTIVITY_TYPES = ACTIVITIES.TYPES;
-
 
 export const MOVEMENT_CONFIG = {
   ENTITY_SIZE: 32,
   MIN_DISTANCE_BETWEEN_ENTITIES: 50,
   COMPANION_SEEK_DISTANCE: 200,
-  REPULSION_FORCE: 2
+  REPULSION_FORCE: 2,
 } as const;
-
 
 export const NEED_TO_ZONE_MAPPING = {
   hunger: 'kitchen',
@@ -219,26 +216,33 @@ export const NEED_TO_ZONE_MAPPING = {
   happiness: 'play',
   boredom: 'recreation',
   money: 'work',
-  health: 'bedroom'
+  health: 'bedroom',
 } as const;
-
 
 export const RESONANCE_THRESHOLDS = {
   LOW: 0.3,
   MEDIUM: 0.6,
-  HIGH: 0.8
+  HIGH: 0.8,
 } as const;
 
+export type ZoneType =
+  | 'kitchen'
+  | 'bedroom'
+  | 'living'
+  | 'bathroom'
+  | 'outdoor';
 
-export type ZoneType = 'kitchen' | 'bedroom' | 'living' | 'bathroom' | 'outdoor';
-
-
-export type EntityStateType = 'idle' | 'moving' | 'interacting' | 'resting' | 'seeking';
+export type EntityStateType =
+  | 'idle'
+  | 'moving'
+  | 'interacting'
+  | 'resting'
+  | 'seeking';
 
 export const {
   MAIN_GAME_LOGIC,
   DEGRADATION_UPDATE,
   NATURAL_CYCLE_MS,
   BREATHING_CYCLE_MS,
-  ATTENTION_SPAN_MS
+  ATTENTION_SPAN_MS,
 } = TIMING;

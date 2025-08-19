@@ -4,12 +4,10 @@
  */
 
 export const GAME_BALANCE = {
-
   CYCLE_LOG_FREQUENCY: 10,
   UI_UPDATE_INTERVAL: 100,
   DIALOGUE_CHECK_INTERVAL: 8000,
   DIALOGUE_VARIATION: 7000,
-  
 
   WORLD: {
     DEFAULT_WIDTH: 1200,
@@ -17,9 +15,8 @@ export const GAME_BALANCE = {
     MIN_WIDTH: 800,
     MIN_HEIGHT: 600,
     MAX_WIDTH: 1920,
-    MAX_HEIGHT: 1080
+    MAX_HEIGHT: 1080,
   },
-
 
   VISUALS: {
     ENTITY_SCALE: 1.5,
@@ -27,13 +24,11 @@ export const GAME_BALANCE = {
     ENTITY_DEPTH: 10,
     ZONE_DEPTH: 2,
     UI_DEPTH: 1000,
-    
 
     BASE_PULSE_SCALE: 1.5,
     PULSE_AMPLITUDE: 0.1,
-    PULSE_SPEED: 0.1
+    PULSE_SPEED: 0.1,
   },
-
 
   RESONANCE: {
     BAR_SCALE: 2,
@@ -41,41 +36,35 @@ export const GAME_BALANCE = {
     BAR_HEIGHT: 20,
     THRESHOLD_HIGH: 50,
     THRESHOLD_MEDIUM: 25,
-    
 
     COLOR_HIGH: 0x27ae60,
     COLOR_MEDIUM: 0xf39c12,
-    COLOR_LOW: 0xe74c3c
+    COLOR_LOW: 0xe74c3c,
   },
-
 
   SPRITES: {
     ENTITY_SIZE: 32,
     ANIMATION_DURATION: 300,
     FADE_DURATION: 500,
     TWEEN_EASE: 'Back.easeOut',
-    TWEEN_EASE_IN: 'Back.easeIn'
+    TWEEN_EASE_IN: 'Back.easeIn',
   },
-
 
   MOVEMENT: {
     DIRECTION_CHANGE_PROBABILITY: 0.02,
     ENTITY_COLLISION_RADIUS: 15,
-    SQUARE_ENTITY_SIZE: 30
+    SQUARE_ENTITY_SIZE: 30,
   },
-
 
   EFFECTS: {
     MIN_ALPHA: 0.5,
     MAX_ALPHA: 1.0,
     HEALTH_ALPHA_FACTOR: 0.5,
-    
 
     DYING_THRESHOLD: 20,
     SAD_THRESHOLD: 50,
-    LOW_HEALTH_THRESHOLD: 15
+    LOW_HEALTH_THRESHOLD: 15,
   },
-
 
   ZONES: {
     DEFAULT_ALPHA: 0.25,
@@ -83,27 +72,23 @@ export const GAME_BALANCE = {
     STROKE_WIDTH: 2,
     CORNER_RADIUS: 10,
     DEPTH: 2,
-    
 
     FOOD_COLOR: 0x27ae60,
     REST_COLOR: 0x2980b9,
     PLAY_COLOR: 0xe74c3c,
-    SOCIAL_COLOR: 0x3498db
+    SOCIAL_COLOR: 0x3498db,
   },
-
 
   UI: {
     BACKGROUND_ALPHA: 0.7,
     PANEL_WIDTH: 300,
     PANEL_HEIGHT: 120,
     TEXT_MARGIN: 10,
-    
 
     DEBUG_BUTTON_WIDTH: 40,
     DEBUG_BUTTON_SPACING: 40,
-    DEBUG_SPEEDS: [0.5, 1.0, 2.0, 5.0, 10.0]
+    DEBUG_SPEEDS: [0.5, 1.0, 2.0, 5.0, 10.0],
   },
-
 
   DIALOGUE: {
     BUBBLE_WIDTH: 240,
@@ -112,49 +97,41 @@ export const GAME_BALANCE = {
     BUBBLE_RADIUS: 10,
     BUBBLE_ALPHA: 0.9,
     TAIL_SIZE: 8,
-    
 
     DEFAULT_DURATION: 4000,
     INTERACTION_DURATION: 3500,
     ANIMATION_DURATION: 300,
-    
 
     ISA_COLOR: 0x8e44ad,
     STEV_COLOR: 0x2980b9,
     TEXT_STROKE: 2,
-    
 
     MAX_TEXT_LENGTH: 80,
-    WRAP_WIDTH: 220
+    WRAP_WIDTH: 220,
   },
-
 
   DECORATIONS: {
     CAMPFIRE_SCALE: 1.2,
     FLOWERS_SCALE: 1.2,
-    DECORATION_DEPTH: 1
+    DECORATION_DEPTH: 1,
   },
-
 
   MAP_GENERATION: {
     MIN_ZONES: 4,
     MIN_ELEMENTS: 8,
     ZONE_VARIATION_FACTOR: 0.3,
-    
 
     MIN_ZONE_SIZE: 100,
-    MIN_ELEMENTS_COUNT: 5
+    MIN_ELEMENTS_COUNT: 5,
   },
-
 
   PERFORMANCE: {
     LOG_SAMPLING_RATE: 0.1,
     CLEANUP_INTERVAL: 60000,
     BATCH_SIZE: 20,
-    THROTTLE_THRESHOLD: 16.67
-  }
+    THROTTLE_THRESHOLD: 16.67,
+  },
 } as const;
-
 
 export type GameBalanceKey = keyof typeof GAME_BALANCE;
 export type WorldDimensions = typeof GAME_BALANCE.WORLD;

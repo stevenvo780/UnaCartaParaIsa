@@ -10,7 +10,7 @@ export type {
   GeneratedWorld,
   WorldLayer,
   NoiseOptions,
-  BiomeTransition
+  BiomeTransition,
 } from './types';
 
 // Enum principal
@@ -30,7 +30,7 @@ export {
   getBiomeDefinition,
   getAllBiomes,
   canBiomeSpawn,
-  calculateBiomeFitness
+  calculateBiomeFitness,
 } from './BiomeDefinitions';
 
 export {
@@ -40,5 +40,5 @@ export {
   getAvailablePresets,
   applyDensityConfig,
   createCustomWorldConfig,
-  validateWorldConfig
+  validateWorldConfig,
 } from './WorldConfig';

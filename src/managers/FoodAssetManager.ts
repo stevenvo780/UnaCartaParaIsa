@@ -3,14 +3,14 @@
  * Maneja la carga lazy de sprites de comida según se necesiten
  */
 
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 import { FoodCatalog } from '../data/FoodCatalog';
 import { logAutopoiesis } from '../utils/logger';
 
 export class FoodAssetManager {
   private scene: Phaser.Scene;
-  private loadedAssets: Set<string> = new Set();
-  private loadingPromises: Map<string, Promise<void>> = new Map();
+  private loadedAssets = new Set<string>();
+  private loadingPromises = new Map<string, Promise<void>>();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -21,12 +21,21 @@ export class FoodAssetManager {
    */
   async loadEssentialFoodAssets(): Promise<void> {
     const essentialFoods = [
-      'bread', 'burger', 'apple_pie', 'icecream', 'sandwich', 'pizza'
+      'bread',
+      'burger',
+      'apple_pie',
+      'icecream',
+      'sandwich',
+      'pizza',
     ];
 
-    logAutopoiesis.info('Cargando assets esenciales de comida', { count: essentialFoods.length });
+    logAutopoiesis.info('Cargando assets esenciales de comida', {
+      count: essentialFoods.length,
+    });
 
-    const loadPromises = essentialFoods.map(foodId => this.loadFoodAsset(foodId));
+    const loadPromises = essentialFoods.map(foodId =>
+      this.loadFoodAsset(foodId)
+    );
     await Promise.all(loadPromises);
 
     // Cargar assets adicionales para el sistema de comida
@@ -58,20 +67,23 @@ export class FoodAssetManager {
     const loadPromise = new Promise<void>((resolve, reject) => {
       // Usar el scene's load para cargar la imagen
       this.scene.load.image(foodId, food.sprite);
-      
-      this.scene.load.once('filecomplete-image-' + foodId, () => {
+
+      this.scene.load.once(`filecomplete-image-${foodId}`, () => {
         this.loadedAssets.add(foodId);
         this.loadingPromises.delete(foodId);
-        logAutopoiesis.debug('Asset de comida cargado', { foodId, sprite: food.sprite });
+        logAutopoiesis.debug('Asset de comida cargado', {
+          foodId,
+          sprite: food.sprite,
+        });
         resolve();
       });
 
       this.scene.load.once('loaderror', (file: any) => {
         if (file.key === foodId) {
-          logAutopoiesis.error('Error cargando asset de comida', { 
-            foodId, 
+          logAutopoiesis.error('Error cargando asset de comida', {
+            foodId,
             sprite: food.sprite,
-            error: file.error 
+            error: file.error,
           });
           this.loadingPromises.delete(foodId);
           reject(new Error(`Failed to load food asset: ${foodId}`));
@@ -99,8 +111,11 @@ export class FoodAssetManager {
   async loadFoodCategory(category: string): Promise<void> {
     const categoryFoods = FoodCatalog.getFoodsByCategory(category as any);
     const foodIds = categoryFoods.map(food => food.id);
-    
-    logAutopoiesis.info('Cargando categoría de comida', { category, count: foodIds.length });
+
+    logAutopoiesis.info('Cargando categoría de comida', {
+      category,
+      count: foodIds.length,
+    });
     await this.loadFoodAssets(foodIds);
   }
 
@@ -113,7 +128,7 @@ export class FoodAssetManager {
       const systemAssets = [
         { key: 'food_store', path: 'assets/props/Crate_Medium_Closed.png' },
         { key: 'spark', path: 'assets/effects/spark.png' },
-        { key: 'eating_indicator', path: 'assets/ui/eating_icon.png' }
+        { key: 'eating_indicator', path: 'assets/ui/eating_icon.png' },
       ];
 
       let assetsLoaded = 0;
@@ -173,7 +188,7 @@ export class FoodAssetManager {
       total: totalAssets,
       loaded: loadedCount,
       percentage: totalAssets > 0 ? (loadedCount / totalAssets) * 100 : 0,
-      loadedAssets: Array.from(this.loadedAssets)
+      loadedAssets: Array.from(this.loadedAssets),
     };
   }
 
@@ -183,18 +198,27 @@ export class FoodAssetManager {
   async preloadFrequentFoods(): Promise<void> {
     // Comidas que se usan frecuentemente
     const frequentFoods = [
-      'bread', 'burger', 'pizza', 'sandwich', 'icecream',
-      'apple_pie', 'cookies', 'hotdog', 'salmon'
+      'bread',
+      'burger',
+      'pizza',
+      'sandwich',
+      'icecream',
+      'apple_pie',
+      'cookies',
+      'hotdog',
+      'salmon',
     ];
 
-    logAutopoiesis.info('Precargando comidas frecuentes', { count: frequentFoods.length });
+    logAutopoiesis.info('Precargando comidas frecuentes', {
+      count: frequentFoods.length,
+    });
     await this.loadFoodAssets(frequentFoods);
   }
 
   /**
    * Limpia assets no utilizados (para optimización de memoria)
    */
-  cleanupUnusedAssets(keepEssentials: boolean = true): number {
+  cleanupUnusedAssets(keepEssentials = true): number {
     let cleanedCount = 0;
     const essentialFoods = ['bread', 'burger', 'apple_pie'];
 
@@ -210,9 +234,9 @@ export class FoodAssetManager {
       }
     });
 
-    logAutopoiesis.info('Assets de comida limpiados', { 
-      cleaned: cleanedCount, 
-      remaining: this.loadedAssets.size 
+    logAutopoiesis.info('Assets de comida limpiados', {
+      cleaned: cleanedCount,
+      remaining: this.loadedAssets.size,
     });
 
     return cleanedCount;
@@ -221,9 +245,9 @@ export class FoodAssetManager {
   /**
    * Obtiene el progreso de carga de assets
    */
-  getLoadingProgress(): { 
-    isLoading: boolean; 
-    activeLoads: number; 
+  getLoadingProgress(): {
+    isLoading: boolean;
+    activeLoads: number;
     totalProgress: number;
   } {
     const activeLoads = this.loadingPromises.size;
@@ -232,7 +256,7 @@ export class FoodAssetManager {
     return {
       isLoading: activeLoads > 0 || this.scene.load.isLoading(),
       activeLoads,
-      totalProgress: loadProgress * 100
+      totalProgress: loadProgress * 100,
     };
   }
 }

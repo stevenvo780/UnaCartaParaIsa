@@ -4,11 +4,11 @@
 
 export enum BiomeType {
   GRASSLAND = 'grassland',
-  FOREST = 'forest', 
+  FOREST = 'forest',
   MYSTICAL = 'mystical',
   WETLAND = 'wetland',
   MOUNTAINOUS = 'mountainous',
-  VILLAGE = 'village'
+  VILLAGE = 'village',
 }
 
 export interface BiomeDefinition {
@@ -16,7 +16,7 @@ export interface BiomeDefinition {
   name: string;
   description: string;
   color: string; // Color representativo para debugging
-  
+
   // Condiciones de spawn
   conditions: {
     temperatureRange: [number, number]; // 0-1
@@ -24,7 +24,7 @@ export interface BiomeDefinition {
     elevationRange: [number, number]; // 0-1
     distanceFromWater?: number; // tiles
   };
-  
+
   // Assets por categoría
   assets: {
     terrain: {
@@ -32,7 +32,7 @@ export interface BiomeDefinition {
       secondary: string[]; // Assets secundarios para variación
       weight: number[]; // Pesos para cada asset
     };
-    
+
     // IDs de tiles para uso eficiente con TilesetManager
     tileIds?: {
       terrain: number[]; // IDs de tiles de terreno
@@ -40,7 +40,7 @@ export interface BiomeDefinition {
       autotiles?: number[]; // IDs de autotiles para transiciones
       decorations?: number[]; // IDs de decoraciones
     };
-    
+
     trees: {
       primary: string[];
       rare: string[]; // Árboles especiales/raros
@@ -66,7 +66,7 @@ export interface BiomeDefinition {
       density: number;
     };
   };
-  
+
   // Configuración de generación
   generation: {
     tileSize: number;
@@ -98,7 +98,7 @@ export interface WorldGenConfig {
   height: number; // alto en tiles
   tileSize: number; // tamaño de cada tile en pixels
   seed: number;
-  
+
   // Parámetros de ruido
   noise: {
     temperature: {
@@ -120,17 +120,17 @@ export interface WorldGenConfig {
       lacunarity: number;
     };
   };
-  
+
   // Configuración de biomas
   biomes: {
     enabled: BiomeType[];
-    forceSpawn?: Array<{
+    forceSpawn?: {
       biome: BiomeType;
       position: { x: number; y: number };
       radius: number;
-    }>;
+    }[];
   };
-  
+
   // Generación de agua
   water: {
     level: number; // 0-1, nivel de agua basado en elevación
@@ -142,14 +142,14 @@ export interface WorldGenConfig {
 export interface WorldLayer {
   name: string;
   zIndex: number;
-  tiles: Array<{
+  tiles: {
     x: number;
     y: number;
     asset: string;
     rotation?: number;
     scale?: number;
     alpha?: number;
-  }>;
+  }[];
 }
 
 export interface GeneratedWorld {

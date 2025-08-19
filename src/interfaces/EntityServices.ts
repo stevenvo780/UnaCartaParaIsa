@@ -12,7 +12,7 @@ export interface TimeOfDayData {
   hour: number;
   isDay: boolean;
   isNight: boolean;
-  phase: "dawn" | "day" | "dusk" | "night";
+  phase: 'dawn' | 'day' | 'dusk' | 'night';
   lightLevel: number;
   modifier: number;
 }
@@ -37,7 +37,12 @@ export interface IGameConfig {
 /**
  * Tipo para datos de logging
  */
-export type LogData = Record<string, unknown> | string | number | boolean | null;
+export type LogData =
+  | Record<string, unknown>
+  | string
+  | number
+  | boolean
+  | null;
 
 /**
  * Interface para servicios de logging
@@ -58,9 +63,9 @@ export interface IActivityCalculator {
     activity: ActivityType,
     deltaTime: number
   ): EntityStats;
-  
+
   applySurvivalCosts(stats: EntityStats, deltaTime: number): EntityStats;
-  
+
   applyActivityEffectsWithTimeModifiers(
     activity: ActivityType,
     stats: EntityStats,
@@ -85,8 +90,11 @@ export interface IResonanceCalculator {
     closeness: number;
     effect: string;
   };
-  
-  calculateResonanceModifiers(resonance: number, closeness: number): {
+
+  calculateResonanceModifiers(
+    resonance: number,
+    closeness: number
+  ): {
     happinessMultiplier: number;
     energyMultiplier: number;
     healthMultiplier: number;
@@ -139,12 +147,12 @@ export class EntityServicesFactory {
         entityInitialHealth: 90,
         initialResonance: 0,
         movement: { baseSpeed: 84, friction: 0.85 },
-        timing: { mainGameLogic: 800 }
+        timing: { mainGameLogic: 800 },
       },
       logger: {
         info: (message: string, data?: LogData) => {
           try {
-            const logAutopoiesis = require('../utils/logger').logAutopoiesis;
+            const { logAutopoiesis } = require('../utils/logger');
             logAutopoiesis.info(message, data);
           } catch {
             // Fallback silencioso si logger no está disponible
@@ -152,7 +160,7 @@ export class EntityServicesFactory {
         },
         warn: (message: string, data?: LogData) => {
           try {
-            const logAutopoiesis = require('../utils/logger').logAutopoiesis;
+            const { logAutopoiesis } = require('../utils/logger');
             logAutopoiesis.warn(message, data);
           } catch {
             // Fallback silencioso si logger no está disponible
@@ -160,7 +168,7 @@ export class EntityServicesFactory {
         },
         error: (message: string, data?: LogData) => {
           try {
-            const logAutopoiesis = require('../utils/logger').logAutopoiesis;
+            const { logAutopoiesis } = require('../utils/logger');
             logAutopoiesis.error(message, data);
           } catch {
             // Fallback silencioso si logger no está disponible
@@ -168,17 +176,26 @@ export class EntityServicesFactory {
         },
         debug: (message: string, data?: LogData) => {
           try {
-            const logAutopoiesis = require('../utils/logger').logAutopoiesis;
+            const { logAutopoiesis } = require('../utils/logger');
             logAutopoiesis.debug(message, data);
           } catch {
             // Fallback silencioso si logger no está disponible
           }
-        }
+        },
       },
       activityCalculator: {
-        applyHybridDecay: (stats: EntityStats, _activity: ActivityType, _deltaTime: number) => stats,
+        applyHybridDecay: (
+          stats: EntityStats,
+          _activity: ActivityType,
+          _deltaTime: number
+        ) => stats,
         applySurvivalCosts: (stats: EntityStats, _deltaTime: number) => stats,
-        applyActivityEffectsWithTimeModifiers: (_activity: ActivityType, stats: EntityStats, _deltaTime: number, _timeOfDay: TimeOfDayData) => stats
+        applyActivityEffectsWithTimeModifiers: (
+          _activity: ActivityType,
+          stats: EntityStats,
+          _deltaTime: number,
+          _timeOfDay: TimeOfDayData
+        ) => stats,
       },
       resonanceCalculator: {
         calculateProximityResonanceChange: (
@@ -191,18 +208,21 @@ export class EntityServicesFactory {
         ) => ({
           resonanceChange: 0,
           closeness: 0,
-          effect: 'none'
+          effect: 'none',
         }),
-        calculateResonanceModifiers: (_resonance: number, _closeness: number) => ({
+        calculateResonanceModifiers: (
+          _resonance: number,
+          _closeness: number
+        ) => ({
           happinessMultiplier: 1,
           energyMultiplier: 1,
           healthMultiplier: 1,
-          lonelinessPenalty: 0
-        })
+          lonelinessPenalty: 0,
+        }),
       },
       aiDecisionEngine: {
-        makeIntelligentDecision: () => 'rest' as ActivityType
-      }
+        makeIntelligentDecision: () => 'rest' as ActivityType,
+      },
     };
   }
 }
@@ -217,37 +237,37 @@ export class MockEntityServices implements IEntityServices {
     entityInitialHealth: 90,
     initialResonance: 0,
     movement: { baseSpeed: 84, friction: 0.85 },
-    timing: { mainGameLogic: 800 }
+    timing: { mainGameLogic: 800 },
   };
 
   logger: ILogger = {
     info: () => {},
     warn: () => {},
     error: () => {},
-    debug: () => {}
+    debug: () => {},
   };
 
   activityCalculator: IActivityCalculator = {
-    applyHybridDecay: (stats) => stats,
-    applySurvivalCosts: (stats) => stats,
-    applyActivityEffectsWithTimeModifiers: (_activity, stats) => stats
+    applyHybridDecay: stats => stats,
+    applySurvivalCosts: stats => stats,
+    applyActivityEffectsWithTimeModifiers: (_activity, stats) => stats,
   };
 
   resonanceCalculator: IResonanceCalculator = {
     calculateProximityResonanceChange: () => ({
       resonanceChange: 0,
       closeness: 0,
-      effect: 'neutral'
+      effect: 'neutral',
     }),
     calculateResonanceModifiers: () => ({
       happinessMultiplier: 1,
       energyMultiplier: 1,
       healthMultiplier: 1,
-      lonelinessPenalty: 1
-    })
+      lonelinessPenalty: 1,
+    }),
   };
 
   aiDecisionEngine: IAIDecisionEngine = {
-    makeIntelligentDecision: (entity) => entity.activity
+    makeIntelligentDecision: entity => entity.activity,
   };
 }

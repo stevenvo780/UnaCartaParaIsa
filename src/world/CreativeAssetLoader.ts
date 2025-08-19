@@ -2,7 +2,8 @@
  * Asset Loader creativo que carga dinámicamente assets para crear mundos diversos
  */
 
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
+import { logAutopoiesis } from '../utils/logger';
 
 export interface AssetInfo {
   key: string;
@@ -17,8 +18,8 @@ export interface AssetInfo {
  */
 export class CreativeAssetLoader {
   private scene: Phaser.Scene;
-  private loadedAssets: Map<string, AssetInfo> = new Map();
-  private assetsByType: Map<string, AssetInfo[]> = new Map();
+  private loadedAssets = new Map<string, AssetInfo>();
+  private assetsByType = new Map<string, AssetInfo[]>();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -49,7 +50,7 @@ export class CreativeAssetLoader {
         path: `assets/terrain/base/cesped${i}.png`,
         type: 'terrain',
         biome: 'grassland',
-        variant: i
+        variant: i,
       };
       terrainAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
@@ -57,8 +58,16 @@ export class CreativeAssetLoader {
 
     // Cargar assets base especiales
     const baseAssets = [
-      { key: 'grass_middle', path: 'assets/terrain/base/Grass_Middle.png', biome: 'grassland' },
-      { key: 'textured_grass', path: 'assets/terrain/base/TexturedGrass.png', biome: 'grassland' }
+      {
+        key: 'grass_middle',
+        path: 'assets/terrain/base/Grass_Middle.png',
+        biome: 'grassland',
+      },
+      {
+        key: 'textured_grass',
+        path: 'assets/terrain/base/TexturedGrass.png',
+        biome: 'grassland',
+      },
     ];
 
     for (const asset of baseAssets) {
@@ -66,7 +75,7 @@ export class CreativeAssetLoader {
         key: asset.key,
         path: asset.path,
         type: 'terrain',
-        biome: asset.biome
+        biome: asset.biome,
       };
       terrainAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
@@ -87,20 +96,95 @@ export class CreativeAssetLoader {
       key: 'water_middle',
       path: 'assets/water/Water_Middle.png',
       type: 'water',
-      biome: 'wetland'
+      biome: 'wetland',
     };
     waterAssets.push(waterBase);
     this.loadedAssets.set(waterBase.key, waterBase);
 
     // Cargar tiles organizados de agua (patrón tile_XX_YY)
     const waterTilePatterns = [
-      '00_02', '00_03', '00_04', '00_05', '00_06', '00_07', '00_08', '00_09', '00_10', '00_11',
-      '01_00', '01_01', '01_02', '01_03', '01_04', '01_05', '01_06', '01_07', '01_08', '01_09', '01_10', '01_11',
-      '02_00', '02_01', '02_02', '02_03', '02_04', '02_05', '02_06', '02_07', '02_08', '02_09', '02_10', '02_11',
-      '03_00', '03_01', '03_02', '03_03', '03_04', '03_05', '03_06', '03_07', '03_08', '03_09', '03_10', '03_11',
-      '04_00', '04_01', '04_02', '04_03', '04_04', '04_05', '04_06', '04_07', '04_08', '04_09', '04_10', '04_11',
-      '05_00', '05_01', '05_02', '05_03', '05_04', '05_05', '05_06', '05_07', '05_08', '05_09', '05_10', '05_11',
-      '09_00', '09_01', '09_02', '09_03', '09_04', '09_05', '09_06', '09_07', '09_08', '09_09', '09_10', '09_11'
+      '00_02',
+      '00_03',
+      '00_04',
+      '00_05',
+      '00_06',
+      '00_07',
+      '00_08',
+      '00_09',
+      '00_10',
+      '00_11',
+      '01_00',
+      '01_01',
+      '01_02',
+      '01_03',
+      '01_04',
+      '01_05',
+      '01_06',
+      '01_07',
+      '01_08',
+      '01_09',
+      '01_10',
+      '01_11',
+      '02_00',
+      '02_01',
+      '02_02',
+      '02_03',
+      '02_04',
+      '02_05',
+      '02_06',
+      '02_07',
+      '02_08',
+      '02_09',
+      '02_10',
+      '02_11',
+      '03_00',
+      '03_01',
+      '03_02',
+      '03_03',
+      '03_04',
+      '03_05',
+      '03_06',
+      '03_07',
+      '03_08',
+      '03_09',
+      '03_10',
+      '03_11',
+      '04_00',
+      '04_01',
+      '04_02',
+      '04_03',
+      '04_04',
+      '04_05',
+      '04_06',
+      '04_07',
+      '04_08',
+      '04_09',
+      '04_10',
+      '04_11',
+      '05_00',
+      '05_01',
+      '05_02',
+      '05_03',
+      '05_04',
+      '05_05',
+      '05_06',
+      '05_07',
+      '05_08',
+      '05_09',
+      '05_10',
+      '05_11',
+      '09_00',
+      '09_01',
+      '09_02',
+      '09_03',
+      '09_04',
+      '09_05',
+      '09_06',
+      '09_07',
+      '09_08',
+      '09_09',
+      '09_10',
+      '09_11',
     ];
 
     for (const pattern of waterTilePatterns) {
@@ -109,7 +193,7 @@ export class CreativeAssetLoader {
         path: `assets/water/tile_${pattern}.png`,
         type: 'water',
         biome: 'wetland',
-        variant: parseInt(pattern.replace('_', ''))
+        variant: parseInt(pattern.replace('_', '')),
       };
       waterAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
@@ -118,7 +202,7 @@ export class CreativeAssetLoader {
     // Cargar tiles especiales
     const specialWater = [
       { key: 'water_0198', path: 'assets/water/tile_0198.png' },
-      { key: 'water_0230', path: 'assets/water/tile_0230.png' }
+      { key: 'water_0230', path: 'assets/water/tile_0230.png' },
     ];
 
     for (const special of specialWater) {
@@ -126,7 +210,7 @@ export class CreativeAssetLoader {
         key: special.key,
         path: special.path,
         type: 'water',
-        biome: 'wetland'
+        biome: 'wetland',
       };
       waterAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
@@ -143,21 +227,81 @@ export class CreativeAssetLoader {
     const roadAssets: AssetInfo[] = [];
 
     const roadTypes = [
-      { key: 'road_cross', path: 'assets/roads/road_path_cross.png', type: 'intersection' },
-      { key: 'road_curve_ne', path: 'assets/roads/road_path_curve_ne.png', type: 'curve' },
-      { key: 'road_curve_nw', path: 'assets/roads/road_path_curve_nw.png', type: 'curve' },
-      { key: 'road_curve_se', path: 'assets/roads/road_path_curve_se.png', type: 'curve' },
-      { key: 'road_curve_sw', path: 'assets/roads/road_path_curve_sw.png', type: 'curve' },
-      { key: 'road_end_e', path: 'assets/roads/road_path_end_e.png', type: 'end' },
-      { key: 'road_end_n', path: 'assets/roads/road_path_end_n.png', type: 'end' },
-      { key: 'road_end_s', path: 'assets/roads/road_path_end_s.png', type: 'end' },
-      { key: 'road_end_w', path: 'assets/roads/road_path_end_w.png', type: 'end' },
-      { key: 'road_straight_h', path: 'assets/roads/road_path_straight_h.png', type: 'straight' },
-      { key: 'road_straight_v', path: 'assets/roads/road_path_straight_v.png', type: 'straight' },
-      { key: 'road_t', path: 'assets/roads/road_path_t.png', type: 't_junction' },
-      { key: 'road_t_e', path: 'assets/roads/road_path_t_e.png', type: 't_junction' },
-      { key: 'road_t_s', path: 'assets/roads/road_path_t_s.png', type: 't_junction' },
-      { key: 'road_t_w', path: 'assets/roads/road_path_t_w.png', type: 't_junction' }
+      {
+        key: 'road_cross',
+        path: 'assets/roads/road_path_cross.png',
+        type: 'intersection',
+      },
+      {
+        key: 'road_curve_ne',
+        path: 'assets/roads/road_path_curve_ne.png',
+        type: 'curve',
+      },
+      {
+        key: 'road_curve_nw',
+        path: 'assets/roads/road_path_curve_nw.png',
+        type: 'curve',
+      },
+      {
+        key: 'road_curve_se',
+        path: 'assets/roads/road_path_curve_se.png',
+        type: 'curve',
+      },
+      {
+        key: 'road_curve_sw',
+        path: 'assets/roads/road_path_curve_sw.png',
+        type: 'curve',
+      },
+      {
+        key: 'road_end_e',
+        path: 'assets/roads/road_path_end_e.png',
+        type: 'end',
+      },
+      {
+        key: 'road_end_n',
+        path: 'assets/roads/road_path_end_n.png',
+        type: 'end',
+      },
+      {
+        key: 'road_end_s',
+        path: 'assets/roads/road_path_end_s.png',
+        type: 'end',
+      },
+      {
+        key: 'road_end_w',
+        path: 'assets/roads/road_path_end_w.png',
+        type: 'end',
+      },
+      {
+        key: 'road_straight_h',
+        path: 'assets/roads/road_path_straight_h.png',
+        type: 'straight',
+      },
+      {
+        key: 'road_straight_v',
+        path: 'assets/roads/road_path_straight_v.png',
+        type: 'straight',
+      },
+      {
+        key: 'road_t',
+        path: 'assets/roads/road_path_t.png',
+        type: 't_junction',
+      },
+      {
+        key: 'road_t_e',
+        path: 'assets/roads/road_path_t_e.png',
+        type: 't_junction',
+      },
+      {
+        key: 'road_t_s',
+        path: 'assets/roads/road_path_t_s.png',
+        type: 't_junction',
+      },
+      {
+        key: 'road_t_w',
+        path: 'assets/roads/road_path_t_w.png',
+        type: 't_junction',
+      },
     ];
 
     for (const road of roadTypes) {
@@ -165,7 +309,7 @@ export class CreativeAssetLoader {
         key: road.key,
         path: road.path,
         type: 'road',
-        biome: 'village'
+        biome: 'village',
       };
       roadAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
@@ -183,22 +327,82 @@ export class CreativeAssetLoader {
 
     const autotileTypes = [
       // Grass edges
-      { key: 'grass_edge_n', path: 'assets/terrain/autotiles/grass_edge_n.png', from: 'grassland', to: 'other' },
-      { key: 'grass_edge_s', path: 'assets/terrain/autotiles/grass_edge_s.png', from: 'grassland', to: 'other' },
-      { key: 'grass_edge_e', path: 'assets/terrain/autotiles/grass_edge_e.png', from: 'grassland', to: 'other' },
-      { key: 'grass_edge_w', path: 'assets/terrain/autotiles/grass_edge_w.png', from: 'grassland', to: 'other' },
-      
+      {
+        key: 'grass_edge_n',
+        path: 'assets/terrain/autotiles/grass_edge_n.png',
+        from: 'grassland',
+        to: 'other',
+      },
+      {
+        key: 'grass_edge_s',
+        path: 'assets/terrain/autotiles/grass_edge_s.png',
+        from: 'grassland',
+        to: 'other',
+      },
+      {
+        key: 'grass_edge_e',
+        path: 'assets/terrain/autotiles/grass_edge_e.png',
+        from: 'grassland',
+        to: 'other',
+      },
+      {
+        key: 'grass_edge_w',
+        path: 'assets/terrain/autotiles/grass_edge_w.png',
+        from: 'grassland',
+        to: 'other',
+      },
+
       // Water edges
-      { key: 'water_edge_n', path: 'assets/terrain/autotiles/water_edge_n.png', from: 'wetland', to: 'other' },
-      { key: 'water_edge_s', path: 'assets/terrain/autotiles/water_edge_s.png', from: 'wetland', to: 'other' },
-      { key: 'water_edge_e', path: 'assets/terrain/autotiles/water_edge_e.png', from: 'wetland', to: 'other' },
-      { key: 'water_edge_w', path: 'assets/terrain/autotiles/water_edge_w.png', from: 'wetland', to: 'other' },
-      
+      {
+        key: 'water_edge_n',
+        path: 'assets/terrain/autotiles/water_edge_n.png',
+        from: 'wetland',
+        to: 'other',
+      },
+      {
+        key: 'water_edge_s',
+        path: 'assets/terrain/autotiles/water_edge_s.png',
+        from: 'wetland',
+        to: 'other',
+      },
+      {
+        key: 'water_edge_e',
+        path: 'assets/terrain/autotiles/water_edge_e.png',
+        from: 'wetland',
+        to: 'other',
+      },
+      {
+        key: 'water_edge_w',
+        path: 'assets/terrain/autotiles/water_edge_w.png',
+        from: 'wetland',
+        to: 'other',
+      },
+
       // Water corners
-      { key: 'water_corner_ne', path: 'assets/terrain/autotiles/water_corner_ne.png', from: 'wetland', to: 'other' },
-      { key: 'water_corner_nw', path: 'assets/terrain/autotiles/water_corner_nw.png', from: 'wetland', to: 'other' },
-      { key: 'water_corner_se', path: 'assets/terrain/autotiles/water_corner_se.png', from: 'wetland', to: 'other' },
-      { key: 'water_corner_sw', path: 'assets/terrain/autotiles/water_corner_sw.png', from: 'wetland', to: 'other' }
+      {
+        key: 'water_corner_ne',
+        path: 'assets/terrain/autotiles/water_corner_ne.png',
+        from: 'wetland',
+        to: 'other',
+      },
+      {
+        key: 'water_corner_nw',
+        path: 'assets/terrain/autotiles/water_corner_nw.png',
+        from: 'wetland',
+        to: 'other',
+      },
+      {
+        key: 'water_corner_se',
+        path: 'assets/terrain/autotiles/water_corner_se.png',
+        from: 'wetland',
+        to: 'other',
+      },
+      {
+        key: 'water_corner_sw',
+        path: 'assets/terrain/autotiles/water_corner_sw.png',
+        from: 'wetland',
+        to: 'other',
+      },
     ];
 
     for (const autotile of autotileTypes) {
@@ -206,7 +410,7 @@ export class CreativeAssetLoader {
         key: autotile.key,
         path: autotile.path,
         type: 'autotile',
-        biome: autotile.from
+        biome: autotile.from,
       };
       autotileAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
@@ -221,26 +425,28 @@ export class CreativeAssetLoader {
    */
   async loadAllAssets(): Promise<void> {
     logAutopoiesis.info('🎨 Cargando assets creativamente...');
-    
+
     // Cargar en paralelo para mejor performance
     await Promise.all([
       this.loadTerrainAssets(),
-      this.loadWaterAssets(), 
+      this.loadWaterAssets(),
       this.loadRoadAssets(),
-      this.loadAutotileAssets()
+      this.loadAutotileAssets(),
     ]);
 
     // Cargar en Phaser
     await this.loadAssetsInPhaser();
-    
-    logAutopoiesis.info(`✅ Cargados ${this.loadedAssets.size} assets únicos organizados en categorías`);
+
+    logAutopoiesis.info(
+      `✅ Cargados ${this.loadedAssets.size} assets únicos organizados en categorías`
+    );
   }
 
   /**
    * Carga los assets en el cache de Phaser
    */
   private async loadAssetsInPhaser(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       let loadedCount = 0;
       const totalAssets = this.loadedAssets.size;
 
@@ -265,13 +471,13 @@ export class CreativeAssetLoader {
    */
   getAssetsByBiome(biome: string): AssetInfo[] {
     const assets: AssetInfo[] = [];
-    
+
     for (const asset of this.loadedAssets.values()) {
       if (asset.biome === biome) {
         assets.push(asset);
       }
     }
-    
+
     return assets;
   }
 
@@ -280,12 +486,12 @@ export class CreativeAssetLoader {
    */
   getRandomAsset(type: string, biome?: string): AssetInfo | null {
     const typeAssets = this.assetsByType.get(type) || [];
-    const filteredAssets = biome 
+    const filteredAssets = biome
       ? typeAssets.filter(a => a.biome === biome)
       : typeAssets;
-    
+
     if (filteredAssets.length === 0) return null;
-    
+
     const randomIndex = Math.floor(Math.random() * filteredAssets.length);
     return filteredAssets[randomIndex];
   }
@@ -308,7 +514,10 @@ export class CreativeAssetLoader {
   /**
    * Obtiene autotile apropiado para transición
    */
-  getAutotileForTransition(fromBiome: string, direction: 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'): AssetInfo | null {
+  getAutotileForTransition(
+    fromBiome: string,
+    direction: 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
+  ): AssetInfo | null {
     const key = `${fromBiome}_${direction.includes('corner') ? 'corner' : 'edge'}_${direction}`;
     return this.loadedAssets.get(key) || null;
   }
@@ -318,15 +527,15 @@ export class CreativeAssetLoader {
    */
   generateCreativeTileset(biomes: string[]): AssetInfo[] {
     const tileset: AssetInfo[] = [];
-    
+
     for (const biome of biomes) {
       const biomeAssets = this.getAssetsByBiome(biome);
-      
+
       // Añadir variedad seleccionando múltiples assets por bioma
       const selectedAssets = this.selectDiverseAssets(biomeAssets, 5); // 5 variantes por bioma
       tileset.push(...selectedAssets);
     }
-    
+
     return tileset;
   }
 
@@ -335,15 +544,15 @@ export class CreativeAssetLoader {
    */
   private selectDiverseAssets(assets: AssetInfo[], count: number): AssetInfo[] {
     if (assets.length <= count) return assets;
-    
+
     const selected: AssetInfo[] = [];
     const step = Math.floor(assets.length / count);
-    
+
     for (let i = 0; i < count; i++) {
       const index = (i * step) % assets.length;
       selected.push(assets[index]);
     }
-    
+
     return selected;
   }
 
@@ -352,11 +561,11 @@ export class CreativeAssetLoader {
    */
   getAssetStats(): Record<string, number> {
     const stats: Record<string, number> = {};
-    
+
     for (const [type, assets] of this.assetsByType) {
       stats[type] = assets.length;
     }
-    
+
     return stats;
   }
 }

@@ -14,13 +14,13 @@ export interface PoolableUIElement {
 
 export class ResonanceLabel implements PoolableUIElement {
   public gameObject: Phaser.GameObjects.Text;
-  public isActive: boolean = false;
+  public isActive = false;
 
   constructor(scene: Phaser.Scene) {
     this.gameObject = scene.add.text(0, 0, '', {
       fontSize: '12px',
       color: '#ffffff',
-      fontFamily: 'Arial'
+      fontFamily: 'Arial',
     });
     this.gameObject.setScrollFactor(0);
     this.gameObject.setVisible(false);
@@ -41,20 +41,21 @@ export class ResonanceLabel implements PoolableUIElement {
 
 export class UIElementPool<T extends PoolableUIElement> {
   private pool: T[] = [];
-  private activeElements: Set<T> = new Set();
+  private activeElements = new Set<T>();
   private createElementFn: () => T;
   private poolName: string;
 
-  constructor(createElementFn: () => T, poolName: string, initialSize: number = 5) {
+  constructor(createElementFn: () => T, poolName: string, initialSize = 5) {
     this.createElementFn = createElementFn;
     this.poolName = poolName;
-    
 
     for (let i = 0; i < initialSize; i++) {
       this.pool.push(this.createElementFn());
     }
-    
-    logAutopoiesis.debug(`UIElementPool '${poolName}' initialized`, { initialSize });
+
+    logAutopoiesis.debug(`UIElementPool '${poolName}' initialized`, {
+      initialSize,
+    });
   }
 
   /**
@@ -62,12 +63,14 @@ export class UIElementPool<T extends PoolableUIElement> {
    */
   public acquire(): T {
     let element = this.pool.pop();
-    
+
     if (!element) {
       element = this.createElementFn();
-      logAutopoiesis.debug(`Pool '${this.poolName}' expanded - new element created`);
+      logAutopoiesis.debug(
+        `Pool '${this.poolName}' expanded - new element created`
+      );
     }
-    
+
     this.activeElements.add(element);
     return element;
   }
@@ -77,10 +80,12 @@ export class UIElementPool<T extends PoolableUIElement> {
    */
   public release(element: T): void {
     if (!this.activeElements.has(element)) {
-      logAutopoiesis.warn(`Attempting to release element not from this pool: ${this.poolName}`);
+      logAutopoiesis.warn(
+        `Attempting to release element not from this pool: ${this.poolName}`
+      );
       return;
     }
-    
+
     element.reset();
     this.activeElements.delete(element);
     this.pool.push(element);
@@ -95,7 +100,7 @@ export class UIElementPool<T extends PoolableUIElement> {
       this.pool.push(element);
     });
     this.activeElements.clear();
-    
+
     logAutopoiesis.debug(`Pool '${this.poolName}' - all elements released`);
   }
 
@@ -108,10 +113,10 @@ export class UIElementPool<T extends PoolableUIElement> {
         element.gameObject.destroy();
       }
     });
-    
+
     this.activeElements.clear();
     this.pool.length = 0;
-    
+
     logAutopoiesis.debug(`UIElementPool '${this.poolName}' destroyed`);
   }
 
@@ -122,7 +127,7 @@ export class UIElementPool<T extends PoolableUIElement> {
     return {
       active: this.activeElements.size,
       pooled: this.pool.length,
-      total: this.activeElements.size + this.pool.length
+      total: this.activeElements.size + this.pool.length,
     };
   }
 }

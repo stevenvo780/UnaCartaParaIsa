@@ -19,7 +19,8 @@ export class FoodCatalog {
       price: 12,
       consumeTime: 8000,
       spoilTime: 300000, // 5 minutos
-      description: 'Deliciosa tarta casera de manzana, nutritiva y reconfortante'
+      description:
+        'Deliciosa tarta casera de manzana, nutritiva y reconfortante',
     },
     {
       id: 'salmon',
@@ -33,7 +34,7 @@ export class FoodCatalog {
       price: 18,
       consumeTime: 12000,
       spoilTime: 180000, // 3 minutos
-      description: 'Salmón fresco rico en omega-3, excelente para la salud'
+      description: 'Salmón fresco rico en omega-3, excelente para la salud',
     },
     {
       id: 'eggsalad',
@@ -47,7 +48,7 @@ export class FoodCatalog {
       price: 8,
       consumeTime: 6000,
       spoilTime: 240000, // 4 minutos
-      description: 'Ensalada fresca con huevo, ligera y nutritiva'
+      description: 'Ensalada fresca con huevo, ligera y nutritiva',
     },
 
     // JUNK FOOD
@@ -62,7 +63,7 @@ export class FoodCatalog {
       healthEffect: -3,
       price: 15,
       consumeTime: 10000,
-      description: 'Hamburguesa jugosa pero poco saludable, muy sabrosa'
+      description: 'Hamburguesa jugosa pero poco saludable, muy sabrosa',
     },
     {
       id: 'pizza',
@@ -75,7 +76,8 @@ export class FoodCatalog {
       healthEffect: -2,
       price: 20,
       consumeTime: 15000,
-      description: 'Pizza caliente con queso derretido, irresistible pero grasosa'
+      description:
+        'Pizza caliente con queso derretido, irresistible pero grasosa',
     },
     {
       id: 'hotdog',
@@ -88,7 +90,7 @@ export class FoodCatalog {
       healthEffect: -1,
       price: 8,
       consumeTime: 5000,
-      description: 'Clásico hot dog de la calle, rápido y sabroso'
+      description: 'Clásico hot dog de la calle, rápido y sabroso',
     },
     {
       id: 'frenchfries',
@@ -101,7 +103,7 @@ export class FoodCatalog {
       healthEffect: -2,
       price: 6,
       consumeTime: 4000,
-      description: 'Papas fritas crujientes, perfectas como acompañamiento'
+      description: 'Papas fritas crujientes, perfectas como acompañamiento',
     },
 
     // DESSERTS
@@ -116,7 +118,8 @@ export class FoodCatalog {
       healthEffect: -1,
       price: 14,
       consumeTime: 8000,
-      description: 'Exquisita torta de chocolate, pura felicidad en cada bocado'
+      description:
+        'Exquisita torta de chocolate, pura felicidad en cada bocado',
     },
     {
       id: 'icecream',
@@ -130,7 +133,7 @@ export class FoodCatalog {
       price: 5,
       consumeTime: 3000,
       spoilTime: 120000, // 2 minutos
-      description: 'Helado cremoso que se derrite, perfecto para el calor'
+      description: 'Helado cremoso que se derrite, perfecto para el calor',
     },
     {
       id: 'donut',
@@ -143,7 +146,7 @@ export class FoodCatalog {
       healthEffect: -1,
       price: 4,
       consumeTime: 4000,
-      description: 'Dona glaseada dulce, irresistible tentación matutina'
+      description: 'Dona glaseada dulce, irresistible tentación matutina',
     },
 
     // SNACKS
@@ -158,7 +161,7 @@ export class FoodCatalog {
       healthEffect: 1,
       price: 3,
       consumeTime: 3000,
-      description: 'Palomitas crujientes, perfectas para picar'
+      description: 'Palomitas crujientes, perfectas para picar',
     },
     {
       id: 'cookies',
@@ -171,7 +174,7 @@ export class FoodCatalog {
       healthEffect: 0,
       price: 5,
       consumeTime: 4000,
-      description: 'Galletas caseras crujientes, ideales con té o café'
+      description: 'Galletas caseras crujientes, ideales con té o café',
     },
 
     // BREAD & BASICS
@@ -187,7 +190,7 @@ export class FoodCatalog {
       price: 2,
       consumeTime: 5000,
       spoilTime: 600000, // 10 minutos
-      description: 'Pan fresco básico, alimento fundamental y nutritivo'
+      description: 'Pan fresco básico, alimento fundamental y nutritivo',
     },
     {
       id: 'sandwich',
@@ -201,8 +204,8 @@ export class FoodCatalog {
       price: 8,
       consumeTime: 8000,
       spoilTime: 300000, // 5 minutos
-      description: 'Sándwich completo con ingredientes frescos'
-    }
+      description: 'Sándwich completo con ingredientes frescos',
+    },
   ];
 
   /**
@@ -230,7 +233,9 @@ export class FoodCatalog {
    * Obtiene comidas por rango de precio
    */
   static getFoodsByPriceRange(minPrice: number, maxPrice: number): FoodItem[] {
-    return this.foods.filter(food => food.price >= minPrice && food.price <= maxPrice);
+    return this.foods.filter(
+      food => food.price >= minPrice && food.price <= maxPrice
+    );
   }
 
   /**
@@ -246,17 +251,21 @@ export class FoodCatalog {
   static getRandomFoodFromCategory(category: FoodCategory): FoodItem | null {
     const categoryFoods = this.getFoodsByCategory(category);
     if (categoryFoods.length === 0) return null;
-    
+
     const randomIndex = Math.floor(Math.random() * categoryFoods.length);
-    return categoryFoods[randomIndex];
+    return categoryFoods[randomIndex] ?? null;
   }
 
   /**
    * Obtiene comida recomendada basada en las necesidades de la entidad
    */
-  static getRecommendedFood(hunger: number, happiness: number, money: number): FoodItem[] {
+  static getRecommendedFood(
+    hunger: number,
+    happiness: number,
+    money: number
+  ): FoodItem[] {
     const affordable = this.foods.filter(food => food.price <= money);
-    
+
     // Si tiene mucha hambre, priorizar comidas que restauren más hambre
     if (hunger < 30) {
       return affordable
@@ -264,7 +273,7 @@ export class FoodCatalog {
         .sort((a, b) => b.hungerRestore - a.hungerRestore)
         .slice(0, 3);
     }
-    
+
     // Si está triste, priorizar comidas que den felicidad
     if (happiness < 40) {
       return affordable
@@ -272,7 +281,7 @@ export class FoodCatalog {
         .sort((a, b) => b.happinessBonus - a.happinessBonus)
         .slice(0, 3);
     }
-    
+
     // Por defecto, comida balanceada
     return affordable
       .sort((a, b) => {

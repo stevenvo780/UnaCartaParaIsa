@@ -130,7 +130,7 @@ const baseConfig: GameConfig = {
     degradation: TIMING.DEGRADATION_UPDATE,
     batchFlush: 100,
     cleanup: 60000,
-    gameSpeedMultiplier: 1.0
+    gameSpeedMultiplier: 1.0,
   },
 
   survival: {
@@ -140,23 +140,23 @@ const baseConfig: GameConfig = {
       happiness: SURVIVAL.DEGRADATION_RATES.HAPPINESS,
       sleepiness: SURVIVAL.DEGRADATION_RATES.SLEEPINESS,
       boredom: SURVIVAL.DEGRADATION_RATES.BOREDOM,
-      loneliness: SURVIVAL.DEGRADATION_RATES.LONELINESS
+      loneliness: SURVIVAL.DEGRADATION_RATES.LONELINESS,
     },
     criticalThresholds: {
       hunger: SURVIVAL.CRITICAL_THRESHOLDS.HUNGER,
       energy: SURVIVAL.CRITICAL_THRESHOLDS.ENERGY,
-      health: SURVIVAL.CRITICAL_THRESHOLDS.HEALTH
+      health: SURVIVAL.CRITICAL_THRESHOLDS.HEALTH,
     },
     livingCosts: {
       basic: SURVIVAL.LIVING_COSTS.BASIC,
       activity: SURVIVAL.LIVING_COSTS.ACTIVITY,
-      luxury: SURVIVAL.LIVING_COSTS.LUXURY
+      luxury: SURVIVAL.LIVING_COSTS.LUXURY,
     },
     recovery: {
       restingBonus: 1.8,
       eatingEfficiency: 2.5,
-      socialBonus: 1.6
-    }
+      socialBonus: 1.6,
+    },
   },
 
   movement: {
@@ -165,7 +165,7 @@ const baseConfig: GameConfig = {
     acceleration: PHYSICS.ACCELERATION,
     friction: PHYSICS.FRICTION,
     avoidanceDistance: 60,
-    wanderRadius: 100
+    wanderRadius: 100,
   },
 
   resonance: {
@@ -173,7 +173,7 @@ const baseConfig: GameConfig = {
     decayRate: 0.02,
     harmonyBonus: 1.2,
     activitySyncBonus: 1.15,
-    proximityWeight: 0.6
+    proximityWeight: 0.6,
   },
 
   ai: {
@@ -181,13 +181,13 @@ const baseConfig: GameConfig = {
     activityInertiaBonus: 1.2,
     moodInfluenceStrength: 0.8,
     softmaxTau: 0.5,
-    decisionChangeThreshold: 0.15
+    decisionChangeThreshold: 0.15,
   },
 
   zones: {
     effectivenessMultiplier: 1.5,
     transitionSmoothness: 0.1,
-    bonusDecayRate: 0.05
+    bonusDecayRate: 0.05,
   },
 
   ui: {
@@ -197,14 +197,14 @@ const baseConfig: GameConfig = {
     statUpdateFrequency: 500,
     dialogueInitiationChance: 0.1,
     dialogueConversationTimeout: 20000,
-    dialogueResponseDelay: 3000
+    dialogueResponseDelay: 3000,
   },
 
   performance: {
     maxEntities: 10,
     cullingDistance: 1000,
     batchSize: 20,
-    throttleThreshold: 16.67
+    throttleThreshold: 16.67,
   },
 
   entityCircleInitialX: 200,
@@ -225,7 +225,7 @@ const baseConfig: GameConfig = {
   activityInertiaBonus: 1.2,
   aiPersonalityInfluence: 0.3,
   moodInfluenceStrength: 0.8,
-  aiSoftmaxTau: 0.5
+  aiSoftmaxTau: 0.5,
 };
 
 export const gamePresets = {
@@ -236,12 +236,12 @@ export const gamePresets = {
     timing: {
       ...baseConfig.timing,
       gameSpeedMultiplier: 2.0,
-      mainGameLogic: 400
+      mainGameLogic: 400,
     },
     ui: {
       ...baseConfig.ui,
-      dialogueDuration: 1000
-    }
+      dialogueDuration: 1000,
+    },
   },
 
   production: {
@@ -251,8 +251,8 @@ export const gamePresets = {
     performance: {
       ...baseConfig.performance,
       maxEntities: 4,
-      batchSize: 15
-    }
+      batchSize: 15,
+    },
   },
 
   testing: {
@@ -263,7 +263,7 @@ export const gamePresets = {
       ...baseConfig.timing,
       gameSpeedMultiplier: 10.0,
       mainGameLogic: 100,
-      degradation: 200
+      degradation: 200,
     },
     survival: {
       ...baseConfig.survival,
@@ -274,16 +274,16 @@ export const gamePresets = {
         happiness: 0.3,
         sleepiness: 0.4,
         boredom: 0.6,
-        loneliness: 0.2
-      }
-    }
-  }
+        loneliness: 0.2,
+      },
+    },
+  },
 } as const;
 
 let activeConfig: GameConfig = gamePresets.development;
 
 export const getGameConfig = (): GameConfig => ({
-  ...activeConfig
+  ...activeConfig,
 });
 
 export const setGameConfig = (config: Partial<GameConfig>): void => {
@@ -302,7 +302,7 @@ export const getGameIntervals = () => ({
   movement: Math.floor(1000 / activeConfig.targetFPS),
   ui: activeConfig.ui.statUpdateFrequency,
   entityMovementSpeed: 2.0,
-  zoneEffectsInterval: 1000
+  zoneEffectsInterval: 1000,
 });
 
 export const gameConfig = getGameConfig();

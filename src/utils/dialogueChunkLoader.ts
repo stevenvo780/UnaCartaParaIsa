@@ -4,7 +4,7 @@
  */
 
 import { logAutopoiesis } from './logger';
-import type { DialogueEntry } from '../types';
+import type { DialogueEntry, DialogueCriteria } from '../types';
 
 interface DialogueChunk {
   id: string;
@@ -23,9 +23,9 @@ interface DialogueMetadata {
 export class DialogueChunkLoader {
   private static instance: DialogueChunkLoader;
   private metadata: DialogueMetadata | null = null;
-  private cache: Map<string, DialogueEntry[]> = new Map();
-  private loadingPromises: Map<string, Promise<DialogueEntry[]>> = new Map();
-  
+  private cache = new Map<string, DialogueEntry[]>();
+  private loadingPromises = new Map<string, Promise<DialogueEntry[]>>();
+
   // Configuración optimizada
   private readonly CHUNK_SIZE = 1000; // 1000 diálogos por chunk
   private readonly MAX_CACHE_CHUNKS = 5; // Mantener máximo 5 chunks en memoria
@@ -51,12 +51,14 @@ export class DialogueChunkLoader {
         this.metadata = await metadataResponse.json();
         logAutopoiesis.info('Dialogue chunks metadata loaded', {
           totalEntries: this.metadata.totalEntries,
-          chunks: this.metadata.chunks.length
+          chunks: this.metadata.chunks.length,
         });
         return;
       }
     } catch (error) {
-      logAutopoiesis.warn('No chunked dialogues found, creating chunks from main file');
+      logAutopoiesis.warn(
+        'No chunked dialogues found, creating chunks from main file'
+      );
     }
 
     // Fallback: crear chunks desde archivo principal
@@ -68,18 +70,20 @@ export class DialogueChunkLoader {
    */
   private async createChunksFromMainFile(): Promise<void> {
     try {
-      const response = await fetch('/dialogs/dialogos_chat_isa.lite.censored_plus.json');
+      const response = await fetch(
+        '/dialogs/dialogos_chat_isa.lite.censored_plus.json'
+      );
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
 
       const dialogues: DialogueEntry[] = await response.json();
-      
+
       // Crear metadata de chunks
       this.metadata = {
         totalEntries: dialogues.length,
         chunkSize: this.CHUNK_SIZE,
-        chunks: []
+        chunks: [],
       };
 
       // Dividir en chunks
@@ -89,11 +93,11 @@ export class DialogueChunkLoader {
           id: chunkId,
           startIndex: i,
           endIndex: Math.min(i + this.CHUNK_SIZE, dialogues.length),
-          loaded: false
+          loaded: false,
         };
-        
+
         this.metadata.chunks.push(chunk);
-        
+
         // Guardar primer chunk inmediatamente
         if (i === 0) {
           const chunkData = dialogues.slice(chunk.startIndex, chunk.endIndex);
@@ -106,11 +110,12 @@ export class DialogueChunkLoader {
       logAutopoiesis.info('Created dialogue chunks from main file', {
         totalEntries: dialogues.length,
         chunks: this.metadata.chunks.length,
-        chunkSize: this.CHUNK_SIZE
+        chunkSize: this.CHUNK_SIZE,
       });
-
     } catch (error) {
-      logAutopoiesis.error('Failed to create dialogue chunks', { error: String(error) });
+      logAutopoiesis.error('Failed to create dialogue chunks', {
+        error: String(error),
+      });
       throw error;
     }
   }
@@ -130,14 +135,14 @@ export class DialogueChunkLoader {
     // Encontrar chunk correspondiente
     const chunkIndex = Math.floor(index / this.CHUNK_SIZE);
     const chunk = this.metadata.chunks[chunkIndex];
-    
+
     if (!chunk) {
       return null;
     }
 
     // Cargar chunk si no está en cache
     const chunkData = await this.loadChunk(chunk.id);
-    
+
     // Obtener diálogo específico dentro del chunk
     const localIndex = index - chunk.startIndex;
     return chunkData[localIndex] || null;
@@ -146,30 +151,31 @@ export class DialogueChunkLoader {
   /**
    * Obtener múltiples diálogos por rango
    */
-  public async getDialogueRange(startIndex: number, count: number): Promise<DialogueEntry[]> {
+  public async getDialogueRange(
+    startIndex: number,
+    count: number
+  ): Promise<DialogueEntry[]> {
     const dialogues: DialogueEntry[] = [];
-    
+
     for (let i = 0; i < count; i++) {
       const dialogue = await this.getDialogue(startIndex + i);
       if (dialogue) {
         dialogues.push(dialogue);
       }
     }
-    
+
     return dialogues;
   }
 
   /**
    * Buscar diálogos por criterios (carga chunks según necesidad)
    */
-  public async searchDialogues(
-    criteria: {
-      speaker?: 'ISA' | 'STEV';
-      emotion?: string;
-      textContains?: string;
-      limit?: number;
-    }
-  ): Promise<DialogueEntry[]> {
+  public async searchDialogues(criteria: {
+    speaker?: 'ISA' | 'STEV';
+    emotion?: string;
+    textContains?: string;
+    limit?: number;
+  }): Promise<DialogueEntry[]> {
     if (!this.metadata) {
       await this.initialize();
     }
@@ -181,10 +187,10 @@ export class DialogueChunkLoader {
     // Buscar en chunks cargados primero
     for (const [chunkId, chunkData] of this.cache) {
       if (found >= limit) break;
-      
+
       for (const dialogue of chunkData) {
         if (found >= limit) break;
-        
+
         if (this.matchesCriteria(dialogue, criteria)) {
           results.push(dialogue);
           found++;
@@ -197,20 +203,22 @@ export class DialogueChunkLoader {
       for (const chunk of this.metadata.chunks) {
         if (found >= limit) break;
         if (this.cache.has(chunk.id)) continue; // Ya revisado
-        
+
         try {
           const chunkData = await this.loadChunk(chunk.id);
-          
+
           for (const dialogue of chunkData) {
             if (found >= limit) break;
-            
+
             if (this.matchesCriteria(dialogue, criteria)) {
               results.push(dialogue);
               found++;
             }
           }
         } catch (error) {
-          logAutopoiesis.warn(`Failed to search in chunk ${chunk.id}`, { error: String(error) });
+          logAutopoiesis.warn(`Failed to search in chunk ${chunk.id}`, {
+            error: String(error),
+          });
         }
       }
     }
@@ -240,18 +248,18 @@ export class DialogueChunkLoader {
 
     try {
       const data = await promise;
-      
+
       // Gestionar cache (remover chunks antiguos si excede límite)
       this.manageCacheSize();
-      
+
       // Añadir al cache
       this.cache.set(chunkId, data);
-      
+
       // Precargar chunks adyacentes si está habilitado
       if (this.PRELOAD_ADJACENT) {
         this.preloadAdjacentChunks(chunkId);
       }
-      
+
       return data;
     } finally {
       this.loadingPromises.delete(chunkId);
@@ -267,7 +275,9 @@ export class DialogueChunkLoader {
       const chunkResponse = await fetch(`/dialogs/chunks/${chunkId}.json`);
       if (chunkResponse.ok) {
         const data = await chunkResponse.json();
-        logAutopoiesis.debug(`Loaded dialogue chunk: ${chunkId}`, { entries: data.length });
+        logAutopoiesis.debug(`Loaded dialogue chunk: ${chunkId}`, {
+          entries: data.length,
+        });
         return data;
       }
     } catch (error) {
@@ -281,7 +291,9 @@ export class DialogueChunkLoader {
   /**
    * Cargar chunk desde archivo principal (fallback)
    */
-  private async loadChunkFromMainFile(chunkId: string): Promise<DialogueEntry[]> {
+  private async loadChunkFromMainFile(
+    chunkId: string
+  ): Promise<DialogueEntry[]> {
     if (!this.metadata) {
       throw new Error('Metadata not initialized');
     }
@@ -291,39 +303,47 @@ export class DialogueChunkLoader {
       throw new Error(`Chunk not found: ${chunkId}`);
     }
 
-    const response = await fetch('/dialogs/dialogos_chat_isa.lite.censored_plus.json');
+    const response = await fetch(
+      '/dialogs/dialogos_chat_isa.lite.censored_plus.json'
+    );
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
 
     const allDialogues: DialogueEntry[] = await response.json();
     const chunkData = allDialogues.slice(chunk.startIndex, chunk.endIndex);
-    
-    logAutopoiesis.debug(`Loaded chunk from main file: ${chunkId}`, { 
+
+    logAutopoiesis.debug(`Loaded chunk from main file: ${chunkId}`, {
       entries: chunkData.length,
       startIndex: chunk.startIndex,
-      endIndex: chunk.endIndex 
+      endIndex: chunk.endIndex,
     });
-    
+
     return chunkData;
   }
 
   /**
    * Verificar si diálogo coincide con criterios
    */
-  private matchesCriteria(dialogue: DialogueEntry, criteria: any): boolean {
+  private matchesCriteria(
+    dialogue: DialogueEntry,
+    criteria: DialogueCriteria
+  ): boolean {
     if (criteria.speaker && dialogue.speaker !== criteria.speaker) {
       return false;
     }
-    
+
     if (criteria.emotion && dialogue.emotion !== criteria.emotion) {
       return false;
     }
-    
-    if (criteria.textContains && !dialogue.text.toLowerCase().includes(criteria.textContains.toLowerCase())) {
+
+    if (
+      criteria.textContains &&
+      !dialogue.text.toLowerCase().includes(criteria.textContains.toLowerCase())
+    ) {
       return false;
     }
-    
+
     return true;
   }
 
@@ -357,10 +377,15 @@ export class DialogueChunkLoader {
 
     for (const idx of toPreload) {
       const adjacentChunk = this.metadata.chunks[idx];
-      if (!this.cache.has(adjacentChunk.id) && !this.loadingPromises.has(adjacentChunk.id)) {
+      if (
+        !this.cache.has(adjacentChunk.id) &&
+        !this.loadingPromises.has(adjacentChunk.id)
+      ) {
         // Precargar en background sin bloquear
         this.loadChunk(adjacentChunk.id).catch(error => {
-          logAutopoiesis.debug(`Failed to preload chunk: ${adjacentChunk.id}`, { error: String(error) });
+          logAutopoiesis.debug(`Failed to preload chunk: ${adjacentChunk.id}`, {
+            error: String(error),
+          });
         });
       }
     }
@@ -379,7 +404,7 @@ export class DialogueChunkLoader {
       totalChunks: this.metadata?.chunks.length || 0,
       loadedChunks: this.cache.size,
       cacheSize: this.cache.size,
-      totalEntries: this.metadata?.totalEntries || 0
+      totalEntries: this.metadata?.totalEntries || 0,
     };
   }
 

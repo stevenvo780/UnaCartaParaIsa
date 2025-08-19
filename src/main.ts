@@ -20,12 +20,12 @@ const config: Phaser.Types.Core.GameConfig = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
     min: {
       width: 800,
-      height: 600
+      height: 600,
     },
     max: {
       width: 1920,
-      height: 1080
-    }
+      height: 1080,
+    },
   },
   physics: {
     default: 'arcade',
@@ -33,24 +33,22 @@ const config: Phaser.Types.Core.GameConfig = {
       gravity: { x: 0, y: 0 },
       debug: gameConfig.debugMode,
       fps: gameConfig.targetFPS,
-      ...(phaserOptimizations.physics?.arcade || {})
-    }
+      ...(phaserOptimizations.physics?.arcade || {}),
+    },
   },
   scene: [BootScene, MainScene, UIScene],
   // Aplicar optimizaciones de producción
   ...phaserOptimizations,
   callbacks: {
-    postBoot: function (game) {
-
+    postBoot(game) {
       game.registry.set('gameConfig', gameConfig);
-      
 
       if (gameConfig.debugMode) {
         (window as any).game = game;
         (window as any).scenes = {
           boot: game.scene.getScene('BootScene'),
           main: game.scene.getScene('MainScene'),
-          ui: game.scene.getScene('UIScene')
+          ui: game.scene.getScene('UIScene'),
         };
         // Solo en modo debug, usar console.log para información de desarrollo
         if (gameConfig.debugMode) {
@@ -59,10 +57,9 @@ const config: Phaser.Types.Core.GameConfig = {
           console.log('🎭 Access scenes via window.scenes');
         }
       }
-    }
-  }
+    },
+  },
 };
-
 
 const game = new Phaser.Game(config);
 

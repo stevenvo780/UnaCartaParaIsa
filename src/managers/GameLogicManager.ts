@@ -3,115 +3,124 @@
  * Centraliza actualizaciones, timers y estado del juego
  */
 
-import type { GameState } from '../types';
+import type {
+  GameState,
+  Entity,
+  EntityStats,
+  GameLogicUpdateData,
+  IGameLogicManager,
+  GameEvents,
+} from '../types';
 import { gameConfig } from '../config/gameConfig';
 import { GAME_BALANCE } from '../constants/gameBalance';
 import { logAutopoiesis } from '../utils/logger';
 
-export interface GameUpdateData {
-  cycles: number;
-  resonance: number;
-  isaStats: any;
-  stevStats: any;
-}
+export class GameLogicManager implements IGameLogicManager {
+  private _scene: Phaser.Scene;
+  private _gameState: GameState;
+  private _gameLoopTimer?: Phaser.Time.TimerEvent;
+  private _entities = new Map<string, Entity>();
+  private _eventEmitter: Phaser.Events.EventEmitter;
 
-export class GameLogicManager {
-  private scene: Phaser.Scene;
-  private gameState: GameState;
-  private gameLoopTimer?: Phaser.Time.TimerEvent;
-  private entities: Map<string, any> = new Map();
-  private eventEmitter: Phaser.Events.EventEmitter;
-
-  constructor(scene: Phaser.Scene, initialGameState: GameState) {
-    this.scene = scene;
-    this.gameState = initialGameState;
-    this.eventEmitter = new Phaser.Events.EventEmitter();
+  public constructor(scene: Phaser.Scene, initialGameState: GameState) {
+    this._scene = scene;
+    this._gameState = initialGameState;
+    this._eventEmitter = new Phaser.Events.EventEmitter();
   }
 
   /**
    * Initialize the game logic system
    */
   public initialize(): void {
-    this.setupGameLoop();
+    this._setupGameLoop();
     logAutopoiesis.info('GameLogicManager initialized', {
-      entities: this.gameState.entities.length,
-      zones: this.gameState.zones.length
+      entities: this._gameState.entities.length,
+      zones: this._gameState.zones.length,
     });
+  }
+
+  /**
+   * Update method required by IGameLogicManager
+   */
+  public update(_deltaTime: number): void {
+    // The actual update logic is handled by the timer-based game loop
+    // This method exists to satisfy the interface requirement
   }
 
   /**
    * Setup main game logic timer
    */
-  private setupGameLoop(): void {
-    this.gameLoopTimer = this.scene.time.addEvent({
+  private _setupGameLoop(): void {
+    this._gameLoopTimer = this._scene.time.addEvent({
       delay: gameConfig.timing.mainGameLogic,
-      callback: this.updateGameLogic,
+      callback: this._updateGameLogic,
       callbackScope: this,
-      loop: true
+      loop: true,
     });
 
     logAutopoiesis.debug(`Game logic loop started`, {
-      interval: gameConfig.timing.mainGameLogic
+      interval: gameConfig.timing.mainGameLogic,
     });
   }
 
   /**
    * Main game logic update - separated from rendering
    */
-  private updateGameLogic(): void {
+  private _updateGameLogic(): void {
+    this._gameState.cycles++;
 
-    this.gameState.cycles++;
-    
-
-    this.entities.forEach((entity) => {
-      if (entity.updateEntity && typeof entity.updateEntity === 'function') {
+    this._entities.forEach(entity => {
+      if (
+        'updateEntity' in entity &&
+        typeof entity.updateEntity === 'function'
+      ) {
         entity.updateEntity(gameConfig.timing.mainGameLogic);
       }
     });
 
+    this._updateResonance();
 
-    this.updateResonance();
-    
+    const isaEntity = this._entities.get('isa');
+    const stevEntity = this._entities.get('stev');
 
-    const updateData: GameUpdateData = {
-      cycles: this.gameState.cycles,
-      resonance: this.gameState.resonance,
-      isaStats: this.entities.get('isa')?.getStats() || {},
-      stevStats: this.entities.get('stev')?.getStats() || {}
+    const updateData: GameLogicUpdateData = {
+      entities: Array.from(this._entities.values()),
+      cycles: this._gameState.cycles,
+      resonance: this._gameState.resonance,
+      deltaTime: gameConfig.timing.mainGameLogic,
+      togetherTime: this._gameState.togetherTime,
+      isaStats: isaEntity?.stats ?? ({} as EntityStats),
+      stevStats: stevEntity?.stats ?? ({} as EntityStats),
     };
-    
-    this.eventEmitter.emit('gameLogicUpdate', updateData);
 
+    this.emit('gameLogicUpdate', updateData);
 
-    if (this.gameState.cycles % GAME_BALANCE.CYCLE_LOG_FREQUENCY === 0) {
-      this.logGameStatus();
+    if (this._gameState.cycles % GAME_BALANCE.CYCLE_LOG_FREQUENCY === 0) {
+      this._logGameStatus();
     }
   }
 
   /**
    * Update resonance calculations between entities
    */
-  private updateResonance(): void {
-    const isaEntity = this.entities.get('isa');
-    const stevEntity = this.entities.get('stev');
+  private _updateResonance(): void {
+    const isaEntity = this._entities.get('isa');
+    const stevEntity = this._entities.get('stev');
 
     if (isaEntity && stevEntity) {
+      const isaResonance = isaEntity.resonance ?? 0;
+      const stevResonance = stevEntity.resonance ?? 0;
 
-      const isaResonance = isaEntity.getResonance?.() || 0;
-      const stevResonance = stevEntity.getResonance?.() || 0;
-      
+      this._gameState.resonance = (isaResonance + stevResonance) / 2;
 
-      this.gameState.resonance = (isaResonance + stevResonance) / 2;
-      
-
-      const isaPos = isaEntity.getPosition?.() || { x: 0, y: 0 };
-      const stevPos = stevEntity.getPosition?.() || { x: 0, y: 0 };
+      const isaPos = isaEntity.position ?? { x: 0, y: 0 };
+      const stevPos = stevEntity.position ?? { x: 0, y: 0 };
       const distance = Math.sqrt(
         Math.pow(isaPos.x - stevPos.x, 2) + Math.pow(isaPos.y - stevPos.y, 2)
       );
-      
+
       if (distance < 100) {
-        this.gameState.togetherTime += gameConfig.timing.mainGameLogic;
+        this._gameState.togetherTime += gameConfig.timing.mainGameLogic;
       }
     }
   }
@@ -119,8 +128,8 @@ export class GameLogicManager {
   /**
    * Register an entity for game logic updates
    */
-  public registerEntity(entityId: string, entity: any): void {
-    this.entities.set(entityId, entity);
+  public registerEntity(entityId: string, entity: Entity): void {
+    this._entities.set(entityId, entity);
     logAutopoiesis.debug(`Entity registered: ${entityId}`);
   }
 
@@ -128,8 +137,8 @@ export class GameLogicManager {
    * Unregister an entity
    */
   public unregisterEntity(entityId: string): void {
-    if (this.entities.has(entityId)) {
-      this.entities.delete(entityId);
+    if (this._entities.has(entityId)) {
+      this._entities.delete(entityId);
       logAutopoiesis.debug(`Entity unregistered: ${entityId}`);
     }
   }
@@ -137,32 +146,35 @@ export class GameLogicManager {
   /**
    * Handle player interactions with entities
    */
-  public handlePlayerInteraction(entityId: string, interactionType: string): void {
-    const entity = this.entities.get(entityId);
+  public handlePlayerInteraction(
+    entityId: string,
+    interactionType: string
+  ): void {
+    const entity = this._entities.get(entityId);
     if (!entity) {
-      logAutopoiesis.warn(`Player interaction failed - entity not found: ${entityId}`);
+      logAutopoiesis.warn(
+        `Player interaction failed - entity not found: ${entityId}`
+      );
       return;
     }
 
-
-    this.gameState.connectionAnimation = {
+    this._gameState.connectionAnimation = {
       active: true,
       startTime: Date.now(),
       type: interactionType as any,
-      entityId
+      entityId,
     };
 
-
-    this.eventEmitter.emit('playerInteraction', {
+    this.emit('playerInteraction', {
       entityId,
       interactionType,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     logAutopoiesis.info('Player interaction processed', {
       entityId,
       interactionType,
-      resonance: this.gameState.resonance
+      resonance: this._gameState.resonance,
     });
   }
 
@@ -170,43 +182,62 @@ export class GameLogicManager {
    * Get current game state (read-only copy)
    */
   public getGameState(): GameState {
-    return { ...this.gameState };
+    return { ...this._gameState };
   }
 
   /**
    * Get specific entity by ID
    */
-  public getEntity(entityId: string): any {
-    return this.entities.get(entityId);
+  public getEntity(entityId: string): Entity | undefined {
+    return this._entities.get(entityId);
   }
 
   /**
    * Get all registered entities
    */
-  public getAllEntities(): Map<string, any> {
-    return new Map(this.entities);
+  public getEntities(): Entity[] {
+    return Array.from(this._entities.values());
+  }
+
+  public getAllEntities(): Map<string, Entity> {
+    return new Map(this._entities);
   }
 
   /**
    * Subscribe to game logic events
    */
-  public on(event: string, listener: Function, context?: any): void {
-    this.eventEmitter.on(event, listener, context);
+  public on<K extends keyof GameEvents>(
+    event: K,
+    listener: (data: GameEvents[K]) => void,
+    context?: any
+  ): void {
+    this._eventEmitter.on(event, listener, context);
   }
 
   /**
    * Unsubscribe from game logic events
    */
-  public off(event: string, listener?: Function, context?: any): void {
-    this.eventEmitter.off(event, listener, context);
+  public off<K extends keyof GameEvents>(
+    event: K,
+    listener?: (data: GameEvents[K]) => void,
+    context?: any
+  ): void {
+    this._eventEmitter.off(event, listener, context);
+  }
+
+  /**
+   * Emit typed event
+   */
+  public emit<K extends keyof GameEvents>(event: K, data: GameEvents[K]): void {
+    this._eventEmitter.emit(event, data);
   }
 
   /**
    * Pause game logic updates
    */
   public pause(): void {
-    if (this.gameLoopTimer) {
-      this.gameLoopTimer.paused = true;
+    if (this._gameLoopTimer) {
+      this._gameLoopTimer.paused = true;
       logAutopoiesis.info('Game logic paused');
     }
   }
@@ -215,8 +246,8 @@ export class GameLogicManager {
    * Resume game logic updates
    */
   public resume(): void {
-    if (this.gameLoopTimer) {
-      this.gameLoopTimer.paused = false;
+    if (this._gameLoopTimer) {
+      this._gameLoopTimer.paused = false;
       logAutopoiesis.info('Game logic resumed');
     }
   }
@@ -225,16 +256,18 @@ export class GameLogicManager {
    * Change game speed multiplier
    */
   public setGameSpeed(multiplier: number): void {
-    if (this.gameLoopTimer) {
-      this.gameLoopTimer.destroy();
+    if (this._gameLoopTimer) {
+      this._gameLoopTimer.destroy();
       const newDelay = gameConfig.timing.mainGameLogic / multiplier;
-      this.gameLoopTimer = this.scene.time.addEvent({
+      this._gameLoopTimer = this._scene.time.addEvent({
         delay: newDelay,
-        callback: () => this.updateGameLogic(),
-        loop: true
+        callback: () => {
+          this._updateGameLogic();
+        },
+        loop: true,
       });
       logAutopoiesis.info(`Game speed set to ${multiplier}x`, {
-        newDelay: newDelay
+        newDelay,
       });
     }
   }
@@ -242,37 +275,39 @@ export class GameLogicManager {
   /**
    * Log current game status for debugging
    */
-  private logGameStatus(): void {
-    const entityStates = Array.from(this.entities.entries()).map(([id, entity]) => ({
-      id,
-      activity: entity.getCurrentActivity?.() || 'unknown',
-      mood: entity.getMood?.() || 'unknown',
-      alive: !entity.isDead?.()
-    }));
+  private _logGameStatus(): void {
+    const entityStates = Array.from(this._entities.entries()).map(
+      ([id, entity]) => ({
+        id,
+        activity: entity.activity ?? 'unknown',
+        mood: entity.mood ?? 'unknown',
+        alive: !entity.isDead,
+      })
+    );
 
-    logAutopoiesis.info(`Game cycle ${this.gameState.cycles}`, {
-      resonance: this.gameState.resonance.toFixed(2),
-      togetherTime: Math.floor(this.gameState.togetherTime / 1000),
-      entities: entityStates
+    logAutopoiesis.info(`Game cycle ${this._gameState.cycles}`, {
+      resonance: this._gameState.resonance.toFixed(2),
+      togetherTime: Math.floor(this._gameState.togetherTime / 1000),
+      entities: entityStates,
     });
   }
 
   /**
    * Get performance statistics
    */
-  public getStats(): { 
+  public getStats(): {
     cycles: number;
-    resonance: number; 
+    resonance: number;
     entities: number;
     togetherTime: number;
     uptime: number;
   } {
     return {
-      cycles: this.gameState.cycles,
-      resonance: this.gameState.resonance,
-      entities: this.entities.size,
-      togetherTime: this.gameState.togetherTime,
-      uptime: Date.now() - this.gameState.lastSave
+      cycles: this._gameState.cycles,
+      resonance: this._gameState.resonance,
+      entities: this._entities.size,
+      togetherTime: this._gameState.togetherTime,
+      uptime: Date.now() - this._gameState.lastSave,
     };
   }
 
@@ -280,13 +315,13 @@ export class GameLogicManager {
    * Cleanup when destroying the manager
    */
   public destroy(): void {
-    if (this.gameLoopTimer) {
-      this.gameLoopTimer.destroy();
+    if (this._gameLoopTimer) {
+      this._gameLoopTimer.destroy();
     }
-    
-    this.entities.clear();
-    this.eventEmitter.removeAllListeners();
-    
+
+    this._entities.clear();
+    this._eventEmitter.removeAllListeners();
+
     logAutopoiesis.info('GameLogicManager destroyed');
   }
 }

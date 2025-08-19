@@ -2,9 +2,10 @@
  * BiomeAssetRenderer - Sistema creativo simplificado que carga assets reales
  */
 
-import Phaser from 'phaser';
+import type Phaser from 'phaser';
 import { BiomeType } from './types';
 import type { GeneratedWorld } from './types';
+import { logAutopoiesis } from '../utils/logger';
 
 interface BiomeAssetConfig {
   grassVariants: string[];
@@ -19,7 +20,7 @@ interface BiomeAssetConfig {
 export class BiomeAssetRenderer {
   private scene: Phaser.Scene;
   private assetConfig: BiomeAssetConfig;
-  private loadedAssets: Set<string> = new Set();
+  private loadedAssets = new Set<string>();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -43,7 +44,7 @@ export class BiomeAssetRenderer {
       'assets/water/tile_02_02.png',
       'assets/water/tile_03_03.png',
       'assets/water/tile_04_04.png',
-      'assets/water/tile_05_05.png'
+      'assets/water/tile_05_05.png',
     ];
 
     // Assets de roads
@@ -52,7 +53,7 @@ export class BiomeAssetRenderer {
       'assets/roads/road_path_straight_v.png',
       'assets/roads/road_path_curve_ne.png',
       'assets/roads/road_path_curve_nw.png',
-      'assets/roads/road_path_cross.png'
+      'assets/roads/road_path_cross.png',
     ];
 
     // Autotiles para transiciones
@@ -60,14 +61,14 @@ export class BiomeAssetRenderer {
       'assets/terrain/autotiles/grass_edge_n.png',
       'assets/terrain/autotiles/grass_edge_s.png',
       'assets/terrain/autotiles/water_edge_n.png',
-      'assets/terrain/autotiles/water_corner_ne.png'
+      'assets/terrain/autotiles/water_corner_ne.png',
     ];
 
     return {
       grassVariants,
       waterTiles,
       roadTiles,
-      autotiles
+      autotiles,
     };
   }
 
@@ -76,27 +77,27 @@ export class BiomeAssetRenderer {
    */
   async loadAssets(): Promise<void> {
     logAutopoiesis.info('🎨 Cargando assets creativamente...');
-    
+
     const allAssets = [
       ...this.assetConfig.grassVariants,
       ...this.assetConfig.waterTiles,
       ...this.assetConfig.roadTiles,
-      ...this.assetConfig.autotiles
+      ...this.assetConfig.autotiles,
     ];
 
     // Cargar assets únicos
     const uniqueAssets = [...new Set(allAssets)];
-    
+
     for (let i = 0; i < uniqueAssets.length; i++) {
       const assetPath = uniqueAssets[i];
       const key = this.pathToKey(assetPath);
-      
+
       if (!this.scene.textures.exists(key)) {
         this.scene.load.image(key, assetPath);
       }
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.scene.load.on('complete', () => {
         logAutopoiesis.info(`✅ Cargados ${uniqueAssets.length} assets únicos`);
         resolve();
@@ -138,23 +139,28 @@ export class BiomeAssetRenderer {
     for (let y = 0; y < world.terrain.length; y++) {
       for (let x = 0; x < world.terrain[y].length; x++) {
         const tile = world.terrain[y][x];
-        const biome = tile.biome;
-        
+        const { biome } = tile;
+
         // Seleccionar asset creativo
-        const assetKey = this.selectCreativeAsset(biome, x, y, tile.biomeStrength);
-        
+        const assetKey = this.selectCreativeAsset(
+          biome,
+          x,
+          y,
+          tile.biomeStrength
+        );
+
         if (assetKey && this.scene.textures.exists(assetKey)) {
           const sprite = this.scene.add.image(
             x * tileSize + tileSize / 2,
             y * tileSize + tileSize / 2,
             assetKey
           );
-          
+
           sprite.setDisplaySize(tileSize, tileSize);
-          
+
           // Aplicar variaciones creativas
           this.applyCreativeVariations(sprite, biome, tile.biomeStrength);
-          
+
           spriteContainer.add(sprite);
         }
       }
@@ -167,7 +173,12 @@ export class BiomeAssetRenderer {
   /**
    * Selecciona asset de forma creativa
    */
-  private selectCreativeAsset(biome: BiomeType, x: number, y: number, strength: number): string {
+  private selectCreativeAsset(
+    biome: BiomeType,
+    x: number,
+    y: number,
+    strength: number
+  ): string {
     // Usar posición y strength para crear variación natural
     const seed = (x * 73 + y * 137 + Math.floor(strength * 100)) % 100;
 
@@ -189,19 +200,22 @@ export class BiomeAssetRenderer {
 
       case BiomeType.FOREST:
         // Césped más denso para bosques
-        const forestIndex = Math.floor(seed / 2) % this.assetConfig.grassVariants.length;
+        const forestIndex =
+          Math.floor(seed / 2) % this.assetConfig.grassVariants.length;
         return this.pathToKey(this.assetConfig.grassVariants[forestIndex]);
 
       case BiomeType.MOUNTAINOUS:
         // Variaciones más rocosas
-        const mountainIndex = (15 + (seed % 16)) % this.assetConfig.grassVariants.length;
+        const mountainIndex =
+          (15 + (seed % 16)) % this.assetConfig.grassVariants.length;
         return this.pathToKey(this.assetConfig.grassVariants[mountainIndex]);
 
       case BiomeType.MYSTICAL:
         // Combinación especial
-        const mysticalIndex = (seed % 2 === 0) 
-          ? (seed % 10) % this.assetConfig.grassVariants.length
-          : (seed % 5) % this.assetConfig.grassVariants.length;
+        const mysticalIndex =
+          seed % 2 === 0
+            ? (seed % 10) % this.assetConfig.grassVariants.length
+            : (seed % 5) % this.assetConfig.grassVariants.length;
         return this.pathToKey(this.assetConfig.grassVariants[mysticalIndex]);
 
       default:
@@ -212,36 +226,40 @@ export class BiomeAssetRenderer {
   /**
    * Aplica variaciones creativas a sprites
    */
-  private applyCreativeVariations(sprite: Phaser.GameObjects.Image, biome: BiomeType, strength: number): void {
+  private applyCreativeVariations(
+    sprite: Phaser.GameObjects.Image,
+    biome: BiomeType,
+    strength: number
+  ): void {
     // Variaciones de tinte basadas en bioma
     switch (biome) {
       case BiomeType.GRASSLAND:
-        sprite.setTint(0x90EE90); // Verde claro
+        sprite.setTint(0x90ee90); // Verde claro
         break;
 
       case BiomeType.FOREST:
-        sprite.setTint(0x228B22); // Verde bosque
+        sprite.setTint(0x228b22); // Verde bosque
         break;
 
       case BiomeType.WETLAND:
-        sprite.setTint(0x4682B4); // Azul acero
+        sprite.setTint(0x4682b4); // Azul acero
         break;
 
       case BiomeType.MOUNTAINOUS:
-        sprite.setTint(0x8B7355); // Marrón montaña
+        sprite.setTint(0x8b7355); // Marrón montaña
         break;
 
       case BiomeType.MYSTICAL:
-        sprite.setTint(0xDDA0DD); // Púrpura místico
+        sprite.setTint(0xdda0dd); // Púrpura místico
         break;
 
       case BiomeType.VILLAGE:
-        sprite.setTint(0xD2B48C); // Tan (arena)
+        sprite.setTint(0xd2b48c); // Tan (arena)
         break;
     }
 
     // Variaciones de escala basadas en strength
-    const scaleVariation = 0.85 + (strength * 0.3); // 0.85 a 1.15
+    const scaleVariation = 0.85 + strength * 0.3; // 0.85 a 1.15
     sprite.setScale(scaleVariation);
 
     // Rotación sutil para variedad
@@ -252,30 +270,33 @@ export class BiomeAssetRenderer {
   /**
    * Aplica autotiles creativos para transiciones
    */
-  private applyCreativeAutotiles(world: GeneratedWorld, container: Phaser.GameObjects.Container): void {
+  private applyCreativeAutotiles(
+    world: GeneratedWorld,
+    container: Phaser.GameObjects.Container
+  ): void {
     const tileSize = 32;
 
     for (let y = 0; y < world.terrain.length; y++) {
       for (let x = 0; x < world.terrain[y].length; x++) {
         const currentBiome = world.terrain[y][x].biome;
-        
+
         // Detectar transiciones en vecinos
         const hasTransition = this.detectTransitions(world, x, y, currentBiome);
-        
+
         if (hasTransition) {
           // Aplicar autotile de transición
           const autotileKey = this.selectAutotile(currentBiome);
-          
+
           if (autotileKey && this.scene.textures.exists(autotileKey)) {
             const autotileSprite = this.scene.add.image(
               x * tileSize + tileSize / 2,
               y * tileSize + tileSize / 2,
               autotileKey
             );
-            
+
             autotileSprite.setDisplaySize(tileSize, tileSize);
             autotileSprite.setAlpha(0.7); // Semi-transparente para mezcla
-            
+
             container.add(autotileSprite);
           }
         }
@@ -286,21 +307,36 @@ export class BiomeAssetRenderer {
   /**
    * Detecta transiciones entre biomas
    */
-  private detectTransitions(world: GeneratedWorld, x: number, y: number, currentBiome: BiomeType): boolean {
-    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]; // N, S, E, W
-    
+  private detectTransitions(
+    world: GeneratedWorld,
+    x: number,
+    y: number,
+    currentBiome: BiomeType
+  ): boolean {
+    const directions = [
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1],
+    ]; // N, S, E, W
+
     for (const [dx, dy] of directions) {
       const nx = x + dx;
       const ny = y + dy;
-      
-      if (ny >= 0 && ny < world.terrain.length && nx >= 0 && nx < world.terrain[ny].length) {
+
+      if (
+        ny >= 0 &&
+        ny < world.terrain.length &&
+        nx >= 0 &&
+        nx < world.terrain[ny].length
+      ) {
         const neighborBiome = world.terrain[ny][nx].biome;
         if (neighborBiome !== currentBiome) {
           return true;
         }
       }
     }
-    
+
     return false;
   }
 

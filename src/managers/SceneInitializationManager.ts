@@ -18,9 +18,9 @@ export class SceneInitializationManager {
    */
   static initialize(): InitializationResult {
     logAutopoiesis.info('Initializing game state and world');
-    
+
     const mapData = generateValidatedMap();
-    
+
     const gameState: GameState = {
       entities: [],
       resonance: 0,
@@ -30,7 +30,7 @@ export class SceneInitializationManager {
       connectionAnimation: {
         active: false,
         startTime: 0,
-        type: 'FEED'
+        type: 'FEED',
       },
       zones: mapData.zones,
       mapElements: mapData.mapElements,
@@ -39,18 +39,18 @@ export class SceneInitializationManager {
         participants: [],
         lastSpeaker: null,
         lastDialogue: null,
-        startTime: 0
+        startTime: 0,
       },
       terrainTiles: [],
       roads: [],
       objectLayers: [],
       worldSize: { width: 1200, height: 800 },
-      generatorVersion: '1.0'
+      generatorVersion: '1.0',
     };
 
     return {
       gameState,
-      generatedWorldData: mapData.generatedWorld
+      generatedWorldData: mapData.generatedWorld,
     };
   }
 }

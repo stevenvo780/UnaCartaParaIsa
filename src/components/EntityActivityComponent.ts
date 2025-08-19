@@ -6,76 +6,79 @@
 import type { ActivityType, MoodType } from '../types';
 
 export class EntityActivityComponent {
-  private currentActivity: ActivityType;
-  private activityStartTime: number;
-  private lastActivityChange: number;
-  private mood: MoodType;
+  private _currentActivity: ActivityType;
+  private _activityStartTime: number;
+  private _lastActivityChange: number;
+  private _mood: MoodType;
 
-  constructor(initialActivity: ActivityType = 'WANDERING', initialMood: MoodType = '😊') {
-    this.currentActivity = initialActivity;
-    this.mood = initialMood;
-    this.activityStartTime = Date.now();
-    this.lastActivityChange = Date.now();
+  public constructor(
+    initialActivity: ActivityType = 'WANDERING',
+    initialMood: MoodType = '😊'
+  ) {
+    this._currentActivity = initialActivity;
+    this._mood = initialMood;
+    this._activityStartTime = Date.now();
+    this._lastActivityChange = Date.now();
   }
 
   /**
    * Obtiene la actividad actual
    */
-  getCurrentActivity(): ActivityType {
-    return this.currentActivity;
+  public getCurrentActivity(): ActivityType {
+    return this._currentActivity;
   }
 
   /**
    * Cambia la actividad actual
    */
-  setActivity(newActivity: ActivityType): void {
-    if (this.currentActivity !== newActivity) {
-      this.currentActivity = newActivity;
-      this.activityStartTime = Date.now();
-      this.lastActivityChange = Date.now();
+  public setActivity(newActivity: ActivityType): void {
+    if (this._currentActivity !== newActivity) {
+      this._currentActivity = newActivity;
+      this._activityStartTime = Date.now();
+      this._lastActivityChange = Date.now();
     }
   }
 
   /**
    * Obtiene el mood actual
    */
-  getMood(): MoodType {
-    return this.mood;
+  public getMood(): MoodType {
+    return this._mood;
   }
 
   /**
    * Cambia el mood
    */
-  setMood(newMood: MoodType): void {
-    this.mood = newMood;
+  public setMood(newMood: MoodType): void {
+    this._mood = newMood;
   }
 
   /**
    * Obtiene cuánto tiempo ha durado la actividad actual
    */
-  getActivityDuration(): number {
-    return Date.now() - this.activityStartTime;
+  public getActivityDuration(): number {
+    return Date.now() - this._activityStartTime;
   }
 
   /**
    * Verifica si es hora de cambiar de actividad
    */
-  shouldChangeActivity(minDuration: number = 5000): boolean {
+  public shouldChangeActivity(minDuration = 5000): boolean {
     return this.getActivityDuration() > minDuration;
   }
 
   /**
    * Obtiene el tiempo desde el último cambio de actividad
    */
-  getTimeSinceLastChange(): number {
-    return Date.now() - this.lastActivityChange;
+  public getTimeSinceLastChange(): number {
+    return Date.now() - this._lastActivityChange;
   }
 
   /**
    * Mapea actividades a sprites apropiados
    */
-  getActivitySprite(): string {
-    switch (this.currentActivity) {
+  public getActivitySprite(): string {
+    switch (this._currentActivity) {
       case 'RESTING':
       case 'SLEEPING':
         return 'entity_sleeping';
@@ -103,8 +106,8 @@ export class EntityActivityComponent {
   /**
    * Mapea mood a actividades preferidas
    */
-  getPreferredActivitiesForMood(): ActivityType[] {
-    switch (this.mood) {
+  public getPreferredActivitiesForMood(): ActivityType[] {
+    switch (this._mood) {
       case '😊': // Happy
         return ['SOCIALIZING', 'DANCING', 'PLAYING'];
       case '😢': // Sad
@@ -131,13 +134,19 @@ export class EntityActivityComponent {
   /**
    * Obtiene datos de la actividad para serialización
    */
-  getActivityData() {
+  public getActivityData(): {
+    activity: ActivityType;
+    mood: MoodType;
+    activityStartTime: number;
+    lastActivityChange: number;
+    duration: number;
+  } {
     return {
-      activity: this.currentActivity,
-      mood: this.mood,
-      activityStartTime: this.activityStartTime,
-      lastActivityChange: this.lastActivityChange,
-      duration: this.getActivityDuration()
+      activity: this._currentActivity,
+      mood: this._mood,
+      activityStartTime: this._activityStartTime,
+      lastActivityChange: this._lastActivityChange,
+      duration: this.getActivityDuration(),
     };
   }
 }

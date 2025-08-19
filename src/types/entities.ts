@@ -5,11 +5,11 @@
 import type { ActivityType } from './activities';
 import type { Position } from './core';
 
-export type EntityStateType = 
-  | 'idle' 
-  | 'moving' 
-  | 'interacting' 
-  | 'resting' 
+export type EntityStateType =
+  | 'idle'
+  | 'moving'
+  | 'interacting'
+  | 'resting'
   | 'seeking'
   | 'dead'
   | 'fading';

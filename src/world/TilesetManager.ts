@@ -28,11 +28,11 @@ export interface TilesetConfig {
  */
 export class TilesetManager {
   private static instance: TilesetManager;
-  private tilesets: Map<string, TilesetConfig> = new Map();
-  private tileInfoById: Map<number, TileInfo> = new Map();
-  
+  private tilesets = new Map<string, TilesetConfig>();
+  private tileInfoById = new Map<number, TileInfo>();
+
   private constructor() {}
-  
+
   static getInstance(): TilesetManager {
     if (!TilesetManager.instance) {
       TilesetManager.instance = new TilesetManager();
@@ -63,7 +63,7 @@ export class TilesetManager {
         name: `cesped${i}`,
         category: 'terrain',
         biomes: this.determineBiomeFromCespedId(i),
-        imagePath: `assets/terrain/base/cesped${i}.png`
+        imagePath: `assets/terrain/base/cesped${i}.png`,
       });
     }
 
@@ -73,7 +73,7 @@ export class TilesetManager {
       name: 'grass_middle',
       category: 'terrain',
       biomes: ['GRASSLAND', 'FOREST'],
-      imagePath: 'assets/terrain/base/Grass_Middle.png'
+      imagePath: 'assets/terrain/base/Grass_Middle.png',
     });
 
     tiles.push({
@@ -81,7 +81,7 @@ export class TilesetManager {
       name: 'textured_grass',
       category: 'terrain',
       biomes: ['GRASSLAND', 'VILLAGE'],
-      imagePath: 'assets/terrain/base/TexturedGrass.png'
+      imagePath: 'assets/terrain/base/TexturedGrass.png',
     });
 
     this.tilesets.set('main_terrain', {
@@ -92,7 +92,7 @@ export class TilesetManager {
       columns: 8, // 8 columnas para organizar bien
       margin: 0,
       spacing: 0,
-      tiles
+      tiles,
     });
 
     // Registrar tiles por ID
@@ -112,29 +112,47 @@ export class TilesetManager {
       name: 'water_middle',
       category: 'water',
       biomes: ['WETLAND'],
-      imagePath: 'assets/water/Water_Middle.png'
+      imagePath: 'assets/water/Water_Middle.png',
     });
 
     // Tiles organizados de agua (tile_XX_YY)
     const waterTilePattern = /tile_(\d{2})_(\d{2})\.png/;
     const waterTiles = [
-      'tile_00_02.png', 'tile_00_03.png', 'tile_00_04.png', 'tile_00_05.png',
-      'tile_01_00.png', 'tile_01_01.png', 'tile_01_02.png', 'tile_01_03.png',
-      'tile_02_00.png', 'tile_02_01.png', 'tile_02_02.png', 'tile_02_03.png',
-      'tile_03_00.png', 'tile_03_01.png', 'tile_03_02.png', 'tile_03_03.png',
-      'tile_04_00.png', 'tile_04_01.png', 'tile_04_02.png', 'tile_04_03.png',
-      'tile_05_00.png', 'tile_05_01.png', 'tile_05_02.png', 'tile_05_03.png'
+      'tile_00_02.png',
+      'tile_00_03.png',
+      'tile_00_04.png',
+      'tile_00_05.png',
+      'tile_01_00.png',
+      'tile_01_01.png',
+      'tile_01_02.png',
+      'tile_01_03.png',
+      'tile_02_00.png',
+      'tile_02_01.png',
+      'tile_02_02.png',
+      'tile_02_03.png',
+      'tile_03_00.png',
+      'tile_03_01.png',
+      'tile_03_02.png',
+      'tile_03_03.png',
+      'tile_04_00.png',
+      'tile_04_01.png',
+      'tile_04_02.png',
+      'tile_04_03.png',
+      'tile_05_00.png',
+      'tile_05_01.png',
+      'tile_05_02.png',
+      'tile_05_03.png',
     ];
 
     waterTiles.forEach(tileName => {
-      const match = tileName.match(waterTilePattern);
+      const match = waterTilePattern.exec(tileName);
       if (match) {
         tiles.push({
           id: id++,
           name: tileName.replace('.png', ''),
           category: 'water',
           biomes: ['WETLAND'],
-          imagePath: `assets/water/${tileName}`
+          imagePath: `assets/water/${tileName}`,
         });
       }
     });
@@ -147,7 +165,7 @@ export class TilesetManager {
       columns: 6,
       margin: 0,
       spacing: 0,
-      tiles
+      tiles,
     });
 
     tiles.forEach(tile => this.tileInfoById.set(tile.id, tile));
@@ -172,7 +190,7 @@ export class TilesetManager {
       { name: 'water_corner_ne', rule: 'water_corner_northeast' },
       { name: 'water_corner_nw', rule: 'water_corner_northwest' },
       { name: 'water_corner_se', rule: 'water_corner_southeast' },
-      { name: 'water_corner_sw', rule: 'water_corner_southwest' }
+      { name: 'water_corner_sw', rule: 'water_corner_southwest' },
     ];
 
     autotiles.forEach(autotile => {
@@ -182,7 +200,7 @@ export class TilesetManager {
         category: 'autotile',
         biomes: ['GRASSLAND', 'WETLAND'],
         imagePath: `assets/terrain/autotiles/${autotile.name}.png`,
-        autotileRule: autotile.rule
+        autotileRule: autotile.rule,
       });
     });
 
@@ -194,7 +212,7 @@ export class TilesetManager {
       columns: 4,
       margin: 0,
       spacing: 0,
-      tiles
+      tiles,
     });
 
     tiles.forEach(tile => this.tileInfoById.set(tile.id, tile));
@@ -236,34 +254,38 @@ export class TilesetManager {
    */
   getTilesByBiome(biome: string, category?: string): TileInfo[] {
     const allTiles = Array.from(this.tileInfoById.values());
-    return allTiles.filter(tile => 
-      tile.biomes.includes(biome) && 
-      (!category || tile.category === category)
+    return allTiles.filter(
+      tile =>
+        tile.biomes.includes(biome) && (!category || tile.category === category)
     );
   }
 
   /**
    * Obtiene un tile aleatorio para un bioma
    */
-  getRandomTileForBiome(biome: string, category: string = 'terrain'): TileInfo | null {
+  getRandomTileForBiome(biome: string, category = 'terrain'): TileInfo | null {
     const compatibleTiles = this.getTilesByBiome(biome, category);
     if (compatibleTiles.length === 0) return null;
-    
+
     return compatibleTiles[Math.floor(Math.random() * compatibleTiles.length)];
   }
 
   /**
    * Obtiene el tile de autotile apropiado para una transición
    */
-  getAutotileForTransition(_fromBiome: string, _toBiome: string, direction: string): TileInfo | null {
+  getAutotileForTransition(
+    _fromBiome: string,
+    _toBiome: string,
+    direction: string
+  ): TileInfo | null {
     // Lógica para determinar qué autotile usar
     const autotiles = this.getTilesByBiome('GRASSLAND', 'autotile');
-    
+
     // Buscar por regla de dirección
-    const matching = autotiles.find(tile => 
+    const matching = autotiles.find(tile =>
       tile.autotileRule?.includes(direction.toLowerCase())
     );
-    
+
     return matching || null;
   }
 }
