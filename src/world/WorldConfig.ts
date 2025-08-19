@@ -274,11 +274,7 @@ export const WORLD_PRESETS: Record<string, WorldPreset> = {
       },
 
       biomes: {
-        enabled: [
-          'grassland' as BiomeType,
-          'forest' as BiomeType,
-          'village' as BiomeType,
-        ],
+        enabled: ['grassland' as BiomeType, 'forest' as BiomeType, 'village' as BiomeType],
         forceSpawn: [
           {
             biome: 'village' as BiomeType,
@@ -307,6 +303,7 @@ export const DENSITY_CONFIGS = {
     propDensity: 0.01,
     structureDensity: 0.005,
     decalDensity: 0.1,
+    multiplier: 0.5,
   },
 
   normal: {
@@ -315,6 +312,7 @@ export const DENSITY_CONFIGS = {
     propDensity: 0.05,
     structureDensity: 0.02,
     decalDensity: 0.3,
+    multiplier: 1.0,
   },
 
   dense: {
@@ -323,6 +321,7 @@ export const DENSITY_CONFIGS = {
     propDensity: 0.15,
     structureDensity: 0.05,
     decalDensity: 0.5,
+    multiplier: 1.5,
   },
 
   performance: {
@@ -331,6 +330,7 @@ export const DENSITY_CONFIGS = {
     propDensity: 0.02,
     structureDensity: 0.01,
     decalDensity: 0.15,
+    multiplier: 0.7,
   },
 };
 
@@ -437,11 +437,7 @@ export function validateWorldConfig(config: WorldGenConfig): {
   }
 
   // Validar configuraciones de ruido
-  const noiseValidation = [
-    config.noise.temperature,
-    config.noise.moisture,
-    config.noise.elevation,
-  ];
+  const noiseValidation = [config.noise.temperature, config.noise.moisture, config.noise.elevation];
 
   for (const noise of noiseValidation) {
     if (noise.scale <= 0 || noise.scale > 1) {

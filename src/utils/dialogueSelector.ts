@@ -26,8 +26,7 @@ export const loadDialogueData = async (): Promise<void> => {
 
     // Establecer índice inicial aleatorio
     const seed = Date.now();
-    currentIndex =
-      Math.floor((seed * 1664525 + 1013904223) % 2147483647) % totalDialogues;
+    currentIndex = Math.floor((seed * 1664525 + 1013904223) % 2147483647) % totalDialogues;
 
     isLoaded = true;
 
@@ -148,25 +147,20 @@ const responseMap: Record<string, string[]> = {
 /**
  * Genera una respuesta contextual basada en el último diálogo
  */
-export const getResponseWriter = (
+export const getResponseWriter = async (
   responderSpeaker: 'ISA' | 'STEV',
   lastDialogue: DialogueEntry
-): DialogueEntry | null => {
-  const possibleEmotions =
-    responseMap[lastDialogue.emotion] || responseMap.DEFAULT;
+): Promise<DialogueEntry | null> => {
+  const possibleEmotions = responseMap[lastDialogue.emotion] || responseMap.DEFAULT;
 
   for (const emotion of possibleEmotions) {
-    const response = getNextDialogue(
-      responderSpeaker,
-      emotion,
-      lastDialogue.activity
-    );
+    const response = await getNextDialogue(responderSpeaker, emotion, lastDialogue.activity);
     if (response) {
       return response;
     }
   }
 
-  return getNextDialogue(responderSpeaker);
+  return await getNextDialogue(responderSpeaker);
 };
 
 /**
@@ -288,9 +282,7 @@ export const getDialogueStats = () => {
 /**
  * Obtiene una muestra aleatoria de diálogos para testing
  */
-export const getRandomDialogueSample = async (
-  count = 5
-): Promise<DialogueEntry[]> => {
+export const getRandomDialogueSample = async (count = 5): Promise<DialogueEntry[]> => {
   if (!isLoaded || totalDialogues === 0) return [];
 
   try {

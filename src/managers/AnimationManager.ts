@@ -286,12 +286,9 @@ export class AnimationManager {
     AnimationManager.ANIMATION_CONFIGS.forEach(config => {
       try {
         if (!this.scene.textures.exists(config.spriteSheetKey)) {
-          logAutopoiesis.warn(
-            `Spritesheet not found: ${config.spriteSheetKey}`,
-            {
-              animationKey: config.key,
-            }
-          );
+          logAutopoiesis.warn(`Spritesheet not found: ${config.spriteSheetKey}`, {
+            animationKey: config.key,
+          });
           return;
         }
 
@@ -373,9 +370,7 @@ export class AnimationManager {
     animationKey: string,
     autoPlay = true
   ): Phaser.GameObjects.Sprite | null {
-    const config = AnimationManager.ANIMATION_CONFIGS.find(
-      c => c.key === animationKey
-    );
+    const config = AnimationManager.ANIMATION_CONFIGS.find(c => c.key === animationKey);
     if (!config) {
       logAutopoiesis.warn(`Animation config not found: ${animationKey}`);
       return null;
@@ -398,12 +393,9 @@ export class AnimationManager {
 
       return sprite;
     } catch (error) {
-      logAutopoiesis.error(
-        `Failed to create animated sprite: ${animationKey}`,
-        {
-          error: String(error),
-        }
-      );
+      logAutopoiesis.error(`Failed to create animated sprite: ${animationKey}`, {
+        error: String(error),
+      });
       return null;
     }
   }
@@ -412,9 +404,7 @@ export class AnimationManager {
    * Get animation duration in milliseconds
    */
   public getAnimationDuration(animationKey: string): number {
-    const config = AnimationManager.ANIMATION_CONFIGS.find(
-      c => c.key === animationKey
-    );
+    const config = AnimationManager.ANIMATION_CONFIGS.find(c => c.key === animationKey);
     if (!config) return 0;
 
     return (config.frames.length / config.frameRate) * 1000;
@@ -441,15 +431,10 @@ export class AnimationManager {
     );
 
     const environment = Array.from(this.createdAnimations).filter(
-      key =>
-        key.includes('campfire') ||
-        key.includes('flowers') ||
-        key.includes('flag')
+      key => key.includes('campfire') || key.includes('flowers') || key.includes('flag')
     );
 
-    const ui = Array.from(this.createdAnimations).filter(key =>
-      key.includes('pointer')
-    );
+    const ui = Array.from(this.createdAnimations).filter(key => key.includes('pointer'));
 
     const animals = Array.from(this.createdAnimations).filter(
       key => key.includes('chicken') || key.includes('pig')
@@ -471,8 +456,7 @@ export class AnimationManager {
       loadedSpriteSheets: this.loadedSpriteSheets.size,
       createdAnimations: this.createdAnimations.size,
       totalConfigs: AnimationManager.ANIMATION_CONFIGS.length,
-      successRate:
-        this.createdAnimations.size / AnimationManager.ANIMATION_CONFIGS.length,
+      successRate: this.createdAnimations.size / AnimationManager.ANIMATION_CONFIGS.length,
     };
   }
 

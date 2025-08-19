@@ -11,10 +11,7 @@ export class EntityActivityComponent {
   private _lastActivityChange: number;
   private _mood: MoodType;
 
-  public constructor(
-    initialActivity: ActivityType = 'WANDERING',
-    initialMood: MoodType = '😊'
-  ) {
+  public constructor(initialActivity: ActivityType = 'WANDERING', initialMood: MoodType = '😊') {
     this._currentActivity = initialActivity;
     this._mood = initialMood;
     this._activityStartTime = Date.now();

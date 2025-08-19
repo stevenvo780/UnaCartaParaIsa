@@ -17,7 +17,7 @@ export class QuestSystem {
   public constructor(scene: Phaser.Scene) {
     this._scene = scene;
     this._eventEmitter = new Phaser.Events.EventEmitter();
-    
+
     // Inicializar progreso de misiones
     this._questProgress = {
       activeQuests: new Map(),
@@ -27,7 +27,7 @@ export class QuestSystem {
       questHistory: [],
       totalQuestsCompleted: 0,
       totalExperienceGained: 0,
-      unlockedTitles: []
+      unlockedTitles: [],
     };
 
     this._setupEventListeners();
@@ -40,23 +40,23 @@ export class QuestSystem {
   private _setupEventListeners(): void {
     // Integración con GameLogicManager
     this._scene.events.on('gameLogicUpdate', this._onGameUpdate, this);
-    
+
     // Integración con sistema de diálogos
     this._scene.events.on('dialogue_completed', this._onDialogueCompleted, this);
-    
+
     // Integración con sistema de comida
     this._scene.events.on('food_consumed', this._onFoodConsumed, this);
     this._scene.events.on('buyFood', this._onFoodPurchased, this);
-    
+
     // Integración con interacciones de entidades
     this._scene.events.on('playerInteraction', this._onPlayerInteraction, this);
-    
+
     // Timer para chequeos automáticos de misiones
     this._questCheckTimer = this._scene.time.addEvent({
       delay: 5000, // Chequeo cada 5 segundos
       callback: this._checkQuestProgress,
       callbackScope: this,
-      loop: true
+      loop: true,
     });
   }
 
@@ -65,11 +65,11 @@ export class QuestSystem {
    */
   private _initializeQuests(): void {
     const allQuests = QuestCatalog.getAllQuests();
-    
+
     allQuests.forEach(quest => {
       // Clonar la quest para evitar modificar el catálogo original
       const questCopy = JSON.parse(JSON.stringify(quest)) as Quest;
-      
+
       if (this._checkQuestRequirements(questCopy)) {
         if (questCopy.status === 'available') {
           this._questProgress.availableQuests.set(questCopy.id, questCopy);
@@ -80,7 +80,7 @@ export class QuestSystem {
 
     logAutopoiesis.info('QuestSystem initialized', {
       availableQuests: this._questProgress.availableQuests.size,
-      totalQuests: allQuests.length
+      totalQuests: allQuests.length,
     });
   }
 
@@ -110,7 +110,7 @@ export class QuestSystem {
     this._questProgress.questHistory.push({
       questId,
       action: 'started',
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // Mostrar diálogo de introducción usando el sistema existente
@@ -139,7 +139,7 @@ export class QuestSystem {
 
     if (incompleteObjectives.length > 0) {
       logAutopoiesis.warn(`Cannot complete quest ${questId}, incomplete objectives`, {
-        incompleteObjectives: incompleteObjectives.map(obj => obj.id)
+        incompleteObjectives: incompleteObjectives.map(obj => obj.id),
       });
       return false;
     }
@@ -147,7 +147,7 @@ export class QuestSystem {
     // Completar misión
     quest.status = 'completed';
     quest.completedAt = Date.now();
-    
+
     // Mover a completadas
     this._questProgress.activeQuests.delete(questId);
     this._questProgress.completedQuests.set(questId, quest);
@@ -163,7 +163,7 @@ export class QuestSystem {
     this._questProgress.questHistory.push({
       questId,
       action: 'completed',
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // Verificar si se desbloquean nuevas misiones
@@ -172,9 +172,9 @@ export class QuestSystem {
     // Emitir evento
     this._emitQuestEvent('quest_completed', questId);
 
-    logAutopoiesis.info(`Quest completed: ${quest.title}`, { 
+    logAutopoiesis.info(`Quest completed: ${quest.title}`, {
       questId,
-      rewards: quest.rewards.length 
+      rewards: quest.rewards.length,
     });
 
     return true;
@@ -193,7 +193,7 @@ export class QuestSystem {
     // Actualizar progreso
     if (objective.requiredAmount) {
       objective.currentAmount = (objective.currentAmount || 0) + amount;
-      
+
       if (objective.currentAmount >= objective.requiredAmount) {
         objective.isCompleted = true;
         this._emitQuestEvent('objective_completed', questId, objectiveId);
@@ -233,7 +233,11 @@ export class QuestSystem {
     if (!isaEntity) return;
 
     quest.objectives.forEach(objective => {
-      if (objective.type === 'reach_location' && !objective.isCompleted && objective.targetLocation) {
+      if (
+        objective.type === 'reach_location' &&
+        !objective.isCompleted &&
+        objective.targetLocation
+      ) {
         const distance = Phaser.Math.Distance.Between(
           isaEntity.position.x,
           isaEntity.position.y,
@@ -350,13 +354,13 @@ export class QuestSystem {
    */
   private _applyQuestRewards(quest: Quest): void {
     const gameLogicManager = this._scene.registry.get('gameLogicManager');
-    
+
     quest.rewards.forEach(reward => {
       switch (reward.type) {
         case 'experience':
           this._questProgress.totalExperienceGained += reward.amount || 0;
           break;
-          
+
         case 'stats_boost':
           if (reward.statsBoost && gameLogicManager) {
             // Aplicar boost de stats a las entidades
@@ -372,22 +376,22 @@ export class QuestSystem {
             });
           }
           break;
-          
+
         case 'money':
           // Integrar con sistema de dinero cuando esté disponible
           break;
-          
+
         case 'title':
           if (reward.title) {
             this._questProgress.unlockedTitles.push(reward.title);
           }
           break;
-          
+
         case 'unlock_feature':
           // Emitir evento para desbloquear características
           this._scene.events.emit('feature_unlocked', {
             featureId: reward.unlockId,
-            questId: quest.id
+            questId: quest.id,
           });
           break;
       }
@@ -405,7 +409,7 @@ export class QuestSystem {
         speaker: introDialogue.speaker,
         text: introDialogue.text,
         mood: introDialogue.mood || 'neutral',
-        type: 'quest_intro'
+        type: 'quest_intro',
       });
     }
   }
@@ -420,7 +424,7 @@ export class QuestSystem {
         speaker: completionDialogue.speaker,
         text: completionDialogue.text,
         mood: completionDialogue.mood || 'happy',
-        type: 'quest_completion'
+        type: 'quest_completion',
       });
     }
   }
@@ -430,11 +434,12 @@ export class QuestSystem {
    */
   private _showObjectiveCompletedNotification(quest: Quest, objective: QuestObjective): void {
     this._showNotification(`✓ ${objective.description}`, 'success');
-    
+
     // Si hay hints para el siguiente objetivo, mostrarlas
     const nextObjective = quest.objectives.find(obj => !obj.isCompleted);
     if (nextObjective && nextObjective.hints && nextObjective.hints.length > 0) {
-      const randomHint = nextObjective.hints[Math.floor(Math.random() * nextObjective.hints.length)];
+      const randomHint =
+        nextObjective.hints[Math.floor(Math.random() * nextObjective.hints.length)];
       this._scene.time.delayedCall(2000, () => {
         this._showNotification(`💡 ${randomHint}`, 'info');
       });
@@ -456,20 +461,20 @@ export class QuestSystem {
     const colors = {
       success: 0x2ecc71,
       warning: 0xf39c12,
-      info: 0x3498db
+      info: 0x3498db,
     };
 
     const notification = this._scene.add.container(this._scene.cameras.main.width - 20, 50);
-    
+
     const bg = this._scene.add.rectangle(0, 0, 300, 60, colors[type], 0.9);
     const textObj = this._scene.add.text(0, 0, text, {
       fontSize: '14px',
       color: '#ffffff',
       align: 'center',
-      wordWrap: { width: 280 }
+      wordWrap: { width: 280 },
     });
     textObj.setOrigin(0.5);
-    
+
     notification.add([bg, textObj]);
     notification.setDepth(1000);
     notification.setAlpha(0);
@@ -479,7 +484,7 @@ export class QuestSystem {
       targets: notification,
       alpha: 1,
       duration: 300,
-      ease: 'Power2'
+      ease: 'Power2',
     });
 
     this._scene.time.delayedCall(3000, () => {
@@ -488,7 +493,7 @@ export class QuestSystem {
         alpha: 0,
         duration: 300,
         ease: 'Power2',
-        onComplete: () => notification.destroy()
+        onComplete: () => notification.destroy(),
       });
     });
   }
@@ -514,12 +519,13 @@ export class QuestSystem {
    */
   private _checkForNewAvailableQuests(): void {
     const allQuests = QuestCatalog.getAllQuests();
-    
+
     allQuests.forEach(quest => {
-      if (!this._questProgress.availableQuests.has(quest.id) && 
-          !this._questProgress.activeQuests.has(quest.id) &&
-          !this._questProgress.completedQuests.has(quest.id)) {
-        
+      if (
+        !this._questProgress.availableQuests.has(quest.id) &&
+        !this._questProgress.activeQuests.has(quest.id) &&
+        !this._questProgress.completedQuests.has(quest.id)
+      ) {
         if (this._checkQuestRequirements(quest)) {
           const questCopy = JSON.parse(JSON.stringify(quest)) as Quest;
           questCopy.status = 'available';
@@ -558,7 +564,10 @@ export class QuestSystem {
     // Activar misiones especiales cuando la resonancia es alta
     if (!this._questProgress.activeQuests.has('daily_resonance_meditation')) {
       const meditationQuest = QuestCatalog.getQuestById('daily_resonance_meditation');
-      if (meditationQuest && this._questProgress.availableQuests.has('daily_resonance_meditation')) {
+      if (
+        meditationQuest &&
+        this._questProgress.availableQuests.has('daily_resonance_meditation')
+      ) {
         this.startQuest('daily_resonance_meditation');
       }
     }
@@ -572,7 +581,7 @@ export class QuestSystem {
       type,
       questId,
       objectiveId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     this._eventEmitter.emit(type, event);
@@ -614,7 +623,7 @@ export class QuestSystem {
     if (this._questCheckTimer) {
       this._questCheckTimer.destroy();
     }
-    
+
     this._eventEmitter.removeAllListeners();
     this._scene.events.off('gameLogicUpdate', this._onGameUpdate, this);
     this._scene.events.off('dialogue_completed', this._onDialogueCompleted, this);

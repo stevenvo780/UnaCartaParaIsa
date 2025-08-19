@@ -20,22 +20,13 @@ export class FoodAssetManager {
    * Carga assets básicos de comida (los más comunes)
    */
   async loadEssentialFoodAssets(): Promise<void> {
-    const essentialFoods = [
-      'bread',
-      'burger',
-      'apple_pie',
-      'icecream',
-      'sandwich',
-      'pizza',
-    ];
+    const essentialFoods = ['bread', 'burger', 'apple_pie', 'icecream', 'sandwich', 'pizza'];
 
     logAutopoiesis.info('Cargando assets esenciales de comida', {
       count: essentialFoods.length,
     });
 
-    const loadPromises = essentialFoods.map(foodId =>
-      this.loadFoodAsset(foodId)
-    );
+    const loadPromises = essentialFoods.map(foodId => this.loadFoodAsset(foodId));
     await Promise.all(loadPromises);
 
     // Cargar assets adicionales para el sistema de comida
@@ -55,7 +46,7 @@ export class FoodAssetManager {
 
     // Si ya se está cargando, esperar a que termine
     if (this.loadingPromises.has(foodId)) {
-      return this.loadingPromises.get(foodId)!;
+      return this.loadingPromises.get(foodId);
     }
 
     const food = FoodCatalog.getFoodById(foodId);

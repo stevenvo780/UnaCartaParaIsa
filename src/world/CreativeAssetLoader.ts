@@ -193,7 +193,7 @@ export class CreativeAssetLoader {
         path: `assets/water/tile_${pattern}.png`,
         type: 'water',
         biome: 'wetland',
-        variant: parseInt(pattern.replace('_', '')),
+        variant: parseInt(pattern.replace('_', ''), 10),
       };
       waterAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
@@ -486,9 +486,7 @@ export class CreativeAssetLoader {
    */
   getRandomAsset(type: string, biome?: string): AssetInfo | null {
     const typeAssets = this.assetsByType.get(type) || [];
-    const filteredAssets = biome
-      ? typeAssets.filter(a => a.biome === biome)
-      : typeAssets;
+    const filteredAssets = biome ? typeAssets.filter(a => a.biome === biome) : typeAssets;
 
     if (filteredAssets.length === 0) return null;
 

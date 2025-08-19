@@ -1,10 +1,5 @@
 /*\n * Documentación científica (resumen):\n * - Eficiencia temporal por actividad: curva en campana por tramos alrededor de una duración óptima.\n * - Prioridad: w(v,α)=1−(v/100)^α (α∈[0.1,10]) para modelar urgencia no lineal.\n * - Decaimiento híbrido lineal estable y costes de supervivencia por minuto.\n * - Modificadores circadianos: multiplicadores nocturnos para descanso/energía.\n */
-import type {
-  EntityStats,
-  EntityActivity,
-  ActivityType,
-  ZoneType,
-} from '../types';
+import type { EntityStats, EntityActivity, ActivityType, ZoneType } from '../types';
 import { gameConfig } from '../config/gameConfig';
 
 interface TimeOfDayModifiers {
@@ -69,37 +64,29 @@ const DECAY_CONFIG = {
 const EFFICIENCY_FUNCTIONS = {
   WORKING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.WORKING;
-    if (timeSpent < optimal * 0.5)
-      return 0.5 + (timeSpent / (optimal * 0.5)) * 0.3;
-    if (timeSpent <= optimal)
-      return 0.8 + ((timeSpent - optimal * 0.5) / (optimal * 0.5)) * 0.2;
+    if (timeSpent < optimal * 0.5) return 0.5 + (timeSpent / (optimal * 0.5)) * 0.3;
+    if (timeSpent <= optimal) return 0.8 + ((timeSpent - optimal * 0.5) / (optimal * 0.5)) * 0.2;
     return Math.max(0.2, 1.0 - ((timeSpent - optimal) / optimal) * 0.8);
   },
 
   RESTING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.RESTING;
-    if (timeSpent < optimal * 0.3)
-      return 0.4 + (timeSpent / (optimal * 0.3)) * 0.4;
-    if (timeSpent <= optimal)
-      return 0.8 + ((timeSpent - optimal * 0.3) / (optimal * 0.7)) * 0.2;
+    if (timeSpent < optimal * 0.3) return 0.4 + (timeSpent / (optimal * 0.3)) * 0.4;
+    if (timeSpent <= optimal) return 0.8 + ((timeSpent - optimal * 0.3) / (optimal * 0.7)) * 0.2;
     return Math.max(0.3, 1.0 - ((timeSpent - optimal) / optimal) * 0.7);
   },
 
   SOCIALIZING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.SOCIALIZING;
-    if (timeSpent < optimal * 0.2)
-      return 0.6 + (timeSpent / (optimal * 0.2)) * 0.3;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.2) / (optimal * 0.8)) * 0.1;
+    if (timeSpent < optimal * 0.2) return 0.6 + (timeSpent / (optimal * 0.2)) * 0.3;
+    if (timeSpent <= optimal) return 0.9 + ((timeSpent - optimal * 0.2) / (optimal * 0.8)) * 0.1;
     return Math.max(0.4, 1.0 - ((timeSpent - optimal) / optimal) * 0.6);
   },
 
   DANCING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.DANCING;
-    if (timeSpent < optimal * 0.4)
-      return 0.7 + (timeSpent / (optimal * 0.4)) * 0.2;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.4) / (optimal * 0.6)) * 0.1;
+    if (timeSpent < optimal * 0.4) return 0.7 + (timeSpent / (optimal * 0.4)) * 0.2;
+    if (timeSpent <= optimal) return 0.9 + ((timeSpent - optimal * 0.4) / (optimal * 0.6)) * 0.1;
     return Math.max(0.3, 1.0 - ((timeSpent - optimal) / optimal) * 0.7);
   },
 
@@ -112,37 +99,29 @@ const EFFICIENCY_FUNCTIONS = {
 
   COOKING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.COOKING;
-    if (timeSpent < optimal * 0.3)
-      return 0.5 + (timeSpent / (optimal * 0.3)) * 0.4;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.3) / (optimal * 0.7)) * 0.1;
+    if (timeSpent < optimal * 0.3) return 0.5 + (timeSpent / (optimal * 0.3)) * 0.4;
+    if (timeSpent <= optimal) return 0.9 + ((timeSpent - optimal * 0.3) / (optimal * 0.7)) * 0.1;
     return Math.max(0.4, 1.0 - ((timeSpent - optimal) / optimal) * 0.6);
   },
 
   EXERCISING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.EXERCISING;
-    if (timeSpent < optimal * 0.5)
-      return 0.6 + (timeSpent / (optimal * 0.5)) * 0.3;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.5) / (optimal * 0.5)) * 0.1;
+    if (timeSpent < optimal * 0.5) return 0.6 + (timeSpent / (optimal * 0.5)) * 0.3;
+    if (timeSpent <= optimal) return 0.9 + ((timeSpent - optimal * 0.5) / (optimal * 0.5)) * 0.1;
     return Math.max(0.2, 1.0 - ((timeSpent - optimal) / optimal) * 0.8);
   },
 
   MEDITATING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.MEDITATING;
-    if (timeSpent < optimal * 0.6)
-      return 0.4 + (timeSpent / (optimal * 0.6)) * 0.4;
-    if (timeSpent <= optimal)
-      return 0.8 + ((timeSpent - optimal * 0.6) / (optimal * 0.4)) * 0.2;
+    if (timeSpent < optimal * 0.6) return 0.4 + (timeSpent / (optimal * 0.6)) * 0.4;
+    if (timeSpent <= optimal) return 0.8 + ((timeSpent - optimal * 0.6) / (optimal * 0.4)) * 0.2;
     return Math.max(0.5, 1.0 - ((timeSpent - optimal) / optimal) * 0.5);
   },
 
   WRITING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.WRITING;
-    if (timeSpent < optimal * 0.4)
-      return 0.5 + (timeSpent / (optimal * 0.4)) * 0.3;
-    if (timeSpent <= optimal)
-      return 0.8 + ((timeSpent - optimal * 0.4) / (optimal * 0.6)) * 0.2;
+    if (timeSpent < optimal * 0.4) return 0.5 + (timeSpent / (optimal * 0.4)) * 0.3;
+    if (timeSpent <= optimal) return 0.8 + ((timeSpent - optimal * 0.4) / (optimal * 0.6)) * 0.2;
     return Math.max(0.4, 1.0 - ((timeSpent - optimal) / optimal) * 0.6);
   },
 
@@ -155,27 +134,22 @@ const EFFICIENCY_FUNCTIONS = {
 
   EXPLORING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.EXPLORING;
-    if (timeSpent < optimal * 0.3)
-      return 0.6 + (timeSpent / (optimal * 0.3)) * 0.3;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.3) / (optimal * 0.7)) * 0.1;
+    if (timeSpent < optimal * 0.3) return 0.6 + (timeSpent / (optimal * 0.3)) * 0.3;
+    if (timeSpent <= optimal) return 0.9 + ((timeSpent - optimal * 0.3) / (optimal * 0.7)) * 0.1;
     return Math.max(0.3, 1.0 - ((timeSpent - optimal) / optimal) * 0.7);
   },
 
   CONTEMPLATING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.CONTEMPLATING;
-    if (timeSpent < optimal * 0.7)
-      return 0.3 + (timeSpent / (optimal * 0.7)) * 0.5;
-    if (timeSpent <= optimal)
-      return 0.8 + ((timeSpent - optimal * 0.7) / (optimal * 0.3)) * 0.2;
+    if (timeSpent < optimal * 0.7) return 0.3 + (timeSpent / (optimal * 0.7)) * 0.5;
+    if (timeSpent <= optimal) return 0.8 + ((timeSpent - optimal * 0.7) / (optimal * 0.3)) * 0.2;
     return Math.max(0.4, 1.0 - ((timeSpent - optimal) / optimal) * 0.6);
   },
 
   HIDING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.HIDING;
     if (timeSpent < optimal * 0.5) return 0.7;
-    if (timeSpent <= optimal)
-      return 0.7 + ((timeSpent - optimal * 0.5) / (optimal * 0.5)) * 0.2;
+    if (timeSpent <= optimal) return 0.7 + ((timeSpent - optimal * 0.5) / (optimal * 0.5)) * 0.2;
     return Math.max(0.3, 0.9 - ((timeSpent - optimal) / optimal) * 0.6);
   },
 };
@@ -196,9 +170,7 @@ export const getActivityDynamics = () => ({
   COOKING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.COOKING },
 });
 
-export const getTimeOfDayActivityModifiers = (
-  timeOfDay: TimeOfDayModifiers
-) => {
+export const getTimeOfDayActivityModifiers = (timeOfDay: TimeOfDayModifiers) => {
   const { isNight, phase, hour } = timeOfDay;
 
   return {
@@ -353,9 +325,7 @@ export const ACTIVITY_EFFECTS: Record<
   },
 };
 
-export const mapActivityToPreferredZone = (
-  activity: EntityActivity
-): ZoneType | null => {
+export const mapActivityToPreferredZone = (activity: EntityActivity): ZoneType | null => {
   switch (activity) {
     case 'RESTING':
       return 'rest';
@@ -426,9 +396,7 @@ export const calculateActivityPriority = (
   }
 
   if (activity === 'RESTING') {
-    priority +=
-      Math.max(0, currentStats.sleepiness - 30) * 1.2 +
-      w(100 - currentStats.energy) * 80;
+    priority += Math.max(0, currentStats.sleepiness - 30) * 1.2 + w(100 - currentStats.energy) * 80;
   }
 
   if (activity === 'COOKING') {
@@ -475,15 +443,13 @@ export const applyHybridDecay = (
     return newStats;
   }
 
-  const safeTimeMultiplier =
-    Math.min(10, deltaTimeMs / 1000) * gameConfig.gameSpeedMultiplier;
+  const safeTimeMultiplier = Math.min(10, deltaTimeMs / 1000) * gameConfig.gameSpeedMultiplier;
   const decayMultiplier = ACTIVITY_DECAY_MULTIPLIERS[activity] ?? 1.0;
 
   Object.entries(HYBRID_DECAY_RATES.base).forEach(([statName, baseRate]) => {
     if (statName in newStats) {
       const finalRate = baseRate * decayMultiplier;
-      const configuredRate =
-        finalRate * DECAY_CONFIG.GENERAL_MULTIPLIER * safeTimeMultiplier;
+      const configuredRate = finalRate * DECAY_CONFIG.GENERAL_MULTIPLIER * safeTimeMultiplier;
       const statKey = statName as keyof EntityStats;
 
       let newValue = newStats[statKey] + configuredRate;
@@ -501,30 +467,17 @@ export const applyHybridDecay = (
   return newStats;
 };
 
-export const applySurvivalCosts = (
-  currentStats: EntityStats,
-  deltaTimeMs: number
-): EntityStats => {
+export const applySurvivalCosts = (currentStats: EntityStats, deltaTimeMs: number): EntityStats => {
   const newStats = { ...currentStats };
   const minutesElapsed = (deltaTimeMs / 60000) * gameConfig.gameSpeedMultiplier;
 
-  newStats.money = Math.max(
-    0,
-    newStats.money - SURVIVAL_COSTS.LIVING_COST * minutesElapsed
-  );
+  newStats.money = Math.max(0, newStats.money - SURVIVAL_COSTS.LIVING_COST * minutesElapsed);
 
   if (newStats.money < SURVIVAL_COSTS.CRITICAL_MONEY) {
     const desperation =
-      (SURVIVAL_COSTS.CRITICAL_MONEY - newStats.money) /
-      SURVIVAL_COSTS.CRITICAL_MONEY;
-    newStats.hunger = Math.max(
-      0,
-      newStats.hunger - desperation * 5 * minutesElapsed
-    );
-    newStats.happiness = Math.max(
-      0,
-      newStats.happiness - desperation * 3 * minutesElapsed
-    );
+      (SURVIVAL_COSTS.CRITICAL_MONEY - newStats.money) / SURVIVAL_COSTS.CRITICAL_MONEY;
+    newStats.hunger = Math.max(0, newStats.hunger - desperation * 5 * minutesElapsed);
+    newStats.happiness = Math.max(0, newStats.happiness - desperation * 3 * minutesElapsed);
   }
 
   return newStats;
@@ -540,8 +493,7 @@ export const applyActivityEffectsWithTimeModifiers = (
   const effects = ACTIVITY_EFFECTS[activity];
 
   if (effects) {
-    const minutesElapsed =
-      (deltaTimeMs / 60000) * gameConfig.gameSpeedMultiplier;
+    const minutesElapsed = (deltaTimeMs / 60000) * gameConfig.gameSpeedMultiplier;
 
     Object.entries(effects.immediate).forEach(([stat, value]) => {
       const statKey = stat as keyof EntityStats;
@@ -549,10 +501,7 @@ export const applyActivityEffectsWithTimeModifiers = (
         if (statKey === 'money') {
           newStats[statKey] = Math.max(0, newStats[statKey] + value);
         } else {
-          newStats[statKey] = Math.max(
-            0,
-            Math.min(100, newStats[statKey] + value)
-          );
+          newStats[statKey] = Math.max(0, Math.min(100, newStats[statKey] + value));
         }
       }
     });
@@ -564,10 +513,7 @@ export const applyActivityEffectsWithTimeModifiers = (
         if (statKey === 'money') {
           newStats[statKey] = Math.max(0, newStats[statKey] + change);
         } else {
-          newStats[statKey] = Math.max(
-            0,
-            Math.min(100, newStats[statKey] + change)
-          );
+          newStats[statKey] = Math.max(0, Math.min(100, newStats[statKey] + change));
         }
       }
     });
@@ -577,8 +523,7 @@ export const applyActivityEffectsWithTimeModifiers = (
   const activityModifier = modifiers[activity as keyof typeof modifiers];
 
   if (activity === 'RESTING' && activityModifier) {
-    const minutesElapsed =
-      (deltaTimeMs / 60000) * gameConfig.gameSpeedMultiplier;
+    const minutesElapsed = (deltaTimeMs / 60000) * gameConfig.gameSpeedMultiplier;
     const effects = ACTIVITY_EFFECTS.RESTING;
 
     if ('energyRecoveryBonus' in activityModifier) {
@@ -586,10 +531,7 @@ export const applyActivityEffectsWithTimeModifiers = (
         (effects.perMinute.energy || 0) *
         (activityModifier.energyRecoveryBonus - 1) *
         minutesElapsed;
-      newStats.energy = Math.min(
-        100,
-        Math.max(0, newStats.energy + energyBonus)
-      );
+      newStats.energy = Math.min(100, Math.max(0, newStats.energy + energyBonus));
     }
 
     if ('sleepinessRecoveryBonus' in activityModifier) {
@@ -597,19 +539,12 @@ export const applyActivityEffectsWithTimeModifiers = (
         (effects.perMinute.sleepiness || 0) *
         (activityModifier.sleepinessRecoveryBonus - 1) *
         minutesElapsed;
-      newStats.sleepiness = Math.min(
-        100,
-        Math.max(0, newStats.sleepiness + sleepBonus)
-      );
+      newStats.sleepiness = Math.min(100, Math.max(0, newStats.sleepiness + sleepBonus));
     }
 
     if ('deepSleepBonus' in activityModifier) {
-      const deepSleepHealthBonus =
-        activityModifier.deepSleepBonus * 0.5 * minutesElapsed;
-      newStats.health = Math.min(
-        100,
-        Math.max(0, newStats.health + deepSleepHealthBonus)
-      );
+      const deepSleepHealthBonus = activityModifier.deepSleepBonus * 0.5 * minutesElapsed;
+      newStats.health = Math.min(100, Math.max(0, newStats.health + deepSleepHealthBonus));
     }
 
     if (timeOfDay.isNight) {

@@ -5,8 +5,7 @@
 
 import { TerrainGenerator } from './TerrainGenerator';
 import { getBiomeDefinition, DEFAULT_WORLD_CONFIG } from './BiomeDefinitions';
-import { BiomeType } from './types';
-import type { GeneratedWorld, WorldGenConfig, WorldLayer } from './types';
+import { BiomeType, type GeneratedWorld, type WorldGenConfig, type WorldLayer } from './types';
 import type { Zone, MapElement } from '../types';
 import { logAutopoiesis } from '../utils/logger';
 
@@ -79,12 +78,8 @@ export class BiomeSystem {
    */
   private adaptZoneToBiome(zone: Zone, world: GeneratedWorld): Zone {
     // Convertir coordenadas pixel a tile
-    const centerTileX = Math.floor(
-      (zone.bounds.x + zone.bounds.width / 2) / this.config.tileSize
-    );
-    const centerTileY = Math.floor(
-      (zone.bounds.y + zone.bounds.height / 2) / this.config.tileSize
-    );
+    const centerTileX = Math.floor((zone.bounds.x + zone.bounds.width / 2) / this.config.tileSize);
+    const centerTileY = Math.floor((zone.bounds.y + zone.bounds.height / 2) / this.config.tileSize);
 
     // Obtener bioma dominante en la zona
     const dominantBiome = this.getDominantBiomeInArea(
@@ -105,18 +100,12 @@ export class BiomeSystem {
         biome: dominantBiome,
         biomeColor: biomeDef.color,
         biomeName: biomeDef.name,
-        environmentalEffects: this.calculateEnvironmentalEffects(
-          zone.type,
-          dominantBiome
-        ),
+        environmentalEffects: this.calculateEnvironmentalEffects(zone.type, dominantBiome),
       },
     };
 
     // Ajustar color de la zona para que armonice con el bioma
-    adaptedZone.color = this.blendZoneColorWithBiome(
-      zone.color,
-      biomeDef.color
-    );
+    adaptedZone.color = this.blendZoneColorWithBiome(zone.color, biomeDef.color);
 
     return adaptedZone;
   }
@@ -134,15 +123,9 @@ export class BiomeSystem {
     const biomeCounts = new Map<BiomeType, number>();
 
     const startX = Math.max(0, centerX - Math.floor(width / 2));
-    const endX = Math.min(
-      biomeMap[0].length - 1,
-      centerX + Math.floor(width / 2)
-    );
+    const endX = Math.min(biomeMap[0].length - 1, centerX + Math.floor(width / 2));
     const startY = Math.max(0, centerY - Math.floor(height / 2));
-    const endY = Math.min(
-      biomeMap.length - 1,
-      centerY + Math.floor(height / 2)
-    );
+    const endY = Math.min(biomeMap.length - 1, centerY + Math.floor(height / 2));
 
     for (let y = startY; y <= endY; y++) {
       for (let x = startX; x <= endX; x++) {
@@ -221,10 +204,7 @@ export class BiomeSystem {
   /**
    * Mezcla el color de una zona con el color del bioma
    */
-  private blendZoneColorWithBiome(
-    zoneColor: string,
-    biomeColor: string
-  ): string {
+  private blendZoneColorWithBiome(zoneColor: string, biomeColor: string): string {
     // Extraer valores RGBA
     const zoneRgba = this.parseRgbaColor(zoneColor);
     const biomeRgb = this.parseHexColor(biomeColor);
@@ -242,18 +222,14 @@ export class BiomeSystem {
   /**
    * Parsea un color RGBA string
    */
-  private parseRgbaColor(
-    color: string
-  ): { r: number; g: number; b: number; a: number } | null {
-    const match = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(
-      color
-    );
+  private parseRgbaColor(color: string): { r: number; g: number; b: number; a: number } | null {
+    const match = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(color);
     if (!match) return null;
 
     return {
-      r: parseInt(match[1]),
-      g: parseInt(match[2]),
-      b: parseInt(match[3]),
+      r: parseInt(match[1], 10),
+      g: parseInt(match[2], 10),
+      b: parseInt(match[3], 10),
       a: match[4] ? parseFloat(match[4]) : 1,
     };
   }
@@ -261,9 +237,7 @@ export class BiomeSystem {
   /**
    * Parsea un color hex
    */
-  private parseHexColor(
-    hex: string
-  ): { r: number; g: number; b: number } | null {
+  private parseHexColor(hex: string): { r: number; g: number; b: number } | null {
     const match = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     if (!match) return null;
 
@@ -352,12 +326,7 @@ export class BiomeSystem {
     const tileX = Math.floor(x / this.config.tileSize);
     const tileY = Math.floor(y / this.config.tileSize);
 
-    if (
-      tileX < 0 ||
-      tileX >= this.config.width ||
-      tileY < 0 ||
-      tileY >= this.config.height
-    ) {
+    if (tileX < 0 || tileX >= this.config.width || tileY < 0 || tileY >= this.config.height) {
       return null;
     }
 
@@ -394,16 +363,11 @@ export class BiomeSystem {
   /**
    * Regenera el mundo con nueva configuración
    */
-  public regenerateWorld(
-    newConfig: Partial<WorldGenConfig> = {}
-  ): GeneratedWorld {
+  public regenerateWorld(newConfig: Partial<WorldGenConfig> = {}): GeneratedWorld {
     this.config = { ...this.config, ...newConfig };
     this.generator = new TerrainGenerator(this.config);
 
-    logAutopoiesis.info(
-      '🔄 Regenerando mundo con nueva configuración',
-      newConfig
-    );
+    logAutopoiesis.info('🔄 Regenerando mundo con nueva configuración', newConfig);
 
     return this.generateWorld();
   }

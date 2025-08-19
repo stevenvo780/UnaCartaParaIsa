@@ -141,10 +141,7 @@ export class AssetManager {
     },
   ];
 
-  private static readonly FALLBACK_ASSETS: Record<
-    string,
-    () => HTMLCanvasElement
-  > = {
+  private static readonly FALLBACK_ASSETS: Record<string, () => HTMLCanvasElement> = {
     'default-entity': () => AssetManager.createDefaultEntitySprite(),
     'default-terrain': () => AssetManager.createDefaultTerrain(),
     'default-decoration': () => AssetManager.createDefaultDecoration(),
@@ -159,32 +156,27 @@ export class AssetManager {
    */
   public async validateAssets(): Promise<string[]> {
     const missingAssets: string[] = [];
-    const validationPromises = AssetManager.ASSET_DEFINITIONS.map(
-      async asset => {
-        try {
-          const response = await fetch(asset.path, { method: 'HEAD' });
-          if (!response.ok) {
-            missingAssets.push(asset.key);
-            logAutopoiesis.warn(
-              `Asset no encontrado: ${asset.key} en ${asset.path}`
-            );
-          }
-        } catch (error) {
+    const validationPromises = AssetManager.ASSET_DEFINITIONS.map(async asset => {
+      try {
+        const response = await fetch(asset.path, { method: 'HEAD' });
+        if (!response.ok) {
           missingAssets.push(asset.key);
-          logAutopoiesis.error(`Error validando asset: ${asset.key}`, {
-            error: String(error),
-          });
+          logAutopoiesis.warn(`Asset no encontrado: ${asset.key} en ${asset.path}`);
         }
+      } catch (error) {
+        missingAssets.push(asset.key);
+        logAutopoiesis.error(`Error validando asset: ${asset.key}`, {
+          error: String(error),
+        });
       }
-    );
+    });
 
     await Promise.all(validationPromises);
 
     if (missingAssets.length > 0) {
-      logAutopoiesis.warn(
-        `Validation complete - ${missingAssets.length} assets missing`,
-        { missingAssets }
-      );
+      logAutopoiesis.warn(`Validation complete - ${missingAssets.length} assets missing`, {
+        missingAssets,
+      });
     } else {
       logAutopoiesis.info('✅ All assets validated successfully');
     }
@@ -211,9 +203,7 @@ export class AssetManager {
     });
 
     this.scene.load.on('loaderror', (file: any) => {
-      const asset = AssetManager.ASSET_DEFINITIONS.find(
-        a => a.key === file.key
-      );
+      const asset = AssetManager.ASSET_DEFINITIONS.find(a => a.key === file.key);
       this.handleAssetError(asset, result);
     });
 
@@ -266,19 +256,13 @@ export class AssetManager {
           break;
         case 'spritesheet':
           if (asset.spriteConfig) {
-            this.scene.load.spritesheet(
-              asset.key,
-              asset.path,
-              asset.spriteConfig
-            );
+            this.scene.load.spritesheet(asset.key, asset.path, asset.spriteConfig);
           } else {
             logAutopoiesis.warn(`Spritesheet ${asset.key} missing config`);
           }
           break;
         default:
-          logAutopoiesis.warn(
-            `Unknown asset type: ${asset.type} for ${asset.key}`
-          );
+          logAutopoiesis.warn(`Unknown asset type: ${asset.type} for ${asset.key}`);
       }
     } catch (error) {
       logAutopoiesis.error(`Error queuing asset: ${asset.key}`, {
@@ -291,32 +275,23 @@ export class AssetManager {
   /**
    * Maneja errores de carga de assets
    */
-  private handleAssetError(
-    asset: AssetDefinition | undefined,
-    result: AssetLoadResult
-  ): void {
+  private handleAssetError(asset: AssetDefinition | undefined, result: AssetLoadResult): void {
     if (!asset) return;
 
     this.failedAssets.add(asset.key);
     result.failedAssets.push(asset.key);
 
     if (asset.fallback) {
-      const fallbackAsset = AssetManager.ASSET_DEFINITIONS.find(
-        a => a.key === asset.fallback
-      );
+      const fallbackAsset = AssetManager.ASSET_DEFINITIONS.find(a => a.key === asset.fallback);
       if (fallbackAsset && !this.failedAssets.has(asset.fallback)) {
         this.fallbacksUsed.set(asset.key, asset.fallback);
         result.fallbacksUsed.push(`${asset.key} -> ${asset.fallback}`);
-        logAutopoiesis.info(
-          `Using fallback for ${asset.key}: ${asset.fallback}`
-        );
+        logAutopoiesis.info(`Using fallback for ${asset.key}: ${asset.fallback}`);
       }
     } else if (asset.required) {
       this.createProgrammaticFallback(asset.key);
       result.fallbacksUsed.push(`${asset.key} -> programmatic`);
-      logAutopoiesis.warn(
-        `Created programmatic fallback for critical asset: ${asset.key}`
-      );
+      logAutopoiesis.warn(`Created programmatic fallback for critical asset: ${asset.key}`);
     }
   }
 
@@ -337,20 +312,12 @@ export class AssetManager {
     const canvas = document.createElement('canvas');
     canvas.width = 32;
     canvas.height = 32;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
 
     if (assetKey.includes('isa')) {
-      this.drawCircleEntity(
-        ctx,
-        '#e91e63',
-        assetKey.includes('happy') ? '😊' : '😢'
-      );
+      this.drawCircleEntity(ctx, '#e91e63', assetKey.includes('happy') ? '😊' : '😢');
     } else if (assetKey.includes('stev')) {
-      this.drawSquareEntity(
-        ctx,
-        '#2196f3',
-        assetKey.includes('happy') ? '😊' : '😢'
-      );
+      this.drawSquareEntity(ctx, '#2196f3', assetKey.includes('happy') ? '😊' : '😢');
     } else if (assetKey.includes('grass')) {
       this.drawGrassTile(ctx);
     } else {
@@ -386,7 +353,7 @@ export class AssetManager {
     const canvas = document.createElement('canvas');
     canvas.width = 32;
     canvas.height = 32;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
 
     ctx.fillStyle = '#95a5a6';
     ctx.beginPath();
@@ -400,7 +367,7 @@ export class AssetManager {
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
 
     ctx.fillStyle = '#2ecc71';
     ctx.fillRect(0, 0, 64, 64);
@@ -412,7 +379,7 @@ export class AssetManager {
     const canvas = document.createElement('canvas');
     canvas.width = 16;
     canvas.height = 16;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
 
     ctx.fillStyle = '#e74c3c';
     ctx.beginPath();
@@ -422,11 +389,7 @@ export class AssetManager {
     return canvas;
   }
 
-  private drawCircleEntity(
-    ctx: CanvasRenderingContext2D,
-    color: string,
-    emoji: string
-  ): void {
+  private drawCircleEntity(ctx: CanvasRenderingContext2D, color: string, emoji: string): void {
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(16, 16, 12, 0, Math.PI * 2);
@@ -437,11 +400,7 @@ export class AssetManager {
     ctx.fillText(emoji, 16, 22);
   }
 
-  private drawSquareEntity(
-    ctx: CanvasRenderingContext2D,
-    color: string,
-    emoji: string
-  ): void {
+  private drawSquareEntity(ctx: CanvasRenderingContext2D, color: string, emoji: string): void {
     ctx.fillStyle = color;
     ctx.fillRect(4, 4, 24, 24);
 

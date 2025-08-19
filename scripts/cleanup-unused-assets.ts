@@ -83,16 +83,11 @@ class AssetCleanup {
 
         for (const entry of entries) {
           const fullPath = path.join(dir, entry.name);
-          const relativePath = baseDir
-            ? path.join(baseDir, entry.name)
-            : entry.name;
+          const relativePath = baseDir ? path.join(baseDir, entry.name) : entry.name;
 
           if (entry.isDirectory()) {
             await scanAssets(fullPath, relativePath);
-          } else if (
-            entry.isFile() &&
-            /\.(png|jpg|jpeg|webp|gif)$/.test(entry.name)
-          ) {
+          } else if (entry.isFile() && /\.(png|jpg|jpeg|webp|gif)$/.test(entry.name)) {
             assets.push(`assets/${relativePath.replace(/\\/g, '/')}`);
           }
         }
@@ -176,9 +171,7 @@ class AssetCleanup {
         const stats = await fs.stat(dirPath);
         const dirSize = await this.getDirSize(dirPath);
 
-        console.log(
-          `📂 Procesando directorio: ${dir} (${this.formatBytes(dirSize)})`
-        );
+        console.log(`📂 Procesando directorio: ${dir} (${this.formatBytes(dirSize)})`);
 
         if (!dryRun) {
           await fs.rmdir(dirPath, { recursive: true });
@@ -194,12 +187,10 @@ class AssetCleanup {
       }
     }
 
-    console.log(`\n📊 Resumen de limpieza:`);
+    console.log('\n📊 Resumen de limpieza:');
     console.log(`   Directorios procesados: ${totalCleaned}`);
     console.log(`   Espacio liberado: ${this.formatBytes(sizeCleaned)}`);
-    console.log(
-      `   Modo: ${dryRun ? 'DRY RUN (sin cambios)' : 'LIMPIEZA REAL'}`
-    );
+    console.log(`   Modo: ${dryRun ? 'DRY RUN (sin cambios)' : 'LIMPIEZA REAL'}`);
   }
 
   /**
@@ -231,7 +222,7 @@ class AssetCleanup {
   /**
    * Formatea bytes en formato legible
    */
-  private formatBytes(bytes: number): string {
+  public formatBytes(bytes: number): string {
     if (bytes === 0) return '0 B';
 
     const k = 1024;
@@ -255,9 +246,7 @@ async function main() {
     console.log(`   Total assets: ${report.totalAssets}`);
     console.log(`   Assets utilizados: ${report.usedAssets.length}`);
     console.log(`   Assets no utilizados: ${report.unusedAssets.length}`);
-    console.log(
-      `   Espacio potencial a liberar: ${cleanup.formatBytes(report.sizeSaved)}`
-    );
+    console.log(`   Espacio potencial a liberar: ${cleanup.formatBytes(report.sizeSaved)}`);
 
     // Mostrar algunos assets no utilizados como ejemplo
     if (report.unusedAssets.length > 0) {
@@ -276,9 +265,7 @@ async function main() {
     const dryRun = !process.argv.includes('--execute');
 
     if (dryRun) {
-      console.log(
-        'ℹ️ Ejecutando en modo DRY RUN. Usa --execute para aplicar cambios reales.'
-      );
+      console.log('ℹ️ Ejecutando en modo DRY RUN. Usa --execute para aplicar cambios reales.');
     }
 
     await cleanup.cleanupUnusedAssets(dryRun);

@@ -16,14 +16,14 @@ export class QuestController {
   private _currentActivities = new Map<string, ActivityType>();
 
   public constructor(
-    scene: Phaser.Scene, 
-    questSystem: QuestSystem, 
+    scene: Phaser.Scene,
+    questSystem: QuestSystem,
     dialogueSystem: DialogueSystem
   ) {
     this._scene = scene;
     this._questSystem = questSystem;
     this._dialogueSystem = dialogueSystem;
-    
+
     this._setupActivityTracking();
     this._setupSmartQuestTriggers();
   }
@@ -37,7 +37,7 @@ export class QuestController {
       delay: 3000,
       callback: this._checkActivities,
       callbackScope: this,
-      loop: true
+      loop: true,
     });
 
     // Escuchar eventos específicos del juego
@@ -56,7 +56,7 @@ export class QuestController {
       delay: 10000, // Cada 10 segundos
       callback: this._checkHungerQuests,
       callbackScope: this,
-      loop: true
+      loop: true,
     });
 
     // Trigger para misión de resonancia cuando están cerca
@@ -64,7 +64,7 @@ export class QuestController {
       delay: 5000, // Cada 5 segundos
       callback: this._checkProximityQuests,
       callbackScope: this,
-      loop: true
+      loop: true,
     });
 
     // Trigger para misiones de exploración
@@ -72,7 +72,7 @@ export class QuestController {
       delay: 15000, // Cada 15 segundos
       callback: this._checkExplorationQuests,
       callbackScope: this,
-      loop: true
+      loop: true,
     });
   }
 
@@ -84,7 +84,7 @@ export class QuestController {
     if (!gameLogicManager) return;
 
     const entities = gameLogicManager.getEntities();
-    
+
     entities.forEach((entity: any) => {
       if (entity.activity) {
         const previousActivity = this._currentActivities.get(entity.id);
@@ -103,19 +103,20 @@ export class QuestController {
    */
   private _checkActivityObjectives(entityId: string, activity: ActivityType): void {
     const activeQuests = this._questSystem.getActiveQuests();
-    
+
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
-        if (objective.type === 'complete_activity' && 
-            objective.target === activity.toLowerCase() &&
-            !objective.isCompleted) {
-          
+        if (
+          objective.type === 'complete_activity' &&
+          objective.target === activity.toLowerCase() &&
+          !objective.isCompleted
+        ) {
           this._questSystem.updateObjectiveProgress(quest.id, objective.id);
-          logAutopoiesis.info(`Activity objective updated`, {
+          logAutopoiesis.info('Activity objective updated', {
             entityId,
             activity,
             questId: quest.id,
-            objectiveId: objective.id
+            objectiveId: objective.id,
           });
         }
       });
@@ -128,12 +129,15 @@ export class QuestController {
   private _onGameUpdate(data: any): void {
     // Verificar objetivos de estadísticas
     this._checkStatsObjectives(data);
-    
+
     // Verificar objetivos de tiempo
     this._checkTimeObjectives();
-    
+
     // Auto-trigger de misiones basadas en resonancia
-    if (data.resonance > 70 && !this._questSystem.getActiveQuests().find(q => q.id === 'daily_resonance_meditation')) {
+    if (
+      data.resonance > 70 &&
+      !this._questSystem.getActiveQuests().find(q => q.id === 'daily_resonance_meditation')
+    ) {
       const availableQuests = this._questSystem.getAvailableQuests();
       const meditationQuest = availableQuests.find(q => q.id === 'daily_resonance_meditation');
       if (meditationQuest) {
@@ -147,13 +151,13 @@ export class QuestController {
    */
   private _checkStatsObjectives(data: any): void {
     const activeQuests = this._questSystem.getActiveQuests();
-    
+
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
         if (objective.type === 'achieve_stats' && !objective.isCompleted) {
           // Verificar si se cumplieron los requisitos de stats
           // (implementar cuando se definan mejor los objetivos de stats)
-          
+
           // Por ejemplo, si la resonancia es muy alta por cierto tiempo
           if (data.resonance > 80) {
             this._questSystem.updateObjectiveProgress(quest.id, objective.id);
@@ -168,10 +172,14 @@ export class QuestController {
    */
   private _checkTimeObjectives(): void {
     const activeQuests = this._questSystem.getActiveQuests();
-    
+
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
-        if (objective.type === 'survive_time' && !objective.isCompleted && objective.requiredAmount) {
+        if (
+          objective.type === 'survive_time' &&
+          !objective.isCompleted &&
+          objective.requiredAmount
+        ) {
           const elapsedTime = Date.now() - (quest.startedAt || Date.now());
           if (elapsedTime >= objective.requiredAmount * 1000) {
             this._questSystem.updateObjectiveProgress(quest.id, objective.id);
@@ -187,16 +195,17 @@ export class QuestController {
   private _onPlayerInteraction(data: any): void {
     // Verificar objetivos de interacción
     const activeQuests = this._questSystem.getActiveQuests();
-    
+
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
         if (objective.type === 'interact_with_entity' && !objective.isCompleted) {
-          if (objective.target === 'partner_entity' || 
-              objective.target === data.entityId ||
-              data.interactionType === objective.target) {
-            
+          if (
+            objective.target === 'partner_entity' ||
+            objective.target === data.entityId ||
+            data.interactionType === objective.target
+          ) {
             this._questSystem.updateObjectiveProgress(quest.id, objective.id);
-            
+
             // Mostrar diálogo específico de la misión si existe
             this._showQuestDialogue(quest, 'progress');
           }
@@ -210,22 +219,24 @@ export class QuestController {
    */
   private _onFoodConsumed(data: any): void {
     const activeQuests = this._questSystem.getActiveQuests();
-    
+
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
         // Actualizar objetivos de comer
-        if (objective.type === 'complete_activity' && 
-            objective.target === 'eating' && 
-            !objective.isCompleted) {
-          
+        if (
+          objective.type === 'complete_activity' &&
+          objective.target === 'eating' &&
+          !objective.isCompleted
+        ) {
           this._questSystem.updateObjectiveProgress(quest.id, objective.id);
         }
-        
+
         // Actualizar objetivos de recolectar comida
-        if (objective.type === 'collect_resource' && 
-            objective.target === 'food' && 
-            !objective.isCompleted) {
-          
+        if (
+          objective.type === 'collect_resource' &&
+          objective.target === 'food' &&
+          !objective.isCompleted
+        ) {
           this._questSystem.updateObjectiveProgress(quest.id, objective.id);
         }
       });
@@ -237,13 +248,14 @@ export class QuestController {
    */
   private _onDialogueStarted(data: any): void {
     const activeQuests = this._questSystem.getActiveQuests();
-    
+
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
-        if (objective.type === 'talk_to_npc' && 
-            objective.target === data.speakerId && 
-            !objective.isCompleted) {
-          
+        if (
+          objective.type === 'talk_to_npc' &&
+          objective.target === data.speakerId &&
+          !objective.isCompleted
+        ) {
           this._questSystem.updateObjectiveProgress(quest.id, objective.id);
         }
       });
@@ -258,14 +270,12 @@ export class QuestController {
     if (!gameLogicManager) return;
 
     const entities = gameLogicManager.getEntities();
-    const lowHungerEntities = entities.filter((e: any) => 
-      e.stats && e.stats.hunger < 30
-    );
+    const lowHungerEntities = entities.filter((e: any) => e.stats && e.stats.hunger < 30);
 
     if (lowHungerEntities.length > 0) {
       const availableQuests = this._questSystem.getAvailableQuests();
       const foodQuest = availableQuests.find(q => q.id === 'main_first_meal');
-      
+
       if (foodQuest && !this._questSystem.getActiveQuests().find(q => q.id === 'main_first_meal')) {
         this._questSystem.startQuest('main_first_meal');
         logAutopoiesis.info('Food quest auto-triggered due to low hunger');
@@ -286,17 +296,19 @@ export class QuestController {
 
     if (isaEntity && stevEntity) {
       const distance = Phaser.Math.Distance.Between(
-        isaEntity.position.x, isaEntity.position.y,
-        stevEntity.position.x, stevEntity.position.y
+        isaEntity.position.x,
+        isaEntity.position.y,
+        stevEntity.position.x,
+        stevEntity.position.y
       );
 
       // Si están muy cerca, activar misiones de proximidad
       if (distance < 80) {
         const availableQuests = this._questSystem.getAvailableQuests();
-        const proximityQuest = availableQuests.find(q => 
-          q.tags.includes('bonding') || q.tags.includes('romance')
+        const proximityQuest = availableQuests.find(
+          q => q.tags.includes('bonding') || q.tags.includes('romance')
         );
-        
+
         if (proximityQuest) {
           this._questSystem.startQuest(proximityQuest.id);
           logAutopoiesis.info('Proximity quest auto-triggered', { distance });
@@ -313,18 +325,18 @@ export class QuestController {
     if (!gameLogicManager) return;
 
     // Si las entidades han estado moviéndose mucho, sugerir exploración
-    const wanderingEntities = Array.from(this._currentActivities.entries())
-      .filter(([_, activity]) => 
-        activity === 'WANDERING' || activity === 'EXPLORING'
-      );
+    const wanderingEntities = Array.from(this._currentActivities.entries()).filter(
+      ([_, activity]) => activity === 'WANDERING' || activity === 'EXPLORING'
+    );
 
     if (wanderingEntities.length > 0) {
       const availableQuests = this._questSystem.getAvailableQuests();
-      const explorationQuest = availableQuests.find(q => 
-        q.category === 'exploration' || q.tags.includes('exploration')
+      const explorationQuest = availableQuests.find(
+        q => q.category === 'exploration' || q.tags.includes('exploration')
       );
-      
-      if (explorationQuest && Math.random() < 0.1) { // 10% de probabilidad
+
+      if (explorationQuest && Math.random() < 0.1) {
+        // 10% de probabilidad
         this._questSystem.startQuest(explorationQuest.id);
         logAutopoiesis.info('Exploration quest auto-triggered');
       }
@@ -342,7 +354,7 @@ export class QuestController {
         speaker: dialogue.speaker,
         text: dialogue.text,
         mood: dialogue.mood || 'neutral',
-        type: `quest_${stage}`
+        type: `quest_${stage}`,
       });
     }
   }
@@ -352,19 +364,20 @@ export class QuestController {
    */
   public onItemFound(itemId: string, location: { x: number; y: number }): void {
     const activeQuests = this._questSystem.getActiveQuests();
-    
+
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
-        if (objective.type === 'find_item' && 
-            objective.target === itemId && 
-            !objective.isCompleted) {
-          
+        if (
+          objective.type === 'find_item' &&
+          objective.target === itemId &&
+          !objective.isCompleted
+        ) {
           this._questSystem.updateObjectiveProgress(quest.id, objective.id);
-          
+
           logAutopoiesis.info('Item found for quest', {
             itemId,
             location,
-            questId: quest.id
+            questId: quest.id,
           });
         }
       });
@@ -376,23 +389,26 @@ export class QuestController {
    */
   public onLocationReached(locationId: string, coordinates: { x: number; y: number }): void {
     const activeQuests = this._questSystem.getActiveQuests();
-    
+
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
         if (objective.type === 'reach_location' && !objective.isCompleted) {
-          if (objective.target === locationId || 
-              (objective.targetLocation && 
-               Phaser.Math.Distance.Between(
-                 coordinates.x, coordinates.y,
-                 objective.targetLocation.x, objective.targetLocation.y
-               ) <= (objective.targetLocation.radius || 50))) {
-            
+          if (
+            objective.target === locationId ||
+            (objective.targetLocation &&
+              Phaser.Math.Distance.Between(
+                coordinates.x,
+                coordinates.y,
+                objective.targetLocation.x,
+                objective.targetLocation.y
+              ) <= (objective.targetLocation.radius || 50))
+          ) {
             this._questSystem.updateObjectiveProgress(quest.id, objective.id);
-            
+
             logAutopoiesis.info('Location reached for quest', {
               locationId,
               coordinates,
-              questId: quest.id
+              questId: quest.id,
             });
           }
         }
@@ -411,7 +427,7 @@ export class QuestController {
     duration?: number;
   }): void {
     const activeQuests = this._questSystem.getActiveQuests();
-    
+
     activeQuests.forEach(quest => {
       // Verificar si el contexto actual cumple algún objetivo de la misión
       quest.objectives.forEach(objective => {
@@ -423,19 +439,21 @@ export class QuestController {
               this._questSystem.updateObjectiveProgress(quest.id, objective.id);
             }
             break;
-            
+
           case 'reach_location':
             if (objective.targetLocation) {
               const distance = Phaser.Math.Distance.Between(
-                context.location.x, context.location.y,
-                objective.targetLocation.x, objective.targetLocation.y
+                context.location.x,
+                context.location.y,
+                objective.targetLocation.x,
+                objective.targetLocation.y
               );
               if (distance <= (objective.targetLocation.radius || 50)) {
                 this._questSystem.updateObjectiveProgress(quest.id, objective.id);
               }
             }
             break;
-            
+
           case 'interact_with_entity':
             if (context.entityIds.length > 1 && objective.target === 'partner_entity') {
               this._questSystem.updateObjectiveProgress(quest.id, objective.id);
@@ -453,12 +471,12 @@ export class QuestController {
     if (this._activityTimer) {
       this._activityTimer.destroy();
     }
-    
+
     this._scene.events.off('gameLogicUpdate', this._onGameUpdate, this);
     this._scene.events.off('playerInteraction', this._onPlayerInteraction, this);
     this._scene.events.off('food_consumed', this._onFoodConsumed, this);
     this._scene.events.off('dialogue_started', this._onDialogueStarted, this);
-    
+
     logAutopoiesis.info('QuestController destroyed');
   }
 }

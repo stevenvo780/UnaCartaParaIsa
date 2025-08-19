@@ -31,7 +31,9 @@ export class TilesetManager {
   private tilesets = new Map<string, TilesetConfig>();
   private tileInfoById = new Map<number, TileInfo>();
 
-  private constructor() {}
+  private constructor() {
+    // Singleton pattern - constructor intentionally empty
+  }
 
   static getInstance(): TilesetManager {
     if (!TilesetManager.instance) {
@@ -255,8 +257,7 @@ export class TilesetManager {
   getTilesByBiome(biome: string, category?: string): TileInfo[] {
     const allTiles = Array.from(this.tileInfoById.values());
     return allTiles.filter(
-      tile =>
-        tile.biomes.includes(biome) && (!category || tile.category === category)
+      tile => tile.biomes.includes(biome) && (!category || tile.category === category)
     );
   }
 
@@ -282,9 +283,7 @@ export class TilesetManager {
     const autotiles = this.getTilesByBiome('GRASSLAND', 'autotile');
 
     // Buscar por regla de dirección
-    const matching = autotiles.find(tile =>
-      tile.autotileRule?.includes(direction.toLowerCase())
-    );
+    const matching = autotiles.find(tile => tile.autotileRule?.includes(direction.toLowerCase()));
 
     return matching || null;
   }

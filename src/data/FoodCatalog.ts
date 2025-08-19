@@ -19,8 +19,7 @@ export class FoodCatalog {
       price: 12,
       consumeTime: 8000,
       spoilTime: 300000, // 5 minutos
-      description:
-        'Deliciosa tarta casera de manzana, nutritiva y reconfortante',
+      description: 'Deliciosa tarta casera de manzana, nutritiva y reconfortante',
     },
     {
       id: 'salmon',
@@ -76,8 +75,7 @@ export class FoodCatalog {
       healthEffect: -2,
       price: 20,
       consumeTime: 15000,
-      description:
-        'Pizza caliente con queso derretido, irresistible pero grasosa',
+      description: 'Pizza caliente con queso derretido, irresistible pero grasosa',
     },
     {
       id: 'hotdog',
@@ -118,8 +116,7 @@ export class FoodCatalog {
       healthEffect: -1,
       price: 14,
       consumeTime: 8000,
-      description:
-        'Exquisita torta de chocolate, pura felicidad en cada bocado',
+      description: 'Exquisita torta de chocolate, pura felicidad en cada bocado',
     },
     {
       id: 'icecream',
@@ -233,9 +230,7 @@ export class FoodCatalog {
    * Obtiene comidas por rango de precio
    */
   static getFoodsByPriceRange(minPrice: number, maxPrice: number): FoodItem[] {
-    return this.foods.filter(
-      food => food.price >= minPrice && food.price <= maxPrice
-    );
+    return this.foods.filter(food => food.price >= minPrice && food.price <= maxPrice);
   }
 
   /**
@@ -259,11 +254,7 @@ export class FoodCatalog {
   /**
    * Obtiene comida recomendada basada en las necesidades de la entidad
    */
-  static getRecommendedFood(
-    hunger: number,
-    happiness: number,
-    money: number
-  ): FoodItem[] {
+  static getRecommendedFood(hunger: number, happiness: number, money: number): FoodItem[] {
     const affordable = this.foods.filter(food => food.price <= money);
 
     // Si tiene mucha hambre, priorizar comidas que restauren más hambre

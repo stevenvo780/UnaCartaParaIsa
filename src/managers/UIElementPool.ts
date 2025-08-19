@@ -66,9 +66,7 @@ export class UIElementPool<T extends PoolableUIElement> {
 
     if (!element) {
       element = this.createElementFn();
-      logAutopoiesis.debug(
-        `Pool '${this.poolName}' expanded - new element created`
-      );
+      logAutopoiesis.debug(`Pool '${this.poolName}' expanded - new element created`);
     }
 
     this.activeElements.add(element);
@@ -80,9 +78,7 @@ export class UIElementPool<T extends PoolableUIElement> {
    */
   public release(element: T): void {
     if (!this.activeElements.has(element)) {
-      logAutopoiesis.warn(
-        `Attempting to release element not from this pool: ${this.poolName}`
-      );
+      logAutopoiesis.warn(`Attempting to release element not from this pool: ${this.poolName}`);
       return;
     }
 

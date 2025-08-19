@@ -6,6 +6,7 @@
 import type Phaser from 'phaser';
 import type { FoodItem, FoodInventoryItem, FoodStoreData } from '../types';
 import { logAutopoiesis } from '../utils/logger';
+import { UIDesignSystem as DS } from '../config/uiDesignSystem';
 
 export class FoodUI {
   private _scene: Phaser.Scene;
@@ -14,47 +15,227 @@ export class FoodUI {
   private _storePanel: Phaser.GameObjects.Container;
   private _isVisible = false;
 
+  // Modern UI constants
+  private readonly PANEL_WIDTH = 350;
+  private readonly PANEL_HEIGHT = 450;
+  private readonly ITEM_CARD_SIZE = 80;
+  private readonly GRID_COLS = 3;
+  private readonly ANIMATION_DURATION = 400;
+
+  // Use centralized design system
+  private readonly COLORS = DS.COLORS;
+
   public constructor(scene: Phaser.Scene) {
     this._scene = scene;
-    this._container = scene.add.container(0, 0);
-    this._inventoryPanel = scene.add.container(50, 50);
-    this._storePanel = scene.add.container(400, 50);
+
+    // Center panels on screen
+    const centerX = scene.cameras.main.width / 2;
+    const centerY = scene.cameras.main.height / 2;
+
+    this._container = scene.add.container(centerX, centerY);
+    this._inventoryPanel = scene.add.container(-this.PANEL_WIDTH / 2 - 20, 0);
+    this._storePanel = scene.add.container(this.PANEL_WIDTH / 2 + 20, 0);
 
     this._container.add([this._inventoryPanel, this._storePanel]);
     this._container.setVisible(false);
+    this._container.setAlpha(0);
+    this._container.setDepth(2000);
 
-    this._setupPanels();
+    this._setupModernPanels();
     this._setupEventListeners();
   }
 
   /**
-   * Configura los paneles base de la UI
+   * Configura los paneles modernos de la UI
    */
-  private _setupPanels(): void {
-    // Panel de inventario
-    const inventoryBg = this._scene.add.rectangle(
+  private _setupModernPanels(): void {
+    this._createModernInventoryPanel();
+    this._createModernStorePanel();
+    this._createModalOverlay();
+  }
+
+  /**
+   * Crea el panel de inventario moderno
+   */
+  private _createModernInventoryPanel(): void {
+    // Fondo con glassmorphism usando design system
+    const inventoryBg = this._scene.add.graphics();
+    DS.createGlassmorphismBackground(
+      inventoryBg,
       0,
       0,
-      300,
-      400,
-      0x2c3e50,
-      0.9
+      this.PANEL_WIDTH,
+      this.PANEL_HEIGHT,
+      DS.RADIUS.xl,
+      DS.COLORS.surface,
+      0.95
     );
-    const inventoryTitle = this._scene.add.text(-140, -180, 'Inventario', {
-      fontSize: '18px',
-      color: '#ffffff',
+
+    // Border primario
+    inventoryBg.lineStyle(2, DS.COLORS.primary, 0.6);
+    inventoryBg.strokeRoundedRect(0, 0, this.PANEL_WIDTH, this.PANEL_HEIGHT, DS.RADIUS.xl);
+
+    // Header
+    const headerBg = this._scene.add.graphics();
+    headerBg.fillStyle(this.COLORS.primary, 0.8);
+    headerBg.fillRoundedRect(0, 0, this.PANEL_WIDTH, 60, 16);
+    headerBg.fillRect(0, 44, this.PANEL_WIDTH, 16);
+
+    const inventoryIcon = this._scene.add
+      .text(25, 30, '🎒', {
+        fontSize: '20px',
+      })
+      .setOrigin(0, 0.5);
+
+    const inventoryTitle = this._scene.add
+      .text(55, 30, 'INVENTARIO', DS.getTextStyle('lg', DS.COLORS.text, 'bold'))
+      .setOrigin(0, 0.5);
+
+    // Close button
+    const inventoryCloseBtn = this._createCloseButton();
+    inventoryCloseBtn.setPosition(this.PANEL_WIDTH - 30, 30);
+    inventoryCloseBtn.on('pointerdown', () => this.hide());
+
+    this._inventoryPanel.add([
+      inventoryBg,
+      headerBg,
+      inventoryIcon,
+      inventoryTitle,
+      inventoryCloseBtn,
+    ]);
+  }
+
+  /**
+   * Crea el panel de tienda moderno
+   */
+  private _createModernStorePanel(): void {
+    // Fondo con glassmorphism usando design system
+    const storeBg = this._scene.add.graphics();
+    DS.createGlassmorphismBackground(
+      storeBg,
+      0,
+      0,
+      this.PANEL_WIDTH,
+      this.PANEL_HEIGHT,
+      DS.RADIUS.xl,
+      DS.COLORS.surface,
+      0.95
+    );
+
+    // Border de éxito
+    storeBg.lineStyle(2, DS.COLORS.success, 0.6);
+    storeBg.strokeRoundedRect(0, 0, this.PANEL_WIDTH, this.PANEL_HEIGHT, DS.RADIUS.xl);
+
+    // Header
+    const headerBg = this._scene.add.graphics();
+    headerBg.fillStyle(this.COLORS.success, 0.8);
+    headerBg.fillRoundedRect(0, 0, this.PANEL_WIDTH, 60, 16);
+    headerBg.fillRect(0, 44, this.PANEL_WIDTH, 16);
+
+    const storeIcon = this._scene.add
+      .text(25, 30, '🏪', {
+        fontSize: '20px',
+      })
+      .setOrigin(0, 0.5);
+
+    const storeTitle = this._scene.add
+      .text(55, 30, 'TIENDA DE COMIDA', DS.getTextStyle('lg', DS.COLORS.text, 'bold'))
+      .setOrigin(0, 0.5);
+
+    // Money indicator
+    const moneyContainer = this._scene.add.container(this.PANEL_WIDTH - 100, 30);
+    const moneyBg = this._scene.add.graphics();
+    moneyBg.fillStyle(this.COLORS.warning, 0.2);
+    moneyBg.fillRoundedRect(0, -12, 90, 24, 12);
+    moneyBg.lineStyle(1, this.COLORS.warning, 0.5);
+    moneyBg.strokeRoundedRect(0, -12, 90, 24, 12);
+
+    const moneyIcon = this._scene.add
+      .text(10, 0, '💰', {
+        fontSize: '12px',
+      })
+      .setOrigin(0, 0.5);
+
+    const moneyText = this._scene.add
+      .text(25, 0, '1000', DS.getTextStyle('sm', DS.COLORS.text, 'bold'))
+      .setOrigin(0, 0.5);
+
+    moneyContainer.add([moneyBg, moneyIcon, moneyText]);
+    moneyContainer.setData('moneyText', moneyText);
+
+    this._storePanel.add([storeBg, headerBg, storeIcon, storeTitle, moneyContainer]);
+    this._storePanel.setVisible(false);
+  }
+
+  /**
+   * Crea el overlay modal semi-transparente
+   */
+  private _createModalOverlay(): void {
+    const overlay = this._scene.add.graphics();
+    overlay.fillStyle(0x000000, 0.5);
+    overlay.fillRect(
+      -this._scene.cameras.main.width / 2,
+      -this._scene.cameras.main.height / 2,
+      this._scene.cameras.main.width,
+      this._scene.cameras.main.height
+    );
+    overlay.setInteractive(
+      new (window as any).Phaser.Geom.Rectangle(
+        -this._scene.cameras.main.width / 2,
+        -this._scene.cameras.main.height / 2,
+        this._scene.cameras.main.width,
+        this._scene.cameras.main.height
+      ),
+      (window as any).Phaser.Geom.Rectangle.Contains
+    );
+    overlay.on('pointerdown', () => this.hide());
+
+    // Add overlay as first element
+    this._container.addAt(overlay, 0);
+  }
+
+  /**
+   * Crea un botón de cierre moderno
+   */
+  private _createCloseButton(): Phaser.GameObjects.Container {
+    const button = this._scene.add.container(0, 0);
+
+    const buttonBg = this._scene.add.graphics();
+    buttonBg.fillStyle(0xe17055, 0.9);
+    buttonBg.fillCircle(0, 0, 15);
+    buttonBg.lineStyle(2, 0xffffff, 0.8);
+    buttonBg.strokeCircle(0, 0, 15);
+
+    const closeIcon = this._scene.add
+      .text(0, 0, '×', DS.getTextStyle('xl', DS.COLORS.text, 'bold'))
+      .setOrigin(0.5);
+
+    button.add([buttonBg, closeIcon]);
+    button.setSize(30, 30);
+    button.setInteractive();
+
+    // Hover effects
+    button.on('pointerover', () => {
+      this._scene.tweens.add({
+        targets: button,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 150,
+        ease: 'Back.easeOut',
+      });
     });
 
-    this._inventoryPanel.add([inventoryBg, inventoryTitle]);
-
-    // Panel de tienda
-    const storeBg = this._scene.add.rectangle(0, 0, 350, 450, 0x34495e, 0.9);
-    const storeTitle = this._scene.add.text(-165, -210, 'Tienda de Comida', {
-      fontSize: '18px',
-      color: '#ffffff',
+    button.on('pointerout', () => {
+      this._scene.tweens.add({
+        targets: button,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 150,
+        ease: 'Back.easeOut',
+      });
     });
 
-    this._storePanel.add([storeBg, storeTitle]);
+    return button;
   }
 
   /**
@@ -78,42 +259,109 @@ export class FoodUI {
   }
 
   /**
-   * Muestra/oculta el inventario
+   * Muestra/oculta el inventario con animaciones modernas
    */
   public toggleInventory(): void {
-    if (this._isVisible && this._storePanel.visible) {
-      // Si la tienda está abierta, solo cerrar la tienda
-      this._storePanel.setVisible(false);
+    if (this._isVisible) {
+      this.hide();
     } else {
-      // Toggle inventario
-      this._isVisible = !this._isVisible;
-      this._container.setVisible(this._isVisible);
-      this._storePanel.setVisible(false);
-
-      if (this._isVisible) {
-        this._updateInventoryDisplay();
-      }
+      this.showInventoryOnly();
     }
+  }
+
+  /**
+   * Muestra solo el inventario
+   */
+  public showInventoryOnly(): void {
+    this._isVisible = true;
+    this._container.setVisible(true);
+    this._storePanel.setVisible(false);
+
+    // Animación de entrada elegante
+    this._scene.tweens.add({
+      targets: this._container,
+      alpha: { from: 0, to: 1 },
+      scaleX: { from: 0.8, to: 1 },
+      scaleY: { from: 0.8, to: 1 },
+      duration: this.ANIMATION_DURATION,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this._updateInventoryDisplay();
+      },
+    });
+
+    // Animación de entrada del panel
+    this._scene.tweens.add({
+      targets: this._inventoryPanel,
+      x: { from: -this.PANEL_WIDTH / 2 - 20 - 100, to: -this.PANEL_WIDTH / 2 - 20 },
+      duration: this.ANIMATION_DURATION + 100,
+      ease: 'Back.easeOut',
+      delay: 100,
+    });
   }
 
   /**
    * Muestra la tienda con comida disponible
    */
-  public showStore(
-    storeData: FoodStoreData,
-    inventory?: FoodInventoryItem[]
-  ): void {
+  public showStore(storeData: FoodStoreData, inventory?: FoodInventoryItem[]): void {
     this._isVisible = true;
     this._container.setVisible(true);
     this._storePanel.setVisible(true);
 
-    this._updateInventoryDisplay(inventory);
-    this._updateStoreDisplay(storeData.foods);
-
-    logAutopoiesis.info('Tienda de comida abierta', {
-      availableFoods: storeData.foods.length,
-      inventoryItems: inventory?.length ?? 0,
+    // Animación de entrada elegante
+    this._scene.tweens.add({
+      targets: this._container,
+      alpha: { from: 0, to: 1 },
+      scaleX: { from: 0.8, to: 1 },
+      scaleY: { from: 0.8, to: 1 },
+      duration: this.ANIMATION_DURATION,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this._updateInventoryDisplay(inventory);
+        this._updateStoreDisplay(storeData);
+      },
     });
+
+    // Animación escalonada de los paneles
+    this._scene.tweens.add({
+      targets: this._inventoryPanel,
+      x: { from: -this.PANEL_WIDTH / 2 - 20 - 100, to: -this.PANEL_WIDTH / 2 - 20 },
+      duration: this.ANIMATION_DURATION + 100,
+      ease: 'Back.easeOut',
+      delay: 100,
+    });
+
+    this._scene.tweens.add({
+      targets: this._storePanel,
+      x: { from: this.PANEL_WIDTH / 2 + 20 + 100, to: this.PANEL_WIDTH / 2 + 20 },
+      duration: this.ANIMATION_DURATION + 100,
+      ease: 'Back.easeOut',
+      delay: 200,
+    });
+  }
+
+  /**
+   * Oculta la UI con animación suave
+   */
+  public hide(): void {
+    if (!this._isVisible) return;
+
+    this._isVisible = false;
+
+    // Animación de salida elegante
+    this._scene.tweens.add({
+      targets: this._container,
+      alpha: 0,
+      scaleX: 0.8,
+      scaleY: 0.8,
+      duration: this.ANIMATION_DURATION - 100,
+      ease: 'Back.easeIn',
+      onComplete: () => {
+        this._container.setVisible(false);
+      },
+    });
+
+    logAutopoiesis.debug('Food UI hidden with animation');
   }
 
   /**
@@ -128,11 +376,12 @@ export class FoodUI {
     });
 
     if (!inventory || inventory.length === 0) {
-      const emptyText = this._scene.add.text(0, 0, 'Inventario vacío', {
-        fontSize: '14px',
-        color: '#bdc3c7',
-        align: 'center',
-      });
+      const emptyText = this._scene.add.text(
+        0,
+        0,
+        'Inventario vacío',
+        DS.getTextStyle('base', DS.COLORS.textSecondary)
+      );
       emptyText.setOrigin(0.5);
       this._inventoryPanel.add(emptyText);
       return;
@@ -155,10 +404,7 @@ export class FoodUI {
         -90,
         y,
         `${item.food.name} x${item.quantity}`,
-        {
-          fontSize: '12px',
-          color: '#ecf0f1',
-        }
+        DS.getTextStyle('sm', DS.COLORS.text)
       );
       itemText.setOrigin(0, 0.5);
 
@@ -167,10 +413,7 @@ export class FoodUI {
         -90,
         y + 15,
         `+${item.food.hungerRestore} hambre`,
-        {
-          fontSize: '10px',
-          color: '#2ecc71',
-        }
+        DS.getTextStyle('xs', DS.COLORS.success)
       );
       effectsText.setOrigin(0, 0.5);
 
@@ -181,7 +424,9 @@ export class FoodUI {
   /**
    * Actualiza la visualización de la tienda
    */
-  private _updateStoreDisplay(foods: FoodItem[]): void {
+  private _updateStoreDisplay(storeData: FoodStoreData | FoodItem[]): void {
+    // Si recibimos FoodStoreData, extraer los foods
+    const foods = Array.isArray(storeData) ? storeData : storeData.foods || [];
     // Limpiar items existentes
     const itemsToRemove = this._storePanel.list.slice(2);
     itemsToRemove.forEach(item => {
@@ -202,16 +447,20 @@ export class FoodUI {
       }
 
       // Nombre y precio
-      const nameText = this._scene.add.text(-110, y - 15, food.name, {
-        fontSize: '14px',
-        color: '#ecf0f1',
-      });
+      const nameText = this._scene.add.text(
+        -110,
+        y - 15,
+        food.name,
+        DS.getTextStyle('base', DS.COLORS.text)
+      );
       nameText.setOrigin(0, 0.5);
 
-      const priceText = this._scene.add.text(-110, y + 5, `$${food.price}`, {
-        fontSize: '12px',
-        color: '#f1c40f',
-      });
+      const priceText = this._scene.add.text(
+        -110,
+        y + 5,
+        `$${food.price}`,
+        DS.getTextStyle('sm', DS.COLORS.warning)
+      );
       priceText.setOrigin(0, 0.5);
 
       // Efectos
@@ -219,19 +468,18 @@ export class FoodUI {
         -110,
         y + 20,
         `+${food.hungerRestore} hambre, +${food.happinessBonus} felicidad`,
-        {
-          fontSize: '10px',
-          color: '#95a5a6',
-        }
+        DS.getTextStyle('xs', DS.COLORS.textMuted)
       );
       effectsText.setOrigin(0, 0.5);
 
       // Botón para comprar
       const buyButton = this._scene.add.rectangle(120, y, 80, 30, 0x27ae60);
-      const buyText = this._scene.add.text(120, y, 'Comprar', {
-        fontSize: '12px',
-        color: '#ffffff',
-      });
+      const buyText = this._scene.add.text(
+        120,
+        y,
+        'Comprar',
+        DS.getTextStyle('sm', DS.COLORS.text)
+      );
       buyText.setOrigin(0.5);
 
       buyButton.setInteractive();
@@ -247,13 +495,7 @@ export class FoodUI {
         buyButton.setFillStyle(0x27ae60);
       });
 
-      this._storePanel.add([
-        nameText,
-        priceText,
-        effectsText,
-        buyButton,
-        buyText,
-      ]);
+      this._storePanel.add([nameText, priceText, effectsText, buyButton, buyText]);
     });
   }
 
@@ -268,32 +510,15 @@ export class FoodUI {
   }
 
   /**
-   * Oculta la UI
-   */
-  public hide(): void {
-    this._isVisible = false;
-    this._container.setVisible(false);
-  }
-
-  /**
    * Muestra indicador de que se está comiendo
    */
-  public showEatingIndicator(
-    entityId: string,
-    _foodId: string,
-    duration: number
-  ): void {
-    const indicator = this._scene.add.text(
-      100,
-      100,
-      `${entityId} está comiendo...`,
-      {
-        fontSize: '16px',
-        color: '#2ecc71',
-        backgroundColor: '#2c3e50',
-        padding: { x: 10, y: 5 },
-      }
-    );
+  public showEatingIndicator(entityId: string, _foodId: string, duration: number): void {
+    const indicator = this._scene.add.text(100, 100, `${entityId} está comiendo...`, {
+      fontSize: '16px',
+      color: '#2ecc71',
+      backgroundColor: '#2c3e50',
+      padding: { x: 10, y: 5 },
+    });
 
     // Animar el indicador
     this._scene.tweens.add({

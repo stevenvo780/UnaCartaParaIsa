@@ -44,8 +44,9 @@ const config: Phaser.Types.Core.GameConfig = {
       game.registry.set('gameConfig', gameConfig);
 
       if (gameConfig.debugMode) {
-        (window as any).game = game;
-        (window as any).scenes = {
+        (window as Window & { game: Phaser.Game; scenes: Record<string, Phaser.Scene> }).game =
+          game;
+        (window as Window & { game: Phaser.Game; scenes: Record<string, Phaser.Scene> }).scenes = {
           boot: game.scene.getScene('BootScene'),
           main: game.scene.getScene('MainScene'),
           ui: game.scene.getScene('UIScene'),

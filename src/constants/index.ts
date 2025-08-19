@@ -225,19 +225,9 @@ export const RESONANCE_THRESHOLDS = {
   HIGH: 0.8,
 } as const;
 
-export type ZoneType =
-  | 'kitchen'
-  | 'bedroom'
-  | 'living'
-  | 'bathroom'
-  | 'outdoor';
+export type ZoneType = 'kitchen' | 'bedroom' | 'living' | 'bathroom' | 'outdoor';
 
-export type EntityStateType =
-  | 'idle'
-  | 'moving'
-  | 'interacting'
-  | 'resting'
-  | 'seeking';
+export type EntityStateType = 'idle' | 'moving' | 'interacting' | 'resting' | 'seeking';
 
 export const {
   MAIN_GAME_LOGIC,

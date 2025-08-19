@@ -82,9 +82,7 @@ export class FoodInventorySystem {
    * Obtiene el inventario completo
    */
   getInventory(): FoodInventoryItem[] {
-    return Array.from(this.inventory.values()).filter(
-      item => item.quantity > 0
-    );
+    return Array.from(this.inventory.values()).filter(item => item.quantity > 0);
   }
 
   /**
@@ -171,10 +169,7 @@ export class FoodInventorySystem {
    */
   getInventoryStats() {
     const items = this.getInventory();
-    const totalValue = items.reduce(
-      (sum, item) => sum + item.food.price * item.quantity,
-      0
-    );
+    const totalValue = items.reduce((sum, item) => sum + item.food.price * item.quantity, 0);
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
     const nearExpiry = this.getFoodsNearExpiry().length;
 

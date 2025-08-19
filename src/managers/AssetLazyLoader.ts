@@ -162,11 +162,7 @@ export class AssetLazyLoader {
   /**
    * Definir un grupo de assets
    */
-  private defineAssetGroup(
-    name: string,
-    assets: AssetLoadRequest[],
-    preload = false
-  ): void {
+  private defineAssetGroup(name: string, assets: AssetLoadRequest[], preload = false): void {
     this.assetGroups.set(name, { name, assets, preload });
 
     // Añadir assets al queue
@@ -302,11 +298,7 @@ export class AssetLazyLoader {
 
           case 'spritesheet':
             if (config.frameConfig) {
-              this.scene.load.spritesheet(
-                config.key,
-                config.path,
-                config.frameConfig
-              );
+              this.scene.load.spritesheet(config.key, config.path, config.frameConfig);
             } else {
               this.scene.load.image(config.key, config.path);
             }
@@ -352,11 +344,7 @@ export class AssetLazyLoader {
   /**
    * Precargar assets por proximidad (para mundo abierto)
    */
-  public async preloadAssetsNear(
-    _x: number,
-    _y: number,
-    _radius = 200
-  ): Promise<void> {
+  public async preloadAssetsNear(_x: number, _y: number, _radius = 200): Promise<void> {
     // Lógica simplificada - en un juego real, mapearía coordenadas a assets
     const nearbyGroups = ['terrain_basic'];
 
@@ -372,9 +360,7 @@ export class AssetLazyLoader {
   /**
    * Cargar assets por prioridad
    */
-  public async loadAssetsByPriority(
-    priority: 'high' | 'medium' | 'low'
-  ): Promise<void> {
+  public async loadAssetsByPriority(priority: 'high' | 'medium' | 'low'): Promise<void> {
     const assetsToLoad = Array.from(this.loadQueue.values()).filter(
       asset => asset.priority === priority && !this.isAssetLoaded(asset.key)
     );

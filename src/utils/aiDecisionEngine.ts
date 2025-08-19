@@ -123,11 +123,7 @@ const getPersonalityProfile = (entityId: string): PersonalityProfile => {
 /**
  * Aplica modificadores de mood a la puntuación de una actividad
  */
-const applyMoodModifiers = (
-  baseScore: number,
-  activity: ActivityType,
-  mood: MoodType
-): number => {
+const applyMoodModifiers = (baseScore: number, activity: ActivityType, mood: MoodType): number => {
   const modifiers = MOOD_MODIFIERS[mood];
   let score = baseScore;
 
@@ -139,11 +135,7 @@ const applyMoodModifiers = (
     score += modifiers.energyConservation * 10;
   }
 
-  if (
-    activity === 'WANDERING' ||
-    activity === 'EXPLORING' ||
-    activity === 'DANCING'
-  ) {
+  if (activity === 'WANDERING' || activity === 'EXPLORING' || activity === 'DANCING') {
     score += modifiers.riskTaking * 8;
   }
 
@@ -153,10 +145,7 @@ const applyMoodModifiers = (
 /**
  * Calcula inercia de actividad - resistencia a cambiar
  */
-const calculateActivityInertia = (
-  entity: Entity,
-  currentTime: number
-): number => {
+const calculateActivityInertia = (entity: Entity, currentTime: number): number => {
   const personality = getPersonalityProfile(entity.id);
   const session = activitySessions.get(entity.id);
 
@@ -194,16 +183,12 @@ const getHabitBias = (entityId: string, activity: ActivityType): number => {
 /**
  * Actualiza el bias de hábito cuando se completa una actividad
  */
-const updateHabitBias = (
-  entityId: string,
-  activity: ActivityType,
-  satisfaction: number
-): void => {
+const updateHabitBias = (entityId: string, activity: ActivityType, satisfaction: number): void => {
   if (!habitBias.has(entityId)) {
     habitBias.set(entityId, new Map());
   }
 
-  const entityHabits = habitBias.get(entityId)!;
+  const entityHabits = habitBias.get(entityId);
   const currentBias = entityHabits.get(activity) || 0;
 
   const change = satisfaction > 0.7 ? 0.5 : -0.2;
@@ -299,34 +284,23 @@ export const makeIntelligentDecision = (
       currentTime - (entity.lastActivityChange || 0)
     );
 
-    const moodModifiedScore = applyMoodModifiers(
-      baseScore,
-      activity,
-      entity.mood
-    );
+    const moodModifiedScore = applyMoodModifiers(baseScore, activity, entity.mood);
 
     let personalityModifiedScore = moodModifiedScore;
 
     if (activity === 'SOCIALIZING' && companion && !companion.isDead) {
       const personalityInfluence = gameConfig.ai.personalityInfluence || 0.5;
-      personalityModifiedScore +=
-        personality.socialPreference * 15 * personalityInfluence;
+      personalityModifiedScore += personality.socialPreference * 15 * personalityInfluence;
     }
 
     if (activity === 'MEDITATING' || activity === 'RESTING') {
       const personalityInfluence = gameConfig.ai.personalityInfluence || 0.5;
-      personalityModifiedScore +=
-        personality.energyEfficiency * 10 * personalityInfluence;
+      personalityModifiedScore += personality.energyEfficiency * 10 * personalityInfluence;
     }
 
-    if (
-      activity === 'WANDERING' ||
-      activity === 'EXERCISING' ||
-      activity === 'EXPLORING'
-    ) {
+    if (activity === 'WANDERING' || activity === 'EXERCISING' || activity === 'EXPLORING') {
       const personalityInfluence = gameConfig.ai.personalityInfluence || 0.5;
-      personalityModifiedScore +=
-        personality.riskTolerance * 8 * personalityInfluence;
+      personalityModifiedScore += personality.riskTolerance * 8 * personalityInfluence;
     }
 
     activityScores.push({ activity, score: personalityModifiedScore });
@@ -357,8 +331,7 @@ export const makeIntelligentDecision = (
     if (shouldChangeActivity(entity, currentTime, chosenScore)) {
       const oldSession = activitySessions.get(entity.id);
       if (oldSession) {
-        const satisfaction =
-          oldSession.effectiveness * 0.7 + Math.random() * 0.3;
+        const satisfaction = oldSession.effectiveness * 0.7 + Math.random() * 0.3;
         updateHabitBias(entity.id, oldSession.activity, satisfaction);
       }
 
@@ -383,10 +356,7 @@ export const makeIntelligentDecision = (
 /**
  * Actualiza la efectividad de la sesión actual
  */
-export const updateSessionEffectiveness = (
-  entityId: string,
-  effectiveness: number
-): void => {
+export const updateSessionEffectiveness = (entityId: string, effectiveness: number): void => {
   const session = activitySessions.get(entityId);
   if (session) {
     session.effectiveness = Math.max(0, Math.min(1, effectiveness));

@@ -4,6 +4,7 @@
  */
 
 import type { Entity, EntityStats, ActivityType } from '../types';
+import { logAutopoiesis } from '../utils/logger';
 
 /**
  * Tipo para datos de tiempo del día
@@ -37,12 +38,7 @@ export interface IGameConfig {
 /**
  * Tipo para datos de logging
  */
-export type LogData =
-  | Record<string, unknown>
-  | string
-  | number
-  | boolean
-  | null;
+export type LogData = Record<string, unknown> | string | number | boolean | null;
 
 /**
  * Interface para servicios de logging
@@ -58,11 +54,7 @@ export interface ILogger {
  * Interface para cálculos de actividad
  */
 export interface IActivityCalculator {
-  applyHybridDecay(
-    stats: EntityStats,
-    activity: ActivityType,
-    deltaTime: number
-  ): EntityStats;
+  applyHybridDecay(stats: EntityStats, activity: ActivityType, deltaTime: number): EntityStats;
 
   applySurvivalCosts(stats: EntityStats, deltaTime: number): EntityStats;
 
@@ -152,7 +144,6 @@ export class EntityServicesFactory {
       logger: {
         info: (message: string, data?: LogData) => {
           try {
-            const { logAutopoiesis } = require('../utils/logger');
             logAutopoiesis.info(message, data);
           } catch {
             // Fallback silencioso si logger no está disponible
@@ -160,7 +151,6 @@ export class EntityServicesFactory {
         },
         warn: (message: string, data?: LogData) => {
           try {
-            const { logAutopoiesis } = require('../utils/logger');
             logAutopoiesis.warn(message, data);
           } catch {
             // Fallback silencioso si logger no está disponible
@@ -168,7 +158,6 @@ export class EntityServicesFactory {
         },
         error: (message: string, data?: LogData) => {
           try {
-            const { logAutopoiesis } = require('../utils/logger');
             logAutopoiesis.error(message, data);
           } catch {
             // Fallback silencioso si logger no está disponible
@@ -176,7 +165,6 @@ export class EntityServicesFactory {
         },
         debug: (message: string, data?: LogData) => {
           try {
-            const { logAutopoiesis } = require('../utils/logger');
             logAutopoiesis.debug(message, data);
           } catch {
             // Fallback silencioso si logger no está disponible
@@ -184,11 +172,8 @@ export class EntityServicesFactory {
         },
       },
       activityCalculator: {
-        applyHybridDecay: (
-          stats: EntityStats,
-          _activity: ActivityType,
-          _deltaTime: number
-        ) => stats,
+        applyHybridDecay: (stats: EntityStats, _activity: ActivityType, _deltaTime: number) =>
+          stats,
         applySurvivalCosts: (stats: EntityStats, _deltaTime: number) => stats,
         applyActivityEffectsWithTimeModifiers: (
           _activity: ActivityType,
@@ -210,10 +195,7 @@ export class EntityServicesFactory {
           closeness: 0,
           effect: 'none',
         }),
-        calculateResonanceModifiers: (
-          _resonance: number,
-          _closeness: number
-        ) => ({
+        calculateResonanceModifiers: (_resonance: number, _closeness: number) => ({
           happinessMultiplier: 1,
           energyMultiplier: 1,
           healthMultiplier: 1,
@@ -241,10 +223,18 @@ export class MockEntityServices implements IEntityServices {
   };
 
   logger: ILogger = {
-    info: () => {},
-    warn: () => {},
-    error: () => {},
-    debug: () => {},
+    info: () => {
+      // No-op logger for production
+    },
+    warn: () => {
+      // No-op logger for production
+    },
+    error: () => {
+      // No-op logger for production
+    },
+    debug: () => {
+      // No-op logger for production
+    },
   };
 
   activityCalculator: IActivityCalculator = {

@@ -39,10 +39,7 @@ export class EntityManager {
     this.entities.add(this.stevEntity);
 
     // Añadir al estado del juego
-    gameState.entities = [
-      this.isaEntity.getEntity(),
-      this.stevEntity.getEntity(),
-    ];
+    gameState.entities = [this.isaEntity.getEntity(), this.stevEntity.getEntity()];
 
     return {
       isaEntity: this.isaEntity,

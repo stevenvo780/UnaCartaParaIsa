@@ -3,8 +3,7 @@
  * Cada bioma especifica rangos de IDs de tiles en lugar de nombres de archivos
  */
 
-import { BiomeType } from './types';
-import type { BiomeDefinition } from './types';
+import { BiomeType, type BiomeDefinition } from './types';
 
 export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
   [BiomeType.GRASSLAND]: {
@@ -220,11 +219,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.2,
       },
       props: {
-        common: [
-          'light_balls_tree1.png',
-          'light_balls_tree2.png',
-          'light_balls_tree3.png',
-        ],
+        common: ['light_balls_tree1.png', 'light_balls_tree2.png', 'light_balls_tree3.png'],
         rare: [],
         density: 0.1,
       },
@@ -262,12 +257,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
     assets: {
       terrain: {
-        primary: [
-          'cesped1.png',
-          'cesped2.png',
-          'cesped3.png',
-          'Water_Middle.png',
-        ],
+        primary: ['cesped1.png', 'cesped2.png', 'cesped3.png', 'Water_Middle.png'],
         secondary: [],
         weight: [0.6, 0.4],
       },
@@ -333,12 +323,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
     assets: {
       terrain: {
-        primary: [
-          'cesped15.png',
-          'cesped16.png',
-          'cesped17.png',
-          'cesped18.png',
-        ],
+        primary: ['cesped15.png', 'cesped16.png', 'cesped17.png', 'cesped18.png'],
         secondary: ['dirt_patch_01.png'],
         weight: [0.7, 0.3],
       },
@@ -365,12 +350,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.4,
       },
       structures: {
-        assets: [
-          'cliff_face_n.png',
-          'cliff_face_s.png',
-          'cliff_face_e.png',
-          'cliff_face_w.png',
-        ],
+        assets: ['cliff_face_n.png', 'cliff_face_s.png', 'cliff_face_e.png', 'cliff_face_w.png'],
         density: 0.3,
         spacing: 2,
       },
@@ -407,13 +387,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
     assets: {
       terrain: {
-        primary: [
-          'cesped1.png',
-          'cesped2.png',
-          'cesped3.png',
-          'cesped4.png',
-          'cesped5.png',
-        ],
+        primary: ['cesped1.png', 'cesped2.png', 'cesped3.png', 'cesped4.png', 'cesped5.png'],
         secondary: [],
         weight: [1.0],
       },
@@ -574,13 +548,9 @@ export function calculateBiomeFitness(
   const def = getBiomeDefinition(biome);
 
   // Calcular distancia normalizada a los rangos óptimos
-  const tempCenter =
-    (def.conditions.temperatureRange[0] + def.conditions.temperatureRange[1]) /
-    2;
-  const moistCenter =
-    (def.conditions.moistureRange[0] + def.conditions.moistureRange[1]) / 2;
-  const elevCenter =
-    (def.conditions.elevationRange[0] + def.conditions.elevationRange[1]) / 2;
+  const tempCenter = (def.conditions.temperatureRange[0] + def.conditions.temperatureRange[1]) / 2;
+  const moistCenter = (def.conditions.moistureRange[0] + def.conditions.moistureRange[1]) / 2;
+  const elevCenter = (def.conditions.elevationRange[0] + def.conditions.elevationRange[1]) / 2;
 
   const tempDist = Math.abs(temperature - tempCenter);
   const moistDist = Math.abs(moisture - moistCenter);
@@ -588,11 +558,7 @@ export function calculateBiomeFitness(
 
   // Fitness inverso a la distancia (0-1, donde 1 es perfecto)
   const fitness =
-    1 -
-    Math.sqrt(
-      tempDist * tempDist + moistDist * moistDist + elevDist * elevDist
-    ) /
-      Math.sqrt(3);
+    1 - Math.sqrt(tempDist * tempDist + moistDist * moistDist + elevDist * elevDist) / Math.sqrt(3);
 
   return Math.max(0, fitness);
 }

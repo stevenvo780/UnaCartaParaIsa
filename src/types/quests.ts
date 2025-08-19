@@ -7,7 +7,7 @@ import type { EntityStats } from './entities';
 /**
  * Estado de una misión
  */
-export type QuestStatus = 
+export type QuestStatus =
   | 'not_started'
   | 'available'
   | 'active'
@@ -37,7 +37,7 @@ export type QuestDifficulty = 'easy' | 'medium' | 'hard' | 'legendary';
 /**
  * Categoría de misión
  */
-export type QuestCategory = 
+export type QuestCategory =
   | 'main_story'
   | 'side_quest'
   | 'daily'
@@ -51,7 +51,7 @@ export type QuestCategory =
 /**
  * Tipo de recompensa
  */
-export type RewardType = 
+export type RewardType =
   | 'money'
   | 'food'
   | 'stats_boost'
@@ -125,31 +125,31 @@ export interface Quest {
   loreText: string;
   category: QuestCategory;
   difficulty: QuestDifficulty;
-  
+
   // Estado y progreso
   status: QuestStatus;
   objectives: QuestObjective[];
-  
+
   // Requisitos y disponibilidad
   requirements: QuestRequirement[];
   isRepeatable: boolean;
   timeLimit?: number;
-  
+
   // Narrativa
   dialogues: QuestDialogue[];
   introText: string;
   progressTexts: string[];
   completionText: string;
   failureText?: string;
-  
+
   // Recompensas
   rewards: QuestReward[];
-  
+
   // Metadatos
   estimatedDuration: number;
   tags: string[];
   isHidden: boolean;
-  
+
   // Timestamps
   startedAt?: number;
   completedAt?: number;
@@ -179,7 +179,12 @@ export interface QuestProgress {
  * Evento del sistema de misiones
  */
 export interface QuestEvent {
-  type: 'quest_started' | 'quest_completed' | 'quest_failed' | 'objective_completed' | 'quest_available';
+  type:
+    | 'quest_started'
+    | 'quest_completed'
+    | 'quest_failed'
+    | 'objective_completed'
+    | 'quest_available';
   questId: string;
   objectiveId?: string;
   timestamp: number;

@@ -3,6 +3,11 @@
  * Organized to prevent circular dependencies
  */
 
+// Import types for use in this file
+import type { Position, Size, Rect, Color } from './core';
+import type { ZoneType } from './zones';
+import type { EntityStats, MoodType, Entity } from './entities';
+
 // Core types (no dependencies)
 export type { Position, Size, Rect, Color } from './core';
 
@@ -14,18 +19,8 @@ export type {
   ActivityDefinition,
 } from './activities';
 export type { ZoneType, Zone as ZoneDefinition } from './zones';
-export type {
-  EntityStateType,
-  MoodType,
-  EntityStats,
-  Entity,
-} from './entities';
-export type {
-  FoodCategory,
-  FoodItem,
-  FoodInventoryItem,
-  EatingAction,
-} from './food';
+export type { EntityStateType, MoodType, EntityStats, Entity } from './entities';
+export type { FoodCategory, FoodItem, FoodInventoryItem, EatingAction } from './food';
 export type {
   QuestStatus,
   QuestObjectiveType,

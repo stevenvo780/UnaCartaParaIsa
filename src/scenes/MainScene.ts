@@ -1,9 +1,5 @@
 import Phaser from 'phaser';
-import type {
-  GameState,
-  GeneratedWorldData,
-  GameLogicUpdateData,
-} from '../types';
+import type { GameState, GeneratedWorldData, GameLogicUpdateData } from '../types';
 import { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
 import { DialogueSystem } from '../systems/DialogueSystem';
 import { QuestSystem } from '../systems/QuestSystem';
@@ -31,6 +27,11 @@ export class MainScene extends Phaser.Scene {
   private foodAssetManager!: FoodAssetManager;
   private foodSystem!: FoodSystem;
   private generatedWorldData?: GeneratedWorldData;
+
+  // Entity references for game stats
+  private entities!: Phaser.GameObjects.Group;
+  private isaEntity?: AnimatedGameEntity;
+  private stevEntity?: AnimatedGameEntity;
 
   constructor() {
     super({ key: 'MainScene' });
@@ -62,9 +63,12 @@ export class MainScene extends Phaser.Scene {
     await this.initializeManagers();
 
     // Create entities using EntityManager
-    const { isaEntity, stevEntity } = this.entityManager.createEntities(
-      this.gameState
-    );
+    const { isaEntity, stevEntity } = this.entityManager.createEntities(this.gameState);
+
+    // Store entity references for game stats
+    this.isaEntity = isaEntity;
+    this.stevEntity = stevEntity;
+    this.entities = this.entityManager.getEntitiesGroup();
 
     // Setup partner relationships and register with GameLogicManager
     isaEntity.setPartnerEntity(stevEntity);

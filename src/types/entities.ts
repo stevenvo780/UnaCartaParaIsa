@@ -14,16 +14,7 @@ export type EntityStateType =
   | 'dead'
   | 'fading';
 
-export type MoodType =
-  | '😊'
-  | '😢'
-  | '😡'
-  | '😌'
-  | '🤩'
-  | '😑'
-  | '😔'
-  | '😰'
-  | '😴';
+export type MoodType = '😊' | '😢' | '😡' | '😌' | '🤩' | '😑' | '😔' | '😰' | '😴';
 
 export interface EntityStats {
   health: number;
@@ -38,6 +29,7 @@ export interface EntityStats {
   comfort: number;
   creativity: number;
   resonance: number;
+  courage: number;
 }
 
 export interface Entity {

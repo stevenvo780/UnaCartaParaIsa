@@ -322,12 +322,10 @@ export const checkCollisionWithObstacles = (
     };
 
     const distance = Math.sqrt(
-      Math.pow(position.x - obstacleCenter.x, 2) +
-        Math.pow(position.y - obstacleCenter.y, 2)
+      Math.pow(position.x - obstacleCenter.x, 2) + Math.pow(position.y - obstacleCenter.y, 2)
     );
 
-    const minDistance =
-      entitySize / 2 + Math.min(obstacle.size.width, obstacle.size.height) / 2;
+    const minDistance = entitySize / 2 + Math.min(obstacle.size.width, obstacle.size.height) / 2;
 
     if (distance < minDistance) {
       return true;
@@ -346,11 +344,9 @@ export const getEntityZone = (
 ): Zone | null => {
   for (const zone of zones) {
     const withinX =
-      entityPosition.x >= zone.bounds.x &&
-      entityPosition.x <= zone.bounds.x + zone.bounds.width;
+      entityPosition.x >= zone.bounds.x && entityPosition.x <= zone.bounds.x + zone.bounds.width;
     const withinY =
-      entityPosition.y >= zone.bounds.y &&
-      entityPosition.y <= zone.bounds.y + zone.bounds.height;
+      entityPosition.y >= zone.bounds.y && entityPosition.y <= zone.bounds.y + zone.bounds.height;
 
     if (withinX && withinY) {
       return zone;
@@ -403,8 +399,7 @@ export const getAttractionTarget = (
       y: zone.bounds.y + zone.bounds.height / 2,
     };
     const distance = Math.sqrt(
-      Math.pow(currentPosition.x - zoneCenter.x, 2) +
-        Math.pow(currentPosition.y - zoneCenter.y, 2)
+      Math.pow(currentPosition.x - zoneCenter.x, 2) + Math.pow(currentPosition.y - zoneCenter.y, 2)
     );
     score -= distance / 500;
 
@@ -533,10 +528,7 @@ const generateLegacyMap = (): { zones: Zone[]; mapElements: MapElement[] } => {
   logAutopoiesis.info('⚠️ Usando sistema de mapas legacy', {
     zonesCount: zones.length,
     elementsCount: mapElements.length,
-    totalZoneArea: zones.reduce(
-      (sum, zone) => sum + zone.bounds.width * zone.bounds.height,
-      0
-    ),
+    totalZoneArea: zones.reduce((sum, zone) => sum + zone.bounds.width * zone.bounds.height, 0),
   });
 
   return { zones, mapElements };
@@ -585,10 +577,7 @@ const createEssentialLegacyElements = (): MapElement[] => {
 /**
  * Valida que el mapa generado tenga elementos esenciales
  */
-export const validateMapIntegrity = (
-  zones: Zone[],
-  mapElements: MapElement[]
-): boolean => {
+export const validateMapIntegrity = (zones: Zone[], mapElements: MapElement[]): boolean => {
   const essentialZoneTypes = ['food', 'rest', 'social'];
   const hasEssentialZones = essentialZoneTypes.every(type =>
     zones.some(zone => zone.type === type)
@@ -596,10 +585,7 @@ export const validateMapIntegrity = (
 
   const hasValidBounds = zones.every(
     zone =>
-      zone.bounds.width > 0 &&
-      zone.bounds.height > 0 &&
-      zone.bounds.x >= 0 &&
-      zone.bounds.y >= 0
+      zone.bounds.width > 0 && zone.bounds.height > 0 && zone.bounds.x >= 0 && zone.bounds.y >= 0
   );
 
   const hasInteractiveElements = mapElements.length > 5;
@@ -673,8 +659,7 @@ export const generateDemoMaps = (): Record<
   string,
   { zones: Zone[]; mapElements: MapElement[] }
 > => {
-  const demos: Record<string, { zones: Zone[]; mapElements: MapElement[] }> =
-    {};
+  const demos: Record<string, { zones: Zone[]; mapElements: MapElement[] }> = {};
 
   // Mapa Legacy
   demos.legacy = generateSimpleMap(false);

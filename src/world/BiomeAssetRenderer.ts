@@ -3,8 +3,7 @@
  */
 
 import type Phaser from 'phaser';
-import { BiomeType } from './types';
-import type { GeneratedWorld } from './types';
+import { BiomeType, type GeneratedWorld } from './types';
 import { logAutopoiesis } from '../utils/logger';
 
 interface BiomeAssetConfig {
@@ -111,7 +110,7 @@ export class BiomeAssetRenderer {
    * Convierte path a key único
    */
   private pathToKey(path: string): string {
-    return path.replace(/[\/\.]/g, '_').replace('assets_', '');
+    return path.replace(/[/.]/g, '_').replace('assets_', '');
   }
 
   /**
@@ -142,12 +141,7 @@ export class BiomeAssetRenderer {
         const { biome } = tile;
 
         // Seleccionar asset creativo
-        const assetKey = this.selectCreativeAsset(
-          biome,
-          x,
-          y,
-          tile.biomeStrength
-        );
+        const assetKey = this.selectCreativeAsset(biome, x, y, tile.biomeStrength);
 
         if (assetKey && this.scene.textures.exists(assetKey)) {
           const sprite = this.scene.add.image(
@@ -173,50 +167,49 @@ export class BiomeAssetRenderer {
   /**
    * Selecciona asset de forma creativa
    */
-  private selectCreativeAsset(
-    biome: BiomeType,
-    x: number,
-    y: number,
-    strength: number
-  ): string {
+  private selectCreativeAsset(biome: BiomeType, x: number, y: number, strength: number): string {
     // Usar posición y strength para crear variación natural
     const seed = (x * 73 + y * 137 + Math.floor(strength * 100)) % 100;
 
     switch (biome) {
-      case BiomeType.GRASSLAND:
+      case BiomeType.GRASSLAND: {
         // Usar diferentes variaciones de césped
         const grassIndex = seed % this.assetConfig.grassVariants.length;
         return this.pathToKey(this.assetConfig.grassVariants[grassIndex]);
+      }
 
-      case BiomeType.WETLAND:
+      case BiomeType.WETLAND: {
         // Usar tiles de agua variados
         const waterIndex = seed % this.assetConfig.waterTiles.length;
         return this.pathToKey(this.assetConfig.waterTiles[waterIndex]);
+      }
 
-      case BiomeType.VILLAGE:
+      case BiomeType.VILLAGE: {
         // Usar roads de forma inteligente
         const roadIndex = seed % this.assetConfig.roadTiles.length;
         return this.pathToKey(this.assetConfig.roadTiles[roadIndex]);
+      }
 
-      case BiomeType.FOREST:
+      case BiomeType.FOREST: {
         // Césped más denso para bosques
-        const forestIndex =
-          Math.floor(seed / 2) % this.assetConfig.grassVariants.length;
+        const forestIndex = Math.floor(seed / 2) % this.assetConfig.grassVariants.length;
         return this.pathToKey(this.assetConfig.grassVariants[forestIndex]);
+      }
 
-      case BiomeType.MOUNTAINOUS:
+      case BiomeType.MOUNTAINOUS: {
         // Variaciones más rocosas
-        const mountainIndex =
-          (15 + (seed % 16)) % this.assetConfig.grassVariants.length;
+        const mountainIndex = (15 + (seed % 16)) % this.assetConfig.grassVariants.length;
         return this.pathToKey(this.assetConfig.grassVariants[mountainIndex]);
+      }
 
-      case BiomeType.MYSTICAL:
+      case BiomeType.MYSTICAL: {
         // Combinación especial
         const mysticalIndex =
           seed % 2 === 0
             ? (seed % 10) % this.assetConfig.grassVariants.length
             : (seed % 5) % this.assetConfig.grassVariants.length;
         return this.pathToKey(this.assetConfig.grassVariants[mysticalIndex]);
+      }
 
       default:
         return this.pathToKey(this.assetConfig.grassVariants[0]);
@@ -324,12 +317,7 @@ export class BiomeAssetRenderer {
       const nx = x + dx;
       const ny = y + dy;
 
-      if (
-        ny >= 0 &&
-        ny < world.terrain.length &&
-        nx >= 0 &&
-        nx < world.terrain[ny].length
-      ) {
+      if (ny >= 0 && ny < world.terrain.length && nx >= 0 && nx < world.terrain[ny].length) {
         const neighborBiome = world.terrain[ny][nx].biome;
         if (neighborBiome !== currentBiome) {
           return true;

@@ -96,16 +96,12 @@ export const validateNumber = (
   }
 
   if (options.minValue !== undefined && value < options.minValue) {
-    console.warn(
-      `⚠️ ${paramName}: valor menor al mínimo (${value} < ${options.minValue})`
-    );
+    console.warn(`⚠️ ${paramName}: valor menor al mínimo (${value} < ${options.minValue})`);
     return false;
   }
 
   if (options.maxValue !== undefined && value > options.maxValue) {
-    console.warn(
-      `⚠️ ${paramName}: valor mayor al máximo (${value} > ${options.maxValue})`
-    );
+    console.warn(`⚠️ ${paramName}: valor mayor al máximo (${value} > ${options.maxValue})`);
     return false;
   }
 
@@ -143,9 +139,7 @@ export const calculateResonance = (
   timeBonus = 0,
   baseResonance = 50
 ): number => {
-  if (
-    !validateNumber(entityDistance, 'entityDistance', { allowNegative: false })
-  ) {
+  if (!validateNumber(entityDistance, 'entityDistance', { allowNegative: false })) {
     return 0;
   }
 
@@ -168,8 +162,7 @@ export const calculateResonance = (
   }
 
   const maxDistance = 500;
-  const normalizedDistance =
-    Math.log(1 + entityDistance / maxDistance) / Math.log(2);
+  const normalizedDistance = Math.log(1 + entityDistance / maxDistance) / Math.log(2);
 
   const proximityFactor = Math.exp(-normalizedDistance * 2);
 
@@ -225,15 +218,13 @@ export const calculateProximityResonanceChange = (
   closeness: number;
 } => {
   const distance = Math.sqrt(
-    Math.pow(isaPosition.x - stevPosition.x, 2) +
-      Math.pow(isaPosition.y - stevPosition.y, 2)
+    Math.pow(isaPosition.x - stevPosition.x, 2) + Math.pow(isaPosition.y - stevPosition.y, 2)
   );
 
   const closeness = calculateCloseness(distance);
 
   const isaMood = (isaStats.happiness + isaStats.energy + isaStats.health) / 3;
-  const stevMood =
-    (stevStats.happiness + stevStats.energy + stevStats.health) / 3;
+  const stevMood = (stevStats.happiness + stevStats.energy + stevStats.health) / 3;
   const moodBonus = (isaMood + stevMood) / 200;
 
   const statDifference = Math.abs(isaMood - stevMood);
@@ -243,15 +234,9 @@ export const calculateProximityResonanceChange = (
   const SEPARATION_DECAY = 1.8;
   const STRESS_DECAY = 0.7;
 
-  const gain =
-    BOND_GAIN_PER_SEC *
-    closeness *
-    moodBonus *
-    synergy *
-    (1 - currentResonance / 100);
+  const gain = BOND_GAIN_PER_SEC * closeness * moodBonus * synergy * (1 - currentResonance / 100);
 
-  const separation =
-    SEPARATION_DECAY * (1 - closeness) * (currentResonance / 100);
+  const separation = SEPARATION_DECAY * (1 - closeness) * (currentResonance / 100);
 
   const criticalStatsCount = [isaStats, stevStats].reduce((count, stats) => {
     return count + Object.values(stats).filter(stat => stat < 20).length;

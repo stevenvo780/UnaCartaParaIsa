@@ -116,16 +116,8 @@ export interface GameEvents {
  * Event emitter tipado
  */
 export interface TypedEventEmitter<T extends Record<string, any>> {
-  on<K extends keyof T>(
-    event: K,
-    listener: (data: T[K]) => void,
-    context?: any
-  ): void;
-  off<K extends keyof T>(
-    event: K,
-    listener?: (data: T[K]) => void,
-    context?: any
-  ): void;
+  on<K extends keyof T>(event: K, listener: (data: T[K]) => void, context?: any): void;
+  off<K extends keyof T>(event: K, listener?: (data: T[K]) => void, context?: any): void;
   emit<K extends keyof T>(event: K, data: T[K]): void;
 }
 

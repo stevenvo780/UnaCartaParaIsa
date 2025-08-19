@@ -38,10 +38,10 @@ export class BootScene extends Phaser.Scene {
       await this.lazyLoader.loadCriticalAssets();
 
       // FASE 2: Preparar spritesheets críticos para animaciones
-      this.animationManager.loadCriticalSpriteSheets();
+      this.animationManager.loadAllSpriteSheets();
 
       // FASE 3: Crear animaciones básicas
-      this.animationManager.createCriticalAnimations();
+      this.animationManager.createAllAnimations();
 
       // FASE 4: Cargar assets esenciales de comida
       await this.foodAssetManager.loadEssentialFoodAssets();
@@ -117,10 +117,9 @@ export class BootScene extends Phaser.Scene {
       // Validar assets tradicionales
       const missingAssets = await this.assetManager.validateAssets();
       if (missingAssets.length > 0) {
-        logAutopoiesis.warn(
-          `Assets faltantes: ${missingAssets.length}, se usarán fallbacks`,
-          { missingAssets }
-        );
+        logAutopoiesis.warn(`Assets faltantes: ${missingAssets.length}, se usarán fallbacks`, {
+          missingAssets,
+        });
       }
 
       // Cargar con sistema tradicional

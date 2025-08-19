@@ -33,14 +33,8 @@ export class EntityVisualsComponent {
 
     // Configuración de físicas
     if (this.sprite.body) {
-      this.sprite.body.setSize(
-        this.sprite.width * 0.6,
-        this.sprite.height * 0.8
-      );
-      this.sprite.body.setOffset(
-        this.sprite.width * 0.2,
-        this.sprite.height * 0.1
-      );
+      this.sprite.body.setSize(this.sprite.width * 0.6, this.sprite.height * 0.8);
+      this.sprite.body.setOffset(this.sprite.width * 0.2, this.sprite.height * 0.1);
     }
   }
 

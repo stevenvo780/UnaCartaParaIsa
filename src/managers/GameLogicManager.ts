@@ -58,7 +58,7 @@ export class GameLogicManager implements IGameLogicManager {
       loop: true,
     });
 
-    logAutopoiesis.debug(`Game logic loop started`, {
+    logAutopoiesis.debug('Game logic loop started', {
       interval: gameConfig.timing.mainGameLogic,
     });
   }
@@ -70,10 +70,7 @@ export class GameLogicManager implements IGameLogicManager {
     this._gameState.cycles++;
 
     this._entities.forEach(entity => {
-      if (
-        'updateEntity' in entity &&
-        typeof entity.updateEntity === 'function'
-      ) {
+      if ('updateEntity' in entity && typeof entity.updateEntity === 'function') {
         entity.updateEntity(gameConfig.timing.mainGameLogic);
       }
     });
@@ -146,15 +143,10 @@ export class GameLogicManager implements IGameLogicManager {
   /**
    * Handle player interactions with entities
    */
-  public handlePlayerInteraction(
-    entityId: string,
-    interactionType: string
-  ): void {
+  public handlePlayerInteraction(entityId: string, interactionType: string): void {
     const entity = this._entities.get(entityId);
     if (!entity) {
-      logAutopoiesis.warn(
-        `Player interaction failed - entity not found: ${entityId}`
-      );
+      logAutopoiesis.warn(`Player interaction failed - entity not found: ${entityId}`);
       return;
     }
 
@@ -276,14 +268,12 @@ export class GameLogicManager implements IGameLogicManager {
    * Log current game status for debugging
    */
   private _logGameStatus(): void {
-    const entityStates = Array.from(this._entities.entries()).map(
-      ([id, entity]) => ({
-        id,
-        activity: entity.activity ?? 'unknown',
-        mood: entity.mood ?? 'unknown',
-        alive: !entity.isDead,
-      })
-    );
+    const entityStates = Array.from(this._entities.entries()).map(([id, entity]) => ({
+      id,
+      activity: entity.activity ?? 'unknown',
+      mood: entity.mood ?? 'unknown',
+      alive: !entity.isDead,
+    }));
 
     logAutopoiesis.info(`Game cycle ${this._gameState.cycles}`, {
       resonance: this._gameState.resonance.toFixed(2),

@@ -67,10 +67,7 @@ export class InputManager {
   /**
    * Procesa los inputs de movimiento
    */
-  processMovementInput(
-    isaEntity: AnimatedGameEntity,
-    stevEntity: AnimatedGameEntity
-  ): void {
+  processMovementInput(isaEntity: AnimatedGameEntity, stevEntity: AnimatedGameEntity): void {
     if (!this.cursors || !this.wasdKeys) return;
 
     const currentEntity =

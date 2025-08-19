@@ -66,9 +66,7 @@ export class DialogueSystem {
         stats: getDialogueStats(),
       });
 
-      logAutopoiesis.info(
-        '✅ Sistema de diálogos inicializado con conversaciones reales'
-      );
+      logAutopoiesis.info('✅ Sistema de diálogos inicializado con conversaciones reales');
     } catch (error) {
       logAutopoiesis.error('❌ Error inicializando sistema de diálogos', {
         error: String(error),
@@ -91,7 +89,9 @@ export class DialogueSystem {
     this.autoDialogueTimer = this.scene.time.addEvent({
       delay: baseInterval + variableInterval,
       callback: () => {
-        this.evaluateAutoDialogue();
+        this.evaluateAutoDialogue().catch(error => {
+          logAutopoiesis.error('Error in auto dialogue evaluation:', error);
+        });
       },
       loop: true,
     });
@@ -105,7 +105,7 @@ export class DialogueSystem {
   /**
    * Evaluar si debe generar un diálogo automático
    */
-  private evaluateAutoDialogue(): void {
+  private async evaluateAutoDialogue(): Promise<void> {
     if (!this.isInitialized || this.conversationState.isActive) return;
 
     const entities = this.getAvailableEntities();
@@ -114,7 +114,7 @@ export class DialogueSystem {
     const selectedEntity = this.selectEntityForDialogue(entities);
     if (!selectedEntity) return;
 
-    this.generateContextualDialogue(selectedEntity);
+    await this.generateContextualDialogue(selectedEntity);
   }
 
   /**
@@ -224,25 +224,18 @@ export class DialogueSystem {
   /**
    * Generar diálogo contextual para una entidad
    */
-  private generateContextualDialogue(entity: Entity): void {
+  private async generateContextualDialogue(entity: Entity): Promise<void> {
     const speaker = getSpeakerForEntity(entity.id);
-    const emotion =
-      entity.emotion || getEmotionForActivity(entity.activity || 'SOCIALIZING');
+    const emotion = entity.emotion || getEmotionForActivity(entity.activity || 'SOCIALIZING');
 
     let dialogue: DialogueEntry | null = null;
 
-    if (
-      this.conversationState.lastDialogue &&
-      this.conversationState.lastSpeaker !== speaker
-    ) {
-      dialogue = getResponseWriter(
-        speaker,
-        this.conversationState.lastDialogue
-      );
+    if (this.conversationState.lastDialogue && this.conversationState.lastSpeaker !== speaker) {
+      dialogue = await getResponseWriter(speaker, this.conversationState.lastDialogue);
     }
 
     if (!dialogue) {
-      dialogue = getNextDialogue(speaker, emotion, entity.activity);
+      dialogue = await getNextDialogue(speaker, emotion, entity.activity);
     }
 
     if (dialogue) {
@@ -262,17 +255,11 @@ export class DialogueSystem {
 
     // Posicionar burbuja sobre la entidad con un offset hacia arriba
     const bubbleOffsetY = -80; // Más arriba para mejor visibilidad
-    const bubbleContainer = this.scene.add.container(
-      entity.x,
-      entity.y + bubbleOffsetY
-    );
+    const bubbleContainer = this.scene.add.container(entity.x, entity.y + bubbleOffsetY);
 
     // Ajustar tamaño de burbuja basado en el texto
     const textLines = Math.ceil(dialogue.text.length / 35);
-    const bubbleWidth = Math.min(
-      Math.max(dialogue.text.length * 7 + 40, 200),
-      320
-    );
+    const bubbleWidth = Math.min(Math.max(dialogue.text.length * 7 + 40, 200), 320);
     const bubbleHeight = Math.max(textLines * 20 + 20, 50);
 
     // Crear burbuja con estilo mejorado
@@ -280,31 +267,10 @@ export class DialogueSystem {
 
     // Gradiente de fondo más atractivo
     const bubbleColor = dialogue.speaker === 'ISA' ? 0xff6b9d : 0x4ecdc4;
-    bubble.fillGradientStyle(
-      0xffffff,
-      0xffffff,
-      bubbleColor,
-      bubbleColor,
-      0.95,
-      0.95,
-      0.1,
-      0.1
-    );
+    bubble.fillGradientStyle(0xffffff, 0xffffff, bubbleColor, bubbleColor, 0.95, 0.95, 0.1, 0.1);
     bubble.lineStyle(3, bubbleColor, 0.8);
-    bubble.fillRoundedRect(
-      -bubbleWidth / 2,
-      -bubbleHeight / 2,
-      bubbleWidth,
-      bubbleHeight,
-      12
-    );
-    bubble.strokeRoundedRect(
-      -bubbleWidth / 2,
-      -bubbleHeight / 2,
-      bubbleWidth,
-      bubbleHeight,
-      12
-    );
+    bubble.fillRoundedRect(-bubbleWidth / 2, -bubbleHeight / 2, bubbleWidth, bubbleHeight, 12);
+    bubble.strokeRoundedRect(-bubbleWidth / 2, -bubbleHeight / 2, bubbleWidth, bubbleHeight, 12);
 
     // Añadir "cola" de la burbuja apuntando al personaje
     const tailSize = 12;
@@ -422,10 +388,7 @@ export class DialogueSystem {
   /**
    * Manejar interacción del jugador con entidad
    */
-  public handlePlayerInteraction(
-    entityId: string,
-    interactionType: string
-  ): void {
+  public handlePlayerInteraction(entityId: string, interactionType: string): void {
     if (!this.isInitialized) {
       logAutopoiesis.warn('⚠️ Sistema de diálogos no inicializado');
       return;

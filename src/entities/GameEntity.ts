@@ -1,8 +1,7 @@
 import Phaser from 'phaser';
 import type { Entity, EntityStats, ActivityType, MoodType } from '../types';
 import { GAME_BALANCE } from '../constants/gameBalance';
-import type { IEntityServices } from '../interfaces/EntityServices';
-import { EntityServicesFactory } from '../interfaces/EntityServices';
+import { EntityServicesFactory, type IEntityServices } from '../interfaces/EntityServices';
 
 export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private entityData: Entity;
@@ -56,6 +55,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       pulsePhase: 0,
       mood: '😊',
       isDead: false,
+      resonance: this.services.config.initialResonance,
     };
 
     this.lastUpdateTime = Date.now();
@@ -148,13 +148,12 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       deltaTimeMs
     );
 
-    this.entityData.stats =
-      this.services.activityCalculator.applyActivityEffectsWithTimeModifiers(
-        this.entityData.activity,
-        this.entityData.stats,
-        deltaTimeMs,
-        timeOfDay
-      );
+    this.entityData.stats = this.services.activityCalculator.applyActivityEffectsWithTimeModifiers(
+      this.entityData.activity,
+      this.entityData.stats,
+      deltaTimeMs,
+      timeOfDay
+    );
 
     this.updateMood();
 
@@ -166,16 +165,13 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
     const checkInterval = 3000 + Math.random() * 2000;
     if (timeInCurrentActivity > checkInterval) {
-      const companion = this.partnerEntity
-        ? this.partnerEntity.getEntityData()
-        : null;
+      const companion = this.partnerEntity ? this.partnerEntity.getEntityData() : null;
 
-      const suggestedActivity =
-        this.services.aiDecisionEngine.makeIntelligentDecision(
-          this.entityData,
-          companion,
-          Date.now()
-        );
+      const suggestedActivity = this.services.aiDecisionEngine.makeIntelligentDecision(
+        this.entityData,
+        companion,
+        Date.now()
+      );
 
       if (suggestedActivity !== this.entityData.activity) {
         this.changeActivity(suggestedActivity);
@@ -227,8 +223,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       const basePulse = GAME_BALANCE.VISUALS.BASE_PULSE_SCALE ?? 1.5;
       const pulse =
         basePulse +
-        Math.sin(this.entityData.pulsePhase) *
-          (GAME_BALANCE.VISUALS.PULSE_AMPLITUDE ?? 0.1);
+        Math.sin(this.entityData.pulsePhase) * (GAME_BALANCE.VISUALS.PULSE_AMPLITUDE ?? 0.1);
       this.setScale(pulse);
     }
 
@@ -350,26 +345,21 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     const myStats = this.getStats();
     const partnerStats = this.partnerEntity.getStats();
 
-    const result =
-      this.services.resonanceCalculator.calculateProximityResonanceChange(
-        myPosition,
-        partnerPosition,
-        myStats,
-        partnerStats,
-        this.resonance,
-        deltaTime
-      );
-
-    this.resonance = Math.max(
-      0,
-      Math.min(100, this.resonance + result.resonanceChange)
+    const result = this.services.resonanceCalculator.calculateProximityResonanceChange(
+      myPosition,
+      partnerPosition,
+      myStats,
+      partnerStats,
+      this.resonance,
+      deltaTime
     );
 
-    const modifiers =
-      this.services.resonanceCalculator.calculateResonanceModifiers(
-        this.resonance,
-        result.closeness
-      );
+    this.resonance = Math.max(0, Math.min(100, this.resonance + result.resonanceChange));
+
+    const modifiers = this.services.resonanceCalculator.calculateResonanceModifiers(
+      this.resonance,
+      result.closeness
+    );
 
     this.entityData.stats.happiness = Math.min(
       100,

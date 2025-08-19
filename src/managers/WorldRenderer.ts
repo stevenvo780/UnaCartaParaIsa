@@ -45,9 +45,7 @@ export class WorldRenderer {
       );
     }
 
-    logAutopoiesis.info(
-      'WorldRenderer inicializado con sistema de assets creativos'
-    );
+    logAutopoiesis.info('WorldRenderer inicializado con sistema de assets creativos');
   }
 
   /**
@@ -66,14 +64,12 @@ export class WorldRenderer {
   /**
    * Renderiza el mundo usando assets creativos reales
    */
-  private async renderWorldWithCreativeAssets(
-    world: GeneratedWorld
-  ): Promise<void> {
+  private async renderWorldWithCreativeAssets(world: GeneratedWorld): Promise<void> {
     logAutopoiesis.info('🎨 Renderizando mundo con assets creativos reales');
 
     try {
       // Renderizar usando BiomeAssetRenderer
-      await this.biomeAssetRenderer!.renderWorldWithRealAssets(world);
+      await this.biomeAssetRenderer.renderWorldWithRealAssets(world);
 
       // Renderizar zonas encima de los assets
       this.renderZones();
@@ -84,9 +80,7 @@ export class WorldRenderer {
       // Renderizar decoraciones animadas
       this.renderDecorations();
 
-      logAutopoiesis.info(
-        '✅ Mundo renderizado exitosamente con assets creativos'
-      );
+      logAutopoiesis.info('✅ Mundo renderizado exitosamente con assets creativos');
     } catch (error) {
       logAutopoiesis.error(
         '❌ Error renderizando con assets creativos, fallback a sistema anterior',
@@ -123,14 +117,9 @@ export class WorldRenderer {
     for (let x = 0; x < worldWidth; x += tileSize) {
       for (let y = 0; y < worldHeight; y += tileSize) {
         const grassTypes = ['grass-1', 'grass-2', 'grass-3', 'grass-base'];
-        const randomGrass =
-          grassTypes[Math.floor(Math.random() * grassTypes.length)];
+        const randomGrass = grassTypes[Math.floor(Math.random() * grassTypes.length)];
 
-        const grassTile = this.scene.add.image(
-          x + tileSize / 2,
-          y + tileSize / 2,
-          randomGrass
-        );
+        const grassTile = this.scene.add.image(x + tileSize / 2, y + tileSize / 2, randomGrass);
         grassTile.setDisplaySize(tileSize, tileSize);
         grassTile.setDepth(0);
 
@@ -139,8 +128,7 @@ export class WorldRenderer {
     }
 
     logAutopoiesis.debug('World background created', {
-      tileCount:
-        Math.ceil(worldWidth / tileSize) * Math.ceil(worldHeight / tileSize),
+      tileCount: Math.ceil(worldWidth / tileSize) * Math.ceil(worldHeight / tileSize),
     });
   }
 
@@ -302,13 +290,10 @@ export class WorldRenderer {
 
         if (animatedSprite) {
           decoration = animatedSprite;
-          logAutopoiesis.debug(
-            `Created animated decoration: ${deco.animation}`,
-            {
-              x: deco.x,
-              y: deco.y,
-            }
-          );
+          logAutopoiesis.debug(`Created animated decoration: ${deco.animation}`, {
+            x: deco.x,
+            y: deco.y,
+          });
         } else {
           // Fallback to static sprite if animation creation failed
           decoration = this.createFallbackDecoration(deco);
@@ -325,9 +310,7 @@ export class WorldRenderer {
       // Add random slight variations
       decoration.setRotation((Math.random() - 0.5) * 0.2);
       const scaleVariation = 0.8 + Math.random() * 0.4;
-      decoration.setScale(
-        GAME_BALANCE.DECORATIONS.CAMPFIRE_SCALE * scaleVariation
-      );
+      decoration.setScale(GAME_BALANCE.DECORATIONS.CAMPFIRE_SCALE * scaleVariation);
 
       // Store decoration in both maps for tracking
       this.renderedObjects.set(`decoration_${index}`, decoration);
@@ -351,25 +334,16 @@ export class WorldRenderer {
   }): Phaser.GameObjects.Sprite {
     // Check if fallback sprite exists
     if (this.scene.textures.exists(deco.fallbackSprite)) {
-      const decoration = this.scene.add.sprite(
-        deco.x,
-        deco.y,
-        deco.fallbackSprite
-      );
-      logAutopoiesis.debug(
-        `Created fallback decoration: ${deco.fallbackSprite}`,
-        {
-          x: deco.x,
-          y: deco.y,
-          originalAnimation: deco.animation,
-        }
-      );
+      const decoration = this.scene.add.sprite(deco.x, deco.y, deco.fallbackSprite);
+      logAutopoiesis.debug(`Created fallback decoration: ${deco.fallbackSprite}`, {
+        x: deco.x,
+        y: deco.y,
+        originalAnimation: deco.animation,
+      });
       return decoration;
     } else {
       // Ultimate fallback - create a simple colored rectangle
-      logAutopoiesis.warn(
-        `Fallback sprite ${deco.fallbackSprite} not found, creating placeholder`
-      );
+      logAutopoiesis.warn(`Fallback sprite ${deco.fallbackSprite} not found, creating placeholder`);
       const placeholder = this.scene.add.sprite(deco.x, deco.y, '__DEFAULT');
 
       // Create a default texture if it doesn't exist
@@ -526,8 +500,7 @@ export class WorldRenderer {
         visible: visibleCount,
         paused: pausedCount,
         cullingEfficiency: `${(
-          ((this.decorationSprites.length - visibleCount) /
-            this.decorationSprites.length) *
+          ((this.decorationSprites.length - visibleCount) / this.decorationSprites.length) *
           100
         ).toFixed(1)}%`,
       });

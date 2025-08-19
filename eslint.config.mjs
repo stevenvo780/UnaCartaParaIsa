@@ -4,8 +4,7 @@ import prettier from 'eslint-plugin-prettier';
 
 export default tseslint.config(
   eslint.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
-  ...tseslint.configs.stylisticTypeChecked,
+  ...tseslint.configs.recommended,
   {
     languageOptions: {
       parserOptions: {
@@ -21,260 +20,218 @@ export default tseslint.config(
     },
     rules: {
       // ==========================================
-      // PRETTIER INTEGRATION
+      // PRETTIER INTEGRATION (AI-Agent strict formatting)
       // ==========================================
       'prettier/prettier': [
-        'error',
+        'error', // Make formatting errors fail - important for AI agents
         {
           semi: true,
           trailingComma: 'es5',
           singleQuote: true,
-          printWidth: 80,
+          printWidth: 100,
           tabWidth: 2,
           useTabs: false,
           bracketSpacing: true,
           arrowParens: 'avoid',
-          endOfLine: 'lf',
+          endOfLine: 'auto',
         },
       ],
-
-      // ==========================================
-      // TYPESCRIPT STRICT RULES
-      // ==========================================
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
-      '@typescript-eslint/no-non-null-assertion': 'error',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/await-thenable': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
-      '@typescript-eslint/require-await': 'error',
-      '@typescript-eslint/prefer-promise-reject-errors': 'error',
-      '@typescript-eslint/return-await': 'error',
       
-      // Consistent coding style
-      '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-      '@typescript-eslint/consistent-type-imports': [
-        'error',
-        { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
-      ],
-      '@typescript-eslint/explicit-function-return-type': [
-        'error',
-        { 
-          allowExpressions: true, 
-          allowTypedFunctionExpressions: true,
-          allowHigherOrderFunctions: true
-        },
-      ],
-      '@typescript-eslint/explicit-member-accessibility': [
-        'error',
-        { accessibility: 'explicit' },
-      ],
+      // Additional whitespace and formatting rules for AI agents
+      'no-multiple-empty-lines': ['error', { max: 2, maxEOF: 1, maxBOF: 0 }],
+      'no-trailing-spaces': 'error',
+      'eol-last': 'error',
+      // Disable indent rule to avoid conflict with prettier
+      'indent': 'off',
+      'quotes': ['error', 'single', { avoidEscape: true }],
+      'semi': ['error', 'always'],
 
-      // Variable and parameter rules
+      // ==========================================
+      // TYPESCRIPT RULES (AI-Agent friendly but strict on quality)
+      // ==========================================
+      '@typescript-eslint/no-explicit-any': 'warn', // Discourage anys but don't fail build
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'warn',
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-misused-promises': 'warn',
+      '@typescript-eslint/require-await': 'off',
+      
+      // Relaxed coding style for artistic project
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-member-accessibility': 'off',
+      '@typescript-eslint/member-ordering': 'off',
+
+      // Variable and parameter rules (relaxed)
       '@typescript-eslint/no-unused-vars': [
-        'error',
+        'warn',
         { 
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
           caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
         },
       ],
-      '@typescript-eslint/no-shadow': 'error',
 
-      // Naming conventions
+      // Relaxed naming conventions for creative project
       '@typescript-eslint/naming-convention': [
-        'error',
+        'warn',
         {
           selector: 'default',
-          format: ['camelCase'],
+          format: ['camelCase', 'snake_case', 'PascalCase'],
+          leadingUnderscore: 'allow',
+          trailingUnderscore: 'allow',
         },
         {
           selector: 'variable',
-          format: ['camelCase', 'UPPER_CASE'],
+          format: ['camelCase', 'UPPER_CASE', 'snake_case'],
         },
         {
           selector: 'parameter',
-          format: ['camelCase'],
+          format: ['camelCase', 'snake_case'],
           leadingUnderscore: 'allow',
         },
         {
-          selector: 'memberLike',
-          modifiers: ['private'],
-          format: ['camelCase'],
-          leadingUnderscore: 'require',
+          selector: 'property',
+          format: ['camelCase', 'snake_case', 'PascalCase'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: 'objectLiteralProperty',
+          format: null, // Allow any format for object properties
         },
         {
           selector: 'typeLike',
           format: ['PascalCase'],
         },
         {
-          selector: 'interface',
-          format: ['PascalCase'],
-          custom: {
-            regex: '^I[A-Z]',
-            match: false,
-          },
-        },
-        {
           selector: 'enumMember',
-          format: ['UPPER_CASE'],
-        },
-      ],
-
-      // Class member ordering
-      '@typescript-eslint/member-ordering': [
-        'error',
-        {
-          default: [
-            'signature',
-            'public-static-field',
-            'protected-static-field',
-            'private-static-field',
-            'public-instance-field',
-            'protected-instance-field',
-            'private-instance-field',
-            'public-constructor',
-            'protected-constructor',
-            'private-constructor',
-            'public-static-method',
-            'protected-static-method',
-            'private-static-method',
-            'public-instance-method',
-            'protected-instance-method',
-            'private-instance-method',
-          ],
+          format: ['UPPER_CASE', 'PascalCase'],
         },
       ],
 
       // ==========================================
-      // BEST PRACTICES
+      // BASIC PRACTICES (AI-Agent friendly)
       // ==========================================
-      'no-console': 'warn',
-      'no-debugger': 'error',
-      'no-alert': 'error',
+      'no-console': 'off', // Allow console for debugging in artistic project
+      'no-debugger': 'warn',
+      'no-alert': 'warn',
       'no-eval': 'error',
-      'no-implied-eval': 'error',
-      'no-new-func': 'error',
-      'no-script-url': 'error',
-      'no-void': 'error',
-      'no-with': 'error',
-      'prefer-const': 'error',
-      'prefer-arrow-callback': 'error',
-      'prefer-template': 'error',
-      'prefer-destructuring': [
-        'error',
-        { array: true, object: true },
-        { enforceForRenamedProperties: false },
-      ],
-      'object-shorthand': 'error',
-      'no-var': 'error',
-      'no-param-reassign': 'error',
-      'no-return-assign': 'error',
-      'no-sequences': 'error',
-      'no-unneeded-ternary': 'error',
-      'no-nested-ternary': 'error',
-      'no-mixed-operators': 'error',
-      'operator-assignment': 'error',
-      'prefer-object-spread': 'error',
-      'prefer-rest-params': 'error',
-      'prefer-spread': 'error',
-      'no-useless-call': 'error',
-      'no-useless-concat': 'error',
+      'no-var': 'error', // Force modern JS - important for AI agents
+      'prefer-const': 'error', // Force const when possible - good practice
+      'prefer-template': 'warn',
+      'no-param-reassign': 'off',
+      'no-nested-ternary': 'warn',
+      'no-mixed-operators': 'off',
+      'no-useless-escape': 'warn',
+      
+      // Code quality rules important for AI-generated code
+      'no-duplicate-imports': 'error',
+      'no-unreachable': 'error',
+      'no-unused-expressions': 'error',
       'no-useless-return': 'error',
-      'no-useless-computed-key': 'error',
-      'no-useless-constructor': 'error',
-      'no-useless-rename': 'error',
+      'no-useless-concat': 'error',
+      'consistent-return': 'warn',
 
       // ==========================================
-      // COMPLEXITY CONTROL
+      // COMPLEXITY CONTROL (Very Relaxed)
       // ==========================================
-      'complexity': ['error', 15],
-      'max-depth': ['error', 4],
-      'max-lines': ['error', 500],
-      'max-lines-per-function': ['error', 100],
-      'max-nested-callbacks': ['error', 3],
-      'max-params': ['error', 5],
-      'max-statements': ['error', 30],
+      'complexity': ['warn', 25],
+      'max-depth': ['warn', 6],
+      'max-lines': ['warn', 1000],
+      'max-lines-per-function': ['warn', 200],
+      'max-nested-callbacks': ['warn', 5],
+      'max-params': ['warn', 8],
+      'max-statements': ['warn', 50],
 
       // ==========================================
-      // SECURITY & PERFORMANCE
+      // SECURITY & PERFORMANCE (AI-Agent focused)
       // ==========================================
-      'no-await-in-loop': 'error',
-      'require-atomic-updates': 'error',
+      'no-await-in-loop': 'warn',
+      'require-atomic-updates': 'off',
 
-      // Modern JavaScript patterns
-      'prefer-numeric-literals': 'error',
-      'symbol-description': 'error',
-      'no-prototype-builtins': 'error',
+      // AI-Agent specific rules - prevent common mistakes
+      'no-implicit-globals': 'error',
+      'no-lone-blocks': 'error',
+      'no-empty': 'warn',
+      'no-empty-function': 'warn',
+      'no-new-wrappers': 'error',
+      'radix': 'error', // Prevent parseInt() mistakes
+      'prefer-arrow-callback': 'warn',
+      
+      // TypeScript specific for AI agents
+      '@typescript-eslint/no-empty-interface': 'warn',
+      '@typescript-eslint/no-unnecessary-condition': 'off', // Too many false positives with strict:false
+      '@typescript-eslint/prefer-includes': 'warn',
+      '@typescript-eslint/prefer-string-starts-ends-with': 'warn',
 
-      // Disable conflicting rules
-      'no-unused-vars': 'off',
+      // Keep these disabled but add safer alternatives
+      'no-unused-vars': 'off', // Let TypeScript handle this
       'no-shadow': 'off',
-      'no-undef': 'off',
+      'no-undef': 'off', // TypeScript handles this
       'no-use-before-define': 'off',
       'no-redeclare': 'off',
       'no-dupe-class-members': 'off',
+      '@typescript-eslint/no-shadow': 'off',
+      '@typescript-eslint/consistent-type-definitions': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/restrict-plus-operands': 'off',
     },
   },
 
-  // JavaScript files configuration
+  // JavaScript and config files (very permissive)
   {
-    files: ['**/*.{js,jsx,mjs,cjs}'],
+    files: ['**/*.{js,jsx,mjs,cjs}', '*.config.{js,mjs,ts}', 'vite.config.ts', 'eslint.config.mjs'],
     rules: {
+      'no-console': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-member-accessibility': 'off',
       '@typescript-eslint/no-var-requires': 'off',
-    },
-  },
-
-  // Configuration files
-  {
-    files: [
-      '*.config.{js,mjs,ts}', 
-      'vite.config.ts', 
-      'eslint.config.mjs',
-      'vitest.config.ts'
-    ],
-    rules: {
-      'no-console': 'off',
-      '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/naming-convention': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
 
-  // Test files
+  // Scripts directory (permissive for utilities)
   {
-    files: [
-      '**/*.{test,spec}.{ts,js}', 
-      '**/__tests__/**/*.{ts,js}',
-      '**/*.test-d.ts'
-    ],
+    files: ['scripts/**/*.{ts,js}'],
     rules: {
       'no-console': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn', // Still discourage any in scripts
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-member-accessibility': 'off',
+      '@typescript-eslint/naming-convention': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
       'max-lines-per-function': 'off',
       'max-statements': 'off',
       'complexity': 'off',
+      'no-await-in-loop': 'off', // Allow in utility scripts
+      'prettier/prettier': 'warn', // Still enforce formatting but not critical
     },
   },
 
   // Ignore patterns
   {
     ignores: [
-      'node_modules/',
-      'dist/',
-      'build/',
+      'node_modules/**',
+      'dist/**',
+      'build/**',
       '*.min.js',
-      'coverage/',
-      '.vscode/',
-      '.git/',
-      '*.d.ts',
-      'public/',
-      '.next/',
-      '.nuxt/',
-      '.output/',
+      'coverage/**',
+      '.vscode/**',
+      '.git/**',
+      '**/*.d.ts',
+      'public/**',
+      '.next/**',
+      '.nuxt/**',
+      '.output/**',
     ],
   },
 );

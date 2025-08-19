@@ -9,13 +9,13 @@ import {
   canBiomeSpawn,
   DEFAULT_WORLD_CONFIG,
 } from './BiomeDefinitions';
-import { BiomeType } from './types';
-import type {
-  WorldGenConfig,
-  GeneratedWorld,
-  TerrainTile,
-  WorldLayer,
-  BiomeDefinition,
+import {
+  BiomeType,
+  type WorldGenConfig,
+  type GeneratedWorld,
+  type TerrainTile,
+  type WorldLayer,
+  type BiomeDefinition,
 } from './types';
 import { logAutopoiesis } from '../utils/logger';
 
@@ -46,11 +46,7 @@ export class TerrainGenerator {
     const elevationMap = this.generateNoiseMap(this.config.noise.elevation);
 
     // 2. Asignar biomas basado en condiciones
-    const biomeMap = this.assignBiomes(
-      temperatureMap,
-      moistureMap,
-      elevationMap
-    );
+    const biomeMap = this.assignBiomes(temperatureMap, moistureMap, elevationMap);
 
     // 3. Aplicar spawn forzado de biomas
     this.applyForcedSpawns(biomeMap);
@@ -71,10 +67,7 @@ export class TerrainGenerator {
 
     // 7. Calcular metadata
     const biomeDistribution = this.calculateBiomeDistribution(smoothedBiomeMap);
-    const totalAssets = layers.reduce(
-      (sum, layer) => sum + layer.tiles.length,
-      0
-    );
+    const totalAssets = layers.reduce((sum, layer) => sum + layer.tiles.length, 0);
 
     const generationTime = performance.now() - startTime;
 
@@ -103,7 +96,12 @@ export class TerrainGenerator {
   /**
    * Genera un mapa de ruido 2D
    */
-  private generateNoiseMap(noiseConfig: any): number[][] {
+  private generateNoiseMap(noiseConfig: {
+    scale: number;
+    octaves: number;
+    persistence: number;
+    lacunarity: number;
+  }): number[][] {
     const map = Array(this.config.height)
       .fill(0)
       .map(() => Array(this.config.width).fill(0));
@@ -143,12 +141,7 @@ export class TerrainGenerator {
 
         for (const biome of this.config.biomes.enabled) {
           if (canBiomeSpawn(biome, temperature, moisture, elevation)) {
-            const fitness = calculateBiomeFitness(
-              biome,
-              temperature,
-              moisture,
-              elevation
-            );
+            const fitness = calculateBiomeFitness(biome, temperature, moisture, elevation);
             if (fitness > bestFitness) {
               bestFitness = fitness;
               bestBiome = biome;
@@ -177,12 +170,7 @@ export class TerrainGenerator {
           const x = position.x + dx;
           const y = position.y + dy;
 
-          if (
-            x >= 0 &&
-            x < this.config.width &&
-            y >= 0 &&
-            y < this.config.height
-          ) {
+          if (x >= 0 && x < this.config.width && y >= 0 && y < this.config.height) {
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance <= radius) {
               // Aplicar con fading hacia los bordes
@@ -264,12 +252,7 @@ export class TerrainGenerator {
         const elevation = elevationMap[y][x];
 
         // Calcular strength del bioma (qué tan "puro" es)
-        const biomeStrength = this.calculateBiomeStrength(
-          x,
-          y,
-          biome,
-          biomeMap
-        );
+        const biomeStrength = this.calculateBiomeStrength(x, y, biome, biomeMap);
 
         // Generar assets para este tile
         const assets = this.generateTileAssets(biome, biomeStrength, x, y);
@@ -308,12 +291,7 @@ export class TerrainGenerator {
         const nx = x + dx;
         const ny = y + dy;
 
-        if (
-          nx >= 0 &&
-          nx < this.config.width &&
-          ny >= 0 &&
-          ny < this.config.height
-        ) {
+        if (nx >= 0 && nx < this.config.width && ny >= 0 && ny < this.config.height) {
           totalCount++;
           if (biomeMap[ny][nx] === biome) {
             sameCount++;
@@ -382,9 +360,7 @@ export class TerrainGenerator {
       biomeDef.assets.structures &&
       Math.random() < biomeDef.assets.structures.density * strength
     ) {
-      const structureAsset = this.selectAsset(
-        biomeDef.assets.structures.assets
-      );
+      const structureAsset = this.selectAsset(biomeDef.assets.structures.assets);
       if (structureAsset) {
         assets.structures.push(structureAsset);
       }
@@ -427,11 +403,7 @@ export class TerrainGenerator {
   /**
    * Selecciona un árbol considerando clustering
    */
-  private selectTreeAsset(
-    biomeDef: BiomeDefinition,
-    x: number,
-    y: number
-  ): string | null {
+  private selectTreeAsset(biomeDef: BiomeDefinition, x: number, y: number): string | null {
     const { clustering } = biomeDef.assets.trees;
 
     // Usar ruido para determinar si es una zona de clustering
@@ -520,10 +492,8 @@ export class TerrainGenerator {
   /**
    * Calcula la distribución de biomas en el mapa
    */
-  private calculateBiomeDistribution(
-    biomeMap: BiomeType[][]
-  ): Record<BiomeType, number> {
-    const distribution: Record<BiomeType, number> = {} as any;
+  private calculateBiomeDistribution(biomeMap: BiomeType[][]): Record<BiomeType, number> {
+    const distribution: Record<BiomeType, number> = {} as Record<BiomeType, number>;
     const total = this.config.width * this.config.height;
 
     // Inicializar contadores
@@ -540,8 +510,7 @@ export class TerrainGenerator {
 
     // Convertir a porcentajes
     for (const biome in distribution) {
-      distribution[biome as BiomeType] =
-        (distribution[biome as BiomeType] / total) * 100;
+      distribution[biome as BiomeType] = (distribution[biome as BiomeType] / total) * 100;
     }
 
     return distribution;

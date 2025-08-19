@@ -25,14 +25,11 @@ export class AnimatedGameEntity extends GameEntity {
     // Get animation manager from scene registry with proper type checking
     const animManager = scene.registry.get('animationManager');
     if (!animManager || !(animManager instanceof AnimationManager)) {
-      logAutopoiesis.error(
-        `AnimationManager not found or invalid type for entity ${entityId}`
-      );
+      logAutopoiesis.error(`AnimationManager not found or invalid type for entity ${entityId}`);
     }
 
     // Initialize with base spritesheet instead of static sprite
-    const initialSpriteKey =
-      entityId === 'isa' ? 'isa_happy_anim' : 'stev_happy_anim';
+    const initialSpriteKey = entityId === 'isa' ? 'isa_happy_anim' : 'stev_happy_anim';
 
     // Call parent constructor with a fallback texture
     super(scene, x, y, entityId, services);
@@ -46,14 +43,11 @@ export class AnimatedGameEntity extends GameEntity {
       if (scene.textures.exists(fallbackKey)) {
         this.setTexture(fallbackKey);
       }
-      logAutopoiesis.warn(
-        `Spritesheet ${initialSpriteKey} not found, using fallback`
-      );
+      logAutopoiesis.warn(`Spritesheet ${initialSpriteKey} not found, using fallback`);
     }
 
     // Type-safe assignment of animation manager
-    this.animationManager =
-      animManager instanceof AnimationManager ? animManager : undefined;
+    this.animationManager = animManager instanceof AnimationManager ? animManager : undefined;
 
     if (this.animationManager) {
       // Start with appropriate initial animation
@@ -64,17 +58,12 @@ export class AnimatedGameEntity extends GameEntity {
         this.currentAnimationKey = initialAnimation;
         this.animationManager.playAnimation(this, initialAnimation);
 
-        logAutopoiesis.info(
-          `AnimatedGameEntity ${entityId} created with animation`,
-          {
-            initialAnimation,
-            spriteKey: initialSpriteKey,
-          }
-        );
+        logAutopoiesis.info(`AnimatedGameEntity ${entityId} created with animation`, {
+          initialAnimation,
+          spriteKey: initialSpriteKey,
+        });
       } else {
-        logAutopoiesis.warn(
-          `Animation ${initialAnimation} not found for ${entityId}`
-        );
+        logAutopoiesis.warn(`Animation ${initialAnimation} not found for ${entityId}`);
       }
     } else {
       logAutopoiesis.warn(
@@ -130,11 +119,7 @@ export class AnimatedGameEntity extends GameEntity {
 
     // Calculate average well-being
     const avgStat =
-      (stats.happiness +
-        stats.energy +
-        (100 - stats.hunger) +
-        (100 - stats.boredom)) /
-      4;
+      (stats.happiness + stats.energy + (100 - stats.hunger) + (100 - stats.boredom)) / 4;
 
     // Priority 1: Death/Critical state
     if (entityData.isDead || stats.health <= 10 || avgStat < 20) {
@@ -153,18 +138,9 @@ export class AnimatedGameEntity extends GameEntity {
   /**
    * Create a hash string representing current entity state for change detection
    */
-  private createStateHash(
-    stats: EntityStats,
-    mood: MoodType,
-    activity: ActivityType
-  ): string {
+  private createStateHash(stats: EntityStats, mood: MoodType, activity: ActivityType): string {
     const avgStat = Math.floor(
-      (stats.happiness +
-        stats.energy +
-        (100 - stats.hunger) +
-        (100 - stats.boredom)) /
-        4 /
-        10
+      (stats.happiness + stats.energy + (100 - stats.hunger) + (100 - stats.boredom)) / 4 / 10
     ); // Reduce precision to avoid too frequent changes
 
     const healthTier = Math.floor(stats.health / 20);
@@ -178,9 +154,7 @@ export class AnimatedGameEntity extends GameEntity {
   public playAnimation(animationKey: string, force = false): boolean {
     // Validate animation manager availability
     if (!this.animationManager) {
-      logAutopoiesis.warn(
-        `Cannot play animation ${animationKey}: AnimationManager not available`
-      );
+      logAutopoiesis.warn(`Cannot play animation ${animationKey}: AnimationManager not available`);
       return false;
     }
 
@@ -192,9 +166,7 @@ export class AnimatedGameEntity extends GameEntity {
 
     // Check if animation exists
     if (!this.animationManager.hasAnimation(animationKey)) {
-      logAutopoiesis.warn(
-        `Animation not found: ${animationKey}, attempting fallback`
-      );
+      logAutopoiesis.warn(`Animation not found: ${animationKey}, attempting fallback`);
 
       // Try fallback animation based on entity type
       const entityId = this.getEntityData().id;
@@ -210,18 +182,12 @@ export class AnimatedGameEntity extends GameEntity {
 
     // Validate sprite has animation component
     if (!this.anims) {
-      logAutopoiesis.error(
-        `Sprite lacks animation component for ${animationKey}`
-      );
+      logAutopoiesis.error(`Sprite lacks animation component for ${animationKey}`);
       return false;
     }
 
     try {
-      const success = this.animationManager.playAnimation(
-        this,
-        animationKey,
-        !force
-      );
+      const success = this.animationManager.playAnimation(this, animationKey, !force);
 
       if (success) {
         this.currentAnimationKey = animationKey;
@@ -311,9 +277,7 @@ export class AnimatedGameEntity extends GameEntity {
     // Clear reference to animation manager
     this.animationManager = undefined;
 
-    logAutopoiesis.debug(
-      `AnimatedGameEntity destroyed: ${this.getEntityData().id}`
-    );
+    logAutopoiesis.debug(`AnimatedGameEntity destroyed: ${this.getEntityData().id}`);
 
     // Call parent destroy which handles Phaser sprite cleanup
     super.destroy();

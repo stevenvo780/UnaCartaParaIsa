@@ -79,16 +79,8 @@ export class NoiseGenerator {
     const BB = this.perm[B + 1];
 
     return this.lerp(
-      this.lerp(
-        this.grad(this.perm[AA], x, y),
-        this.grad(this.perm[BA], x - 1, y),
-        u
-      ),
-      this.lerp(
-        this.grad(this.perm[AB], x, y - 1),
-        this.grad(this.perm[BB], x - 1, y - 1),
-        u
-      ),
+      this.lerp(this.grad(this.perm[AA], x, y), this.grad(this.perm[BA], x - 1, y), u),
+      this.lerp(this.grad(this.perm[AB], x, y - 1), this.grad(this.perm[BB], x - 1, y - 1), u),
       v
     );
   }
@@ -151,9 +143,7 @@ export class NoiseGenerator {
         const pointX = cellX + this.hash2D(cellX, cellY) / 256;
         const pointY = cellY + this.hash2D(cellX + 1, cellY) / 256;
 
-        const dist = Math.sqrt(
-          Math.pow(x * scale - pointX, 2) + Math.pow(y * scale - pointY, 2)
-        );
+        const dist = Math.sqrt(Math.pow(x * scale - pointX, 2) + Math.pow(y * scale - pointY, 2));
 
         minDist = Math.min(minDist, dist);
       }

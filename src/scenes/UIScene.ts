@@ -87,143 +87,297 @@ export class UIScene extends Phaser.Scene {
   private createTopBar() {
     this.topBar = this.add.container(0, 0);
     this.topBar.setScrollFactor(0);
+    this.topBar.setDepth(1000);
 
-    // Top bar background with gradient effect
+    // Modern top bar background with glassmorphism effect
     const topBg = this.add.graphics();
-    topBg.fillGradientStyle(
-      0x2c3e50,
-      0x2c3e50,
-      0x34495e,
-      0x34495e,
-      1,
-      1,
-      0.9,
-      0.9
-    );
-    topBg.fillRect(0, 0, this.cameras.main.width, 60);
-    topBg.lineStyle(2, 0x1abc9c, 0.8);
-    topBg.lineBetween(0, 58, this.cameras.main.width, 58);
+
+    // Glassmorphism background
+    topBg.fillStyle(0x1a1a2e, 0.85);
+    topBg.fillRect(0, 0, this.cameras.main.width, 70);
+
+    // Subtle gradient overlay
+    topBg.fillGradientStyle(0x6c5ce7, 0x74b9ff, 0x6c5ce7, 0x74b9ff, 0.1, 0.1, 0.2, 0.2);
+    topBg.fillRect(0, 0, this.cameras.main.width, 70);
+
+    // Bottom accent line
+    topBg.lineStyle(2, 0x74b9ff, 0.6);
+    topBg.lineBetween(0, 68, this.cameras.main.width, 68);
+
+    // Subtle shadow
+    topBg.fillStyle(0x000000, 0.2);
+    topBg.fillRect(0, 70, this.cameras.main.width, 4);
+
     this.topBar.add(topBg);
 
-    // Game title
-    const title = this.add.text(20, 15, '🌟 Una Carta Para Isa', {
-      fontSize: '24px',
-      color: '#ecf0f1',
-      fontFamily: 'Arial',
-      fontStyle: 'bold',
-    });
-    this.topBar.add(title);
+    // Modern game title with better typography
+    const titleContainer = this.add.container(25, 35);
 
-    // Game status indicators
-    this.createTopBarIndicators();
-  }
-
-  private createTopBarIndicators() {
-    const startX = this.cameras.main.width - 400;
-
-    // Resonance indicator
-    const resonanceContainer = this.add.container(startX, 15);
-    const resonanceBg = this.add.graphics();
-    resonanceBg.fillStyle(0x34495e, 0.8);
-    resonanceBg.fillRoundedRect(0, 0, 120, 30, 5);
-    resonanceContainer.add(resonanceBg);
-
-    const resonanceIcon = this.add
-      .text(10, 15, '💫', { fontSize: '16px' })
-      .setOrigin(0, 0.5);
-    resonanceContainer.add(resonanceIcon);
-
-    const resonanceText = this.add
-      .text(35, 15, 'Resonancia: 0%', {
-        fontSize: '12px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial',
-      })
-      .setOrigin(0, 0.5);
-    resonanceContainer.add(resonanceText);
-    resonanceContainer.setData('resonanceText', resonanceText);
-
-    this.topBar.add(resonanceContainer);
-
-    // Cycles indicator
-    const cyclesContainer = this.add.container(startX + 140, 15);
-    const cyclesBg = this.add.graphics();
-    cyclesBg.fillStyle(0x34495e, 0.8);
-    cyclesBg.fillRoundedRect(0, 0, 100, 30, 5);
-    cyclesContainer.add(cyclesBg);
-
-    const cyclesIcon = this.add
-      .text(10, 15, '⚡', { fontSize: '16px' })
-      .setOrigin(0, 0.5);
-    cyclesContainer.add(cyclesIcon);
-
-    const cyclesText = this.add
-      .text(35, 15, 'Ciclos: 0', {
-        fontSize: '12px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial',
-      })
-      .setOrigin(0, 0.5);
-    cyclesContainer.add(cyclesText);
-    cyclesContainer.setData('cyclesText', cyclesText);
-
-    this.topBar.add(cyclesContainer);
-
-    // Menu button
-    this.createMenuButton();
-  }
-
-  private createMenuButton() {
-    const menuBtn = this.add.container(this.cameras.main.width - 80, 15);
-
-    const menuBg = this.add.graphics();
-    menuBg.fillStyle(0x3498db, 0.8);
-    menuBg.fillRoundedRect(0, 0, 60, 30, 5);
-    menuBtn.add(menuBg);
-
-    const menuText = this.add
-      .text(30, 15, '☰ MENU', {
-        fontSize: '10px',
-        color: '#ffffff',
-        fontFamily: 'Arial',
+    const titleText = this.add
+      .text(0, 0, 'Una Carta Para Isa', {
+        fontSize: '22px',
+        color: '#FFFFFF',
+        fontFamily: 'Arial, sans-serif',
         fontStyle: 'bold',
+        stroke: '#6C5CE7',
+        strokeThickness: 1,
       })
-      .setOrigin(0.5);
-    menuBtn.add(menuText);
+      .setOrigin(0, 0.5);
 
-    menuBtn.setInteractive(
-      new Phaser.Geom.Rectangle(0, 0, 60, 30),
-      Phaser.Geom.Rectangle.Contains
-    );
-    menuBtn.on('pointerover', () => menuBg.setAlpha(1));
-    menuBtn.on('pointerout', () => menuBg.setAlpha(0.8));
+    const titleIcon = this.add
+      .text(-30, 0, '💌', {
+        fontSize: '24px',
+      })
+      .setOrigin(0.5, 0.5);
+
+    titleContainer.add([titleIcon, titleText]);
+    this.topBar.add(titleContainer);
+
+    // Subtle breathing animation for the title
+    this.tweens.add({
+      targets: titleIcon,
+      scaleX: { from: 1, to: 1.1 },
+      scaleY: { from: 1, to: 1.1 },
+      duration: 3000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // Modern status indicators
+    this.createModernTopBarIndicators();
+  }
+
+  private createModernTopBarIndicators() {
+    const indicatorY = 35;
+    const rightMargin = 30;
+
+    // Create modern indicator pills
+    const indicators = [
+      {
+        icon: '💫',
+        label: 'Resonancia',
+        value: '0%',
+        color: 0x74b9ff,
+        dataKey: 'resonanceText',
+        width: 140,
+      },
+      {
+        icon: '⚡',
+        label: 'Ciclos',
+        value: '0',
+        color: 0x00cec9,
+        dataKey: 'cyclesText',
+        width: 110,
+      },
+      {
+        icon: '⏰',
+        label: 'Tiempo',
+        value: '00:00',
+        color: 0xfdcb6e,
+        dataKey: 'timeText',
+        width: 120,
+      },
+    ];
+
+    let currentX = this.cameras.main.width - rightMargin;
+
+    indicators.forEach((indicator, index) => {
+      currentX -= indicator.width + 15;
+
+      const container = this.add.container(currentX, indicatorY);
+
+      // Modern pill background with glassmorphism
+      const bg = this.add.graphics();
+      bg.fillStyle(indicator.color, 0.15);
+      bg.fillRoundedRect(0, -15, indicator.width, 30, 15);
+
+      bg.lineStyle(1, indicator.color, 0.4);
+      bg.strokeRoundedRect(0, -15, indicator.width, 30, 15);
+
+      // Inner glow effect
+      bg.fillStyle(indicator.color, 0.05);
+      bg.fillRoundedRect(2, -13, indicator.width - 4, 26, 13);
+
+      // Icon with subtle glow
+      const iconContainer = this.add.container(18, 0);
+
+      const iconGlow = this.add.graphics();
+      iconGlow.fillStyle(indicator.color, 0.3);
+      iconGlow.fillCircle(0, 0, 12);
+
+      const iconText = this.add
+        .text(0, 0, indicator.icon, {
+          fontSize: '14px',
+        })
+        .setOrigin(0.5, 0.5);
+
+      iconContainer.add([iconGlow, iconText]);
+
+      // Value text
+      const valueText = this.add
+        .text(indicator.width / 2 + 20, 0, indicator.value, {
+          fontSize: '11px',
+          color: '#FFFFFF',
+          fontFamily: 'Arial, sans-serif',
+          fontStyle: 'bold',
+        })
+        .setOrigin(0.5, 0.5);
+
+      // Label text
+      const labelText = this.add
+        .text(indicator.width / 2 + 20, -8, indicator.label, {
+          fontSize: '8px',
+          color: '#B2BEC3',
+          fontFamily: 'Arial, sans-serif',
+        })
+        .setOrigin(0.5, 0.5);
+
+      container.add([bg, iconContainer, labelText, valueText]);
+      container.setData(indicator.dataKey, valueText);
+
+      // Breathing animation for icons
+      this.tweens.add({
+        targets: iconText,
+        alpha: { from: 0.8, to: 1 },
+        scaleX: { from: 0.9, to: 1 },
+        scaleY: { from: 0.9, to: 1 },
+        duration: 2000 + index * 500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+
+      // Hover effects
+      container.setSize(indicator.width, 30);
+      container.setInteractive();
+
+      container.on('pointerover', () => {
+        this.tweens.add({
+          targets: container,
+          scaleX: 1.05,
+          scaleY: 1.05,
+          duration: 200,
+          ease: 'Back.easeOut',
+        });
+      });
+
+      container.on('pointerout', () => {
+        this.tweens.add({
+          targets: container,
+          scaleX: 1,
+          scaleY: 1,
+          duration: 200,
+          ease: 'Back.easeOut',
+        });
+      });
+
+      this.topBar.add(container);
+    });
+
+    // Add quick action menu button
+    this.createModernMenuButton();
+  }
+
+  private createModernMenuButton() {
+    const menuBtn = this.add.container(this.cameras.main.width - 45, 35);
+
+    // Modern circular menu button with glow
+    const menuBg = this.add.graphics();
+
+    // Outer glow
+    menuBg.fillStyle(0x6c5ce7, 0.3);
+    menuBg.fillCircle(0, 0, 22);
+
+    // Main button
+    menuBg.fillStyle(0x6c5ce7, 0.9);
+    menuBg.fillCircle(0, 0, 18);
+
+    // Inner highlight
+    menuBg.fillStyle(0x74b9ff, 0.4);
+    menuBg.fillCircle(-3, -3, 8);
+
+    const menuIcon = this.add
+      .text(0, 0, '⚙️', {
+        fontSize: '16px',
+      })
+      .setOrigin(0.5, 0.5);
+
+    menuBtn.add([menuBg, menuIcon]);
+    menuBtn.setSize(40, 40);
+    menuBtn.setInteractive();
+
+    // Modern hover effects
+    menuBtn.on('pointerover', () => {
+      this.tweens.add({
+        targets: [menuBtn],
+        scaleX: 1.2,
+        scaleY: 1.2,
+        duration: 200,
+        ease: 'Back.easeOut',
+      });
+
+      this.tweens.add({
+        targets: menuIcon,
+        rotation: Math.PI * 0.25,
+        duration: 300,
+        ease: 'Power2.easeOut',
+      });
+    });
+
+    menuBtn.on('pointerout', () => {
+      this.tweens.add({
+        targets: [menuBtn],
+        scaleX: 1,
+        scaleY: 1,
+        duration: 200,
+        ease: 'Back.easeOut',
+      });
+
+      this.tweens.add({
+        targets: menuIcon,
+        rotation: 0,
+        duration: 300,
+        ease: 'Power2.easeOut',
+      });
+    });
+
     menuBtn.on('pointerdown', () => {
-      this.toggleGameMenu();
+      // Scale down effect
+      this.tweens.add({
+        targets: menuBtn,
+        scaleX: 0.9,
+        scaleY: 0.9,
+        duration: 100,
+        yoyo: true,
+        ease: 'Power2.easeOut',
+        onComplete: () => {
+          this.toggleGameMenu();
+        },
+      });
     });
 
     this.topBar.add(menuBtn);
+
+    // Subtle breathing animation
+    this.tweens.add({
+      targets: menuBg,
+      alpha: { from: 0.9, to: 1 },
+      duration: 2000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
   }
 
   private createBottomBar() {
     const barHeight = 80;
-    this.bottomBar = this.add.container(
-      0,
-      this.cameras.main.height - barHeight
-    );
+    this.bottomBar = this.add.container(0, this.cameras.main.height - barHeight);
     this.bottomBar.setScrollFactor(0);
 
     // Bottom bar background
     const bottomBg = this.add.graphics();
-    bottomBg.fillGradientStyle(
-      0x34495e,
-      0x34495e,
-      0x2c3e50,
-      0x2c3e50,
-      0.9,
-      0.9,
-      1,
-      1
-    );
+    bottomBg.fillGradientStyle(0x34495e, 0x34495e, 0x2c3e50, 0x2c3e50, 0.9, 0.9, 1, 1);
     bottomBg.fillRect(0, 0, this.cameras.main.width, barHeight);
     bottomBg.lineStyle(2, 0x1abc9c, 0.8);
     bottomBg.lineBetween(0, 2, this.cameras.main.width, 2);
@@ -358,56 +512,24 @@ export class UIScene extends Phaser.Scene {
     speedContainer.add(speedLabel);
 
     // Speed buttons
-    const slowBtn = this.createModernButton(
-      10,
-      20,
-      25,
-      15,
-      '0.5x',
-      '#e74c3c',
-      () => {
-        this.setGameSpeed(0.5);
-      }
-    );
+    const slowBtn = this.createModernButton(10, 20, 25, 15, '0.5x', '#e74c3c', () => {
+      this.setGameSpeed(0.5);
+    });
     speedContainer.add(slowBtn);
 
-    const normalBtn = this.createModernButton(
-      40,
-      20,
-      25,
-      15,
-      '1x',
-      '#95a5a6',
-      () => {
-        this.setGameSpeed(1);
-      }
-    );
+    const normalBtn = this.createModernButton(40, 20, 25, 15, '1x', '#95a5a6', () => {
+      this.setGameSpeed(1);
+    });
     speedContainer.add(normalBtn);
 
-    const fastBtn = this.createModernButton(
-      70,
-      20,
-      25,
-      15,
-      '2x',
-      '#f39c12',
-      () => {
-        this.setGameSpeed(2);
-      }
-    );
+    const fastBtn = this.createModernButton(70, 20, 25, 15, '2x', '#f39c12', () => {
+      this.setGameSpeed(2);
+    });
     speedContainer.add(fastBtn);
 
-    const turboBtn = this.createModernButton(
-      100,
-      20,
-      25,
-      15,
-      '5x',
-      '#e67e22',
-      () => {
-        this.setGameSpeed(5);
-      }
-    );
+    const turboBtn = this.createModernButton(100, 20, 25, 15, '5x', '#e67e22', () => {
+      this.setGameSpeed(5);
+    });
     speedContainer.add(turboBtn);
 
     this.bottomBar.add(speedContainer);
@@ -427,16 +549,7 @@ export class UIScene extends Phaser.Scene {
     this.leftPanel.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0.96,
-      0.96,
-      0.96,
-      0.96
-    );
+    panelBg.fillGradientStyle(0x34495e, 0x2c3e50, 0x34495e, 0x2c3e50, 0.96, 0.96, 0.96, 0.96);
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
     panelBg.lineStyle(3, 0x1abc9c, 0.8);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
@@ -448,16 +561,7 @@ export class UIScene extends Phaser.Scene {
 
     // Enhanced panel header
     const headerBg = this.add.graphics();
-    headerBg.fillGradientStyle(
-      0x1abc9c,
-      0x16a085,
-      0x1abc9c,
-      0x16a085,
-      0.2,
-      0.2,
-      0.1,
-      0.1
-    );
+    headerBg.fillGradientStyle(0x1abc9c, 0x16a085, 0x1abc9c, 0x16a085, 0.2, 0.2, 0.1, 0.1);
     headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
     this.leftPanel.add(headerBg);
 
@@ -477,17 +581,9 @@ export class UIScene extends Phaser.Scene {
     this.createCharacterPanel('stev', 15, 235, '#3498db', '👨 STEV');
 
     // Enhanced toggle button
-    const toggleBtn = this.createModernButton(
-      panelWidth - 35,
-      8,
-      30,
-      20,
-      '◀',
-      '#95a5a6',
-      () => {
-        this.toggleLeftPanel();
-      }
-    );
+    const toggleBtn = this.createModernButton(panelWidth - 35, 8, 30, 20, '◀', '#95a5a6', () => {
+      this.toggleLeftPanel();
+    });
     this.leftPanel.add(toggleBtn);
   }
 
@@ -506,16 +602,7 @@ export class UIScene extends Phaser.Scene {
     this.rightPanel.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0.96,
-      0.96,
-      0.96,
-      0.96
-    );
+    panelBg.fillGradientStyle(0x34495e, 0x2c3e50, 0x34495e, 0x2c3e50, 0.96, 0.96, 0.96, 0.96);
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
     panelBg.lineStyle(3, 0x9b59b6, 0.8);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
@@ -527,16 +614,7 @@ export class UIScene extends Phaser.Scene {
 
     // Enhanced panel header
     const headerBg = this.add.graphics();
-    headerBg.fillGradientStyle(
-      0x9b59b6,
-      0x8e44ad,
-      0x9b59b6,
-      0x8e44ad,
-      0.2,
-      0.2,
-      0.1,
-      0.1
-    );
+    headerBg.fillGradientStyle(0x9b59b6, 0x8e44ad, 0x9b59b6, 0x8e44ad, 0.2, 0.2, 0.1, 0.1);
     headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
     this.rightPanel.add(headerBg);
 
@@ -610,17 +688,9 @@ export class UIScene extends Phaser.Scene {
     this.rightPanel.add(activitiesSection);
 
     // Enhanced toggle button
-    const toggleBtn = this.createModernButton(
-      8,
-      8,
-      30,
-      20,
-      '▶',
-      '#95a5a6',
-      () => {
-        this.toggleRightPanel();
-      }
-    );
+    const toggleBtn = this.createModernButton(8, 8, 30, 20, '▶', '#95a5a6', () => {
+      this.toggleRightPanel();
+    });
     this.rightPanel.add(toggleBtn);
   }
 
@@ -635,16 +705,7 @@ export class UIScene extends Phaser.Scene {
 
     // Minimap background with improved styling
     const minimapBg = this.add.graphics();
-    minimapBg.fillGradientStyle(
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0.95,
-      0.95,
-      0.95,
-      0.95
-    );
+    minimapBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.95, 0.95, 0.95, 0.95);
     minimapBg.fillRoundedRect(0, 0, minimapSize, minimapSize, 8);
     minimapBg.lineStyle(2, 0x3498db, 0.7);
     minimapBg.strokeRoundedRect(0, 0, minimapSize, minimapSize, 8);
@@ -694,17 +755,9 @@ export class UIScene extends Phaser.Scene {
     this.minimapContainer.add(mapContent);
 
     // Improved toggle button
-    const toggleBtn = this.createModernButton(
-      minimapSize - 20,
-      2,
-      16,
-      16,
-      '×',
-      '#e74c3c',
-      () => {
-        this.toggleMinimap();
-      }
-    );
+    const toggleBtn = this.createModernButton(minimapSize - 20, 2, 16, 16, '×', '#e74c3c', () => {
+      this.toggleMinimap();
+    });
     this.minimapContainer.add(toggleBtn);
   }
 
@@ -774,43 +827,22 @@ export class UIScene extends Phaser.Scene {
     // Use UIScene's update loop for camera controls to avoid conflicts
     this.events.on('update', () => {
       const mainScene = this.scene.get('MainScene');
-      if (
-        mainScene &&
-        mainScene.cameras &&
-        mainScene.cameras.main &&
-        !this.isDraggingCamera
-      ) {
+      if (mainScene && mainScene.cameras && mainScene.cameras.main && !this.isDraggingCamera) {
         const camera = mainScene.cameras.main;
         const baseSpeed = wasd?.SHIFT?.isDown ? 12 : 6; // Faster with shift
 
         // Keyboard navigation
         if (cursors?.up.isDown || wasd?.W?.isDown) {
-          camera.scrollY = Phaser.Math.Clamp(
-            camera.scrollY - baseSpeed,
-            -500,
-            2000
-          );
+          camera.scrollY = Phaser.Math.Clamp(camera.scrollY - baseSpeed, -500, 2000);
         }
         if (cursors?.down.isDown || wasd?.S?.isDown) {
-          camera.scrollY = Phaser.Math.Clamp(
-            camera.scrollY + baseSpeed,
-            -500,
-            2000
-          );
+          camera.scrollY = Phaser.Math.Clamp(camera.scrollY + baseSpeed, -500, 2000);
         }
         if (cursors?.left.isDown || wasd?.A?.isDown) {
-          camera.scrollX = Phaser.Math.Clamp(
-            camera.scrollX - baseSpeed,
-            -500,
-            2000
-          );
+          camera.scrollX = Phaser.Math.Clamp(camera.scrollX - baseSpeed, -500, 2000);
         }
         if (cursors?.right.isDown || wasd?.D?.isDown) {
-          camera.scrollX = Phaser.Math.Clamp(
-            camera.scrollX + baseSpeed,
-            -500,
-            2000
-          );
+          camera.scrollX = Phaser.Math.Clamp(camera.scrollX + baseSpeed, -500, 2000);
         }
       }
     });
@@ -828,8 +860,7 @@ export class UIScene extends Phaser.Scene {
         if (mainScene && mainScene.cameras && mainScene.cameras.main) {
           const camera = mainScene.cameras.main;
           const zoomSpeed = 0.1;
-          const newZoom =
-            deltaY < 0 ? camera.zoom + zoomSpeed : camera.zoom - zoomSpeed;
+          const newZoom = deltaY < 0 ? camera.zoom + zoomSpeed : camera.zoom - zoomSpeed;
           camera.setZoom(Phaser.Math.Clamp(newZoom, 0.5, 2.0));
         }
       }
@@ -844,7 +875,9 @@ export class UIScene extends Phaser.Scene {
     // Clear previous dynamic stats (but keep fixed elements like background, title, portrait)
     const existingStats = panel.list.filter(
       (child: Phaser.GameObjects.GameObject) =>
-        (child.type === 'Text' || child.type === 'Graphics') && child.y > 75
+        (child.type === 'Text' || child.type === 'Graphics') &&
+        'y' in child &&
+        (child as any).y > 75
     );
     existingStats.forEach((stat: Phaser.GameObjects.GameObject) => {
       stat.destroy();
@@ -906,21 +939,15 @@ export class UIScene extends Phaser.Scene {
     // First column
     statsColumn1.forEach((stat, index) => {
       const { value } = stat;
-      const barColor =
-        value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
+      const barColor = value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
 
       // Stat label
-      const statText = this.add.text(
-        10,
-        80 + index * 25,
-        `${stat.icon} ${stat.label}`,
-        {
-          fontSize: '10px',
-          color: stat.color,
-          fontFamily: 'Arial, sans-serif',
-          fontStyle: 'bold',
-        }
-      );
+      const statText = this.add.text(10, 80 + index * 25, `${stat.icon} ${stat.label}`, {
+        fontSize: '10px',
+        color: stat.color,
+        fontFamily: 'Arial, sans-serif',
+        fontStyle: 'bold',
+      });
       panel.add(statText);
 
       // Stat value
@@ -948,21 +975,15 @@ export class UIScene extends Phaser.Scene {
     // Second column
     statsColumn2.forEach((stat, index) => {
       const { value } = stat;
-      const barColor =
-        value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
+      const barColor = value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
 
       // Stat label
-      const statText = this.add.text(
-        140,
-        80 + index * 25,
-        `${stat.icon} ${stat.label}`,
-        {
-          fontSize: '10px',
-          color: stat.color,
-          fontFamily: 'Arial, sans-serif',
-          fontStyle: 'bold',
-        }
-      );
+      const statText = this.add.text(140, 80 + index * 25, `${stat.icon} ${stat.label}`, {
+        fontSize: '10px',
+        color: stat.color,
+        fontFamily: 'Arial, sans-serif',
+        fontStyle: 'bold',
+      });
       panel.add(statText);
 
       // Stat value
@@ -1064,30 +1085,13 @@ export class UIScene extends Phaser.Scene {
     panelContainer.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0.8,
-      0.8,
-      0.8,
-      0.8
-    );
+    panelBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.8, 0.8, 0.8, 0.8);
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 6);
-    panelBg.lineStyle(
-      2,
-      Phaser.Display.Color.HexStringToColor(color).color,
-      0.9
-    );
+    panelBg.lineStyle(2, Phaser.Display.Color.HexStringToColor(color).color, 0.9);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 6);
 
     // Inner highlight
-    panelBg.lineStyle(
-      1,
-      Phaser.Display.Color.HexStringToColor(color).color,
-      0.4
-    );
+    panelBg.lineStyle(1, Phaser.Display.Color.HexStringToColor(color).color, 0.4);
     panelBg.strokeRoundedRect(1, 1, panelWidth - 2, panelHeight - 2, 5);
     panelContainer.add(panelBg);
 
@@ -1171,26 +1175,27 @@ export class UIScene extends Phaser.Scene {
   }
 
   private updateCharacterPanels(entities: Entity[]) {
-    if (entities.isa) {
+    const isaEntity = entities.find(entity => entity.id === 'isa');
+    if (isaEntity) {
       const isaPanel = this.leftPanel.getData('isaStatsPanel');
       if (isaPanel) {
-        this.updateEntityStatsDisplay(isaPanel, entities.isa, '#e91e63');
+        this.updateEntityStatsDisplay(isaPanel, isaEntity, '#e91e63');
       }
     }
 
-    if (entities.stev) {
+    const stevEntity = entities.find(entity => entity.id === 'stev');
+    if (stevEntity) {
       const stevPanel = this.leftPanel.getData('stevStatsPanel');
       if (stevPanel) {
-        this.updateEntityStatsDisplay(stevPanel, entities.stev, '#3498db');
+        this.updateEntityStatsDisplay(stevPanel, stevEntity, '#3498db');
       }
     }
   }
 
   private updateTopBarInfo(data: GameLogicUpdateData) {
     // Update resonance indicator
-    const resonanceContainer = this.topBar.list.find(
-      (child: Phaser.GameObjects.GameObject) =>
-        (child as any).getData?.('resonanceText')
+    const resonanceContainer = this.topBar.list.find((child: Phaser.GameObjects.GameObject) =>
+      (child as any).getData?.('resonanceText')
     ) as Phaser.GameObjects.Container;
     if (resonanceContainer && data.resonance !== undefined) {
       const resonanceText = resonanceContainer.getData('resonanceText');
@@ -1200,9 +1205,8 @@ export class UIScene extends Phaser.Scene {
     }
 
     // Update cycles indicator
-    const cyclesContainer = this.topBar.list.find(
-      (child: Phaser.GameObjects.GameObject) =>
-        (child as any).getData?.('cyclesText')
+    const cyclesContainer = this.topBar.list.find((child: Phaser.GameObjects.GameObject) =>
+      (child as any).getData?.('cyclesText')
     ) as Phaser.GameObjects.Container;
     if (cyclesContainer && data.cycles !== undefined) {
       const cyclesText = cyclesContainer.getData('cyclesText');
@@ -1227,10 +1231,7 @@ export class UIScene extends Phaser.Scene {
   private setControlMode(mode: 'auto' | 'isa' | 'stev') {
     // this.currentControlMode = mode; // Comentado temporalmente
     const mainScene = this.scene.get('MainScene');
-    mainScene.events.emit(
-      'changeEntityControl',
-      mode === 'auto' ? 'none' : mode
-    );
+    mainScene.events.emit('changeEntityControl', mode === 'auto' ? 'none' : mode);
 
     logAutopoiesis.info(`Control mode changed to: ${mode}`);
   }
