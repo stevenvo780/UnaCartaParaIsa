@@ -6,6 +6,8 @@ import type {
 } from '../types';
 import { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
 import { DialogueSystem } from '../systems/DialogueSystem';
+import { QuestSystem } from '../systems/QuestSystem';
+import { QuestController } from '../systems/QuestController';
 import { GameLogicManager } from '../managers/GameLogicManager';
 import { WorldRenderer } from '../managers/WorldRenderer';
 import { SceneInitializationManager } from '../managers/SceneInitializationManager';
@@ -13,11 +15,15 @@ import { EntityManager } from '../managers/EntityManager';
 import { InputManager, type ControlledEntity } from '../managers/InputManager';
 import { FoodAssetManager } from '../managers/FoodAssetManager';
 import { FoodSystem } from '../systems/FoodSystem';
+import { QuestUI } from '../components/QuestUI';
 import { logAutopoiesis } from '../utils/logger';
 
 export class MainScene extends Phaser.Scene {
   private gameState!: GameState;
   private dialogueSystem!: DialogueSystem;
+  private questSystem!: QuestSystem;
+  private questController!: QuestController;
+  private questUI!: QuestUI;
   private gameLogicManager!: GameLogicManager;
   private worldRenderer!: WorldRenderer;
   private entityManager!: EntityManager;
@@ -43,12 +49,15 @@ export class MainScene extends Phaser.Scene {
   async create() {
     logAutopoiesis.info('Creating main game world');
 
-    // Initialize managers
+    // Initialize managers and systems
     this.entityManager = new EntityManager(this);
     this.inputManager = new InputManager(this);
     this.foodAssetManager = new FoodAssetManager(this);
     this.foodSystem = new FoodSystem(this);
     this.dialogueSystem = new DialogueSystem(this);
+    this.questSystem = new QuestSystem(this);
+    this.questController = new QuestController(this, this.questSystem, this.dialogueSystem);
+    this.questUI = new QuestUI(this);
 
     await this.initializeManagers();
 
@@ -66,6 +75,16 @@ export class MainScene extends Phaser.Scene {
     // Setup spacebar action for current controlled entity
     this.input.keyboard?.on('keydown-SPACE', () => {
       this.handleEntityAction();
+    });
+
+    // Setup quest system controls
+    this.input.keyboard?.on('keydown-Q', () => {
+      this.questUI.toggleQuestPanel();
+    });
+
+    // Auto-start first quest when entities meet
+    this.time.delayedCall(2000, () => {
+      this.questSystem.startQuest('main_awakening');
     });
 
     this.setupCamera();
@@ -88,6 +107,11 @@ export class MainScene extends Phaser.Scene {
 
     this.worldRenderer = new WorldRenderer(this, this.gameState);
     await this.worldRenderer.renderWorld(this.generatedWorldData);
+
+    // Register systems in registry for cross-component access
+    this.registry.set('gameLogicManager', this.gameLogicManager);
+    this.registry.set('questSystem', this.questSystem);
+    this.registry.set('dialogueSystem', this.dialogueSystem);
 
     this.gameLogicManager.on('gameLogicUpdate', (data: GameLogicUpdateData) => {
       this.events.emit('gameLogicUpdate', data);

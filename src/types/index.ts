@@ -26,6 +26,21 @@ export type {
   FoodInventoryItem,
   EatingAction,
 } from './food';
+export type {
+  QuestStatus,
+  QuestObjectiveType,
+  QuestDifficulty,
+  QuestCategory,
+  RewardType,
+  QuestRequirement,
+  QuestReward,
+  QuestObjective,
+  QuestDialogue,
+  Quest,
+  QuestProgress,
+  QuestEvent,
+  QuestSystemConfig,
+} from './quests';
 
 // Event system types
 export type {
