@@ -28,11 +28,20 @@ export class AnimatedGameEntity extends GameEntity {
     // Initialize with base spritesheet instead of static sprite
     const initialSpriteKey = entityId === 'isa' ? 'isa_happy_anim' : 'stev_happy_anim';
     
-    // Call parent constructor but override texture creation
+    // Call parent constructor with a fallback texture
     super(scene, x, y, entityId, services);
     
-    // Override the texture with the animated spritesheet
-    this.setTexture(initialSpriteKey);
+    // Override the texture with the animated spritesheet if available
+    if (scene.textures.exists(initialSpriteKey)) {
+      this.setTexture(initialSpriteKey);
+    } else {
+      // Fallback to basic texture if spritesheet not loaded
+      const fallbackKey = entityId === 'isa' ? 'woman' : 'man';
+      if (scene.textures.exists(fallbackKey)) {
+        this.setTexture(fallbackKey);
+      }
+      logAutopoiesis.warn(`Spritesheet ${initialSpriteKey} not found, using fallback`);
+    }
     
     this.animationManager = animManager;
     
@@ -160,7 +169,7 @@ export class AnimatedGameEntity extends GameEntity {
       return success;
     } catch (error) {
       logAutopoiesis.error(`Failed to play animation ${animationKey}`, {
-        error: error.toString(),
+        error: String(error),
         entityId: this.getEntityData().id
       });
       return false;
@@ -210,30 +219,36 @@ export class AnimatedGameEntity extends GameEntity {
     return this.anims?.isPlaying || false;
   }
 
-  /**
-   * Handle animation complete events
-   */
-  private onAnimationComplete(): void {
-    // Play next queued animation if available
-    if (this.animationQueue.length > 0) {
-      const nextAnimation = this.animationQueue.shift();
-      if (nextAnimation) {
-        this.playAnimation(nextAnimation);
-      }
-    }
-  }
 
   /**
-   * Override destroy to cleanup animation resources
+   * Override destroy to cleanup animation resources properly
    */
   public destroy(): void {
+    // Stop current animations
     this.stopAnimation();
+    
+    // Clear animation queue
     this.animationQueue = [];
+    
+    // If this sprite was created by AnimationManager, ensure it's properly cleaned up
+    if (this.animationManager && this.scene) {
+      // Stop any active animations on this sprite
+      if (this.anims && this.anims.isPlaying) {
+        this.anims.stop();
+      }
+      
+      // Remove animation event listeners to prevent memory leaks
+      if (this.anims) {
+        this.anims.removeAllListeners();
+      }
+    }
+    
+    // Clear reference to animation manager
     this.animationManager = undefined;
     
     logAutopoiesis.debug(`AnimatedGameEntity destroyed: ${this.getEntityData().id}`);
     
-    // Call parent destroy
+    // Call parent destroy which handles Phaser sprite cleanup
     super.destroy();
   }
 

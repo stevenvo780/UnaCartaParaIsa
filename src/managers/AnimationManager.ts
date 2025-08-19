@@ -26,6 +26,7 @@ export class AnimationManager {
   private scene: Phaser.Scene;
   private loadedSpriteSheets: Set<string> = new Set();
   private createdAnimations: Set<string> = new Set();
+  private createdSprites: Set<Phaser.GameObjects.Sprite> = new Set();
 
 
   private static readonly SPRITE_SHEET_CONFIGS: SpriteSheetConfig[] = [
@@ -274,7 +275,7 @@ export class AnimationManager {
         });
       } catch (error) {
         logAutopoiesis.error(`Failed to load spritesheet: ${config.key}`, {
-          error: error.toString(),
+          error: String(error),
           path: config.path
         });
       }
@@ -331,7 +332,7 @@ export class AnimationManager {
 
       } catch (error) {
         logAutopoiesis.error(`Failed to create animation: ${config.key}`, {
-          error: error.toString(),
+          error: String(error),
           spriteSheet: config.spriteSheetKey
         });
       }
@@ -361,7 +362,7 @@ export class AnimationManager {
       return true;
     } catch (error) {
       logAutopoiesis.error(`Failed to play animation: ${animationKey}`, {
-        error: error.toString()
+        error: String(error)
       });
       return false;
     }
@@ -394,6 +395,14 @@ export class AnimationManager {
     try {
       const sprite = this.scene.add.sprite(x, y, config.spriteSheetKey);
       
+      // Track created sprite for proper cleanup
+      this.createdSprites.add(sprite);
+      
+      // Add cleanup handler when sprite is destroyed
+      sprite.once('destroy', () => {
+        this.createdSprites.delete(sprite);
+      });
+      
       if (autoPlay) {
         this.playAnimation(sprite, animationKey);
       }
@@ -401,7 +410,7 @@ export class AnimationManager {
       return sprite;
     } catch (error) {
       logAutopoiesis.error(`Failed to create animated sprite: ${animationKey}`, {
-        error: error.toString()
+        error: String(error)
       });
       return null;
     }
@@ -470,11 +479,31 @@ export class AnimationManager {
   }
 
   /**
-   * Cleanup animations
+   * Cleanup animations and all created sprites
    */
   public destroy(): void {
+    // Destroy all sprites created by this manager
+    this.createdSprites.forEach(sprite => {
+      if (sprite && sprite.scene) {
+        // Stop animations before destroying
+        if (sprite.anims && sprite.anims.isPlaying) {
+          sprite.anims.stop();
+        }
+        // Remove listeners to prevent memory leaks
+        if (sprite.anims) {
+          sprite.anims.removeAllListeners();
+        }
+        sprite.destroy();
+      }
+    });
+    
+    this.createdSprites.clear();
     this.loadedSpriteSheets.clear();
     this.createdAnimations.clear();
-    logAutopoiesis.info('AnimationManager destroyed');
+    
+    logAutopoiesis.info('AnimationManager destroyed', {
+      spritesDestroyed: this.createdSprites.size,
+      animationsCleared: this.createdAnimations.size
+    });
   }
 }

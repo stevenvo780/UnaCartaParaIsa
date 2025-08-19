@@ -12,8 +12,8 @@ import { logAutopoiesis } from '../utils/logger';
 export class MainScene extends Phaser.Scene {
   private gameState!: GameState;
   private entities!: Phaser.Physics.Arcade.Group;
-  private isaEntity!: GameEntity;
-  private stevEntity!: GameEntity;
+  private isaEntity!: AnimatedGameEntity;
+  private stevEntity!: AnimatedGameEntity;
   private dialogueSystem!: DialogueSystem;
   private gameLogicManager!: GameLogicManager;
   private worldRenderer!: WorldRenderer;
@@ -124,7 +124,7 @@ export class MainScene extends Phaser.Scene {
 
   private createInitialEntities() {
 
-    this.isaEntity = new GameEntity(
+    this.isaEntity = new AnimatedGameEntity(
       this, 
       gameConfig.entityCircleInitialX, 
       gameConfig.entityCircleInitialY, 
@@ -132,7 +132,7 @@ export class MainScene extends Phaser.Scene {
     );
     
 
-    this.stevEntity = new GameEntity(
+    this.stevEntity = new AnimatedGameEntity(
       this, 
       gameConfig.entitySquareInitialX, 
       gameConfig.entitySquareInitialY, 

@@ -2,10 +2,13 @@
 /**
  * Sistema de Generación de Mapas para Una Carta Para Isa
  * Adaptado al motor Phaser - Preserva la lógica de zonas y elementos
+ * ACTUALIZADO: Integra el nuevo sistema de biomas procedurales
  */
 
 import type { Zone, MapElement, EntityStats } from '../types';
 import { logAutopoiesis } from './logger';
+import { BiomeSystem, getWorldPreset, createCustomWorldConfig } from '../world';
+import type { WorldGenConfig } from '../world/types';
 
 export const createDefaultZones = (): Zone[] => {
   return [
@@ -457,19 +460,116 @@ const getMoodZoneCompatibility = (mood: string, zoneType: string): number => {
 };
 
 /**
- * Genera un mapa usando la configuración por defecto
+ * Genera un mapa usando el nuevo sistema de biomas o configuración por defecto
  */
-export const generateSimpleMap = (): { zones: Zone[]; mapElements: MapElement[] } => {
+export const generateSimpleMap = (
+  useNewBiomeSystem: boolean = true,
+  worldConfig?: Partial<WorldGenConfig>
+): { zones: Zone[]; mapElements: MapElement[] } => {
+  
+  if (useNewBiomeSystem) {
+    return generateBiomeBasedMap(worldConfig);
+  } else {
+    // Fallback al sistema legacy
+    return generateLegacyMap();
+  }
+};
+
+/**
+ * Genera un mapa usando el nuevo sistema de biomas
+ */
+const generateBiomeBasedMap = (
+  worldConfig?: Partial<WorldGenConfig>
+): { zones: Zone[]; mapElements: MapElement[] } => {
+  
+  logAutopoiesis.info('🌍 Generando mapa con sistema de biomas avanzado');
+  
+  // Configuración por defecto o personalizada
+  const config = worldConfig ? 
+    { ...createCustomWorldConfig({}), ...worldConfig } :
+    getWorldPreset('balanced')?.config || createCustomWorldConfig({});
+  
+  // Crear sistema de biomas
+  const biomeSystem = new BiomeSystem(config);
+  
+  // Generar mundo con biomas
+  biomeSystem.generateWorld();
+  
+  // Crear zonas funcionales básicas (adaptadas)
+  const baseZones = createDefaultZones();
+  const biomeDrivenZones = biomeSystem.integrateGameplayZones(baseZones);
+  
+  // Generar elementos de mapa desde biomas
+  const biomeElements = biomeSystem.generateBiomeAwareMapElements();
+  
+  // Combinar con elementos legacy importantes
+  const legacyElements = createEssentialLegacyElements();
+  const allElements = [...biomeElements, ...legacyElements];
+  
+  logAutopoiesis.info('✅ Mapa con biomas generado', {
+    zonesCount: biomeDrivenZones.length,
+    biomeElementsCount: biomeElements.length,
+    legacyElementsCount: legacyElements.length,
+    totalElements: allElements.length,
+    worldStats: biomeSystem.getWorldStats()
+  });
+  
+  return { 
+    zones: biomeDrivenZones, 
+    mapElements: allElements 
+  };
+};
+
+/**
+ * Genera un mapa usando el sistema legacy (para compatibilidad)
+ */
+const generateLegacyMap = (): { zones: Zone[]; mapElements: MapElement[] } => {
   const zones = createDefaultZones();
   const mapElements = createDefaultMapElements();
 
-  logAutopoiesis.info('Mapa simple generado', {
+  logAutopoiesis.info('⚠️ Usando sistema de mapas legacy', {
     zonesCount: zones.length,
     elementsCount: mapElements.length,
     totalZoneArea: zones.reduce((sum, zone) => sum + (zone.bounds.width * zone.bounds.height), 0)
   });
 
   return { zones, mapElements };
+};
+
+/**
+ * Crea elementos legacy esenciales que se mantienen en el nuevo sistema
+ */
+const createEssentialLegacyElements = (): MapElement[] => {
+  return [
+    // Mantener algunos obstáculos clave para navegación
+    {
+      id: 'central_landmark',
+      type: 'obstacle',
+      position: { x: 500, y: 320 },
+      size: { width: 50, height: 45 },
+      color: '#7f8c8d',
+      metadata: { assetId: 'wisdom_stone', interactive: false, essential: true }
+    },
+    
+    // Punto de spawn central
+    {
+      id: 'spawn_point_circle',
+      type: 'decoration',
+      position: { x: 200, y: 200 },
+      size: { width: 20, height: 20 },
+      color: '#3498db',
+      metadata: { entityType: 'circle', spawnable: true }
+    },
+    
+    {
+      id: 'spawn_point_square',
+      type: 'decoration',
+      position: { x: 600, y: 300 },
+      size: { width: 20, height: 20 },
+      color: '#e74c3c',
+      metadata: { entityType: 'square', spawnable: true }
+    }
+  ];
 };
 
 /**
@@ -524,4 +624,55 @@ export const generateValidatedMap = (): { zones: Zone[]; mapElements: MapElement
   }
 
   return mapData;
+};
+
+/**
+ * Genera un mapa de prueba usando el nuevo sistema de biomas
+ */
+export const generateTestBiomeMap = (): { zones: Zone[]; mapElements: MapElement[] } => {
+  logAutopoiesis.info('🧪 Generando mapa de prueba con biomas');
+  
+  const testConfig = createCustomWorldConfig({
+    size: 'small',
+    biomePreference: 'balanced',
+    density: 'normal',
+    seed: 42
+  });
+  
+  return generateSimpleMap(true, testConfig);
+};
+
+/**
+ * Genera diferentes tipos de mapa para demostración
+ */
+export const generateDemoMaps = (): Record<string, { zones: Zone[]; mapElements: MapElement[] }> => {
+  const demos: Record<string, { zones: Zone[]; mapElements: MapElement[] }> = {};
+  
+  // Mapa Legacy
+  demos.legacy = generateSimpleMap(false);
+  
+  // Mapa Equilibrado
+  demos.balanced = generateSimpleMap(true, createCustomWorldConfig({
+    size: 'medium',
+    biomePreference: 'balanced'
+  }));
+  
+  // Mapa Boscoso
+  demos.forest = generateSimpleMap(true, createCustomWorldConfig({
+    size: 'medium',
+    biomePreference: 'forest'
+  }));
+  
+  // Mapa Místico
+  demos.mystical = generateSimpleMap(true, createCustomWorldConfig({
+    size: 'small',
+    biomePreference: 'mystical'
+  }));
+  
+  logAutopoiesis.info('🎨 Mapas de demostración generados', {
+    totalDemos: Object.keys(demos).length,
+    types: Object.keys(demos)
+  });
+  
+  return demos;
 };

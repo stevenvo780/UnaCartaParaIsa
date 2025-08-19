@@ -24,11 +24,10 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     services?: IEntityServices
   ) {
 
-    this.services = services || EntityServicesFactory.create();
-
-
     const initialSprite = entityId === 'isa' ? 'isa-happy' : 'stev-happy';
     super(scene, x, y, initialSprite);
+
+    this.services = services || EntityServicesFactory.create();
     
     this.currentSprite = initialSprite;
     

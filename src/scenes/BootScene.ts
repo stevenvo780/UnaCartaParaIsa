@@ -3,6 +3,12 @@ import { AssetManager } from '../managers/AssetManager';
 import { AnimationManager } from '../managers/AnimationManager';
 import { logAutopoiesis } from '../utils/logger';
 
+/*
+ * Documentación científica (resumen):
+ * - Carga validada con fallbacks programáticos para estabilidad. 
+ * - Spritesheets + creación de animaciones tras la fase de carga.
+ * - Flujo: validar → preparar spritesheets → cargar → crear animaciones → cambiar de escena.
+ */
 export class BootScene extends Phaser.Scene {
   private assetManager!: AssetManager;
   private animationManager!: AnimationManager;
@@ -12,39 +18,39 @@ export class BootScene extends Phaser.Scene {
   }
 
   async preload() {
-    // Initialize managers
+    // Inicializar managers de assets y animaciones
     this.assetManager = new AssetManager(this);
     this.animationManager = new AnimationManager(this);
 
-    // Hide loading screen
+    // Ocultar pantalla de carga inicial
     this.hideLoadingScreen();
-    
+
     try {
-      // Validate assets first
+      // Validar existencia de assets antes de cargar
       const missingAssets = await this.assetManager.validateAssets();
       if (missingAssets.length > 0) {
-singAssets.length} assets, will use fallbacks`);
+        logAutopoiesis.warn(`Assets faltantes: ${missingAssets.length}, se usarán fallbacks`, { missingAssets });
       }
-      
-      // Load sprite sheets for animations
-adAllSpriteSheets();
-      
-      // Load all assets with fallbacks
-      const loadResult = await this.assetManager.loadAllAssets();
-      
 
-        logAutopoiesis.error('Critical asset loading failure', loadResult);
+      // Preparar spritesheets para animaciones
+      this.animationManager.loadAllSpriteSheets();
+
+      // Cargar todos los assets con manejo de fallbacks
+      const loadResult = await this.assetManager.loadAllAssets();
+
+      if (!loadResult.success) {
+        logAutopoiesis.error('Fallo crítico en carga de assets', loadResult);
         this.showAssetError(loadResult.failedAssets);
         return;
       }
-      
-tions after assets are loaded
+
+      // Crear animaciones después de la carga
       this.animationManager.createAllAnimations();
-      
-      // Store animation manager globally for other scenes
+
+      // Guardar manager globalmente
       this.registry.set('animationManager', this.animationManager);
-      
-      logAutopoiesis.info('Boot completed successfully', {
+
+      logAutopoiesis.info('Boot completado', {
         assets: {
           loaded: loadResult.loadedAssets.length,
           fallbacks: loadResult.fallbacksUsed.length
@@ -52,27 +58,23 @@ tions after assets are loaded
         animations: this.animationManager.getStats()
       });
 
-      // Proceed to main scenes
-      console.log('🚀 Boot complete with animations, starting main scene');
+      // Cambiar a escenas principales
       this.scene.start('MainScene');
       this.scene.launch('UIScene');
-      
-    } catch (error) {
-      logAutopoiesis.error('Boot scene critical error', { error: error.toString() });
+    } catch (error: any) {
+      logAutopoiesis.error('Error crítico en BootScene', { error: error?.toString?.() || String(error) });
       this.showCriticalError(error);
     }
   }
 
   create() {
-    // Setup global events and initial state
+    // Evento global de boot completo
     this.events.emit('bootComplete');
-    
-    // Test animation system
+
     if (this.animationManager) {
       const stats = this.animationManager.getStats();
       const animations = this.animationManager.getAnimationsByCategory();
-      
-      logAutopoiesis.info('Animation system ready', {
+      logAutopoiesis.info('Sistema de animaciones listo', {
         stats,
         categories: {
           entities: animations.entities.length,
@@ -83,10 +85,8 @@ tions after assets are loaded
       });
     }
   }
-  
-  /**
-   * Hide the loading screen with fade effect
-   */
+
+  // Ocultar pantalla de carga con efecto
   private hideLoadingScreen(): void {
     const loadingElement = document.getElementById('loading');
     if (loadingElement) {
@@ -96,57 +96,69 @@ tions after assets are loaded
       }, 500);
     }
   }
-  
-  /**
-   * Show error message for failed assets
-   */
+
+  // Mostrar error de carga no crítica
   private showAssetError(failedAssets: string[]): void {
-    const errorText = this.add.text(400, 300, [
+    const lines = [
       '⚠️ Error cargando algunos recursos',
       `Falló la carga de: ${failedAssets.slice(0, 3).join(', ')}`,
       failedAssets.length > 3 ? `y ${failedAssets.length - 3} más...` : '',
       '',
       'Presiona cualquier tecla para continuar con fallbacks'
-    ].filter(Boolean).join('\n'), {
-      fontSize: '16px',
-      color: '#e74c3c',
-      align: 'center',
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
-    
+    ].filter(Boolean);
+
+    const errorText = this.add
+      .text(400, 300, lines.join('\n'), {
+        fontSize: '16px',
+        color: '#e74c3c',
+        align: 'center',
+        fontFamily: 'Arial'
+      })
+      .setOrigin(0.5);
+
     this.input.keyboard?.once('keydown', () => {
       errorText.destroy();
       this.scene.start('MainScene');
       this.scene.launch('UIScene');
     });
   }
-  
-  /**
-   * Show critical error that prevents game from starting
-   */
+
+  // Mostrar error crítico que impide iniciar
   private showCriticalError(error: any): void {
-    this.add.text(400, 300, [
-      '💀 Error crítico en el juego',
-      'No es posible iniciar el juego',
-      '',
-      `Error: ${error.message || error}`,
-      '',
-      'Recarga la página para intentar de nuevo'
-    ].join('\n'), {
-      fontSize: '14px',
-      color: '#c0392b',
-      align: 'center',
-      fontFamily: 'Arial'
-    }).setOrigin(0.5);
+    const message = error?.message || String(error);
+    this.add
+      .text(
+        400,
+        300,
+        [
+          '💀 Error crítico en el juego',
+          'No es posible iniciar el juego',
+          '',
+          `Error: ${message}`,
+          '',
+          'Recarga la página para intentar de nuevo'
+        ].join('\n'),
+        {
+          fontSize: '14px',
+          color: '#c0392b',
+          align: 'center',
+          fontFamily: 'Arial'
+        }
+      )
+      .setOrigin(0.5);
   }
-  
-  /**
-   * Get loading statistics including animations
-   */
+
+  // Estadísticas de boot
   public getBootStats() {
     return {
       assets: this.assetManager?.getLoadingStats() || { loaded: 0, failed: 0, fallbacks: 0 },
-      animations: this.animationManager?.getStats() || { createdAnimations: 0, loadedSpriteSheets: 0 }
+      animations: this.animationManager?.getStats() || {
+        loadedSpriteSheets: 0,
+        createdAnimations: 0,
+        totalConfigs: 0,
+        successRate: 0
+      }
     };
   }
 }
+

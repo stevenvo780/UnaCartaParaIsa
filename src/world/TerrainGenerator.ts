@@ -4,11 +4,11 @@
 
 import { NoiseGenerator, NoiseProcessor } from './NoiseUtils';
 import { getBiomeDefinition, calculateBiomeFitness, canBiomeSpawn, DEFAULT_WORLD_CONFIG } from './BiomeDefinitions';
+import { BiomeType } from './types';
 import type { 
   WorldGenConfig, 
   GeneratedWorld, 
   TerrainTile, 
-  BiomeType, 
   WorldLayer,
   BiomeDefinition 
 } from './types';
@@ -305,7 +305,8 @@ export class TerrainGenerator {
     };
     
     // Seleccionar terreno base
-    assets.terrain = this.selectAsset(biomeDef.assets.terrain.primary, biomeDef.assets.terrain.weight);
+    const terrainAsset = this.selectAsset(biomeDef.assets.terrain.primary, biomeDef.assets.terrain.weight);
+    assets.terrain = terrainAsset || 'cesped1.png'; // fallback
     
     // Generar vegetación basada en densidad y clustering
     if (Math.random() < biomeDef.assets.trees.density * strength) {

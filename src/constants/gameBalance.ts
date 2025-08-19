@@ -82,6 +82,7 @@ export const GAME_BALANCE = {
     STROKE_ALPHA: 0.8,
     STROKE_WIDTH: 2,
     CORNER_RADIUS: 10,
+    DEPTH: 2,
     
 
     FOOD_COLOR: 0x27ae60,

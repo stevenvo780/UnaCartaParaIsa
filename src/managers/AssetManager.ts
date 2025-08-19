@@ -34,12 +34,8 @@ export class AssetManager {
 
   private static readonly ASSET_DEFINITIONS: AssetDefinition[] = [
 
-    { key: 'isa-happy', path: 'assets/animated_entities/entidad_circulo_happy_anim.png', type: 'image', required: true },
-    { key: 'isa-sad', path: 'assets/animated_entities/entidad_circulo_sad_anim.png', type: 'image', required: true },
-    { key: 'isa-dying', path: 'assets/animated_entities/entidad_circulo_dying_anim.png', type: 'image', required: true },
-    { key: 'stev-happy', path: 'assets/animated_entities/entidad_square_happy_anim.png', type: 'image', required: true },
-    { key: 'stev-sad', path: 'assets/animated_entities/entidad_square_sad_anim.png', type: 'image', required: true },
-    { key: 'stev-dying', path: 'assets/animated_entities/entidad_square_dying_anim.png', type: 'image', required: true },
+    // Entity sprites now handled by AnimationManager spritesheets
+    // Removed duplicate static images: isa-happy, isa-sad, isa-dying, stev-happy, stev-sad, stev-dying
 
 
     { key: 'woman', path: 'assets/entities/ent_woman.png', type: 'image' },

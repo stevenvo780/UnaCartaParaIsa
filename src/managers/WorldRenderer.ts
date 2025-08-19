@@ -6,16 +6,24 @@
 import type { Zone, MapElement, GameState } from '../types';
 import { GAME_BALANCE } from '../constants/gameBalance';
 import { logAutopoiesis } from '../utils/logger';
+import { AnimationManager } from './AnimationManager';
 
 export class WorldRenderer {
   private scene: Phaser.Scene;
   private gameState: GameState;
   private renderedObjects: Map<string, Phaser.GameObjects.GameObject> = new Map();
   private zoneGraphics: Phaser.GameObjects.Graphics[] = [];
+  private animationManager?: AnimationManager;
 
   constructor(scene: Phaser.Scene, gameState: GameState) {
     this.scene = scene;
     this.gameState = gameState;
+    
+    // Get animation manager from scene registry
+    this.animationManager = scene.registry.get('animationManager') as AnimationManager;
+    if (!this.animationManager) {
+      logAutopoiesis.warn('AnimationManager not available in WorldRenderer, using static decorations');
+    }
   }
 
   /**
@@ -74,11 +82,11 @@ export class WorldRenderer {
   /**
    * Render a single zone
    */
-  private renderSingleZone(zone: Zone, index: number): void {
+  private renderSingleZone(zone: Zone, _index: number): void {
 
-    let colorValue = GAME_BALANCE.ZONES.SOCIAL_COLOR;
+    let colorValue: number = GAME_BALANCE.ZONES.SOCIAL_COLOR;
     if (zone.color.startsWith('rgba(')) {
-      const rgbaMatch = zone.color.match(/rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/);
+      const rgbaMatch = zone.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
       if (rgbaMatch) {
         const [, r, g, b] = rgbaMatch.map(Number);
         colorValue = (r << 16) | (g << 8) | b;
@@ -135,7 +143,7 @@ export class WorldRenderer {
   /**
    * Render a single map element
    */
-  private renderSingleMapElement(element: MapElement, index: number): void {
+  private renderSingleMapElement(element: MapElement, _index: number): void {
     const colorValue = typeof element.color === 'string' ? 
       parseInt(element.color.replace('#', ''), 16) : element.color;
 
@@ -157,25 +165,64 @@ export class WorldRenderer {
    * Create decorative elements
    */
   private renderDecorations(): void {
-
-    const decorations = [
-      { x: 150, y: 120, sprite: 'flowers-red' },
-      { x: 300, y: 180, sprite: 'flowers-white' },
-      { x: 500, y: 250, sprite: 'campfire' },
-      { x: 650, y: 150, sprite: 'flowers-red' },
-      { x: 800, y: 300, sprite: 'flowers-white' },
-      { x: 900, y: 400, sprite: 'campfire' }
+    const animatedDecorations = [
+      { x: 150, y: 120, animation: 'flowers_red_sway', fallbackSprite: 'flowers-red' },
+      { x: 300, y: 180, animation: 'flowers_white_sway', fallbackSprite: 'flowers-white' },
+      { x: 500, y: 250, animation: 'campfire_burning', fallbackSprite: 'campfire' },
+      { x: 650, y: 150, animation: 'flowers_red_sway', fallbackSprite: 'flowers-red' },
+      { x: 800, y: 300, animation: 'flowers_white_sway', fallbackSprite: 'flowers-white' },
+      { x: 200, y: 400, animation: 'campfire_burning', fallbackSprite: 'campfire' },
+      { x: 750, y: 450, animation: 'flag_wave', fallbackSprite: 'checkpoint-flag' },
+      { x: 600, y: 500, animation: 'flag_wave', fallbackSprite: 'checkpoint-flag' }
     ];
 
-    decorations.forEach((deco, index) => {
-      const decoration = this.scene.add.image(deco.x, deco.y, deco.sprite);
+    animatedDecorations.forEach((deco, index) => {
+      let decoration: Phaser.GameObjects.Sprite;
+      
+      // Try to create animated decoration
+      if (this.animationManager) {
+        const animatedSprite = this.animationManager.createAnimatedSprite(
+          deco.x, 
+          deco.y, 
+          deco.animation, 
+          true
+        );
+        
+        if (animatedSprite) {
+          decoration = animatedSprite;
+          logAutopoiesis.debug(`Created animated decoration: ${deco.animation}`, {
+            x: deco.x, 
+            y: deco.y
+          });
+        } else {
+          // Fallback to static sprite
+          decoration = this.scene.add.sprite(deco.x, deco.y, deco.fallbackSprite);
+          logAutopoiesis.debug(`Fallback to static decoration: ${deco.fallbackSprite}`, {
+            x: deco.x, 
+            y: deco.y
+          });
+        }
+      } else {
+        // No animation manager, use static sprite
+        decoration = this.scene.add.sprite(deco.x, deco.y, deco.fallbackSprite);
+      }
+      
+      // Set common properties
       decoration.setScale(GAME_BALANCE.DECORATIONS.CAMPFIRE_SCALE);
       decoration.setDepth(GAME_BALANCE.DECORATIONS.DECORATION_DEPTH);
+      
+      // Add random slight variations
+      decoration.setRotation((Math.random() - 0.5) * 0.2);
+      const scaleVariation = 0.8 + Math.random() * 0.4;
+      decoration.setScale(GAME_BALANCE.DECORATIONS.CAMPFIRE_SCALE * scaleVariation);
       
       this.renderedObjects.set(`decoration_${index}`, decoration);
     });
 
-    logAutopoiesis.debug('Decorations rendered', { count: decorations.length });
+    logAutopoiesis.info('Animated decorations rendered', { 
+      count: animatedDecorations.length,
+      animated: !!this.animationManager
+    });
   }
 
   /**
@@ -248,8 +295,8 @@ export class WorldRenderer {
    */
   public setElementVisibility(elementId: string, visible: boolean): void {
     const element = this.renderedObjects.get(elementId);
-    if (element) {
-      element.setVisible(visible);
+    if (element && 'setVisible' in element) {
+      (element as any).setVisible(visible);
     }
   }
 
@@ -264,23 +311,33 @@ export class WorldRenderer {
   }
 
   /**
-   * Cleanup all rendered objects
+   * Cleanup all rendered objects including animated sprites
    */
   public destroy(): void {
     this.renderedObjects.forEach(obj => {
-      if (obj.destroy) {
+      if (obj && obj.destroy) {
+        // For animated sprites, stop animations first
+        if ('anims' in obj && obj.anims) {
+          if (obj.anims.isPlaying) {
+            obj.anims.stop();
+          }
+          obj.anims.removeAllListeners();
+        }
         obj.destroy();
       }
     });
     
     this.zoneGraphics.forEach(graphic => {
-      if (graphic.destroy) {
+      if (graphic && graphic.destroy) {
         graphic.destroy();
       }
     });
     
     this.renderedObjects.clear();
     this.zoneGraphics.length = 0;
+    
+    // Clear reference to animation manager
+    this.animationManager = undefined;
     
     logAutopoiesis.info('WorldRenderer destroyed');
   }

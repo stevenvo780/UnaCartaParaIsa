@@ -113,27 +113,49 @@ export interface IEntityServices {
  */
 export class EntityServicesFactory {
   static create(): IEntityServices {
-
-    const { gameConfig } = require('../config/gameConfig');
-    const { logAutopoiesis } = require('../utils/logger');
-    const activityDynamics = require('../utils/activityDynamics');
-    const resonanceCalculations = require('../utils/resonanceCalculations');
-    const aiDecisionEngine = require('../utils/aiDecisionEngine');
-
+    // Servicios por defecto síncronos para evitar problemas de async en constructores
     return {
-      config: gameConfig,
-      logger: logAutopoiesis,
+      config: {
+        entityInitialStats: 50,
+        entityInitialMoney: 50,
+        entityInitialHealth: 90,
+        initialResonance: 0,
+        movement: { baseSpeed: 84, friction: 0.85 },
+        timing: { mainGameLogic: 800 }
+      },
+      logger: {
+        info: (message: string, data?: any) => console.log(`[INFO] ${message}`, data || ''),
+        warn: (message: string, data?: any) => console.warn(`[WARN] ${message}`, data || ''),
+        error: (message: string, data?: any) => console.error(`[ERROR] ${message}`, data || ''),
+        debug: (message: string, data?: any) => console.debug(`[DEBUG] ${message}`, data || '')
+      },
       activityCalculator: {
-        applyHybridDecay: activityDynamics.applyHybridDecay,
-        applySurvivalCosts: activityDynamics.applySurvivalCosts,
-        applyActivityEffectsWithTimeModifiers: activityDynamics.applyActivityEffectsWithTimeModifiers
+        applyHybridDecay: (stats: EntityStats, _activity: ActivityType, _deltaTime: number) => stats,
+        applySurvivalCosts: (stats: EntityStats, _deltaTime: number) => stats,
+        applyActivityEffectsWithTimeModifiers: (_activity: ActivityType, stats: EntityStats, _deltaTime: number, _timeOfDay: any) => stats
       },
       resonanceCalculator: {
-        calculateProximityResonanceChange: resonanceCalculations.calculateProximityResonanceChange,
-        calculateResonanceModifiers: resonanceCalculations.calculateResonanceModifiers
+        calculateProximityResonanceChange: (
+          _myPosition: { x: number; y: number },
+          _partnerPosition: { x: number; y: number },
+          _myStats: EntityStats,
+          _partnerStats: EntityStats,
+          _currentResonance: number,
+          _deltaTime: number
+        ) => ({
+          resonanceChange: 0,
+          closeness: 0,
+          effect: 'none'
+        }),
+        calculateResonanceModifiers: (_resonance: number, _closeness: number) => ({
+          happinessMultiplier: 1,
+          energyMultiplier: 1,
+          healthMultiplier: 1,
+          lonelinessPenalty: 0
+        })
       },
       aiDecisionEngine: {
-        makeIntelligentDecision: aiDecisionEngine.makeIntelligentDecision
+        makeIntelligentDecision: () => 'rest' as ActivityType
       }
     };
   }

@@ -3,7 +3,8 @@
  * Cada bioma está configurado para usar assets específicos encontrados en el directorio public/assets
  */
 
-import type { BiomeDefinition, BiomeType } from './types';
+import { BiomeType } from './types';
+import type { BiomeDefinition } from './types';
 
 export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
   [BiomeType.GRASSLAND]: {
