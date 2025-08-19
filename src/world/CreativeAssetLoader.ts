@@ -220,7 +220,7 @@ export class CreativeAssetLoader {
    * Carga todos los assets de forma asíncrona
    */
   async loadAllAssets(): Promise<void> {
-    console.log('🎨 Cargando assets creativamente...');
+    logAutopoiesis.info('🎨 Cargando assets creativamente...');
     
     // Cargar en paralelo para mejor performance
     await Promise.all([
@@ -233,7 +233,7 @@ export class CreativeAssetLoader {
     // Cargar en Phaser
     await this.loadAssetsInPhaser();
     
-    console.log(`✅ Cargados ${this.loadedAssets.size} assets únicos organizados en categorías`);
+    logAutopoiesis.info(`✅ Cargados ${this.loadedAssets.size} assets únicos organizados en categorías`);
   }
 
   /**

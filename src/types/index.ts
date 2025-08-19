@@ -1,92 +1,18 @@
-export type ActivityType = 
-  | 'RESTING'
-  | 'MEDITATING'
-  | 'SOCIALIZING'
-  | 'WORKING'
-  | 'EXERCISING'
-  | 'WANDERING'
-  | 'WRITING'
-  | 'EXPLORING'
-  | 'CONTEMPLATING'
-  | 'DANCING'
-  | 'HIDING'
-  | 'SHOPPING'
-  | 'COOKING';
+/**
+ * Main types index - Re-exports from modular type files
+ * Organized to prevent circular dependencies
+ */
 
-export type ZoneType =
-  | 'kitchen'
-  | 'bedroom'
-  | 'living'
-  | 'bathroom'
-  | 'office'
-  | 'gym'
-  | 'library'
-  | 'social'
-  | 'recreation'
-  | 'food'
-  | 'rest'
-  | 'play'
-  | 'comfort'
-  | 'work'
-  | 'energy';
+// Core types (no dependencies)
+export type { Position, Size, Rect, Color } from './core';
 
-export type EntityStateType = 
-  | 'idle' 
-  | 'moving' 
-  | 'interacting' 
-  | 'resting' 
-  | 'seeking'
-  | 'dead'
-  | 'fading';
+// Domain-specific types
+export type { ActivityType, EntityActivity, ActivityModifiers, ActivityDefinition } from './activities';
+export type { ZoneType } from './zones';
+export type { EntityStateType, MoodType, EntityStats, Entity } from './entities';
+export type { FoodCategory, FoodItem, FoodInventoryItem, EatingAction } from './food';
 
-export type MoodType =
-  | '😊'
-  | '😢'
-  | '😡'
-  | '😌'
-  | '🤩'
-  | '😑'
-  | '😔'
-  | '😰'
-  | '😴';
-
-export interface Position {
-  x: number;
-  y: number;
-}
-
-export interface EntityStats {
-  hunger: number;
-  sleepiness: number;
-  loneliness: number;
-  happiness: number;
-  energy: number;
-  boredom: number;
-  money: number;
-  health: number;
-}
-
-export interface Entity {
-  id: 'isa' | 'stev';
-  position: Position;
-  state: EntityStateType;
-  activity: ActivityType;
-  stats: EntityStats;
-  lastStateChange: number;
-  lastActivityChange: number;
-  lastInteraction: number;
-  pulsePhase: number;
-  colorHue: number;
-  mood: MoodType;
-  thoughts: string[];
-  isDead: boolean;
-  timeOfDeath?: number;
-  controlMode: 'autonomous' | 'manual';
-  isBeingDragged?: boolean;
-}
-
-export type EntityMood = MoodType;
-
+// Game-specific types that remain centralized
 export type InteractionType =
   | 'NOURISH'
   | 'FEED'
@@ -108,7 +34,7 @@ export interface MapElement {
     | 'comfort_zone'
     | 'decoration';
   position: Position;
-  size: { width: number; height: number };
+  size: Size;
   color: string;
   effect?: {
     statType: keyof EntityStats;
@@ -125,12 +51,7 @@ export interface MapElement {
 export interface Zone {
   id: string;
   name: string;
-  bounds: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
+  bounds: Rect;
   type: ZoneType;
   effects?: Partial<Record<keyof EntityStats, number>>;
   color: string;
@@ -160,11 +81,9 @@ export interface ConversationState {
 export interface InteractionEffect {
   stats: Partial<EntityStats>;
   resonance?: number;
-  mood?: EntityMood;
+  mood?: MoodType;
   duration?: number;
 }
-
-export type EntityActivity = ActivityType;
 
 export interface TerrainTile {
   x: number;
@@ -189,11 +108,6 @@ export interface ObjectLayer {
   visible: boolean;
 }
 
-export interface WorldSize {
-  width: number;
-  height: number;
-}
-
 export interface GameState {
   entities: Entity[];
   resonance: number;
@@ -210,10 +124,9 @@ export interface GameState {
   mapElements: MapElement[];
   mapSeed?: string;
   currentConversation: ConversationState;
-
   terrainTiles: TerrainTile[];
   roads: RoadPolyline[];
   objectLayers: ObjectLayer[];
-  worldSize: WorldSize;
+  worldSize: Size;
   generatorVersion: string;
 }

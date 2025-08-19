@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { AssetManager } from '../managers/AssetManager';
 import { AnimationManager } from '../managers/AnimationManager';
 import { AssetLazyLoader } from '../managers/AssetLazyLoader';
+import { FoodAssetManager } from '../managers/FoodAssetManager';
 import { logAutopoiesis } from '../utils/logger';
 
 /*
@@ -14,6 +15,7 @@ export class BootScene extends Phaser.Scene {
   private assetManager!: AssetManager;
   private animationManager!: AnimationManager;
   private lazyLoader!: AssetLazyLoader;
+  private foodAssetManager!: FoodAssetManager;
 
   constructor() {
     super({ key: 'BootScene' });
@@ -24,6 +26,7 @@ export class BootScene extends Phaser.Scene {
     this.lazyLoader = new AssetLazyLoader(this);
     this.assetManager = new AssetManager(this);
     this.animationManager = new AnimationManager(this);
+    this.foodAssetManager = new FoodAssetManager(this);
 
     // Ocultar pantalla de carga inicial
     this.hideLoadingScreen();
@@ -39,10 +42,14 @@ export class BootScene extends Phaser.Scene {
       
       // FASE 3: Crear animaciones básicas
       this.animationManager.createCriticalAnimations();
+      
+      // FASE 4: Cargar assets esenciales de comida
+      await this.foodAssetManager.loadEssentialFoodAssets();
 
       // Guardar managers globalmente
       this.registry.set('animationManager', this.animationManager);
       this.registry.set('lazyLoader', this.lazyLoader);
+      this.registry.set('foodAssetManager', this.foodAssetManager);
 
       // Obtener stats de carga inicial
       const lazyStats = this.lazyLoader.getLoadingStats();

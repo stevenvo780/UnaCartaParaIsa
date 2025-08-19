@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { UIElementPool, ResonanceLabel } from '../managers/UIElementPool';
+import { FoodUI } from '../components/FoodUI';
 import { logAutopoiesis } from '../utils/logger';
 
 export class UIScene extends Phaser.Scene {
@@ -11,6 +12,7 @@ export class UIScene extends Phaser.Scene {
   private leftPanel!: Phaser.GameObjects.Container;
   private rightPanel!: Phaser.GameObjects.Container;
   private minimapContainer!: Phaser.GameObjects.Container;
+  private foodUI!: FoodUI;
   
   // Navigation and control
   private isDraggingCamera: boolean = false;
@@ -37,6 +39,7 @@ export class UIScene extends Phaser.Scene {
     this.createLeftPanel();
     this.createRightPanel();
     this.createMinimap();
+    this.createFoodUI();
     
     // Setup modern navigation
     this.setupModernNavigation();
@@ -972,5 +975,13 @@ export class UIScene extends Phaser.Scene {
     }
     
     logAutopoiesis.debug('UIScene destroyed - pools cleaned up');
+  }
+
+  /**
+   * Crea la UI del sistema de comida
+   */
+  private createFoodUI(): void {
+    this.foodUI = new FoodUI(this);
+    logAutopoiesis.info('Food UI creada');
   }
 }

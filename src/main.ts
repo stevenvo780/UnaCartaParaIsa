@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { gameConfig } from './config/gameConfig';
 import { productionOptimizer } from './utils/productionOptimizer';
-import { BootScene } from './scenes/BootScene.ts';
-import { MainScene } from './scenes/MainScene.ts';
-import { UIScene } from './scenes/UIScene.ts';
+import { BootScene } from './scenes/BootScene';
+import { MainScene } from './scenes/MainScene';
+import { UIScene } from './scenes/UIScene';
 
 // Obtener optimizaciones de producción
 const phaserOptimizations = productionOptimizer.getPhaserOptimizations();

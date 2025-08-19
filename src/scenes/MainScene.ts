@@ -1,25 +1,26 @@
 import Phaser from 'phaser';
 import type { GameState } from '../types';
-import { gameConfig } from '../config/gameConfig';
-import { GAME_BALANCE } from '../constants/gameBalance';
 import { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
 import { DialogueSystem } from '../systems/DialogueSystem';
 import { GameLogicManager } from '../managers/GameLogicManager';
 import { WorldRenderer } from '../managers/WorldRenderer';
-import { generateValidatedMap } from '../utils/simpleMapGeneration';
+import { SceneInitializationManager } from '../managers/SceneInitializationManager';
+import { EntityManager } from '../managers/EntityManager';
+import { InputManager, type ControlledEntity } from '../managers/InputManager';
+import { FoodAssetManager } from '../managers/FoodAssetManager';
+import { FoodSystem } from '../systems/FoodSystem';
 import { logAutopoiesis } from '../utils/logger';
 
 export class MainScene extends Phaser.Scene {
   private gameState!: GameState;
-  private entities!: Phaser.Physics.Arcade.Group;
-  private isaEntity!: AnimatedGameEntity;
-  private stevEntity!: AnimatedGameEntity;
   private dialogueSystem!: DialogueSystem;
   private gameLogicManager!: GameLogicManager;
   private worldRenderer!: WorldRenderer;
-  private controlledEntity: 'isa' | 'stev' | 'none' = 'none';
-  private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
-  private generatedWorldData?: any; // Datos del mundo generado para tilemaps
+  private entityManager!: EntityManager;
+  private inputManager!: InputManager;
+  private foodAssetManager!: FoodAssetManager;
+  private foodSystem!: FoodSystem;
+  private generatedWorldData?: any;
 
   constructor() {
     super({ key: 'MainScene' });
@@ -28,42 +29,9 @@ export class MainScene extends Phaser.Scene {
   init() {
     logAutopoiesis.info('MainScene initialized');
     
-
-    const mapData = generateValidatedMap();
-    
-    // Guardar datos del mundo generado para el renderizador de tilemaps
-    this.generatedWorldData = mapData.generatedWorld;
-    
-    this.gameState = {
-      entities: [],
-      resonance: 0,
-      cycles: 0,
-      lastSave: Date.now(),
-      togetherTime: 0,
-      connectionAnimation: {
-        active: false,
-        startTime: 0,
-        type: 'FEED'
-      },
-      zones: mapData.zones,
-      mapElements: mapData.mapElements,
-      currentConversation: {
-        isActive: false,
-        participants: [],
-        lastSpeaker: null,
-        lastDialogue: null,
-        startTime: 0
-      },
-      terrainTiles: [],
-      roads: [],
-      objectLayers: [],
-      worldSize: { 
-        width: GAME_BALANCE.WORLD.DEFAULT_WIDTH, 
-        height: GAME_BALANCE.WORLD.DEFAULT_HEIGHT 
-      },
-      generatorVersion: '2.0.0'
-    };
-
+    const initResult = SceneInitializationManager.initialize();
+    this.gameState = initResult.gameState;
+    this.generatedWorldData = initResult.generatedWorldData;
 
     this.registry.set('gameState', this.gameState);
   }
@@ -71,26 +39,35 @@ export class MainScene extends Phaser.Scene {
   async create() {
     logAutopoiesis.info('Creating main game world');
 
-
-    this.entities = this.physics.add.group();
-
+    // Initialize managers
+    this.entityManager = new EntityManager(this);
+    this.inputManager = new InputManager(this);
+    this.foodAssetManager = new FoodAssetManager(this);
+    this.foodSystem = new FoodSystem(this);
+    this.dialogueSystem = new DialogueSystem(this);
 
     await this.initializeManagers();
 
+    // Create entities using EntityManager
+    const { isaEntity, stevEntity } = this.entityManager.createEntities(this.gameState);
 
-    this.dialogueSystem = new DialogueSystem(this);
+    // Setup partner relationships and register with GameLogicManager
+    isaEntity.setPartnerEntity(stevEntity);
+    stevEntity.setPartnerEntity(isaEntity);
+    this.gameLogicManager.registerEntity('isa', isaEntity);
+    this.gameLogicManager.registerEntity('stev', stevEntity);
 
-
-    this.createInitialEntities();
+    // Setup spacebar action for current controlled entity
+    this.input.keyboard?.on('keydown-SPACE', () => {
+      this.handleEntityAction();
+    });
 
     this.setupCamera();
-    
-    this.setupInput();
-    
     this.setupUIEvents();
+    this.setupFoodStores();
 
     logAutopoiesis.info('MainScene created successfully', {
-      entities: this.entities.children.size,
+      entities: this.entityManager.getEntitiesGroup().children.size,
       zones: this.gameState.zones.length,
       worldSize: this.gameState.worldSize
     });
@@ -132,40 +109,7 @@ export class MainScene extends Phaser.Scene {
     });
   }
 
-  private createInitialEntities() {
-
-    this.isaEntity = new AnimatedGameEntity(
-      this, 
-      gameConfig.entityCircleInitialX, 
-      gameConfig.entityCircleInitialY, 
-      'isa'
-    );
-    
-
-    this.stevEntity = new AnimatedGameEntity(
-      this, 
-      gameConfig.entitySquareInitialX, 
-      gameConfig.entitySquareInitialY, 
-      'stev'
-    );
-
-
-    this.entities.add(this.isaEntity);
-    this.entities.add(this.stevEntity);
-
-
-    this.isaEntity.setPartnerEntity(this.stevEntity);
-    this.stevEntity.setPartnerEntity(this.isaEntity);
-
-
-    this.gameLogicManager.registerEntity('isa', this.isaEntity);
-    this.gameLogicManager.registerEntity('stev', this.stevEntity);
-
-    logAutopoiesis.info('Initial entities created and registered', {
-      entities: ['isa', 'stev'],
-      hasResonancePartnership: true
-    });
-  }
+  // Método obsoleto - ahora manejado por EntityManager
 
 
 
@@ -201,74 +145,153 @@ export class MainScene extends Phaser.Scene {
     }
     
     this.handleManualControl();
+    this.updateFoodSystem();
     this.updateUI();
   }
   
-  private setupInput() {
-    this.cursors = this.input.keyboard?.createCursorKeys();
-    
-    this.input.keyboard?.on('keydown-SPACE', () => {
-      if (this.controlledEntity !== 'none') {
-        this.handleEntityAction();
-      }
-    });
-  }
+  // Método obsoleto - ahora manejado por InputManager
   
   private setupUIEvents() {
-    this.events.on('changeEntityControl', (entity: 'isa' | 'stev' | 'none') => {
-      this.controlledEntity = entity;
+    this.events.on('changeEntityControl', (entity: ControlledEntity) => {
+      this.inputManager.setControlledEntity(entity);
       logAutopoiesis.info(`Manual control switched to: ${entity}`);
     });
   }
   
   private handleManualControl() {
-    if (this.controlledEntity === 'none' || !this.cursors) return;
+    const isaEntity = this.entityManager.getEntity('isa');
+    const stevEntity = this.entityManager.getEntity('stev');
     
-    const entity = this.controlledEntity === 'isa' ? this.isaEntity : this.stevEntity;
-    if (!entity || !entity.body) return;
-    
-    const speed = 150;
-    let velocityX = 0;
-    let velocityY = 0;
-    
-    if (this.cursors.left.isDown) velocityX = -speed;
-    else if (this.cursors.right.isDown) velocityX = speed;
-    
-    if (this.cursors.up.isDown) velocityY = -speed;
-    else if (this.cursors.down.isDown) velocityY = speed;
-    
-    entity.setVelocity(velocityX, velocityY);
-    
-    // Override control mode for manual movement
-    const entityData = entity.getEntityData();
-    if (velocityX !== 0 || velocityY !== 0) {
-      (entityData as any).controlMode = 'manual';
-    } else {
-      (entityData as any).controlMode = 'autonomous';
+    if (isaEntity && stevEntity) {
+      this.inputManager.processMovementInput(isaEntity, stevEntity);
     }
   }
   
   private handleEntityAction() {
-    // Simple interaction when spacebar is pressed
-    if (this.controlledEntity !== 'none') {
-      this.handlePlayerInteraction(this.controlledEntity, 'manual_action');
+    const controlledEntity = this.inputManager.getControlledEntity();
+    if (controlledEntity !== 'none') {
+      const entity = this.entityManager.getEntity(controlledEntity);
+      if (entity) {
+        // Si está cerca de comida, intentar comer
+        const nearbyFood = this.findNearbyFood(entity.getPosition());
+        if (nearbyFood) {
+          this.tryToEat(controlledEntity, nearbyFood);
+        } else {
+          this.handlePlayerInteraction(controlledEntity, 'manual_action');
+        }
+      }
     }
+  }
+
+  /**
+   * Actualiza el sistema de comida
+   */
+  private updateFoodSystem(): void {
+    const completedActions = this.foodSystem.updateEatingActions();
+    
+    // Aplicar efectos de comida completada
+    completedActions.forEach(({ entityId, food }) => {
+      const entity = this.entityManager.getEntity(entityId as 'isa' | 'stev');
+      if (entity) {
+        const currentStats = entity.getStats();
+        const newStats = this.foodSystem.applyFoodEffects(currentStats, food);
+        
+        // Actualizar stats de la entidad (esto debería hacerse a través de un método en la entidad)
+        logAutopoiesis.info('Aplicando efectos de comida', { 
+          entityId, 
+          foodId: food.id, 
+          statsChange: newStats 
+        });
+      }
+    });
+  }
+
+  /**
+   * Busca comida cercana a una posición
+   */
+  private findNearbyFood(position: { x: number; y: number }): string | null {
+    // Por ahora, simplificar y usar comida básica si hay dinero
+    const entity = this.entityManager.getEntity('isa'); // Asumiendo que buscamos para Isa
+    if (entity && entity.getStats().money >= 5) {
+      return 'bread'; // Comida básica disponible
+    }
+    return null;
+  }
+
+  /**
+   * Intenta hacer que una entidad coma
+   */
+  private tryToEat(entityId: string, foodId: string): void {
+    const entity = this.entityManager.getEntity(entityId as 'isa' | 'stev');
+    if (!entity) return;
+
+    const position = entity.getPosition();
+    const stats = entity.getStats();
+
+    // Verificar si puede comprar la comida
+    const food = this.foodSystem.getInventory().hasFood(foodId);
+    if (!food) {
+      const purchaseResult = this.foodSystem.buyFood(foodId, 1, stats.money);
+      if (!purchaseResult.success) {
+        logAutopoiesis.warn('No se pudo comprar comida', { 
+          entityId, 
+          foodId, 
+          money: stats.money 
+        });
+        return;
+      }
+    }
+
+    // Iniciar acción de comer
+    const success = this.foodSystem.startEating(entityId, foodId, position);
+    if (success) {
+      // Cambiar actividad a EATING
+      const activityComponent = (entity as any).activityComponent;
+      if (activityComponent) {
+        activityComponent.setActivity('EATING');
+      }
+      
+      logAutopoiesis.info('Entidad empezó a comer', { entityId, foodId });
+    }
+  }
+
+  /**
+   * Configura las tiendas de comida en el mundo
+   */
+  private setupFoodStores(): void {
+    // Crear algunas tiendas de comida en posiciones estratégicas
+    const storePositions = [
+      { x: 600, y: 300, foods: ['bread', 'sandwich', 'apple_pie'] },
+      { x: 900, y: 500, foods: ['burger', 'pizza', 'hotdog', 'frenchfries'] },
+      { x: 300, y: 600, foods: ['icecream', 'chocolate_cake', 'donut', 'cookies'] }
+    ];
+
+    storePositions.forEach((store, index) => {
+      this.foodSystem.createFoodStore(store.x, store.y, store.foods);
+      logAutopoiesis.info('Tienda de comida creada', { 
+        index, 
+        position: { x: store.x, y: store.y },
+        foods: store.foods
+      });
+    });
   }
   
   private updateUI() {
-    // Send entity data to UI
+    const isaEntity = this.entityManager.getEntity('isa');
+    const stevEntity = this.entityManager.getEntity('stev');
+    
     const entityData = {
-      isa: this.isaEntity ? {
-        stats: this.isaEntity.getStats(),
-        activity: this.isaEntity.getCurrentActivity(),
-        mood: this.isaEntity.getMood(),
-        position: this.isaEntity.getPosition()
+      isa: isaEntity ? {
+        stats: isaEntity.getStats(),
+        activity: isaEntity.getCurrentActivity(),
+        mood: isaEntity.getMood(),
+        position: isaEntity.getPosition()
       } : null,
-      stev: this.stevEntity ? {
-        stats: this.stevEntity.getStats(),
-        activity: this.stevEntity.getCurrentActivity(),
-        mood: this.stevEntity.getMood(),
-        position: this.stevEntity.getPosition()
+      stev: stevEntity ? {
+        stats: stevEntity.getStats(),
+        activity: stevEntity.getCurrentActivity(),
+        mood: stevEntity.getMood(),
+        position: stevEntity.getPosition()
       } : null
     };
     

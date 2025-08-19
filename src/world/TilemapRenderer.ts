@@ -57,7 +57,7 @@ export class TilemapRenderer {
    * Renderiza un mundo generado usando tilemaps profesionales con assets reales
    */
   async renderWorld(world: GeneratedWorld): Promise<void> {
-    console.log('🎨 Iniciando renderizado creativo con assets reales...');
+    logAutopoiesis.info('🎨 Iniciando renderizado creativo con assets reales...');
     
     // 1. Cargar todos los assets creativamente
     await this.assetLoader.loadAllAssets();
@@ -100,7 +100,7 @@ export class TilemapRenderer {
       }
     }
 
-    console.log('✅ Mundo renderizado con assets reales y diversidad creativa');
+    logAutopoiesis.info('✅ Mundo renderizado con assets reales y diversidad creativa');
   }
 
   /**
@@ -186,7 +186,7 @@ export class TilemapRenderer {
     canvas.width = tilesPerRow * 32;
     canvas.height = Math.ceil(totalTiles / tilesPerRow) * 32;
     
-    console.log(`🎨 Creando tileset real: ${totalTiles} tiles, ${tilesPerRow}x${Math.ceil(totalTiles / tilesPerRow)}`);
+    logAutopoiesis.info(`🎨 Creando tileset real: ${totalTiles} tiles, ${tilesPerRow}x${Math.ceil(totalTiles / tilesPerRow)}`);
     
     let currentTileIndex = 0;
     

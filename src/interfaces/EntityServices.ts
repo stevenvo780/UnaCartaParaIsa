@@ -140,10 +140,38 @@ export class EntityServicesFactory {
         timing: { mainGameLogic: 800 }
       },
       logger: {
-        info: (message: string, data?: LogData) => console.log(`[INFO] ${message}`, data || ''),
-        warn: (message: string, data?: LogData) => console.warn(`[WARN] ${message}`, data || ''),
-        error: (message: string, data?: LogData) => console.error(`[ERROR] ${message}`, data || ''),
-        debug: (message: string, data?: LogData) => console.debug(`[DEBUG] ${message}`, data || '')
+        info: (message: string, data?: LogData) => {
+          try {
+            const logAutopoiesis = require('../utils/logger').logAutopoiesis;
+            logAutopoiesis.info(message, data);
+          } catch {
+            // Fallback silencioso si logger no está disponible
+          }
+        },
+        warn: (message: string, data?: LogData) => {
+          try {
+            const logAutopoiesis = require('../utils/logger').logAutopoiesis;
+            logAutopoiesis.warn(message, data);
+          } catch {
+            // Fallback silencioso si logger no está disponible
+          }
+        },
+        error: (message: string, data?: LogData) => {
+          try {
+            const logAutopoiesis = require('../utils/logger').logAutopoiesis;
+            logAutopoiesis.error(message, data);
+          } catch {
+            // Fallback silencioso si logger no está disponible
+          }
+        },
+        debug: (message: string, data?: LogData) => {
+          try {
+            const logAutopoiesis = require('../utils/logger').logAutopoiesis;
+            logAutopoiesis.debug(message, data);
+          } catch {
+            // Fallback silencioso si logger no está disponible
+          }
+        }
       },
       activityCalculator: {
         applyHybridDecay: (stats: EntityStats, _activity: ActivityType, _deltaTime: number) => stats,

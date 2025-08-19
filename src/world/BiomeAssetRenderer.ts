@@ -75,7 +75,7 @@ export class BiomeAssetRenderer {
    * Carga todos los assets de forma inteligente
    */
   async loadAssets(): Promise<void> {
-    console.log('🎨 Cargando assets creativamente...');
+    logAutopoiesis.info('🎨 Cargando assets creativamente...');
     
     const allAssets = [
       ...this.assetConfig.grassVariants,
@@ -98,7 +98,7 @@ export class BiomeAssetRenderer {
 
     return new Promise((resolve) => {
       this.scene.load.on('complete', () => {
-        console.log(`✅ Cargados ${uniqueAssets.length} assets únicos`);
+        logAutopoiesis.info(`✅ Cargados ${uniqueAssets.length} assets únicos`);
         resolve();
       });
 
@@ -117,7 +117,7 @@ export class BiomeAssetRenderer {
    * Renderiza mundo usando assets reales
    */
   async renderWorldWithRealAssets(world: GeneratedWorld): Promise<void> {
-    console.log('🌍 Renderizando mundo con assets reales...');
+    logAutopoiesis.info('🌍 Renderizando mundo con assets reales...');
 
     // 1. Cargar assets
     await this.loadAssets();
@@ -125,7 +125,7 @@ export class BiomeAssetRenderer {
     // 2. Crear sprites usando assets reales
     this.createDiverseSprites(world);
 
-    console.log('✨ Mundo renderizado con diversidad creativa');
+    logAutopoiesis.info('✨ Mundo renderizado con diversidad creativa');
   }
 
   /**
