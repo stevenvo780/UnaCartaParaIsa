@@ -16,7 +16,9 @@ export type ActivityType =
   | 'HIDING'
   | 'SHOPPING'
   | 'COOKING'
-  | 'EATING';
+  | 'EATING'
+  | 'SLEEPING'
+  | 'PLAYING';
 
 export interface EntityActivity {
   type: ActivityType;

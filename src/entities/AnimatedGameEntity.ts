@@ -6,7 +6,7 @@
 import { GameEntity } from './GameEntity';
 import { AnimationManager } from '../managers/AnimationManager';
 import { logAutopoiesis } from '../utils/logger';
-import type { ActivityType, MoodType } from '../types';
+import type { ActivityType, MoodType, EntityStats } from '../types';
 import type { IEntityServices } from '../interfaces/EntityServices';
 
 export class AnimatedGameEntity extends GameEntity {

@@ -35,8 +35,7 @@ export class FoodUI {
     const inventoryBg = this.scene.add.rectangle(0, 0, 300, 400, 0x2c3e50, 0.9);
     const inventoryTitle = this.scene.add.text(-140, -180, 'Inventario', {
       fontSize: '18px',
-      color: '#ffffff',
-      fontWeight: 'bold'
+      color: '#ffffff'
     });
     
     this.inventoryPanel.add([inventoryBg, inventoryTitle]);
@@ -45,8 +44,7 @@ export class FoodUI {
     const storeBg = this.scene.add.rectangle(0, 0, 350, 450, 0x34495e, 0.9);
     const storeTitle = this.scene.add.text(-165, -210, 'Tienda de Comida', {
       fontSize: '18px',
-      color: '#ffffff',
-      fontWeight: 'bold'
+      color: '#ffffff'
     });
     
     this.storePanel.add([storeBg, storeTitle]);
@@ -192,8 +190,7 @@ export class FoodUI {
       // Nombre y precio
       const nameText = this.scene.add.text(-110, y - 15, food.name, {
         fontSize: '14px',
-        color: '#ecf0f1',
-        fontWeight: 'bold'
+        color: '#ecf0f1'
       });
       nameText.setOrigin(0, 0.5);
 
@@ -257,7 +254,7 @@ export class FoodUI {
   /**
    * Muestra indicador de que se está comiendo
    */
-  showEatingIndicator(entityId: string, foodId: string, duration: number): void {
+  showEatingIndicator(entityId: string, _foodId: string, duration: number): void {
     const indicator = this.scene.add.text(100, 100, 
       `${entityId} está comiendo...`, {
       fontSize: '16px',

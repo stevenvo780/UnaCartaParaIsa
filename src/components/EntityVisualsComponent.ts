@@ -10,7 +10,6 @@ import { GAME_BALANCE } from '../constants/gameBalance';
 export class EntityVisualsComponent {
   private sprite: Phaser.Physics.Arcade.Sprite;
   private currentSprite: string;
-  private colorHue: number;
   private pulsePhase: number = 0;
 
   constructor(
@@ -20,7 +19,6 @@ export class EntityVisualsComponent {
   ) {
     this.sprite = sprite;
     this.currentSprite = initialSprite;
-    this.colorHue = entityId === 'isa' ? 300 : 220;
     
     this.setupVisuals();
   }
@@ -106,8 +104,8 @@ export class EntityVisualsComponent {
    * Establece la velocidad del sprite
    */
   setVelocity(x: number, y: number): void {
-    if (this.sprite.body) {
-      this.sprite.body.setVelocity(x, y);
+    if (this.sprite.body && 'setVelocity' in this.sprite.body) {
+      (this.sprite.body as Phaser.Physics.Arcade.Body).setVelocity(x, y);
     }
   }
 

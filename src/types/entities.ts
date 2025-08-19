@@ -33,6 +33,11 @@ export interface EntityStats {
   boredom: number;
   loneliness: number;
   sleepiness: number;
+  money: number;
+  stress: number;
+  comfort: number;
+  creativity: number;
+  resonance: number;
 }
 
 export interface Entity {
@@ -45,4 +50,6 @@ export interface Entity {
   isDead: boolean;
   lastActivityChange?: number;
   resonance: number;
+  pulsePhase?: number;
+  timeOfDeath?: number;
 }

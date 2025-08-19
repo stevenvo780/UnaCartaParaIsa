@@ -47,7 +47,11 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
         energy: this.services.config.entityInitialStats,
         boredom: this.services.config.entityInitialStats,
         money: this.services.config.entityInitialMoney,
-        health: this.services.config.entityInitialHealth
+        health: this.services.config.entityInitialHealth,
+        stress: this.services.config.entityInitialStats,
+        comfort: this.services.config.entityInitialStats,
+        creativity: this.services.config.entityInitialStats,
+        resonance: this.services.config.initialResonance
       },
       lastStateChange: Date.now(),
       lastActivityChange: Date.now(),
@@ -70,7 +74,11 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
     this.setupPhysics();
 
-    this.services.logger.info(`Entity ${entityId} created`, this.entityData);
+    this.services.logger.info(`Entity ${entityId} created`, { 
+      entityId: this.entityData.id, 
+      position: this.entityData.position,
+      activity: this.entityData.activity 
+    });
   }
 
   private createVisuals() {
@@ -139,8 +147,11 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     
     const timeOfDay = {
       isNight: hour < 6 || hour >= 22,
+      isDay: hour >= 6 && hour < 22,
       phase: getPhase(),
-      hour
+      hour,
+      lightLevel: hour >= 6 && hour < 22 ? 1 : 0.3,
+      modifier: 1
     };
 
 
@@ -420,6 +431,10 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
   public isDead(): boolean {
     return this.entityData.isDead;
+  }
+
+  public getEntity(): Entity {
+    return this.entityData;
   }
 
   public destroy() {

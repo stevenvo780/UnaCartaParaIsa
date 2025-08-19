@@ -265,7 +265,7 @@ export class AssetLazyLoader {
   /**
    * Precargar assets por proximidad (para mundo abierto)
    */
-  public async preloadAssetsNear(x: number, y: number, radius: number = 200): Promise<void> {
+  public async preloadAssetsNear(_x: number, _y: number, _radius: number = 200): Promise<void> {
     // Lógica simplificada - en un juego real, mapearía coordenadas a assets
     const nearbyGroups = ['terrain_basic'];
     

@@ -361,25 +361,21 @@ export function applyDensityConfig(
     ...preset,
     config: {
       ...preset.config,
-      // Aplicar configuración de densidad a los biomas
-      biomeConfigs: Object.entries(preset.config.biomeConfigs).reduce((acc, [biomeKey, biomeConfig]) => {
-        acc[biomeKey as keyof typeof preset.config.biomeConfigs] = {
-          ...biomeConfig,
-          // Ajustar parámetros de generación basados en densidad
-          noiseScale: biomeConfig.noiseScale * density.multiplier,
-          threshold: Math.max(0, Math.min(1, biomeConfig.threshold + density.threshold_adjustment)),
-          // Aplicar multiplicador de densidad a la probabilidad de aparición
-          probability: Math.max(0, Math.min(1, biomeConfig.probability * density.multiplier))
-        };
-        return acc;
-      }, {} as typeof preset.config.biomeConfigs),
-      
-      // Ajustar parámetros globales de mundo
-      noiseSettings: {
-        ...preset.config.noiseSettings,
-        scale: preset.config.noiseSettings.scale * density.multiplier,
-        octaves: Math.max(1, Math.min(6, preset.config.noiseSettings.octaves + density.complexity_bonus)),
-        lacunarity: preset.config.noiseSettings.lacunarity + (density.multiplier - 1) * 0.5
+      // Ajustar parámetros de ruido basados en densidad
+      noise: {
+        ...preset.config.noise,
+        temperature: {
+          ...preset.config.noise.temperature,
+          scale: preset.config.noise.temperature.scale * density.multiplier
+        },
+        moisture: {
+          ...preset.config.noise.moisture,
+          scale: preset.config.noise.moisture.scale * density.multiplier
+        },
+        elevation: {
+          ...preset.config.noise.elevation,
+          scale: preset.config.noise.elevation.scale * density.multiplier
+        }
       }
     }
   };

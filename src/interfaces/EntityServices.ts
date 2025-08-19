@@ -12,6 +12,7 @@ export interface TimeOfDayData {
   hour: number;
   isDay: boolean;
   isNight: boolean;
+  phase: "dawn" | "day" | "dusk" | "night";
   lightLevel: number;
   modifier: number;
 }
@@ -117,6 +118,7 @@ export interface IResonancePartner {
  * Contenedor de servicios para GameEntity
  */
 export interface IEntityServices {
+  id?: string;
   config: IGameConfig;
   logger: ILogger;
   activityCalculator: IActivityCalculator;

@@ -41,9 +41,9 @@ export class SceneInitializationManager {
         lastDialogue: null,
         startTime: 0
       },
-      terrainTiles: mapData.terrainTiles || [],
-      roads: mapData.roads || [],
-      objectLayers: mapData.objectLayers || [],
+      terrainTiles: [],
+      roads: [],
+      objectLayers: [],
       worldSize: { width: 1200, height: 800 },
       generatorVersion: '1.0'
     };
