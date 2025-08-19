@@ -161,170 +161,78 @@ export class MainScene extends Phaser.Scene {
 
   // Game logic updates are now handled by GameLogicManager
 
-  private createTestWorld() {
-    // Create a natural grass background using tiles
-    const tileSize = 64;
-    const worldWidth = this.gameState.worldSize.width;
-    const worldHeight = this.gameState.worldSize.height;
+  // World creation is now handled by WorldRenderer
 
-    // Create grass background tiles
-    for (let x = 0; x < worldWidth; x += tileSize) {
-      for (let y = 0; y < worldHeight; y += tileSize) {
-        // Randomly choose between different grass tiles for variety
-        const grassTypes = ['grass-1', 'grass-2', 'grass-3', 'grass-base'];
-        const randomGrass = grassTypes[Math.floor(Math.random() * grassTypes.length)];
-        
-        const grassTile = this.add.image(x + tileSize/2, y + tileSize/2, randomGrass);
-        grassTile.setDisplaySize(tileSize, tileSize);
-        grassTile.setDepth(0); // Background layer
-      }
-    }
+  // Environmental decorations are now handled by WorldRenderer
 
-    // Add some decorative elements
-    this.createEnvironmentalDecorations();
+  // Activity zones are now handled by WorldRenderer
 
-    // Create activity zones with better visuals
-    this.createActivityZones();
-    
-    console.log('🗺️ Beautiful world created with grass tiles and decorations');
-  }
-
-  private createEnvironmentalDecorations() {
-    // Add flowers and campfires scattered around
-    const decorations = [
-      { x: 150, y: 120, sprite: 'flowers-red' },
-      { x: 300, y: 180, sprite: 'flowers-white' },
-      { x: 500, y: 250, sprite: 'campfire' },
-      { x: 650, y: 150, sprite: 'flowers-red' },
-      { x: 800, y: 300, sprite: 'flowers-white' },
-      { x: 900, y: 400, sprite: 'campfire' }
-    ];
-
-    decorations.forEach(deco => {
-      const decoration = this.add.image(deco.x, deco.y, deco.sprite);
-      decoration.setScale(1.2);
-      decoration.setDepth(1); // Above grass, below entities
-    });
-  }
-
-  private createActivityZones() {
-    // Create more visually appealing zones
-    const zones = [
-      { x: 100, y: 100, width: 200, height: 150, color: 0x27ae60, name: 'Rest Zone', alpha: 0.2 },
-      { x: 400, y: 200, width: 180, height: 120, color: 0xe74c3c, name: 'Food Zone', alpha: 0.2 },
-      { x: 700, y: 300, width: 200, height: 160, color: 0x3498db, name: 'Social Zone', alpha: 0.2 }
-    ];
-
-    zones.forEach(zone => {
-      // Create zone background with rounded corners effect
-      const zoneRect = this.add.rectangle(
-        zone.x + zone.width / 2,
-        zone.y + zone.height / 2,
-        zone.width,
-        zone.height,
-        zone.color,
-        zone.alpha
-      );
-      zoneRect.setStrokeStyle(3, zone.color, 0.6);
-      zoneRect.setDepth(2);
-      
-      // Add zone label
-      const label = this.add.text(
-        zone.x + zone.width / 2,
-        zone.y + zone.height / 2,
-        zone.name,
-        {
-          fontSize: '16px',
-          color: '#ffffff',
-          fontFamily: 'Arial',
-          fontStyle: 'bold'
-        }
-      );
-      label.setOrigin(0.5);
-      label.setDepth(3);
-      
-      // Add subtle shadow to text
-      label.setStroke('#000000', 2);
-    });
-  }
+  // Zone visualization is now handled by WorldRenderer
 
   /**
-   * Crea la visualización de las zonas generadas por el sistema de mapas
-   */
-  private createZonesVisualization() {
-    console.log(`🗺️ Creating ${this.gameState.zones.length} zones and ${this.gameState.mapElements.length} map elements`);
-
-    // Renderizar zonas
-    this.gameState.zones.forEach(zone => {
-      // Parse color string to hex number
-      let colorValue = 0x3498db; // Default blue
-      if (zone.color.startsWith('rgba(')) {
-        const rgbaMatch = zone.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-        if (rgbaMatch) {
-          const [, r, g, b] = rgbaMatch.map(Number);
-          colorValue = (r << 16) | (g << 8) | b;
-        }
-      }
-
-      // Crear rectángulo de zona
-      const zoneRect = this.add.rectangle(
-        zone.bounds.x + zone.bounds.width / 2,
-        zone.bounds.y + zone.bounds.height / 2,
-        zone.bounds.width,
-        zone.bounds.height,
-        colorValue,
-        0.25
-      );
-      zoneRect.setStrokeStyle(2, colorValue, 0.8);
-      zoneRect.setDepth(1);
-
-      // Etiqueta de zona
-      const label = this.add.text(
-        zone.bounds.x + zone.bounds.width / 2,
-        zone.bounds.y + zone.bounds.height / 2,
-        zone.name,
-        {
-          fontSize: '14px',
-          color: '#ffffff',
-          fontFamily: 'Arial',
-          fontStyle: 'bold',
-          align: 'center'
-        }
-      );
-      label.setOrigin(0.5);
-      label.setDepth(3);
-      label.setStroke('#000000', 3);
-    });
-
-    // Renderizar elementos del mapa
-    this.gameState.mapElements.forEach(element => {
-      const colorValue = typeof element.color === 'string' ? 
-        parseInt(element.color.replace('#', ''), 16) : element.color;
-
-      const elementRect = this.add.rectangle(
-        element.position.x + element.size.width / 2,
-        element.position.y + element.size.height / 2,
-        element.size.width,
-        element.size.height,
-        colorValue,
-        0.8
-      );
-      elementRect.setStrokeStyle(1, 0xffffff, 0.6);
-      elementRect.setDepth(2);
-    });
-
-    console.log('✅ Zones visualization completed');
-  }
-
-  /**
-   * Maneja interacciones del jugador que pueden generar diálogos
+   * Maneja interacciones del jugador
    */
   public handlePlayerInteraction(entityId: string, interactionType: string) {
+    // Handle through game logic manager
+    this.gameLogicManager.handlePlayerInteraction(entityId, interactionType);
+    
+    // Also handle dialogue
     this.dialogueSystem.handlePlayerInteraction(entityId, interactionType);
+    
+    logAutopoiesis.info('Player interaction handled', {
+      entityId,
+      interactionType
+    });
   }
 
   update() {
-    // Update entity positions and states
-    // This will be expanded with full autopoiesis system
+    // Update world renderer visuals
+    if (this.worldRenderer) {
+      this.worldRenderer.updateVisuals();
+    }
+  }
+
+  /**
+   * Get game statistics for debugging
+   */
+  public getGameStats() {
+    return {
+      logic: this.gameLogicManager?.getStats(),
+      renderer: this.worldRenderer?.getStats(),
+      entities: {
+        total: this.entities.children.size,
+        isa: this.isaEntity ? {
+          activity: this.isaEntity.getCurrentActivity(),
+          mood: this.isaEntity.getMood(),
+          alive: !this.isaEntity.isDead()
+        } : null,
+        stev: this.stevEntity ? {
+          activity: this.stevEntity.getCurrentActivity(),
+          mood: this.stevEntity.getMood(),
+          alive: !this.stevEntity.isDead()
+        } : null
+      }
+    };
+  }
+
+  /**
+   * Cleanup when scene is destroyed
+   */
+  destroy(): void {
+    // Cleanup managers
+    if (this.gameLogicManager) {
+      this.gameLogicManager.destroy();
+    }
+    
+    if (this.worldRenderer) {
+      this.worldRenderer.destroy();
+    }
+    
+    if (this.dialogueSystem) {
+      this.dialogueSystem.destroy();
+    }
+    
+    logAutopoiesis.info('MainScene destroyed');
+    super.destroy();
   }
 }
