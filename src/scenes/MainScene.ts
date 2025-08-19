@@ -2,12 +2,15 @@ import Phaser from 'phaser';
 import type { GameState } from '../types';
 import { gameConfig } from '../config/gameConfig';
 import { GameEntity } from '../entities/GameEntity';
+import { DialogueSystem } from '../systems/DialogueSystem';
+import { generateValidatedMap } from '../utils/simpleMapGeneration';
 
 export class MainScene extends Phaser.Scene {
   private gameState!: GameState;
   private entities!: Phaser.Physics.Arcade.Group;
   private isaEntity!: GameEntity;
   private stevEntity!: GameEntity;
+  private dialogueSystem!: DialogueSystem;
 
   constructor() {
     super({ key: 'MainScene' });
@@ -16,7 +19,8 @@ export class MainScene extends Phaser.Scene {
   init() {
     console.log('🎮 MainScene initialized');
     
-    // Initialize game state
+    // Initialize game state with generated map
+    const mapData = generateValidatedMap();
     this.gameState = {
       entities: [],
       resonance: 0,
@@ -28,8 +32,8 @@ export class MainScene extends Phaser.Scene {
         startTime: 0,
         type: 'FEED'
       },
-      zones: [],
-      mapElements: [],
+      zones: mapData.zones,
+      mapElements: mapData.mapElements,
       currentConversation: {
         isActive: false,
         participants: [],
@@ -54,8 +58,14 @@ export class MainScene extends Phaser.Scene {
     // Setup physics groups
     this.entities = this.physics.add.group();
 
+    // Initialize dialogue system
+    this.dialogueSystem = new DialogueSystem(this);
+
     // Create initial entities (Isa and Stev)
     this.createInitialEntities();
+
+    // Create zones and map elements visually
+    this.createZonesVisualization();
 
     // Setup camera
     this.cameras.main.setBounds(0, 0, this.gameState.worldSize.width, this.gameState.worldSize.height);
@@ -67,7 +77,7 @@ export class MainScene extends Phaser.Scene {
     // Create temporary visual elements for testing
     this.createTestWorld();
 
-    console.log('✅ MainScene created successfully');
+    console.log('✅ MainScene created successfully with dialogue system and map zones');
   }
 
   private createInitialEntities() {
@@ -206,6 +216,81 @@ export class MainScene extends Phaser.Scene {
       // Add subtle shadow to text
       label.setStroke('#000000', 2);
     });
+  }
+
+  /**
+   * Crea la visualización de las zonas generadas por el sistema de mapas
+   */
+  private createZonesVisualization() {
+    console.log(`🗺️ Creating ${this.gameState.zones.length} zones and ${this.gameState.mapElements.length} map elements`);
+
+    // Renderizar zonas
+    this.gameState.zones.forEach(zone => {
+      // Parse color string to hex number
+      let colorValue = 0x3498db; // Default blue
+      if (zone.color.startsWith('rgba(')) {
+        const rgbaMatch = zone.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (rgbaMatch) {
+          const [, r, g, b] = rgbaMatch.map(Number);
+          colorValue = (r << 16) | (g << 8) | b;
+        }
+      }
+
+      // Crear rectángulo de zona
+      const zoneRect = this.add.rectangle(
+        zone.bounds.x + zone.bounds.width / 2,
+        zone.bounds.y + zone.bounds.height / 2,
+        zone.bounds.width,
+        zone.bounds.height,
+        colorValue,
+        0.25
+      );
+      zoneRect.setStrokeStyle(2, colorValue, 0.8);
+      zoneRect.setDepth(1);
+
+      // Etiqueta de zona
+      const label = this.add.text(
+        zone.bounds.x + zone.bounds.width / 2,
+        zone.bounds.y + zone.bounds.height / 2,
+        zone.name,
+        {
+          fontSize: '14px',
+          color: '#ffffff',
+          fontFamily: 'Arial',
+          fontStyle: 'bold',
+          align: 'center'
+        }
+      );
+      label.setOrigin(0.5);
+      label.setDepth(3);
+      label.setStroke('#000000', 3);
+    });
+
+    // Renderizar elementos del mapa
+    this.gameState.mapElements.forEach(element => {
+      const colorValue = typeof element.color === 'string' ? 
+        parseInt(element.color.replace('#', ''), 16) : element.color;
+
+      const elementRect = this.add.rectangle(
+        element.position.x + element.size.width / 2,
+        element.position.y + element.size.height / 2,
+        element.size.width,
+        element.size.height,
+        colorValue,
+        0.8
+      );
+      elementRect.setStrokeStyle(1, 0xffffff, 0.6);
+      elementRect.setDepth(2);
+    });
+
+    console.log('✅ Zones visualization completed');
+  }
+
+  /**
+   * Maneja interacciones del jugador que pueden generar diálogos
+   */
+  public handlePlayerInteraction(entityId: string, interactionType: string) {
+    this.dialogueSystem.handleInteractionDialogue(entityId, interactionType);
   }
 
   update() {
