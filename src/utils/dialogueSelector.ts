@@ -1,120 +1,114 @@
 /*\n * Documentación científica (resumen):\n * - Índice inicial pseudoaleatorio (LCG), búsqueda circular filtrando por speaker/emoción/actividad.\n * - Degradación progresiva de filtros y fallback; hash de interacción para variar actividad objetivo.\n */
 /**
  * Sistema de Selección de Diálogos para Una Carta Para Isa
- * Carga y selecciona diálogos reales de conversaciones entre Isa y Stev
- * Migrado del proyecto original - preserva toda la lógica de selección contextual
+ * Optimizado con carga fragmentada para mejor rendimiento
+ * Usa DialogueChunkLoader para manejo eficiente de memoria
  */
 
 import type { DialogueEntry } from '../types';
 import { logAutopoiesis } from './logger';
+import { dialogueChunkLoader } from './dialogueChunkLoader';
 
-let dialogueData: DialogueEntry[] = [];
 let currentIndex = 0;
 let isLoaded = false;
+let totalDialogues = 0;
 
 /**
- * Carga el archivo JSON con las conversaciones reales
+ * Inicializa el sistema de diálogos con carga optimizada
  */
 export const loadDialogueData = async (): Promise<void> => {
   try {
-    console.log('🗣️ Cargando diálogos reales de conversaciones...');
-    const response = await fetch('/dialogs/dialogos_chat_isa.lite.censored_plus.json');
+    logAutopoiesis.info('🗣️ Inicializando sistema de diálogos optimizado...');
     
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    await dialogueChunkLoader.initialize();
+    const stats = dialogueChunkLoader.getStats();
+    totalDialogues = stats.totalEntries;
     
-    dialogueData = await response.json();
-    
-
+    // Establecer índice inicial aleatorio
     const seed = Date.now();
-    currentIndex = Math.floor((seed * 1664525 + 1013904223) % 2147483647) % dialogueData.length;
+    currentIndex = Math.floor((seed * 1664525 + 1013904223) % 2147483647) % totalDialogues;
     
     isLoaded = true;
     
-    logAutopoiesis.info('Diálogos cargados exitosamente', {
-      totalDialogues: dialogueData.length,
+    logAutopoiesis.info('Sistema de diálogos inicializado', {
+      totalDialogues: totalDialogues,
+      totalChunks: stats.totalChunks,
       startIndex: currentIndex,
-      memoryUsage: `${(JSON.stringify(dialogueData).length / 1024 / 1024).toFixed(2)}MB`
+      cacheSize: stats.cacheSize
     });
     
-    console.log(`✅ ${dialogueData.length} diálogos reales cargados`);
   } catch (error) {
-    console.warn('❌ No se pudo cargar el archivo de diálogos:', error);
-    logAutopoiesis.error('Error cargando diálogos', { error: error?.toString() });
-    dialogueData = [];
+    logAutopoiesis.error('Error inicializando sistema de diálogos', { error: String(error) });
     isLoaded = false;
+    totalDialogues = 0;
   }
 };
 
 /**
  * Busca el siguiente diálogo que coincida con los criterios especificados
+ * Optimizado para usar el sistema de chunks
  */
-export const getNextDialogue = (
+export const getNextDialogue = async (
   preferredSpeaker?: 'ISA' | 'STEV',
   preferredEmotion?: string,
   preferredActivity?: string
-): DialogueEntry | null => {
-  if (!isLoaded || dialogueData.length === 0) {
-    console.warn('⚠️ Diálogos no cargados, iniciando carga...');
-    loadDialogueData();
-    return null;
+): Promise<DialogueEntry | null> => {
+  if (!isLoaded || totalDialogues === 0) {
+    logAutopoiesis.warn('⚠️ Diálogos no inicializados, iniciando carga...');
+    await loadDialogueData();
+    if (!isLoaded) return null;
   }
 
-  const findDialogue = (
-    speaker?: 'ISA' | 'STEV',
-    emotion?: string,
-    activity?: string
-  ): DialogueEntry | null => {
-    let attempts = 0;
-    const maxAttempts = dialogueData.length;
-    let localIndex = currentIndex;
+  try {
+    // Primero intentar búsqueda optimizada usando el chunk loader
+    const searchResult = await dialogueChunkLoader.searchDialogues({
+      speaker: preferredSpeaker,
+      emotion: preferredEmotion,
+      textContains: preferredActivity ? undefined : undefined, // Mantener lógica original
+      limit: 1
+    });
 
-    while (attempts < maxAttempts) {
-      const dialogue = dialogueData[localIndex];
-      localIndex = (localIndex + 1) % dialogueData.length;
-      attempts++;
+    if (searchResult.length > 0) {
+      return searchResult[0];
+    }
 
-      const speakerMatch = !speaker || dialogue.speaker === speaker;
-      const emotionMatch = !emotion || dialogue.emotion === emotion;
-      const activityMatch = !activity || dialogue.activity === activity;
+    // Fallback: búsqueda con criterios relajados
+    const fallbackCriteria = [
+      { speaker: preferredSpeaker, emotion: undefined, activity: preferredActivity },
+      { speaker: preferredSpeaker, emotion: preferredEmotion, activity: undefined },
+      { speaker: preferredSpeaker, emotion: undefined, activity: undefined },
+      { speaker: undefined, emotion: undefined, activity: undefined }
+    ];
 
-      if (speakerMatch && emotionMatch && activityMatch) {
-        currentIndex = localIndex;
-        return dialogue;
+    for (const criteria of fallbackCriteria) {
+      const result = await dialogueChunkLoader.searchDialogues({
+        speaker: criteria.speaker,
+        emotion: criteria.emotion,
+        limit: 1
+      });
+
+      if (result.length > 0) {
+        return result[0];
       }
     }
+
+    // Último recurso: obtener diálogo aleatorio
+    const randomIndex = Math.floor(Math.random() * totalDialogues);
+    const fallbackDialogue = await dialogueChunkLoader.getDialogue(randomIndex);
+
+    if (fallbackDialogue) {
+      logAutopoiesis.warn('Usando diálogo aleatorio fallback', {
+        requested: { preferredSpeaker, preferredEmotion, preferredActivity },
+        selected: { speaker: fallbackDialogue.speaker, emotion: fallbackDialogue.emotion }
+      });
+    }
+
+    return fallbackDialogue;
+
+  } catch (error) {
+    logAutopoiesis.error('Error obteniendo diálogo', { error: String(error) });
     return null;
-  };
-
-
-
-
-  let dialogue = findDialogue(preferredSpeaker, preferredEmotion, preferredActivity);
-  if (dialogue) return dialogue;
-
-
-  dialogue = findDialogue(preferredSpeaker, undefined, preferredActivity);
-  if (dialogue) return dialogue;
-
-
-  dialogue = findDialogue(preferredSpeaker, preferredEmotion, undefined);
-  if (dialogue) return dialogue;
-
-
-  dialogue = findDialogue(preferredSpeaker, undefined, undefined);
-  if (dialogue) return dialogue;
-
-
-  const fallbackIndex = (Date.now() * 1664525 + 1013904223) % 2147483647;
-  const selectedDialogue = dialogueData[Math.floor(fallbackIndex) % dialogueData.length];
-
-  logAutopoiesis.warn('Usando diálogo fallback', {
-    requested: { preferredSpeaker, preferredEmotion, preferredActivity },
-    selected: { speaker: selectedDialogue.speaker, emotion: selectedDialogue.emotion }
-  });
-
-  return selectedDialogue;
+  }
 };
 
 /**
@@ -264,46 +258,46 @@ export const getDialogueForInteraction = (
 };
 
 /**
- * Obtiene estadísticas del sistema de diálogos
+ * Obtiene estadísticas del sistema de diálogos optimizado
  */
 export const getDialogueStats = () => {
   if (!isLoaded) return null;
 
-  const speakerCount = dialogueData.reduce((acc, dialogue) => {
-    acc[dialogue.speaker] = (acc[dialogue.speaker] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const emotionCount = dialogueData.reduce((acc, dialogue) => {
-    acc[dialogue.emotion] = (acc[dialogue.emotion] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
+  const chunkStats = dialogueChunkLoader.getStats();
+  
   return {
-    total: dialogueData.length,
+    total: totalDialogues,
     currentIndex,
-    speakers: speakerCount,
-    emotions: emotionCount,
-    isLoaded
+    chunkStats: chunkStats,
+    isLoaded,
+    memoryOptimized: true
   };
 };
 
 /**
  * Obtiene una muestra aleatoria de diálogos para testing
  */
-export const getRandomDialogueSample = (count: number = 5): DialogueEntry[] => {
-  if (!isLoaded || dialogueData.length === 0) return [];
+export const getRandomDialogueSample = async (count: number = 5): Promise<DialogueEntry[]> => {
+  if (!isLoaded || totalDialogues === 0) return [];
 
-  const sample: DialogueEntry[] = [];
-  const usedIndices = new Set<number>();
+  try {
+    const sample: DialogueEntry[] = [];
+    const usedIndices = new Set<number>();
 
-  while (sample.length < count && usedIndices.size < dialogueData.length) {
-    const randomIndex = Math.floor(Math.random() * dialogueData.length);
-    if (!usedIndices.has(randomIndex)) {
-      usedIndices.add(randomIndex);
-      sample.push(dialogueData[randomIndex]);
+    while (sample.length < count && usedIndices.size < totalDialogues) {
+      const randomIndex = Math.floor(Math.random() * totalDialogues);
+      if (!usedIndices.has(randomIndex)) {
+        usedIndices.add(randomIndex);
+        const dialogue = await dialogueChunkLoader.getDialogue(randomIndex);
+        if (dialogue) {
+          sample.push(dialogue);
+        }
+      }
     }
-  }
 
-  return sample;
+    return sample;
+  } catch (error) {
+    logAutopoiesis.error('Error getting random dialogue sample', { error: String(error) });
+    return [];
+  }
 };

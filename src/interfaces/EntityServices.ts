@@ -6,6 +6,17 @@
 import type { Entity, EntityStats, ActivityType } from '../types';
 
 /**
+ * Tipo para datos de tiempo del día
+ */
+export interface TimeOfDayData {
+  hour: number;
+  isDay: boolean;
+  isNight: boolean;
+  lightLevel: number;
+  modifier: number;
+}
+
+/**
  * Interface para servicios de configuración
  */
 export interface IGameConfig {
@@ -23,13 +34,18 @@ export interface IGameConfig {
 }
 
 /**
+ * Tipo para datos de logging
+ */
+export type LogData = Record<string, unknown> | string | number | boolean | null;
+
+/**
  * Interface para servicios de logging
  */
 export interface ILogger {
-  info(message: string, data?: any): void;
-  warn(message: string, data?: any): void;
-  error(message: string, data?: any): void;
-  debug(message: string, data?: any): void;
+  info(message: string, data?: LogData): void;
+  warn(message: string, data?: LogData): void;
+  error(message: string, data?: LogData): void;
+  debug(message: string, data?: LogData): void;
 }
 
 /**
@@ -48,7 +64,7 @@ export interface IActivityCalculator {
     activity: ActivityType,
     stats: EntityStats,
     deltaTime: number,
-    timeOfDay: any
+    timeOfDay: TimeOfDayData
   ): EntityStats;
 }
 
@@ -124,15 +140,15 @@ export class EntityServicesFactory {
         timing: { mainGameLogic: 800 }
       },
       logger: {
-        info: (message: string, data?: any) => console.log(`[INFO] ${message}`, data || ''),
-        warn: (message: string, data?: any) => console.warn(`[WARN] ${message}`, data || ''),
-        error: (message: string, data?: any) => console.error(`[ERROR] ${message}`, data || ''),
-        debug: (message: string, data?: any) => console.debug(`[DEBUG] ${message}`, data || '')
+        info: (message: string, data?: LogData) => console.log(`[INFO] ${message}`, data || ''),
+        warn: (message: string, data?: LogData) => console.warn(`[WARN] ${message}`, data || ''),
+        error: (message: string, data?: LogData) => console.error(`[ERROR] ${message}`, data || ''),
+        debug: (message: string, data?: LogData) => console.debug(`[DEBUG] ${message}`, data || '')
       },
       activityCalculator: {
         applyHybridDecay: (stats: EntityStats, _activity: ActivityType, _deltaTime: number) => stats,
         applySurvivalCosts: (stats: EntityStats, _deltaTime: number) => stats,
-        applyActivityEffectsWithTimeModifiers: (_activity: ActivityType, stats: EntityStats, _deltaTime: number, _timeOfDay: any) => stats
+        applyActivityEffectsWithTimeModifiers: (_activity: ActivityType, stats: EntityStats, _deltaTime: number, _timeOfDay: TimeOfDayData) => stats
       },
       resonanceCalculator: {
         calculateProximityResonanceChange: (

@@ -27,7 +27,7 @@ export class UIScene extends Phaser.Scene {
   }
 
   create() {
-    console.log('🎨 Creating Modern Game UI');
+    logAutopoiesis.info('🎨 Creating Modern Game UI');
     
     this.initializePools();
     
@@ -47,7 +47,7 @@ export class UIScene extends Phaser.Scene {
     
     this.events.on('shutdown', this.destroy, this);
     
-    console.log('✅ Modern UI Scene created');
+    logAutopoiesis.info('✅ Modern UI Scene created');
   }
 
   /**

@@ -194,8 +194,9 @@ const shouldChangeActivity = (
 };
 
 /**
- * Selección softmax: convierte scores en distribución de probabilidad
- * Controlada por temperatura (tau)
+ * Selección softmax: convierte puntuaciones en distribución de probabilidad.
+ * Fórmula: P(i) = exp((s_i - max s)/τ) / Σ exp((s_j - max s)/τ).
+ * τ (tau) controla exploración: menor τ → elecciones más “greedy”.
  */
 const softmaxPick = (
   scores: Array<{ activity: ActivityType; score: number }>,

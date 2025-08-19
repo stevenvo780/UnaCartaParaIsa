@@ -353,16 +353,34 @@ export function getAvailablePresets(): string[] {
  */
 export function applyDensityConfig(
   preset: WorldPreset, 
-  _densityConfig: keyof typeof DENSITY_CONFIGS
+  densityConfig: keyof typeof DENSITY_CONFIGS
 ): WorldPreset {
-  // const density = DENSITY_CONFIGS[densityConfig]; // TODO: Implement density integration
+  const density = DENSITY_CONFIGS[densityConfig];
   
   return {
     ...preset,
     config: {
-      ...preset.config
-      // TODO: Apply density configuration in future implementation
-      // density would be integrated into biome definitions when implemented
+      ...preset.config,
+      // Aplicar configuración de densidad a los biomas
+      biomeConfigs: Object.entries(preset.config.biomeConfigs).reduce((acc, [biomeKey, biomeConfig]) => {
+        acc[biomeKey as keyof typeof preset.config.biomeConfigs] = {
+          ...biomeConfig,
+          // Ajustar parámetros de generación basados en densidad
+          noiseScale: biomeConfig.noiseScale * density.multiplier,
+          threshold: Math.max(0, Math.min(1, biomeConfig.threshold + density.threshold_adjustment)),
+          // Aplicar multiplicador de densidad a la probabilidad de aparición
+          probability: Math.max(0, Math.min(1, biomeConfig.probability * density.multiplier))
+        };
+        return acc;
+      }, {} as typeof preset.config.biomeConfigs),
+      
+      // Ajustar parámetros globales de mundo
+      noiseSettings: {
+        ...preset.config.noiseSettings,
+        scale: preset.config.noiseSettings.scale * density.multiplier,
+        octaves: Math.max(1, Math.min(6, preset.config.noiseSettings.octaves + density.complexity_bonus)),
+        lacunarity: preset.config.noiseSettings.lacunarity + (density.multiplier - 1) * 0.5
+      }
     }
   };
 }

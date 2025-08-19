@@ -1,8 +1,12 @@
 import Phaser from 'phaser';
 import { gameConfig } from './config/gameConfig';
+import { productionOptimizer } from './utils/productionOptimizer';
 import { BootScene } from './scenes/BootScene.ts';
 import { MainScene } from './scenes/MainScene.ts';
 import { UIScene } from './scenes/UIScene.ts';
+
+// Obtener optimizaciones de producción
+const phaserOptimizations = productionOptimizer.getPhaserOptimizations();
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -28,10 +32,13 @@ const config: Phaser.Types.Core.GameConfig = {
     arcade: {
       gravity: { x: 0, y: 0 },
       debug: gameConfig.debugMode,
-      fps: gameConfig.targetFPS
+      fps: gameConfig.targetFPS,
+      ...(phaserOptimizations.physics?.arcade || {})
     }
   },
   scene: [BootScene, MainScene, UIScene],
+  // Aplicar optimizaciones de producción
+  ...phaserOptimizations,
   callbacks: {
     postBoot: function (game) {
 
@@ -45,9 +52,12 @@ const config: Phaser.Types.Core.GameConfig = {
           main: game.scene.getScene('MainScene'),
           ui: game.scene.getScene('UIScene')
         };
-        console.log('🎮 Una Carta Para Isa - Debug mode enabled');
-        console.log('🔧 Access game object via window.game');
-        console.log('🎭 Access scenes via window.scenes');
+        // Solo en modo debug, usar console.log para información de desarrollo
+        if (gameConfig.debugMode) {
+          console.log('🎮 Una Carta Para Isa - Debug mode enabled');
+          console.log('🔧 Access game object via window.game');
+          console.log('🎭 Access scenes via window.scenes');
+        }
       }
     }
   }

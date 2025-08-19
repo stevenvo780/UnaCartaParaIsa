@@ -356,6 +356,11 @@ export const calculateActivityPriority = (
   currentStats: EntityStats,
   timeSpentInActivity: number = 0
 ): number => {
+  /**
+   * Resumen matemático: combina urgencias no lineales por estadística con
+   * w(v, α) = 1 − (v/100)^α (α∈[0.1,10]) y una eficiencia temporal tipo “campana”
+   * centrada en optimalDuration. Penaliza sobretiempo > 1.5·optimalDuration.
+   */
   const effects = ACTIVITY_EFFECTS[activity];
   if (!effects) {
     console.warn(`No effects found for activity: ${activity}`);

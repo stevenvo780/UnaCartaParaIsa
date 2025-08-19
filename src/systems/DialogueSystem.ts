@@ -66,9 +66,9 @@ export class DialogueSystem {
         stats: getDialogueStats()
       });
       
-      console.log('✅ Sistema de diálogos inicializado con conversaciones reales');
+      logAutopoiesis.info('✅ Sistema de diálogos inicializado con conversaciones reales');
     } catch (error) {
-      console.error('❌ Error inicializando sistema de diálogos:', error);
+      logAutopoiesis.error('❌ Error inicializando sistema de diálogos', { error: String(error) });
       logAutopoiesis.error('Error en inicialización de DialogueSystem', { error: error?.toString() });
     }
   }
@@ -120,7 +120,20 @@ export class DialogueSystem {
     const entities: Entity[] = [];
     
     // Obtener entidades reales del MainScene
-    const mainScene = this.scene.scene.get('MainScene') as any;
+    const mainScene = this.scene.scene.get('MainScene') as Phaser.Scene & {
+      isaEntity?: { 
+        active: boolean; 
+        getPosition(): { x: number; y: number }; 
+        getCurrentActivity(): string; 
+        getMood(): string; 
+      };
+      stevEntity?: { 
+        active: boolean; 
+        getPosition(): { x: number; y: number }; 
+        getCurrentActivity(): string; 
+        getMood(): string; 
+      };
+    };
     if (mainScene) {
       // Obtener Isa
       if (mainScene.isaEntity && mainScene.isaEntity.active) {
@@ -318,7 +331,7 @@ export class DialogueSystem {
       position: { x: entity.x, y: entity.y }
     });
 
-    console.log(`💬 ${dialogue.speaker}: ${dialogue.text}`);
+    logAutopoiesis.info(`💬 ${dialogue.speaker}: ${dialogue.text}`);
   }
 
   /**
@@ -346,7 +359,7 @@ export class DialogueSystem {
    */
   public handlePlayerInteraction(entityId: string, interactionType: string): void {
     if (!this.isInitialized) {
-      console.warn('⚠️ Sistema de diálogos no inicializado');
+      logAutopoiesis.warn('⚠️ Sistema de diálogos no inicializado');
       return;
     }
 

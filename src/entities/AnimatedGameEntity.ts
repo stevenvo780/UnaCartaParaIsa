@@ -136,7 +136,7 @@ export class AnimatedGameEntity extends GameEntity {
   /**
    * Create a hash string representing current entity state for change detection
    */
-  private createStateHash(stats: any, mood: MoodType, activity: ActivityType): string {
+  private createStateHash(stats: EntityStats, mood: MoodType, activity: ActivityType): string {
     const avgStat = Math.floor((
       stats.happiness + 
       stats.energy + 

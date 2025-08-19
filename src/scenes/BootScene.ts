@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { AssetManager } from '../managers/AssetManager';
 import { AnimationManager } from '../managers/AnimationManager';
+import { AssetLazyLoader } from '../managers/AssetLazyLoader';
 import { logAutopoiesis } from '../utils/logger';
 
 /*
@@ -12,13 +13,15 @@ import { logAutopoiesis } from '../utils/logger';
 export class BootScene extends Phaser.Scene {
   private assetManager!: AssetManager;
   private animationManager!: AnimationManager;
+  private lazyLoader!: AssetLazyLoader;
 
   constructor() {
     super({ key: 'BootScene' });
   }
 
   async preload() {
-    // Inicializar managers de assets y animaciones
+    // Inicializar managers optimizados
+    this.lazyLoader = new AssetLazyLoader(this);
     this.assetManager = new AssetManager(this);
     this.animationManager = new AnimationManager(this);
 
@@ -26,43 +29,109 @@ export class BootScene extends Phaser.Scene {
     this.hideLoadingScreen();
 
     try {
-      // Validar existencia de assets antes de cargar
+      logAutopoiesis.info('🚀 Iniciando carga optimizada de assets...');
+
+      // FASE 1: Cargar solo assets críticos para iniciar rápido
+      await this.lazyLoader.loadCriticalAssets();
+      
+      // FASE 2: Preparar spritesheets críticos para animaciones
+      this.animationManager.loadCriticalSpriteSheets();
+      
+      // FASE 3: Crear animaciones básicas
+      this.animationManager.createCriticalAnimations();
+
+      // Guardar managers globalmente
+      this.registry.set('animationManager', this.animationManager);
+      this.registry.set('lazyLoader', this.lazyLoader);
+
+      // Obtener stats de carga inicial
+      const lazyStats = this.lazyLoader.getLoadingStats();
+      
+      logAutopoiesis.info('Boot rápido completado', {
+        criticalAssets: lazyStats.loadedAssets,
+        totalAssets: lazyStats.totalAssets,
+        loadProgress: lazyStats.loadProgress.toFixed(1) + '%',
+        remainingAssets: lazyStats.pendingAssets
+      });
+
+      // Cambiar a escenas principales inmediatamente
+      this.scene.start('MainScene');
+      this.scene.launch('UIScene');
+      
+      // FASE 4: Cargar assets restantes en background
+      this.startBackgroundLoading();
+
+    } catch (error: any) {
+      logAutopoiesis.error('Error crítico en BootScene optimizado', { error: error?.toString?.() || String(error) });
+      
+      // Fallback: usar sistema tradicional
+      await this.fallbackToTraditionalLoading();
+    }
+  }
+
+  /**
+   * Cargar assets restantes en background sin bloquear el juego
+   */
+  private startBackgroundLoading(): void {
+    // Cargar por prioridades en background
+    setTimeout(async () => {
+      try {
+        logAutopoiesis.info('🔄 Iniciando carga en background...');
+        
+        // Cargar prioridad media
+        await this.lazyLoader.loadAssetsByPriority('medium');
+        
+        // Luego prioridad baja
+        setTimeout(async () => {
+          await this.lazyLoader.loadAssetsByPriority('low');
+          
+          const finalStats = this.lazyLoader.getLoadingStats();
+          logAutopoiesis.info('✅ Carga completa finalizada', {
+            totalLoaded: finalStats.loadedAssets,
+            loadProgress: finalStats.loadProgress.toFixed(1) + '%'
+          });
+          
+        }, 2000); // Esperar 2 segundos antes de cargar prioridad baja
+        
+      } catch (error) {
+        logAutopoiesis.warn('Error en carga background', { error: String(error) });
+      }
+    }, 1000); // Empezar carga background después de 1 segundo
+  }
+
+  /**
+   * Fallback al sistema tradicional si falla el lazy loading
+   */
+  private async fallbackToTraditionalLoading(): Promise<void> {
+    logAutopoiesis.warn('🔄 Usando carga tradicional como fallback...');
+    
+    try {
+      // Validar assets tradicionales
       const missingAssets = await this.assetManager.validateAssets();
       if (missingAssets.length > 0) {
         logAutopoiesis.warn(`Assets faltantes: ${missingAssets.length}, se usarán fallbacks`, { missingAssets });
       }
 
-      // Preparar spritesheets para animaciones
+      // Cargar con sistema tradicional
       this.animationManager.loadAllSpriteSheets();
-
-      // Cargar todos los assets con manejo de fallbacks
       const loadResult = await this.assetManager.loadAllAssets();
 
       if (!loadResult.success) {
-        logAutopoiesis.error('Fallo crítico en carga de assets', loadResult);
+        logAutopoiesis.error('Fallo crítico en carga tradicional', loadResult);
         this.showAssetError(loadResult.failedAssets);
         return;
       }
 
-      // Crear animaciones después de la carga
+      // Crear todas las animaciones
       this.animationManager.createAllAnimations();
-
-      // Guardar manager globalmente
       this.registry.set('animationManager', this.animationManager);
 
-      logAutopoiesis.info('Boot completado', {
-        assets: {
-          loaded: loadResult.loadedAssets.length,
-          fallbacks: loadResult.fallbacksUsed.length
-        },
-        animations: this.animationManager.getStats()
-      });
-
-      // Cambiar a escenas principales
+      // Iniciar juego
       this.scene.start('MainScene');
       this.scene.launch('UIScene');
-    } catch (error: any) {
-      logAutopoiesis.error('Error crítico en BootScene', { error: error?.toString?.() || String(error) });
+
+    } catch (error) {
+      logAutopoiesis.error('Fallo completo en carga de assets', { error: String(error) });
       this.showCriticalError(error);
     }
   }
