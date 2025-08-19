@@ -49,6 +49,8 @@ export class UIScene extends Phaser.Scene {
     const mainScene = this.scene.get('MainScene');
     mainScene.events.on('gameLogicUpdate', this.updateUI, this);
 
+    // Handle resize events
+    this.scale.on('resize', this.handleResize, this);
     this.events.on('shutdown', this.destroy, this);
 
     logAutopoiesis.info('✅ Modern UI Scene created');
@@ -1175,6 +1177,9 @@ export class UIScene extends Phaser.Scene {
   }
 
   private updateCharacterPanels(entities: Entity[]) {
+    if (!Array.isArray(entities)) {
+      return;
+    }
     const isaEntity = entities.find(entity => entity.id === 'isa');
     if (isaEntity) {
       const isaPanel = this.leftPanel.getData('isaStatsPanel');
@@ -1301,6 +1306,34 @@ export class UIScene extends Phaser.Scene {
   private toggleMinimap() {
     this.showMinimap = !this.showMinimap;
     this.minimapContainer.setVisible(this.showMinimap);
+  }
+
+  /**
+   * Handle screen resize events
+   */
+  private handleResize(gameSize: Phaser.Structs.Size) {
+    const { width, height } = gameSize;
+    
+    // Reposition panels based on new screen size
+    if (this.leftPanel) {
+      this.leftPanel.setPosition(20, 20);
+    }
+    
+    if (this.rightPanel) {
+      this.rightPanel.setPosition(width - 300, 20);
+    }
+    
+    if (this.minimapContainer) {
+      this.minimapContainer.setPosition(width - 200, height - 200);
+    }
+    
+    if (this.bottomBar) {
+      this.bottomBar.setPosition(width / 2, height - 50);
+    }
+    
+    if (this.foodUIContainer) {
+      this.foodUIContainer.setPosition(width / 2, height - 120);
+    }
   }
 
   /**

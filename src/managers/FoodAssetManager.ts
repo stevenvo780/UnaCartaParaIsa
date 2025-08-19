@@ -118,8 +118,6 @@ export class FoodAssetManager {
       // Cargar sprites del sistema de comida
       const systemAssets = [
         { key: 'food_store', path: 'assets/props/Crate_Medium_Closed.png' },
-        { key: 'spark', path: 'assets/effects/spark.png' },
-        { key: 'eating_indicator', path: 'assets/ui/eating_icon.png' },
       ];
 
       let assetsLoaded = 0;

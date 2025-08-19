@@ -256,21 +256,36 @@ export class FoodSystem {
       },
     });
 
-    // Crear partículas de efectos
-    const particles = this.scene.add.particles(position.x, position.y - 20, 'spark', {
-      scale: { start: 0.2, end: 0 },
-      speed: { min: 20, max: 50 },
-      lifespan: 1000,
-      quantity: 3,
-      frequency: 200,
-      tint:
-        food.category === 'healthy' ? 0x00ff00 : food.category === 'dessert' ? 0xff69b4 : 0xffd700,
-    });
-
-    // Detener partículas después del tiempo de comer
-    this.scene.time.delayedCall(food.consumeTime, () => {
-      particles.destroy();
-    });
+    // Crear efecto visual simple de consumo (círculos que se desvanecen)
+    const effectColor =
+      food.category === 'healthy' ? 0x00ff00 : food.category === 'dessert' ? 0xff69b4 : 0xffd700;
+    
+    // Crear múltiples círculos como efecto visual
+    for (let i = 0; i < 3; i++) {
+      this.scene.time.delayedCall(i * 200, () => {
+        const circle = this.scene.add.circle(
+          position.x + Phaser.Math.Between(-10, 10),
+          position.y - 20 + Phaser.Math.Between(-10, 10),
+          3,
+          effectColor,
+          0.8
+        );
+        
+        // Animar el círculo
+        this.scene.tweens.add({
+          targets: circle,
+          scaleX: 2,
+          scaleY: 2,
+          alpha: 0,
+          y: circle.y - 20,
+          duration: 800,
+          ease: 'Power2',
+          onComplete: () => {
+            circle.destroy();
+          },
+        });
+      });
+    }
   }
 
   /**

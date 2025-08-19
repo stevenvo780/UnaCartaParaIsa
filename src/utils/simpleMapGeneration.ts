@@ -483,8 +483,8 @@ const generateBiomeBasedMap = (
 
   // Configuración por defecto o personalizada
   const config = worldConfig
-    ? { ...createCustomWorldConfig({}), ...worldConfig }
-    : getWorldPreset('balanced')?.config || createCustomWorldConfig({});
+    ? { ...createCustomWorldConfig({ size: 'xlarge' }), ...worldConfig }
+    : getWorldPreset('balanced')?.config || createCustomWorldConfig({ size: 'xlarge' });
 
   // Crear sistema de biomas
   const biomeSystem = new BiomeSystem(config);

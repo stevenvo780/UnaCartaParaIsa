@@ -385,7 +385,7 @@ export function applyDensityConfig(
  * Crea una configuración personalizada basada en parámetros
  */
 export function createCustomWorldConfig(params: {
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'xlarge';
   biomePreference?: 'balanced' | 'forest' | 'mystical' | 'mountain';
   density?: keyof typeof DENSITY_CONFIGS;
   seed?: number;
@@ -394,6 +394,7 @@ export function createCustomWorldConfig(params: {
     small: { width: 32, height: 32 },
     medium: { width: 64, height: 64 },
     large: { width: 96, height: 96 },
+    xlarge: { width: 128, height: 128 },
   };
 
   const size = sizeConfigs[params.size || 'medium'];

@@ -81,7 +81,7 @@ export class AssetLazyLoader {
     this.defineAssetGroup('terrain_basic', [
       {
         key: 'grass_1',
-        path: '/assets/terrain/grass_1.png',
+        path: 'assets/terrain/autotiles/grass_edge_n.png',
         type: 'image',
         priority: 'medium',
       },

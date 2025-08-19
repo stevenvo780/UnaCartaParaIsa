@@ -172,15 +172,77 @@ export class EntityServicesFactory {
         },
       },
       activityCalculator: {
-        applyHybridDecay: (stats: EntityStats, _activity: ActivityType, _deltaTime: number) =>
-          stats,
-        applySurvivalCosts: (stats: EntityStats, _deltaTime: number) => stats,
+        applyHybridDecay: (stats: EntityStats, _activity: ActivityType, deltaTime: number) => {
+          // Basic degradation over time
+          const secondsElapsed = deltaTime / 1000;
+          const degradationRate = 0.1; // Degradation per second
+          
+          return {
+            ...stats,
+            hunger: Math.min(100, stats.hunger + degradationRate * secondsElapsed * 0.8),
+            energy: Math.max(0, stats.energy - degradationRate * secondsElapsed * 0.6),
+            happiness: Math.max(0, stats.happiness - degradationRate * secondsElapsed * 0.3),
+            sleepiness: Math.min(100, stats.sleepiness + degradationRate * secondsElapsed * 0.5),
+            boredom: Math.min(100, stats.boredom + degradationRate * secondsElapsed * 0.7),
+            loneliness: Math.min(100, stats.loneliness + degradationRate * secondsElapsed * 0.4),
+          };
+        },
+        applySurvivalCosts: (stats: EntityStats, deltaTime: number) => {
+          // Additional survival costs
+          const secondsElapsed = deltaTime / 1000;
+          const baseCost = 0.05; // Base survival cost per second
+          
+          return {
+            ...stats,
+            health: Math.max(0, stats.health - baseCost * secondsElapsed * 0.2),
+            stress: Math.min(100, stats.stress + baseCost * secondsElapsed * 0.3),
+          };
+        },
         applyActivityEffectsWithTimeModifiers: (
-          _activity: ActivityType,
+          activity: ActivityType,
           stats: EntityStats,
-          _deltaTime: number,
+          deltaTime: number,
           _timeOfDay: TimeOfDayData
-        ) => stats,
+        ) => {
+          // Apply positive effects based on activity
+          const secondsElapsed = deltaTime / 1000;
+          const effectStrength = 0.2; // Effect strength per second
+          
+          let modifiedStats = { ...stats };
+          
+          switch (activity) {
+            case 'RESTING':
+              modifiedStats.energy = Math.min(100, stats.energy + effectStrength * secondsElapsed * 2);
+              modifiedStats.sleepiness = Math.max(0, stats.sleepiness - effectStrength * secondsElapsed * 1.5);
+              break;
+            case 'SOCIALIZING':
+              modifiedStats.loneliness = Math.max(0, stats.loneliness - effectStrength * secondsElapsed * 2);
+              modifiedStats.happiness = Math.min(100, stats.happiness + effectStrength * secondsElapsed);
+              break;
+            case 'EATING':
+              modifiedStats.hunger = Math.max(0, stats.hunger - effectStrength * secondsElapsed * 3);
+              modifiedStats.energy = Math.min(100, stats.energy + effectStrength * secondsElapsed * 0.5);
+              break;
+            case 'PLAYING':
+              modifiedStats.boredom = Math.max(0, stats.boredom - effectStrength * secondsElapsed * 2);
+              modifiedStats.happiness = Math.min(100, stats.happiness + effectStrength * secondsElapsed * 1.5);
+              break;
+            case 'WORKING':
+              modifiedStats.money = Math.min(100, stats.money + effectStrength * secondsElapsed * 1.5);
+              modifiedStats.stress = Math.min(100, stats.stress + effectStrength * secondsElapsed * 0.8);
+              break;
+            case 'EXERCISING':
+              modifiedStats.health = Math.min(100, stats.health + effectStrength * secondsElapsed);
+              modifiedStats.energy = Math.max(0, stats.energy - effectStrength * secondsElapsed * 0.5);
+              break;
+            default:
+              // WANDERING or other activities
+              modifiedStats.boredom = Math.max(0, stats.boredom - effectStrength * secondsElapsed * 0.5);
+              break;
+          }
+          
+          return modifiedStats;
+        },
       },
       resonanceCalculator: {
         calculateProximityResonanceChange: (

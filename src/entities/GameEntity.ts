@@ -193,13 +193,25 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   }
 
   private updateMovement(_deltaTime: number) {
-    if (Math.random() < GAME_BALANCE.MOVEMENT.DIRECTION_CHANGE_PROBABILITY) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = this.services.config.movement.baseSpeed;
-
-      this.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+    // Get current game state and zones from scene registry
+    const gameState = this.scene.registry.get('gameState');
+    if (gameState?.zones) {
+      // Find best zone target based on needs
+      const target = this.findBestZoneTarget(gameState.zones);
+      
+      if (target) {
+        // Navigate towards target zone
+        this.navigateToTarget(target);
+      } else {
+        // Fall back to random movement
+        this.randomMovement();
+      }
+    } else {
+      // Fall back to random movement if no zones available
+      this.randomMovement();
     }
 
+    // Apply friction to velocity
     if (this.body) {
       this.setVelocity(
         this.body.velocity.x * this.services.config.movement.friction,
@@ -207,8 +219,118 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       );
     }
 
+    // Update position data
     this.entityData.position.x = this.x;
     this.entityData.position.y = this.y;
+  }
+
+  private randomMovement() {
+    if (Math.random() < GAME_BALANCE.MOVEMENT.DIRECTION_CHANGE_PROBABILITY) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = this.services.config.movement.baseSpeed;
+
+      this.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+    }
+  }
+
+  private findBestZoneTarget(zones: any[]): { x: number; y: number } | null {
+    const { stats } = this.entityData;
+    
+    // Determine current highest need
+    let highestNeed = 0;
+    let targetZone = null;
+    
+    for (const zone of zones) {
+      let needScore = 0;
+      
+      // Calculate need score based on zone type and entity stats
+      switch (zone.type) {
+        case 'food':
+          needScore = stats.hunger;
+          break;
+        case 'rest':
+          needScore = stats.sleepiness;
+          break;
+        case 'social':
+          needScore = stats.loneliness;
+          break;
+        case 'play':
+          needScore = stats.boredom;
+          break;
+        case 'work':
+          needScore = 100 - stats.money; // Higher need if low money
+          break;
+        case 'energy':
+          needScore = 100 - stats.energy; // Higher need if low energy
+          break;
+        default:
+          needScore = (stats.boredom + stats.loneliness) / 2;
+          break;
+      }
+      
+      // Add some randomness to prevent deterministic behavior
+      needScore += Math.random() * 10;
+      
+      if (needScore > highestNeed && needScore > 30) {
+        highestNeed = needScore;
+        targetZone = zone;
+      }
+    }
+    
+    if (targetZone) {
+      // Return center of target zone with some variation
+      const centerX = targetZone.bounds.x + targetZone.bounds.width / 2;
+      const centerY = targetZone.bounds.y + targetZone.bounds.height / 2;
+      
+      // Add variation to avoid clustering
+      const variationX = (Math.random() - 0.5) * targetZone.bounds.width * 0.3;
+      const variationY = (Math.random() - 0.5) * targetZone.bounds.height * 0.3;
+      
+      return {
+        x: centerX + variationX,
+        y: centerY + variationY
+      };
+    }
+    
+    return null;
+  }
+
+  private navigateToTarget(target: { x: number; y: number }) {
+    const currentX = this.x;
+    const currentY = this.y;
+    
+    const deltaX = target.x - currentX;
+    const deltaY = target.y - currentY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Only move if we're not too close to target
+    if (distance > 20) {
+      const speed = this.services.config.movement.baseSpeed;
+      const normalizedX = deltaX / distance;
+      const normalizedY = deltaY / distance;
+      
+      // Add some smoothing to movement
+      const currentVelX = this.body ? this.body.velocity.x : 0;
+      const currentVelY = this.body ? this.body.velocity.y : 0;
+      
+      const targetVelX = normalizedX * speed;
+      const targetVelY = normalizedY * speed;
+      
+      // Smooth interpolation towards target velocity
+      const lerpFactor = 0.1;
+      const newVelX = currentVelX + (targetVelX - currentVelX) * lerpFactor;
+      const newVelY = currentVelY + (targetVelY - currentVelY) * lerpFactor;
+      
+      this.setVelocity(newVelX, newVelY);
+    } else {
+      // Slow down when near target
+      if (this.body) {
+        this.setVelocity(
+          this.body.velocity.x * 0.8,
+          this.body.velocity.y * 0.8
+        );
+      }
+    }
   }
 
   private updateVisuals() {

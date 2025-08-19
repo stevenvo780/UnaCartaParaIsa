@@ -73,8 +73,8 @@ export class MainScene extends Phaser.Scene {
     // Setup partner relationships and register with GameLogicManager
     isaEntity.setPartnerEntity(stevEntity);
     stevEntity.setPartnerEntity(isaEntity);
-    this.gameLogicManager.registerEntity('isa', isaEntity.getEntity());
-    this.gameLogicManager.registerEntity('stev', stevEntity.getEntity());
+    this.gameLogicManager.registerEntity('isa', isaEntity);
+    this.gameLogicManager.registerEntity('stev', stevEntity);
 
     // Setup spacebar action for current controlled entity
     this.input.keyboard?.on('keydown-SPACE', () => {
