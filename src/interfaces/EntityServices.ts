@@ -3,7 +3,7 @@
  * Permite inyección de dependencias y mejor testabilidad
  */
 
-import type { Entity, EntityStats, ActivityType, MoodType } from '../types';
+import type { Entity, EntityStats, ActivityType } from '../types';
 
 /**
  * Interface para servicios de configuración
@@ -184,7 +184,7 @@ export class MockEntityServices implements IEntityServices {
   activityCalculator: IActivityCalculator = {
     applyHybridDecay: (stats) => stats,
     applySurvivalCosts: (stats) => stats,
-    applyActivityEffectsWithTimeModifiers: (activity, stats) => stats
+    applyActivityEffectsWithTimeModifiers: (_activity, stats) => stats
   };
 
   resonanceCalculator: IResonanceCalculator = {

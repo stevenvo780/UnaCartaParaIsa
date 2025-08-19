@@ -137,7 +137,7 @@ export class AssetManager {
         }
       } catch (error) {
         missingAssets.push(asset.key);
-        logAutopoiesis.error(`Error validando asset: ${asset.key}`, { error: error.toString() });
+        logAutopoiesis.error(`Error validando asset: ${asset.key}`, { error: String(error) });
       }
     });
 
@@ -235,7 +235,7 @@ export class AssetManager {
           logAutopoiesis.warn(`Unknown asset type: ${asset.type} for ${asset.key}`);
       }
     } catch (error) {
-      logAutopoiesis.error(`Error queuing asset: ${asset.key}`, { error: error.toString() });
+      logAutopoiesis.error(`Error queuing asset: ${asset.key}`, { error: String(error) });
       this.failedAssets.add(asset.key);
     }
   }

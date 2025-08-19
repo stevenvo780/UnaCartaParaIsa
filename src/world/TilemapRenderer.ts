@@ -1,10 +1,10 @@
 /**
  * Renderizador profesional de tilemaps usando Phaser.Tilemaps
- * Integra con TilesetManager para uso eficiente de assets organizados
+ * Integra con TilesetManager y CreativeAssetLoader para uso real de assets organizados
  */
 
 import Phaser from 'phaser';
-import { TilesetManager } from './TilesetManager';
+import { CreativeAssetLoader, AssetInfo } from './CreativeAssetLoader';
 import { BiomeType } from './types';
 import type { GeneratedWorld } from './types';
 
@@ -44,28 +44,33 @@ export interface TilesetInfo {
  */
 export class TilemapRenderer {
   private scene: Phaser.Scene;
-  private tilesetManager: TilesetManager;
+  private assetLoader: CreativeAssetLoader;
   private tilemap?: Phaser.Tilemaps.Tilemap;
   private layers: Map<string, Phaser.Tilemaps.TilemapLayer> = new Map();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.tilesetManager = TilesetManager.getInstance();
+    this.assetLoader = new CreativeAssetLoader(scene);
   }
 
   /**
-   * Renderiza un mundo generado usando tilemaps profesionales
+   * Renderiza un mundo generado usando tilemaps profesionales con assets reales
    */
   async renderWorld(world: GeneratedWorld): Promise<void> {
-    // 1. Generar array de IDs de tiles desde el mundo
-    const tileData = this.generateTileDataFromWorld(world);
+    console.log('🎨 Iniciando renderizado creativo con assets reales...');
+    
+    // 1. Cargar todos los assets creativamente
+    await this.assetLoader.loadAllAssets();
+    
+    // 2. Generar array de tiles usando assets reales
+    const tileData = await this.generateCreativeTileData(world);
     const width = world.terrain[0].length;
     const height = world.terrain.length;
     
-    // 2. Crear tilesets dinámicos
-    await this.createDynamicTilesets();
+    // 3. Crear tileset dinámico con assets reales
+    const tilesetTexture = await this.createRealAssetTileset(world);
     
-    // 3. Crear el tilemap en Phaser
+    // 4. Crear el tilemap en Phaser
     const flatTileData = tileData.flat();
     this.tilemap = this.scene.make.tilemap({
       data: [flatTileData],
@@ -75,11 +80,8 @@ export class TilemapRenderer {
       height
     });
 
-    // 4. Crear canvas y textura para tiles
-    const tilesetTexture = await this.createTilesetTexture();
-    
-    // 5. Añadir imagen al cache de Phaser
-    const textureKey = 'tileset_texture';
+    // 5. Añadir textura real al cache
+    const textureKey = 'real_tileset';
     if (!this.scene.textures.exists(textureKey)) {
       this.scene.textures.addCanvas(textureKey, tilesetTexture);
     }
@@ -92,17 +94,19 @@ export class TilemapRenderer {
       const layer = this.tilemap.createLayer(0, tileset, 0, 0);
       if (layer) {
         this.layers.set('ground', layer);
+        
+        // 8. Aplicar autotiles reales para transiciones naturales
+        await this.applyRealAutotiles(world, layer);
       }
     }
 
-    // 8. Aplicar autotiles para transiciones naturales
-    this.applyAutotiles(world);
+    console.log('✅ Mundo renderizado con assets reales y diversidad creativa');
   }
 
   /**
-   * Genera array de IDs de tiles desde el mundo generado
+   * Genera array de tiles usando assets reales y variaciones creativas
    */
-  private generateTileDataFromWorld(world: GeneratedWorld): number[][] {
+  private async generateCreativeTileData(world: GeneratedWorld): Promise<number[][]> {
     const tileData: number[][] = [];
     
     for (let y = 0; y < world.terrain.length; y++) {
@@ -111,8 +115,8 @@ export class TilemapRenderer {
         const tile = world.terrain[y][x];
         const biome = tile.biome;
         
-        // Obtener ID de tile basado en bioma
-        const tileId = this.getTileIdForBiome(biome);
+        // Obtener asset creativo basado en bioma, posición y variaciones
+        const tileId = this.getCreativeTileId(biome, x, y, tile.biomeStrength);
         row.push(tileId);
       }
       tileData.push(row);
@@ -121,100 +125,269 @@ export class TilemapRenderer {
     return tileData;
   }
 
+
+
   /**
-   * Obtiene un ID de tile apropiado para un bioma
+   * Obtiene ID de tile creativo basado en múltiples factores
    */
-  private getTileIdForBiome(biome: BiomeType): number {
+  private getCreativeTileId(biome: BiomeType, x: number, y: number, strength: number): number {
+    // Usar posición y strength para crear variación natural
+    const seed = (x * 73 + y * 137 + Math.floor(strength * 100)) % 100;
+    
     switch (biome) {
       case BiomeType.GRASSLAND:
-        return 1; // Grass tile
-      case BiomeType.FOREST:
-        return 2; // Forest tile  
+        // Usar diferentes variaciones de césped basadas en posición
+        const grassVariant = (seed % 31) + 1; // 31 variaciones disponibles
+        return grassVariant;
+      
       case BiomeType.WETLAND:
-        return 3; // Water tile
-      case BiomeType.MOUNTAINOUS:
-        return 4; // Stone tile
-      case BiomeType.MYSTICAL:
-        return 5; // Special tile
+        // Usar patrón de tiles de agua organizados
+        const waterRow = Math.floor(seed / 12) % 6;
+        const waterCol = seed % 12;
+        return 100 + (waterRow * 12) + waterCol; // Offset 100 para agua
+      
       case BiomeType.VILLAGE:
-        return 6; // Path tile
+        // Usar tiles de road de forma inteligente
+        return 200 + (seed % 15); // Offset 200 para roads
+      
+      case BiomeType.FOREST:
+        // Grass más denso y variado
+        const forestVariant = Math.floor(seed / 3) % 31 + 1;
+        return forestVariant;
+      
+      case BiomeType.MOUNTAINOUS:
+        // Variaciones más rocosas
+        const mountainVariant = (15 + (seed % 16)) % 31 + 1;
+        return mountainVariant;
+      
+      case BiomeType.MYSTICAL:
+        // Combinación especial y variada
+        const mysticalVariant = (seed % 2 === 0) ? (seed % 10) + 20 : (seed % 5) + 1;
+        return mysticalVariant;
+      
       default:
         return 1; // Default grass
     }
   }
 
-
-
   /**
-   * Crea tilesets dinámicos en el cache
+   * Crea tileset real usando assets cargados
    */
-  private async createDynamicTilesets(): Promise<void> {
-    const tilesets = this.tilesetManager.getAllTilesets();
-    
-    for (const tileset of tilesets) {
-      // Crear canvas para este tileset
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-      
-      // Configurar tamaño del canvas
-      const cols = Math.ceil(Math.sqrt(tileset.tiles.length));
-      canvas.width = cols * 32;
-      canvas.height = Math.ceil(tileset.tiles.length / cols) * 32;
-      
-      // Dibujar tiles en el canvas
-      for (let i = 0; i < tileset.tiles.length; i++) {
-        const tile = tileset.tiles[i];
-        const x = (i % cols) * 32;
-        const y = Math.floor(i / cols) * 32;
-        
-        // Crear un color sólido basado en el ID del tile
-        ctx.fillStyle = this.getBiomeColorById(tile.id);
-        ctx.fillRect(x, y, 32, 32);
-      }
-      
-      // Añadir al cache de texturas
-      if (!this.scene.textures.exists(tileset.name)) {
-        this.scene.textures.addCanvas(tileset.name, canvas);
-      }
-    }
-  }
-
-  /**
-   * Crea textura de tileset unificada
-   */
-  private async createTilesetTexture(): Promise<HTMLCanvasElement> {
+  private async createRealAssetTileset(world: GeneratedWorld): Promise<HTMLCanvasElement> {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d')!;
     
-    // Por simplicidad, crear un tileset básico con colores de biomas
-    canvas.width = 8 * 32; // 8 tiles por fila
-    canvas.height = 2 * 32; // 2 filas
+    // Calcular biomas únicos en el mundo
+    const uniqueBiomes = this.getUniqueBiomesFromWorld(world);
+    const totalTiles = this.calculateTotalTilesNeeded(uniqueBiomes);
     
-    const biomeColors = [
-      '#000000', // 0 - vacío
-      '#4CAF50', // 1 - grassland
-      '#2E7D32', // 2 - forest
-      '#1976D2', // 3 - wetland
-      '#795548', // 4 - mountainous
-      '#9C27B0', // 5 - mystical
-      '#FFC107'  // 6 - village
-    ];
+    // Configurar canvas para acomodar todos los tiles
+    const tilesPerRow = Math.ceil(Math.sqrt(totalTiles));
+    canvas.width = tilesPerRow * 32;
+    canvas.height = Math.ceil(totalTiles / tilesPerRow) * 32;
     
-    for (let i = 0; i < biomeColors.length; i++) {
-      const x = (i % 8) * 32;
-      const y = Math.floor(i / 8) * 32;
-      
-      ctx.fillStyle = biomeColors[i];
-      ctx.fillRect(x, y, 32, 32);
-      
-      // Añadir borde para claridad
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x, y, 32, 32);
+    console.log(`🎨 Creando tileset real: ${totalTiles} tiles, ${tilesPerRow}x${Math.ceil(totalTiles / tilesPerRow)}`);
+    
+    let currentTileIndex = 0;
+    
+    // Dibujar tiles reales por bioma
+    for (const biome of uniqueBiomes) {
+      currentTileIndex = await this.drawBiomeTiles(ctx, biome, currentTileIndex, tilesPerRow);
     }
     
     return canvas;
   }
+
+  /**
+   * Obtiene biomas únicos del mundo generado
+   */
+  private getUniqueBiomesFromWorld(world: GeneratedWorld): BiomeType[] {
+    const biomes = new Set<BiomeType>();
+    
+    for (let y = 0; y < world.terrain.length; y++) {
+      for (let x = 0; x < world.terrain[y].length; x++) {
+        biomes.add(world.terrain[y][x].biome);
+      }
+    }
+    
+    return Array.from(biomes);
+  }
+
+  /**
+   * Calcula total de tiles necesarios para todos los biomas
+   */
+  private calculateTotalTilesNeeded(biomes: BiomeType[]): number {
+    let total = 0;
+    
+    for (const biome of biomes) {
+      switch (biome) {
+        case BiomeType.GRASSLAND:
+          total += 31; // 31 variaciones de césped
+          break;
+        case BiomeType.WETLAND:
+          total += 72; // 6x12 tiles de agua organizados
+          break;
+        case BiomeType.VILLAGE:
+          total += 15; // 15 tipos de road
+          break;
+        case BiomeType.FOREST:
+        case BiomeType.MOUNTAINOUS:
+        case BiomeType.MYSTICAL:
+          total += 31; // Variaciones de grass
+          break;
+      }
+    }
+    
+    return Math.max(total, 256); // Mínimo 256 para flexibilidad
+  }
+
+  /**
+   * Dibuja tiles reales de un bioma específico
+   */
+  private async drawBiomeTiles(
+    ctx: CanvasRenderingContext2D, 
+    biome: BiomeType, 
+    startIndex: number, 
+    tilesPerRow: number
+  ): Promise<number> {
+    const biomeAssets = this.assetLoader.getAssetsByBiome(this.biomeToAssetBiome(biome));
+    let currentIndex = startIndex;
+    
+    for (const asset of biomeAssets) {
+      const x = (currentIndex % tilesPerRow) * 32;
+      const y = Math.floor(currentIndex / tilesPerRow) * 32;
+      
+      // Cargar imagen real del asset
+      try {
+        const img = await this.loadImageAsync(asset.path);
+        ctx.drawImage(img, x, y, 32, 32);
+      } catch (error) {
+        // Fallback: dibujar color sólido si no se puede cargar la imagen
+        ctx.fillStyle = this.getBiomeColorById(currentIndex);
+        ctx.fillRect(x, y, 32, 32);
+        
+        // Añadir borde para identificación
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, 32, 32);
+      }
+      
+      currentIndex++;
+    }
+    
+    return currentIndex;
+  }
+
+  /**
+   * Carga imagen de forma asíncrona
+   */
+  private loadImageAsync(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  /**
+   * Convierte BiomeType a string para asset loader
+   */
+  private biomeToAssetBiome(biome: BiomeType): string {
+    switch (biome) {
+      case BiomeType.GRASSLAND: return 'grassland';
+      case BiomeType.WETLAND: return 'wetland';
+      case BiomeType.VILLAGE: return 'village';
+      case BiomeType.FOREST: return 'grassland'; // Forest usa variaciones de grass
+      case BiomeType.MOUNTAINOUS: return 'grassland'; // Mountain usa variaciones de grass
+      case BiomeType.MYSTICAL: return 'grassland'; // Mystical usa variaciones de grass
+      default: return 'grassland';
+    }
+  }
+
+  /**
+   * Aplica autotiles reales para transiciones naturales
+   */
+  private async applyRealAutotiles(world: GeneratedWorld, layer: Phaser.Tilemaps.TilemapLayer): Promise<void> {
+    const width = world.terrain[0].length;
+    const height = world.terrain.length;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const currentBiome = this.getBiomeAtPosition(world, x, y);
+        const neighbors = this.getNeighborBiomes(world, x, y);
+        
+        // Detectar transiciones y aplicar autotiles reales
+        const transitions = this.detectBiomeTransitions(currentBiome, neighbors);
+        
+        if (transitions.length > 0) {
+          const autotileAsset = this.selectRealAutotile(currentBiome, transitions);
+          if (autotileAsset) {
+            // Usar el asset real de autotile
+            const autotileId = this.getAutotileIdInTileset(autotileAsset);
+            layer.putTileAt(autotileId, x, y);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Detecta transiciones específicas entre biomas
+   */
+  private detectBiomeTransitions(current: BiomeType | null, neighbors: BiomeType[]): string[] {
+    if (!current) return [];
+    
+    const transitions: string[] = [];
+    const neighborSet = new Set(neighbors);
+    
+    // Detectar direcciones de transición
+    if (neighborSet.has(BiomeType.WETLAND) && current !== BiomeType.WETLAND) {
+      transitions.push('water_transition');
+    }
+    
+    if (neighborSet.has(BiomeType.GRASSLAND) && current !== BiomeType.GRASSLAND) {
+      transitions.push('grass_transition');
+    }
+    
+    return transitions;
+  }
+
+  /**
+   * Selecciona autotile real basado en transiciones
+   */
+  private selectRealAutotile(current: BiomeType | null, transitions: string[]): AssetInfo | null {
+    if (!current || transitions.length === 0) return null;
+    
+    // Priorizar transiciones de agua
+    if (transitions.includes('water_transition')) {
+      if (current === BiomeType.GRASSLAND) {
+        return this.assetLoader.getAutotileForTransition('water', 'n');
+      }
+    }
+    
+    // Priorizar transiciones de grass
+    if (transitions.includes('grass_transition')) {
+      if (current === BiomeType.WETLAND) {
+        return this.assetLoader.getAutotileForTransition('grass', 'n');
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Obtiene ID de autotile en el tileset
+   */
+  private getAutotileIdInTileset(asset: AssetInfo): number {
+    // Por ahora retorna un ID fijo, en producción mapearia a posición real
+    return 300 + Math.abs(asset.key.length % 50); // Offset 300 para autotiles
+  }
+
+
+
+
+
 
   /**
    * Obtiene color representativo para un ID de tile
@@ -233,39 +406,9 @@ export class TilemapRenderer {
 
 
 
-  /**
-   * Aplica autotiles para transiciones naturales entre biomas
-   */
-  private applyAutotiles(world: GeneratedWorld): void {
-    const groundLayer = this.layers.get('ground');
-    if (!groundLayer) return;
 
-    this.detectAndApplyTransitions(world, groundLayer);
-  }
 
-  /**
-   * Detecta y aplica transiciones automáticas
-   */
-  private detectAndApplyTransitions(world: GeneratedWorld, layer: Phaser.Tilemaps.TilemapLayer): void {
-    const width = world.terrain[0].length;
-    const height = world.terrain.length;
 
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const currentBiome = this.getBiomeAtPosition(world, x, y);
-        const neighbors = this.getNeighborBiomes(world, x, y);
-        
-        // Si hay vecinos de diferente bioma, aplicar autotile
-        const hasDifferentNeighbors = neighbors.some(n => n !== currentBiome);
-        if (hasDifferentNeighbors) {
-          const autotileId = this.selectAutotile(currentBiome, neighbors);
-          if (autotileId !== null) {
-            layer.putTileAt(autotileId, x, y);
-          }
-        }
-      }
-    }
-  }
 
   /**
    * Obtiene el bioma en una posición específica
@@ -300,14 +443,7 @@ export class TilemapRenderer {
     return neighbors;
   }
 
-  /**
-   * Selecciona el autotile apropiado basado en vecinos
-   */
-  private selectAutotile(_current: BiomeType | null, _neighbors: BiomeType[]): number | null {
-    // Implementación básica - en producción usaría reglas más complejas
-    // Por ahora retorna el tile base
-    return this.getTileIdForBiome(_current || BiomeType.GRASSLAND);
-  }
+
 
   /**
    * Limpia recursos del renderer

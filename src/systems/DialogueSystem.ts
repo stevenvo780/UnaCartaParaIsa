@@ -274,7 +274,7 @@ export class DialogueSystem {
     const speakerName = this.scene.add.text(bubbleWidth/2 - 10, -bubbleHeight/2 + 8, dialogue.speaker, {
       fontSize: '10px',
       fontFamily: 'Arial, sans-serif',
-      color: bubbleColor,
+      color: `#${bubbleColor.toString(16).padStart(6, '0')}`,
       fontStyle: 'bold'
     }).setOrigin(1, 0);
 

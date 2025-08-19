@@ -7,8 +7,7 @@ import type { Zone, MapElement, GameState } from '../types';
 import { GAME_BALANCE } from '../constants/gameBalance';
 import { logAutopoiesis } from '../utils/logger';
 import { AnimationManager } from './AnimationManager';
-import { TilemapRenderer } from '../world/TilemapRenderer';
-import { initializeTilesets } from '../world/TilesetManager';
+import { BiomeAssetRenderer } from '../world/BiomeAssetRenderer';
 import type { GeneratedWorld } from '../world/types';
 
 export class WorldRenderer {
@@ -21,19 +20,16 @@ export class WorldRenderer {
   private lastCullingUpdate: number = 0;
   private readonly CULLING_UPDATE_INTERVAL = 100; // Update every 100ms
   
-  // Sistema profesional de tilemaps
-  private tilemapRenderer?: TilemapRenderer;
-  private useProfessionalTilemaps: boolean = true;
+  // Sistema simplificado de assets creativos
+  private biomeAssetRenderer?: BiomeAssetRenderer;
+  private useCreativeAssets: boolean = true;
 
   constructor(scene: Phaser.Scene, gameState: GameState) {
     this.scene = scene;
     this.gameState = gameState;
     
-    // Inicializar sistema de tilesets
-    initializeTilesets();
-    
-    // Crear renderizador de tilemaps profesional
-    this.tilemapRenderer = new TilemapRenderer(scene);
+    // Crear renderizador de assets creativos
+    this.biomeAssetRenderer = new BiomeAssetRenderer(scene);
     
     // Get animation manager from scene registry with type safety
     const animManager = scene.registry.get('animationManager');
@@ -45,16 +41,16 @@ export class WorldRenderer {
       logAutopoiesis.warn('AnimationManager not available in WorldRenderer, using static decorations');
     }
 
-    logAutopoiesis.info('WorldRenderer inicializado con sistema profesional de tilemaps');
+    logAutopoiesis.info('WorldRenderer inicializado con sistema de assets creativos');
   }
 
   /**
-   * Render the complete world - ahora con soporte para ambos sistemas
+   * Render the complete world - ahora con sistema de assets creativos
    */
   public async renderWorld(generatedWorld?: GeneratedWorld): Promise<void> {
-    if (this.useProfessionalTilemaps && generatedWorld && this.tilemapRenderer) {
-      // Usar sistema profesional de tilemaps
-      await this.renderWorldWithTilemaps(generatedWorld);
+    if (this.useCreativeAssets && generatedWorld && this.biomeAssetRenderer) {
+      // Usar sistema de assets creativos
+      await this.renderWorldWithCreativeAssets(generatedWorld);
     } else {
       // Fallback al sistema anterior
       this.renderWorldLegacy();
@@ -62,16 +58,16 @@ export class WorldRenderer {
   }
 
   /**
-   * Renderiza el mundo usando el sistema profesional de tilemaps
+   * Renderiza el mundo usando assets creativos reales
    */
-  private async renderWorldWithTilemaps(world: GeneratedWorld): Promise<void> {
-    logAutopoiesis.info('🗺️ Renderizando mundo con sistema profesional de tilemaps');
+  private async renderWorldWithCreativeAssets(world: GeneratedWorld): Promise<void> {
+    logAutopoiesis.info('🎨 Renderizando mundo con assets creativos reales');
     
     try {
-      // Renderizar usando TilemapRenderer
-      await this.tilemapRenderer!.renderWorld(world);
+      // Renderizar usando BiomeAssetRenderer
+      await this.biomeAssetRenderer!.renderWorldWithRealAssets(world);
       
-      // Renderizar zonas encima del tilemap
+      // Renderizar zonas encima de los assets
       this.renderZones();
       
       // Renderizar elementos interactivos
@@ -80,10 +76,10 @@ export class WorldRenderer {
       // Renderizar decoraciones animadas
       this.renderDecorations();
       
-      logAutopoiesis.info('✅ Mundo renderizado exitosamente con tilemaps profesionales');
+      logAutopoiesis.info('✅ Mundo renderizado exitosamente con assets creativos');
       
     } catch (error) {
-      logAutopoiesis.error('❌ Error renderizando con tilemaps, fallback a sistema anterior', error);
+      logAutopoiesis.error('❌ Error renderizando con assets creativos, fallback a sistema anterior', error);
       this.renderWorldLegacy();
     }
   }

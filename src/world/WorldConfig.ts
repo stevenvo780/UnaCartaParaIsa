@@ -353,16 +353,16 @@ export function getAvailablePresets(): string[] {
  */
 export function applyDensityConfig(
   preset: WorldPreset, 
-  densityConfig: keyof typeof DENSITY_CONFIGS
+  _densityConfig: keyof typeof DENSITY_CONFIGS
 ): WorldPreset {
-  const density = DENSITY_CONFIGS[densityConfig];
+  // const density = DENSITY_CONFIGS[densityConfig]; // TODO: Implement density integration
   
   return {
     ...preset,
     config: {
-      ...preset.config,
-      // Aquí se aplicarían las densidades a las definiciones de bioma
-      // Por ahora solo retornamos el preset original
+      ...preset.config
+      // TODO: Apply density configuration in future implementation
+      // density would be integrated into biome definitions when implemented
     }
   };
 }

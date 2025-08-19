@@ -1,11 +1,9 @@
 import Phaser from 'phaser';
 import { UIElementPool, ResonanceLabel } from '../managers/UIElementPool';
-import { GAME_BALANCE } from '../constants/gameBalance';
 import { logAutopoiesis } from '../utils/logger';
 
 export class UIScene extends Phaser.Scene {
   private resonanceLabelPool!: UIElementPool<ResonanceLabel>;
-  private currentResonanceLabel?: ResonanceLabel;
   
   // Modern UI system
   private topBar!: Phaser.GameObjects.Container;
@@ -18,7 +16,6 @@ export class UIScene extends Phaser.Scene {
   private isDraggingCamera: boolean = false;
   private lastPointerX: number = 0;
   private lastPointerY: number = 0;
-  private currentControlMode: 'auto' | 'isa' | 'stev' = 'auto';
   
   // UI state
   private leftPanelExpanded: boolean = true;
@@ -69,17 +66,6 @@ export class UIScene extends Phaser.Scene {
   /**
    * Actualizar label de resonancia usando pool
    */
-  private updateResonanceLabel(x: number, y: number, resonance: number): void {
-
-    if (this.currentResonanceLabel) {
-      this.resonanceLabelPool.release(this.currentResonanceLabel);
-    }
-    
-
-    this.currentResonanceLabel = this.resonanceLabelPool.acquire();
-    this.currentResonanceLabel.setup(x, y, `${resonance.toFixed(1)}%`);
-    this.currentResonanceLabel.gameObject.setOrigin(0, 0.5);
-  }
 
   private updateUI(data: any) {
     this.updateTopBarInfo(data);
@@ -263,127 +249,9 @@ export class UIScene extends Phaser.Scene {
     this.bottomBar.add(screenshotBtn);
   }
 
-  private createControlPanel() {
-    this.controlPanel = this.add.container(10, 270);
-    this.controlPanel.setScrollFactor(0);
 
-    const background = this.add.graphics();
-    background.fillStyle(0x34495e, 0.9);
-    background.fillRoundedRect(0, 0, 370, 80, 5);
-    this.controlPanel.add(background);
 
-    const title = this.add.text(10, 5, 'CONTROL', {
-      fontSize: '14px',
-      color: '#ecf0f1',
-      fontFamily: 'Arial',
-      fontStyle: 'bold'
-    });
-    this.controlPanel.add(title);
 
-    // Control buttons
-    const autoBtn = this.createControlButton(10, 25, 'AUTO', '#95a5a6', () => {
-      this.setEntityControl('none');
-    });
-    this.controlPanel.add(autoBtn);
-
-    const isaBtn = this.createControlButton(80, 25, 'ISA', '#e91e63', () => {
-      this.setEntityControl('isa');
-    });
-    this.controlPanel.add(isaBtn);
-
-    const stevBtn = this.createControlButton(150, 25, 'STEV', '#3498db', () => {
-      this.setEntityControl('stev');
-    });
-    this.controlPanel.add(stevBtn);
-
-    const cameraTip = this.add.text(220, 30, 'WASD: Mover Cámara\nClick: Arrastrar', {
-      fontSize: '10px',
-      color: '#bdc3c7',
-      fontFamily: 'Arial'
-    });
-    this.controlPanel.add(cameraTip);
-  }
-
-  private createControlButton(x: number, y: number, text: string, color: string, callback: () => void) {
-    const button = this.add.container(x, y);
-    
-    const bg = this.add.graphics();
-    bg.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 0.8);
-    bg.fillRoundedRect(0, 0, 60, 30, 5);
-    button.add(bg);
-
-    const label = this.add.text(30, 15, text, {
-      fontSize: '12px',
-      color: '#ffffff',
-      fontFamily: 'Arial',
-      fontStyle: 'bold'
-    }).setOrigin(0.5);
-    button.add(label);
-
-    button.setInteractive(new Phaser.Geom.Rectangle(0, 0, 60, 30), Phaser.Geom.Rectangle.Contains);
-    button.on('pointerdown', callback);
-    button.on('pointerover', () => bg.setAlpha(1));
-    button.on('pointerout', () => bg.setAlpha(0.8));
-
-    return button;
-  }
-
-  private setupCameraControls() {
-    // WASD camera movement
-    const cursors = this.input.keyboard?.createCursorKeys();
-    const wasd = this.input.keyboard?.addKeys('W,S,A,D') as any;
-    
-    // Mouse drag camera
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.x > 400) { // Only if clicking outside UI panel
-        this.isDragging = true;
-        this.cameraDragStartX = pointer.x;
-        this.cameraDragStartY = pointer.y;
-      }
-    });
-
-    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (this.isDragging) {
-        const mainScene = this.scene.get('MainScene') as Phaser.Scene;
-        const camera = mainScene.cameras.main;
-        
-        const deltaX = this.cameraDragStartX - pointer.x;
-        const deltaY = this.cameraDragStartY - pointer.y;
-        
-        camera.scrollX += deltaX;
-        camera.scrollY += deltaY;
-        
-        this.cameraDragStartX = pointer.x;
-        this.cameraDragStartY = pointer.y;
-      }
-    });
-
-    this.input.on('pointerup', () => {
-      this.isDragging = false;
-    });
-
-    // Keyboard camera movement in update loop
-    this.scene.get('MainScene').events.on('update', () => {
-      const mainScene = this.scene.get('MainScene') as Phaser.Scene;
-      const camera = mainScene.cameras.main;
-      
-      if (wasd.W.isDown || cursors?.up.isDown) camera.scrollY -= 5;
-      if (wasd.S.isDown || cursors?.down.isDown) camera.scrollY += 5;
-      if (wasd.A.isDown || cursors?.left.isDown) camera.scrollX -= 5;
-      if (wasd.D.isDown || cursors?.right.isDown) camera.scrollX += 5;
-    });
-  }
-
-  private setEntityControl(entity: 'isa' | 'stev' | 'none') {
-    // Store current controlled entity for visual feedback
-    const currentControlled = entity;
-    
-    // Emit event to MainScene to change control mode
-    const mainScene = this.scene.get('MainScene');
-    mainScene.events.emit('changeEntityControl', entity);
-    
-    logAutopoiesis.info(`Entity control changed to: ${entity}`);
-  }
 
   private createSpeedControls() {
     const rightX = this.cameras.main.width - 150;
@@ -661,8 +529,7 @@ export class UIScene extends Phaser.Scene {
         this.lastPointerX = pointer.x;
         this.lastPointerY = pointer.y;
         
-        // Visual feedback for dragging
-        this.cameras.main.setTint(0xf0f0f0);
+        // Visual feedback for dragging (removed setTint - not available on Camera)
       }
     });
     
@@ -696,8 +563,7 @@ export class UIScene extends Phaser.Scene {
     this.input.on('pointerup', () => {
       if (this.isDraggingCamera) {
         this.isDraggingCamera = false;
-        // Remove visual feedback
-        this.cameras.main.clearTint();
+        // Remove visual feedback (removed clearTint - not available on Camera)
       }
     });
     
@@ -729,7 +595,7 @@ export class UIScene extends Phaser.Scene {
     });
     
     // Mouse wheel zoom (optional enhancement)
-    this.input.on('wheel', (pointer: any, gameObjects: any, deltaX: number, deltaY: number) => {
+    this.input.on('wheel', (_pointer: any, _gameObjects: any, _deltaX: number, deltaY: number) => {
       const mainScene = this.scene.get('MainScene');
       if (mainScene && mainScene.cameras && mainScene.cameras.main) {
         const camera = mainScene.cameras.main;
@@ -740,10 +606,6 @@ export class UIScene extends Phaser.Scene {
     });
   }
   
-  private updateCharacterStats(entities: any) {
-    // Update character panels
-    this.updateCharacterPanels(entities);
-  }
 
   private updateEntityStatsDisplay(panel: Phaser.GameObjects.Container, entityData: any, color: string) {
     // Clear previous dynamic stats (but keep fixed elements like background, title, portrait)
@@ -1015,12 +877,12 @@ export class UIScene extends Phaser.Scene {
     }
   }
   
-  private updateBottomBarInfo(data: any) {
+  private updateBottomBarInfo(_data: any) {
     // Update control mode visual feedback if needed
     // Could highlight active control buttons based on current mode
   }
   
-  private updateMinimap(data: any) {
+  private updateMinimap(_data: any) {
     // Update minimap with entity positions if needed
     // This is a placeholder for future minimap functionality
   }
@@ -1028,7 +890,7 @@ export class UIScene extends Phaser.Scene {
   // =================== CONTROL METHODS ===================
   
   private setControlMode(mode: 'auto' | 'isa' | 'stev') {
-    this.currentControlMode = mode;
+    // this.currentControlMode = mode; // Comentado temporalmente
     const mainScene = this.scene.get('MainScene');
     mainScene.events.emit('changeEntityControl', mode === 'auto' ? 'none' : mode);
     
@@ -1036,7 +898,11 @@ export class UIScene extends Phaser.Scene {
   }
   
   private setGameSpeed(speed: number) {
-    this.scene.scene.setTimeScale(speed);
+    // Use GameLogicManager for speed control instead
+    const mainScene = this.scene.get('MainScene') as any;
+    if (mainScene && mainScene.gameLogicManager) {
+      mainScene.gameLogicManager.setGameSpeed(speed);
+    }
     logAutopoiesis.info(`Game speed set to: ${speed}x`);
   }
   
@@ -1106,6 +972,5 @@ export class UIScene extends Phaser.Scene {
     }
     
     logAutopoiesis.debug('UIScene destroyed - pools cleaned up');
-    super.destroy();
   }
 }

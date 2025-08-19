@@ -3,7 +3,6 @@
  * Evita la creación/destrucción constante de objetos UI
  */
 
-import { GAME_BALANCE } from '../constants/gameBalance';
 import { logAutopoiesis } from '../utils/logger';
 
 export interface PoolableUIElement {

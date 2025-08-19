@@ -3,7 +3,7 @@
  * Centraliza actualizaciones, timers y estado del juego
  */
 
-import type { GameState, Entity } from '../types';
+import type { GameState } from '../types';
 import { gameConfig } from '../config/gameConfig';
 import { GAME_BALANCE } from '../constants/gameBalance';
 import { logAutopoiesis } from '../utils/logger';
@@ -63,7 +63,7 @@ export class GameLogicManager {
     this.gameState.cycles++;
     
 
-    this.entities.forEach((entity, entityId) => {
+    this.entities.forEach((entity) => {
       if (entity.updateEntity && typeof entity.updateEntity === 'function') {
         entity.updateEntity(gameConfig.timing.mainGameLogic);
       }
@@ -226,9 +226,15 @@ export class GameLogicManager {
    */
   public setGameSpeed(multiplier: number): void {
     if (this.gameLoopTimer) {
-      this.gameLoopTimer.delay = gameConfig.timing.mainGameLogic / multiplier;
+      this.gameLoopTimer.destroy();
+      const newDelay = gameConfig.timing.mainGameLogic / multiplier;
+      this.gameLoopTimer = this.scene.time.addEvent({
+        delay: newDelay,
+        callback: () => this.updateGameLogic(),
+        loop: true
+      });
       logAutopoiesis.info(`Game speed set to ${multiplier}x`, {
-        newDelay: this.gameLoopTimer.delay
+        newDelay: newDelay
       });
     }
   }

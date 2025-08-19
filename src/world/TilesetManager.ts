@@ -255,7 +255,7 @@ export class TilesetManager {
   /**
    * Obtiene el tile de autotile apropiado para una transición
    */
-  getAutotileForTransition(fromBiome: string, toBiome: string, direction: string): TileInfo | null {
+  getAutotileForTransition(_fromBiome: string, _toBiome: string, direction: string): TileInfo | null {
     // Lógica para determinar qué autotile usar
     const autotiles = this.getTilesByBiome('GRASSLAND', 'autotile');
     

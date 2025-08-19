@@ -207,7 +207,6 @@ export class MainScene extends Phaser.Scene {
   private setupInput() {
     this.cursors = this.input.keyboard?.createCursorKeys();
     
-    const wasd = this.input.keyboard?.addKeys('W,S,A,D') as any;
     this.input.keyboard?.on('keydown-SPACE', () => {
       if (this.controlledEntity !== 'none') {
         this.handleEntityAction();
@@ -321,6 +320,5 @@ export class MainScene extends Phaser.Scene {
     }
     
     logAutopoiesis.info('MainScene destroyed');
-    super.destroy();
   }
 }

@@ -1,10 +1,7 @@
 import Phaser from 'phaser';
 import type { Entity, EntityStats, ActivityType, MoodType } from '../types';
 import { GAME_BALANCE } from '../constants/gameBalance';
-import type { 
-  IEntityServices, 
-  IResonancePartner 
-} from '../interfaces/EntityServices';
+import type { IEntityServices } from '../interfaces/EntityServices';
 import { EntityServicesFactory } from '../interfaces/EntityServices';
 
 export class GameEntity extends Phaser.Physics.Arcade.Sprite {
