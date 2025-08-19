@@ -4,9 +4,9 @@
  */
 
 import Phaser from 'phaser';
-import { TilesetManager } from './TilesetManager';
-import { BiomeType } from './types';
-import type { GeneratedWorld } from './types';
+import { TilesetManager, TileInfo } from './TilesetManager';
+import type { BiomeType } from './BiomeDefinitions';
+import type { GeneratedWorld, WorldLayer } from './types';
 
 export interface TilemapData {
   width: number;
@@ -66,9 +66,8 @@ export class TilemapRenderer {
     await this.createDynamicTilesets();
     
     // 3. Crear el tilemap en Phaser
-    const flatTileData = tileData.flat();
     this.tilemap = this.scene.make.tilemap({
-      data: [flatTileData],
+      data: [tileData],
       tileWidth: 32,
       tileHeight: 32,
       width,
@@ -79,20 +78,15 @@ export class TilemapRenderer {
     const tilesetTexture = await this.createTilesetTexture();
     
     // 5. Añadir imagen al cache de Phaser
-    const textureKey = 'tileset_texture';
-    if (!this.scene.textures.exists(textureKey)) {
-      this.scene.textures.addCanvas(textureKey, tilesetTexture);
-    }
+    this.scene.textures.addImage('tileset_texture', tilesetTexture);
     
     // 6. Añadir tileset al mapa
-    const tileset = this.tilemap.addTilesetImage(textureKey, textureKey);
+    const tileset = this.tilemap.addTilesetImage('tileset_texture', 'tileset_texture');
     
     // 7. Crear capa del mapa
-    if (tileset) {
-      const layer = this.tilemap.createLayer(0, tileset, 0, 0);
-      if (layer) {
-        this.layers.set('ground', layer);
-      }
+    const layer = this.tilemap.createLayer(0, tileset, 0, 0);
+    if (layer) {
+      this.layers.set('ground', layer);
     }
 
     // 8. Aplicar autotiles para transiciones naturales
@@ -143,7 +137,14 @@ export class TilemapRenderer {
     }
   }
 
-
+  /**
+   * Convierte path de asset a ID de tile
+   */
+  private assetPathToTileId(assetPath: string): number {
+    // Buscar en el TilesetManager
+    const tile = this.tilesetManager.getTileByAssetPath(assetPath);
+    return tile ? tile.id : 1; // Default a grass si no se encuentra
+  }
 
   /**
    * Crea tilesets dinámicos en el cache
@@ -167,15 +168,14 @@ export class TilemapRenderer {
         const x = (i % cols) * 32;
         const y = Math.floor(i / cols) * 32;
         
-        // Crear un color sólido basado en el ID del tile
-        ctx.fillStyle = this.getBiomeColorById(tile.id);
+        // Aquí necesitaríamos cargar la imagen real del asset
+        // Por ahora, crear un color sólido basado en el bioma
+        ctx.fillStyle = this.getBiomeColor(tile.assetPath);
         ctx.fillRect(x, y, 32, 32);
       }
       
       // Añadir al cache de texturas
-      if (!this.scene.textures.exists(tileset.name)) {
-        this.scene.textures.addCanvas(tileset.name, canvas);
-      }
+      this.scene.textures.addImage(tileset.name, canvas);
     }
   }
 
@@ -217,21 +217,21 @@ export class TilemapRenderer {
   }
 
   /**
-   * Obtiene color representativo para un ID de tile
+   * Obtiene color representativo para un asset/bioma
    */
-  private getBiomeColorById(tileId: number): string {
-    switch (tileId) {
-      case 1: return '#4CAF50'; // grassland
-      case 2: return '#2E7D32'; // forest
-      case 3: return '#1976D2'; // wetland
-      case 4: return '#795548'; // mountainous
-      case 5: return '#9C27B0'; // mystical
-      case 6: return '#FFC107'; // village
-      default: return '#4CAF50'; // default grass
+  private getBiomeColor(assetPath: string): string {
+    if (assetPath.includes('grass') || assetPath.includes('cesped')) {
+      return '#4CAF50';
+    } else if (assetPath.includes('water') || assetPath.includes('agua')) {
+      return '#1976D2';
+    } else if (assetPath.includes('stone') || assetPath.includes('rock')) {
+      return '#795548';
+    } else if (assetPath.includes('tree') || assetPath.includes('forest')) {
+      return '#2E7D32';
+    } else {
+      return '#4CAF50'; // Default grass
     }
   }
-
-
 
   /**
    * Aplica autotiles para transiciones naturales entre biomas
@@ -303,10 +303,10 @@ export class TilemapRenderer {
   /**
    * Selecciona el autotile apropiado basado en vecinos
    */
-  private selectAutotile(_current: BiomeType | null, _neighbors: BiomeType[]): number | null {
+  private selectAutotile(current: BiomeType | null, neighbors: BiomeType[]): number | null {
     // Implementación básica - en producción usaría reglas más complejas
     // Por ahora retorna el tile base
-    return this.getTileIdForBiome(_current || BiomeType.GRASSLAND);
+    return this.getTileIdForBiome(current || BiomeType.GRASSLAND);
   }
 
   /**

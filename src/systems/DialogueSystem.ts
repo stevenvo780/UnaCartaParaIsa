@@ -117,11 +117,45 @@ export class DialogueSystem {
    * Obtener entidades disponibles para diálogo
    */
   private getAvailableEntities(): Entity[] {
-
-    return [
-      { id: 'isa_entity', x: 100, y: 100, activity: 'SOCIALIZING', emotion: 'NEUTRAL' },
-      { id: 'stev_entity', x: 200, y: 150, activity: 'SOCIALIZING', emotion: 'CURIOUS' }
-    ];
+    const entities: Entity[] = [];
+    
+    // Obtener entidades reales del MainScene
+    const mainScene = this.scene.scene.get('MainScene') as any;
+    if (mainScene) {
+      // Obtener Isa
+      if (mainScene.isaEntity && mainScene.isaEntity.active) {
+        const position = mainScene.isaEntity.getPosition();
+        entities.push({
+          id: 'isa_entity',
+          x: position.x,
+          y: position.y,
+          activity: mainScene.isaEntity.getCurrentActivity() || 'SOCIALIZING',
+          emotion: mainScene.isaEntity.getMood() || 'NEUTRAL'
+        });
+      }
+      
+      // Obtener Stev
+      if (mainScene.stevEntity && mainScene.stevEntity.active) {
+        const position = mainScene.stevEntity.getPosition();
+        entities.push({
+          id: 'stev_entity',
+          x: position.x,
+          y: position.y,
+          activity: mainScene.stevEntity.getCurrentActivity() || 'SOCIALIZING',
+          emotion: mainScene.stevEntity.getMood() || 'CURIOUS'
+        });
+      }
+    }
+    
+    // Fallback en caso de que no se puedan obtener las entidades reales
+    if (entities.length === 0) {
+      return [
+        { id: 'isa_entity', x: 100, y: 100, activity: 'SOCIALIZING', emotion: 'NEUTRAL' },
+        { id: 'stev_entity', x: 200, y: 150, activity: 'SOCIALIZING', emotion: 'CURIOUS' }
+      ];
+    }
+    
+    return entities;
   }
 
   /**
@@ -195,68 +229,93 @@ export class DialogueSystem {
     const entity = this.getAvailableEntities().find(e => e.id === entityId);
     if (!entity) return;
 
+    // Posicionar burbuja sobre la entidad con un offset hacia arriba
+    const bubbleOffsetY = -80; // Más arriba para mejor visibilidad
+    const bubbleContainer = this.scene.add.container(entity.x, entity.y + bubbleOffsetY);
 
-    const bubbleContainer = this.scene.add.container(entity.x, entity.y - 60);
-
-
-    const bubbleWidth = Math.min(dialogue.text.length * 8 + 40, 300);
-    const bubbleHeight = 60;
+    // Ajustar tamaño de burbuja basado en el texto
+    const textLines = Math.ceil(dialogue.text.length / 35);
+    const bubbleWidth = Math.min(Math.max(dialogue.text.length * 7 + 40, 200), 320);
+    const bubbleHeight = Math.max(textLines * 20 + 20, 50);
     
+    // Crear burbuja con estilo mejorado
     const bubble = this.scene.add.graphics();
-    bubble.fillStyle(0xffffff, 0.9);
-    bubble.lineStyle(2, 0x000000);
-    bubble.fillRoundedRect(-bubbleWidth/2, -bubbleHeight/2, bubbleWidth, bubbleHeight, 15);
-    bubble.strokeRoundedRect(-bubbleWidth/2, -bubbleHeight/2, bubbleWidth, bubbleHeight, 15);
+    
+    // Gradiente de fondo más atractivo
+    const bubbleColor = dialogue.speaker === 'ISA' ? 0xff6b9d : 0x4ecdc4;
+    bubble.fillGradientStyle(0xffffff, 0xffffff, bubbleColor, bubbleColor, 0.95, 0.95, 0.1, 0.1);
+    bubble.lineStyle(3, bubbleColor, 0.8);
+    bubble.fillRoundedRect(-bubbleWidth/2, -bubbleHeight/2, bubbleWidth, bubbleHeight, 12);
+    bubble.strokeRoundedRect(-bubbleWidth/2, -bubbleHeight/2, bubbleWidth, bubbleHeight, 12);
+    
+    // Añadir "cola" de la burbuja apuntando al personaje
+    const tailSize = 12;
+    bubble.fillTriangle(0, bubbleHeight/2, -tailSize, bubbleHeight/2 + tailSize, tailSize, bubbleHeight/2 + tailSize);
+    bubble.lineStyle(3, bubbleColor, 0.8);
+    bubble.strokeTriangle(0, bubbleHeight/2, -tailSize, bubbleHeight/2 + tailSize, tailSize, bubbleHeight/2 + tailSize);
 
-
-    const dialogueText = this.scene.add.text(0, 0, dialogue.text, {
-      fontSize: '14px',
-      fontFamily: 'Arial',
-      color: '#000000',
+    // Texto del diálogo con mejor formato
+    const dialogueText = this.scene.add.text(0, -5, dialogue.text, {
+      fontSize: '12px',
+      fontFamily: 'Arial, sans-serif',
+      color: '#2c3e50',
       align: 'center',
-      wordWrap: { width: bubbleWidth - 20 }
+      wordWrap: { width: bubbleWidth - 30 },
+      lineSpacing: 2
     }).setOrigin(0.5);
 
+    // Indicador del hablante con emoji
+    const speakerEmoji = dialogue.speaker === 'ISA' ? '👩' : '👨';
+    const speakerIndicator = this.scene.add.text(-bubbleWidth/2 + 15, -bubbleHeight/2 + 15, speakerEmoji, {
+      fontSize: '16px'
+    }).setOrigin(0.5);
 
-    const speakerColor = dialogue.speaker === 'ISA' ? 0xff6b9d : 0x4ecdc4;
-    const speakerIndicator = this.scene.add.circle(-bubbleWidth/2 + 15, -bubbleHeight/2 + 15, 8, speakerColor);
+    // Nombre del hablante
+    const speakerName = this.scene.add.text(bubbleWidth/2 - 10, -bubbleHeight/2 + 8, dialogue.speaker, {
+      fontSize: '10px',
+      fontFamily: 'Arial, sans-serif',
+      color: bubbleColor,
+      fontStyle: 'bold'
+    }).setOrigin(1, 0);
 
+    // Añadir todos los elementos a la burbuja
+    bubbleContainer.add([bubble, dialogueText, speakerIndicator, speakerName]);
 
-    bubbleContainer.add([bubble, dialogueText, speakerIndicator]);
-
-
+    // Animación de aparición mejorada
     bubbleContainer.setAlpha(0);
-    bubbleContainer.setScale(0.5);
+    bubbleContainer.setScale(0.3);
+    bubbleContainer.setRotation(-0.1);
     
     this.scene.tweens.add({
       targets: bubbleContainer,
       alpha: 1,
       scaleX: 1,
       scaleY: 1,
-      duration: 300,
-      ease: 'Back.easeOut'
+      rotation: 0,
+      duration: 400,
+      ease: 'Elastic.easeOut'
     });
 
-
+    // Hacer que la burbuja siga a la entidad si se mueve
     this.dialogueBubbles.set(entityId, bubbleContainer);
 
-
-    const displayDuration = Math.max(dialogue.text.length * 80, 3000);
+    // Duración adaptativa según longitud del texto
+    const displayDuration = Math.max(dialogue.text.length * 100, 4000);
     this.scene.time.delayedCall(displayDuration, () => {
       this.removeDialogueBubble(entityId);
     });
 
-
+    // Actualizar estado de conversación
     this.conversationState.lastSpeaker = dialogue.speaker;
     this.conversationState.lastDialogue = dialogue;
     
-
     logAutopoiesis.info('Diálogo mostrado', {
       entityId,
       speaker: dialogue.speaker,
       emotion: dialogue.emotion,
       activity: dialogue.activity,
-      textLength: dialogue.text.length
+      textLength: dialogue.text.length,
+      position: { x: entity.x, y: entity.y }
     });
 
     console.log(`💬 ${dialogue.speaker}: ${dialogue.text}`);

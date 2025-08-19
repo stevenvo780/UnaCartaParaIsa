@@ -430,167 +430,262 @@ export class UIScene extends Phaser.Scene {
   }
   
   private createLeftPanel() {
-    const panelWidth = 280;
+    const panelWidth = 300;
     const panelHeight = this.cameras.main.height - 140;
     
     this.leftPanel = this.add.container(10, 70);
     this.leftPanel.setScrollFactor(0);
     
-    // Panel background
+    // Enhanced panel background with shadow effect
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x000000, 0.3);
+    shadow.fillRoundedRect(3, 3, panelWidth, panelHeight, 8);
+    this.leftPanel.add(shadow);
+    
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.95, 0.95, 0.95, 0.95);
+    panelBg.fillGradientStyle(0x34495e, 0x2c3e50, 0x34495e, 0x2c3e50, 0.96, 0.96, 0.96, 0.96);
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
-    panelBg.lineStyle(2, 0x1abc9c, 0.6);
+    panelBg.lineStyle(3, 0x1abc9c, 0.8);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
+    
+    // Add inner glow effect
+    panelBg.lineStyle(1, 0x1abc9c, 0.3);
+    panelBg.strokeRoundedRect(2, 2, panelWidth - 4, panelHeight - 4, 6);
     this.leftPanel.add(panelBg);
     
-    // Panel title
-    const title = this.add.text(15, 15, '📊 ESTADÍSTICAS', {
-      fontSize: '16px',
-      color: '#1abc9c',
-      fontFamily: 'Arial',
+    // Enhanced panel header
+    const headerBg = this.add.graphics();
+    headerBg.fillGradientStyle(0x1abc9c, 0x16a085, 0x1abc9c, 0x16a085, 0.2, 0.2, 0.1, 0.1);
+    headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
+    this.leftPanel.add(headerBg);
+    
+    // Panel title with better styling
+    const title = this.add.text(panelWidth / 2, 18, '📊 ESTADÍSTICAS DE PERSONAJES', {
+      fontSize: '14px',
+      color: '#ecf0f1',
+      fontFamily: 'Arial, sans-serif',
       fontStyle: 'bold'
-    });
+    }).setOrigin(0.5);
     this.leftPanel.add(title);
     
-    // Character panels
-    this.createCharacterPanel('isa', 15, 45, '#e91e63', '👩 ISA');
-    this.createCharacterPanel('stev', 15, 220, '#3498db', '👨 STEV');
+    // Character panels with improved spacing
+    this.createCharacterPanel('isa', 15, 50, '#e91e63', '👩 ISA');
+    this.createCharacterPanel('stev', 15, 235, '#3498db', '👨 STEV');
     
-    // Toggle button
-    const toggleBtn = this.createModernButton(panelWidth - 35, 5, 30, 20, '◀', '#95a5a6', () => {
+    // Enhanced toggle button
+    const toggleBtn = this.createModernButton(panelWidth - 35, 8, 30, 20, '◀', '#95a5a6', () => {
       this.toggleLeftPanel();
     });
     this.leftPanel.add(toggleBtn);
   }
   
   private createRightPanel() {
-    const panelWidth = 200;
+    const panelWidth = 220;
     const panelHeight = this.cameras.main.height - 140;
     const panelX = this.cameras.main.width - panelWidth - 10;
     
     this.rightPanel = this.add.container(panelX, 70);
     this.rightPanel.setScrollFactor(0);
     
-    // Panel background
+    // Enhanced panel background with shadow effect
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x000000, 0.3);
+    shadow.fillRoundedRect(-3, 3, panelWidth, panelHeight, 8);
+    this.rightPanel.add(shadow);
+    
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.95, 0.95, 0.95, 0.95);
+    panelBg.fillGradientStyle(0x34495e, 0x2c3e50, 0x34495e, 0x2c3e50, 0.96, 0.96, 0.96, 0.96);
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
-    panelBg.lineStyle(2, 0x9b59b6, 0.6);
+    panelBg.lineStyle(3, 0x9b59b6, 0.8);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
+    
+    // Add inner glow effect
+    panelBg.lineStyle(1, 0x9b59b6, 0.3);
+    panelBg.strokeRoundedRect(2, 2, panelWidth - 4, panelHeight - 4, 6);
     this.rightPanel.add(panelBg);
     
-    // Panel title
-    const title = this.add.text(15, 15, '🎯 ZONA ACTUAL', {
-      fontSize: '14px',
-      color: '#9b59b6',
-      fontFamily: 'Arial',
-      fontStyle: 'bold'
-    });
-    this.rightPanel.add(title);
+    // Enhanced panel header
+    const headerBg = this.add.graphics();
+    headerBg.fillGradientStyle(0x9b59b6, 0x8e44ad, 0x9b59b6, 0x8e44ad, 0.2, 0.2, 0.1, 0.1);
+    headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
+    this.rightPanel.add(headerBg);
     
-    // Zone info placeholder
-    const zoneInfo = this.add.text(15, 45, 'Zona: Ninguna\nTipo: ---\nBeneficio: ---', {
+    // Panel title with better styling
+    const title = this.add.text(panelWidth / 2, 18, '🎯 INFORMACIÓN DEL MUNDO', {
       fontSize: '12px',
       color: '#ecf0f1',
-      fontFamily: 'Arial'
-    });
-    this.rightPanel.add(zoneInfo);
+      fontFamily: 'Arial, sans-serif',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+    this.rightPanel.add(title);
     
-    // Activities section
-    const activitiesTitle = this.add.text(15, 120, '📋 ACTIVIDADES', {
-      fontSize: '14px',
-      color: '#f39c12',
-      fontFamily: 'Arial',
+    // Zone info section with better layout
+    const zoneSection = this.add.container(0, 45);
+    const zoneBg = this.add.graphics();
+    zoneBg.fillStyle(0x2c3e50, 0.6);
+    zoneBg.fillRoundedRect(10, 0, panelWidth - 20, 80, 5);
+    zoneSection.add(zoneBg);
+    
+    const zoneTitle = this.add.text(15, 10, '🗺️ ZONA ACTUAL', {
+      fontSize: '11px',
+      color: '#9b59b6',
+      fontFamily: 'Arial, sans-serif',
       fontStyle: 'bold'
     });
-    this.rightPanel.add(activitiesTitle);
+    zoneSection.add(zoneTitle);
     
-    const activitiesText = this.add.text(15, 150, 'Isa: IDLE\nStev: IDLE', {
-      fontSize: '11px',
+    const zoneInfo = this.add.text(15, 25, 'Zona: Ninguna\nTipo: ---\nBeneficio: ---\nDistancia: ---', {
+      fontSize: '10px',
       color: '#bdc3c7',
-      fontFamily: 'Arial'
+      fontFamily: 'Arial, sans-serif',
+      lineSpacing: 2
     });
-    this.rightPanel.add(activitiesText);
+    zoneSection.add(zoneInfo);
+    this.rightPanel.add(zoneSection);
     
-    // Toggle button
-    const toggleBtn = this.createModernButton(5, 5, 30, 20, '▶', '#95a5a6', () => {
+    // Activities section with better layout
+    const activitiesSection = this.add.container(0, 140);
+    const activitiesBg = this.add.graphics();
+    activitiesBg.fillStyle(0x2c3e50, 0.6);
+    activitiesBg.fillRoundedRect(10, 0, panelWidth - 20, 90, 5);
+    activitiesSection.add(activitiesBg);
+    
+    const activitiesTitle = this.add.text(15, 10, '📋 ACTIVIDADES', {
+      fontSize: '11px',
+      color: '#f39c12',
+      fontFamily: 'Arial, sans-serif',
+      fontStyle: 'bold'
+    });
+    activitiesSection.add(activitiesTitle);
+    
+    const activitiesText = this.add.text(15, 25, '👩 Isa: IDLE\n👨 Stev: IDLE\n\n⏱️ Tiempo: 00:00', {
+      fontSize: '10px',
+      color: '#ecf0f1',
+      fontFamily: 'Arial, sans-serif',
+      lineSpacing: 3
+    });
+    activitiesSection.add(activitiesText);
+    this.rightPanel.add(activitiesSection);
+    
+    // Enhanced toggle button
+    const toggleBtn = this.createModernButton(8, 8, 30, 20, '▶', '#95a5a6', () => {
       this.toggleRightPanel();
     });
     this.rightPanel.add(toggleBtn);
   }
   
   private createMinimap() {
-    const minimapSize = 150;
-    const minimapX = this.cameras.main.width - minimapSize - 20;
-    const minimapY = this.cameras.main.height - minimapSize - 100;
+    const minimapSize = 140;
+    // Position minimap in bottom-right corner but inside the right panel area
+    const minimapX = this.cameras.main.width - minimapSize - 15;
+    const minimapY = this.cameras.main.height - minimapSize - 90; // Above the bottom bar
     
     this.minimapContainer = this.add.container(minimapX, minimapY);
     this.minimapContainer.setScrollFactor(0);
     
-    // Minimap background
+    // Minimap background with improved styling
     const minimapBg = this.add.graphics();
-    minimapBg.fillStyle(0x2c3e50, 0.9);
+    minimapBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.95, 0.95, 0.95, 0.95);
     minimapBg.fillRoundedRect(0, 0, minimapSize, minimapSize, 8);
-    minimapBg.lineStyle(2, 0x3498db, 0.8);
+    minimapBg.lineStyle(2, 0x3498db, 0.7);
     minimapBg.strokeRoundedRect(0, 0, minimapSize, minimapSize, 8);
     this.minimapContainer.add(minimapBg);
     
-    // Minimap title
-    const title = this.add.text(10, 8, '🗺️ MAPA', {
-      fontSize: '12px',
+    // Minimap title with better positioning
+    const title = this.add.text(minimapSize / 2, 12, '🗺️ MAPA', {
+      fontSize: '11px',
       color: '#3498db',
       fontFamily: 'Arial',
       fontStyle: 'bold'
-    });
+    }).setOrigin(0.5);
     this.minimapContainer.add(title);
     
-    // Placeholder minimap content
+    // Improved minimap content representation
     const mapContent = this.add.graphics();
-    mapContent.fillStyle(0x27ae60, 0.5);
-    mapContent.fillRect(10, 25, minimapSize - 20, minimapSize - 35);
     
-    // Add some sample zones
-    mapContent.fillStyle(0xe74c3c, 0.7);
-    mapContent.fillRect(20, 35, 30, 20);
-    mapContent.fillStyle(0xf39c12, 0.7);
-    mapContent.fillRect(60, 45, 25, 25);
-    mapContent.fillStyle(0x9b59b6, 0.7);
-    mapContent.fillRect(100, 35, 35, 30);
+    // Base terrain
+    mapContent.fillStyle(0x27ae60, 0.4);
+    mapContent.fillRoundedRect(8, 28, minimapSize - 16, minimapSize - 40, 4);
+    
+    // Different zones with better visual distinction
+    mapContent.fillStyle(0xe74c3c, 0.8); // Red zone
+    mapContent.fillRoundedRect(15, 35, 25, 18, 2);
+    
+    mapContent.fillStyle(0xf39c12, 0.8); // Orange zone  
+    mapContent.fillRoundedRect(50, 40, 20, 20, 2);
+    
+    mapContent.fillStyle(0x9b59b6, 0.8); // Purple zone
+    mapContent.fillRoundedRect(80, 35, 30, 25, 2);
+    
+    mapContent.fillStyle(0x1abc9c, 0.8); // Teal zone
+    mapContent.fillRoundedRect(20, 70, 35, 20, 2);
+    
+    mapContent.fillStyle(0x3498db, 0.8); // Blue zone
+    mapContent.fillRoundedRect(65, 75, 25, 15, 2);
+    
+    // Player positions (will be updated dynamically)
+    mapContent.fillStyle(0xff1744, 1); // Isa position
+    mapContent.fillCircle(30, 50, 3);
+    
+    mapContent.fillStyle(0x00bcd4, 1); // Stev position  
+    mapContent.fillCircle(85, 55, 3);
     
     this.minimapContainer.add(mapContent);
     
-    // Toggle button
-    const toggleBtn = this.createModernButton(minimapSize - 25, 2, 20, 15, '×', '#e74c3c', () => {
+    // Improved toggle button
+    const toggleBtn = this.createModernButton(minimapSize - 20, 2, 16, 16, '×', '#e74c3c', () => {
       this.toggleMinimap();
     });
     this.minimapContainer.add(toggleBtn);
   }
   
   private setupModernNavigation() {
-    // Mouse drag navigation
+    // Mouse drag navigation - improved bounds detection
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      // Only enable dragging if clicking outside UI panels
-      const leftPanelBounds = this.leftPanelExpanded ? 290 : 40;
-      const rightPanelBounds = this.cameras.main.width - (this.rightPanelExpanded ? 210 : 40);
+      // Calculate accurate UI bounds to avoid navigation conflicts
+      const topBarHeight = 60;
+      const bottomBarHeight = 80;
+      const leftPanelWidth = this.leftPanelExpanded ? 300 : 50;
+      const rightPanelWidth = this.rightPanelExpanded ? 220 : 50;
       
-      if (pointer.x > leftPanelBounds && pointer.x < rightPanelBounds && pointer.y > 60 && pointer.y < this.cameras.main.height - 80) {
+      // Check if clicking within navigable area (not on UI elements)
+      const isInNavigableArea = (
+        pointer.x > leftPanelWidth && 
+        pointer.x < (this.cameras.main.width - rightPanelWidth) &&
+        pointer.y > topBarHeight && 
+        pointer.y < (this.cameras.main.height - bottomBarHeight)
+      );
+      
+      if (isInNavigableArea) {
         this.isDraggingCamera = true;
         this.lastPointerX = pointer.x;
         this.lastPointerY = pointer.y;
+        
+        // Visual feedback for dragging
+        this.cameras.main.setTint(0xf0f0f0);
       }
     });
     
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       if (this.isDraggingCamera) {
         const mainScene = this.scene.get('MainScene');
-        if (mainScene) {
+        if (mainScene && mainScene.cameras && mainScene.cameras.main) {
           const camera = mainScene.cameras.main;
-          const deltaX = this.lastPointerX - pointer.x;
-          const deltaY = this.lastPointerY - pointer.y;
           
-          camera.scrollX += deltaX;
-          camera.scrollY += deltaY;
+          // Calculate smooth camera movement
+          const deltaX = (this.lastPointerX - pointer.x) * 1.2;
+          const deltaY = (this.lastPointerY - pointer.y) * 1.2;
+          
+          // Apply camera movement with bounds checking
+          const newScrollX = camera.scrollX + deltaX;
+          const newScrollY = camera.scrollY + deltaY;
+          
+          // Set reasonable world bounds (adjust these based on your world size)
+          const maxScrollX = 2000;
+          const maxScrollY = 2000;
+          
+          camera.scrollX = Phaser.Math.Clamp(newScrollX, -500, maxScrollX);
+          camera.scrollY = Phaser.Math.Clamp(newScrollY, -500, maxScrollY);
           
           this.lastPointerX = pointer.x;
           this.lastPointerY = pointer.y;
@@ -599,23 +694,48 @@ export class UIScene extends Phaser.Scene {
     });
     
     this.input.on('pointerup', () => {
-      this.isDraggingCamera = false;
+      if (this.isDraggingCamera) {
+        this.isDraggingCamera = false;
+        // Remove visual feedback
+        this.cameras.main.clearTint();
+      }
     });
     
-    // Keyboard camera controls
+    // Enhanced keyboard camera controls
     const cursors = this.input.keyboard?.createCursorKeys();
-    const wasd = this.input.keyboard?.addKeys('W,S,A,D') as any;
+    const wasd = this.input.keyboard?.addKeys('W,S,A,D,SHIFT') as any;
     
-    this.scene.get('MainScene').events.on('update', () => {
+    // Use UIScene's update loop for camera controls to avoid conflicts
+    this.events.on('update', () => {
       const mainScene = this.scene.get('MainScene');
-      if (mainScene) {
+      if (mainScene && mainScene.cameras && mainScene.cameras.main && !this.isDraggingCamera) {
         const camera = mainScene.cameras.main;
-        const speed = 8;
+        const baseSpeed = wasd?.SHIFT?.isDown ? 12 : 6; // Faster with shift
         
-        if (cursors?.up.isDown || wasd?.W.isDown) camera.scrollY -= speed;
-        if (cursors?.down.isDown || wasd?.S.isDown) camera.scrollY += speed;
-        if (cursors?.left.isDown || wasd?.A.isDown) camera.scrollX -= speed;
-        if (cursors?.right.isDown || wasd?.D.isDown) camera.scrollX += speed;
+        // Keyboard navigation
+        if (cursors?.up.isDown || wasd?.W?.isDown) {
+          camera.scrollY = Phaser.Math.Clamp(camera.scrollY - baseSpeed, -500, 2000);
+        }
+        if (cursors?.down.isDown || wasd?.S?.isDown) {
+          camera.scrollY = Phaser.Math.Clamp(camera.scrollY + baseSpeed, -500, 2000);
+        }
+        if (cursors?.left.isDown || wasd?.A?.isDown) {
+          camera.scrollX = Phaser.Math.Clamp(camera.scrollX - baseSpeed, -500, 2000);
+        }
+        if (cursors?.right.isDown || wasd?.D?.isDown) {
+          camera.scrollX = Phaser.Math.Clamp(camera.scrollX + baseSpeed, -500, 2000);
+        }
+      }
+    });
+    
+    // Mouse wheel zoom (optional enhancement)
+    this.input.on('wheel', (pointer: any, gameObjects: any, deltaX: number, deltaY: number) => {
+      const mainScene = this.scene.get('MainScene');
+      if (mainScene && mainScene.cameras && mainScene.cameras.main) {
+        const camera = mainScene.cameras.main;
+        const zoomSpeed = 0.1;
+        const newZoom = deltaY < 0 ? camera.zoom + zoomSpeed : camera.zoom - zoomSpeed;
+        camera.setZoom(Phaser.Math.Clamp(newZoom, 0.5, 2.0));
       }
     });
   }
@@ -626,39 +746,122 @@ export class UIScene extends Phaser.Scene {
   }
 
   private updateEntityStatsDisplay(panel: Phaser.GameObjects.Container, entityData: any, color: string) {
-    // Clear previous stats
-    const existingStats = panel.list.filter((child: any) => child.type === 'Text' && child.y > 20);
+    // Clear previous dynamic stats (but keep fixed elements like background, title, portrait)
+    const existingStats = panel.list.filter((child: any) => 
+      (child.type === 'Text' || child.type === 'Graphics') && child.y > 75
+    );
     existingStats.forEach((stat: any) => stat.destroy());
 
     if (!entityData.stats) return;
 
     const stats = entityData.stats;
-    const statsText = [
-      `❤️ Salud: ${Math.round(stats.health || 0)}`,
-      `😊 Felicidad: ${Math.round(stats.happiness || 0)}`,
-      `⚡ Energía: ${Math.round(stats.energy || 0)}`,
-      `🍎 Hambre: ${Math.round(stats.hunger || 0)}`,
-      `😴 Sueño: ${Math.round(stats.sleepiness || 0)}`,
-      `💰 Dinero: ${Math.round(stats.money || 0)}`
+    
+    // Update activity text if it exists
+    const activityText = panel.getData('activityText');
+    if (activityText && entityData.activity) {
+      activityText.setText(entityData.activity || 'IDLE');
+    }
+
+    // Create stats in two columns for better space usage
+    const statsColumn1 = [
+      { icon: '❤️', label: 'Salud', value: Math.round(stats.health || 0), color: '#e74c3c' },
+      { icon: '😊', label: 'Felicidad', value: Math.round(stats.happiness || 0), color: '#f39c12' },
+      { icon: '⚡', label: 'Energía', value: Math.round(stats.energy || 0), color: '#3498db' }
+    ];
+    
+    const statsColumn2 = [
+      { icon: '🍎', label: 'Hambre', value: Math.round(stats.hunger || 0), color: '#27ae60' },
+      { icon: '😴', label: 'Sueño', value: Math.round(stats.sleepiness || 0), color: '#9b59b6' },
+      { icon: '💰', label: 'Dinero', value: Math.round(stats.money || 0), color: '#f1c40f' }
     ];
 
-    statsText.forEach((text, index) => {
-      const statText = this.add.text(5, 25 + (index * 18), text, {
-        fontSize: '11px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial'
+    // First column
+    statsColumn1.forEach((stat, index) => {
+      const value = stat.value;
+      const barColor = value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
+      
+      // Stat label
+      const statText = this.add.text(10, 80 + (index * 25), `${stat.icon} ${stat.label}`, {
+        fontSize: '10px',
+        color: stat.color,
+        fontFamily: 'Arial, sans-serif',
+        fontStyle: 'bold'
       });
       panel.add(statText);
+      
+      // Stat value
+      const valueText = this.add.text(10, 92 + (index * 25), `${value}`, {
+        fontSize: '9px',
+        color: '#ecf0f1',
+        fontFamily: 'Arial, sans-serif'
+      });
+      panel.add(valueText);
+      
+      // Progress bar background
+      const barBg = this.add.graphics();
+      barBg.fillStyle(0x2c3e50, 0.8);
+      barBg.fillRoundedRect(45, 83 + (index * 25), 80, 8, 4);
+      panel.add(barBg);
+      
+      // Progress bar fill
+      const bar = this.add.graphics();
+      bar.fillStyle(Phaser.Display.Color.HexStringToColor(barColor).color, 0.8);
+      const barWidth = Math.max((value / 100) * 76, 2);
+      bar.fillRoundedRect(47, 85 + (index * 25), barWidth, 4, 2);
+      panel.add(bar);
     });
 
-    // Add activity and mood
-    const activity = this.add.text(5, 135, `📋 ${entityData.activity || 'IDLE'}`, {
-      fontSize: '10px',
-      color: color,
-      fontFamily: 'Arial',
-      fontStyle: 'bold'
+    // Second column  
+    statsColumn2.forEach((stat, index) => {
+      const value = stat.value;
+      const barColor = value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
+      
+      // Stat label
+      const statText = this.add.text(140, 80 + (index * 25), `${stat.icon} ${stat.label}`, {
+        fontSize: '10px',
+        color: stat.color,
+        fontFamily: 'Arial, sans-serif',
+        fontStyle: 'bold'
+      });
+      panel.add(statText);
+      
+      // Stat value  
+      const valueText = this.add.text(140, 92 + (index * 25), `${value}`, {
+        fontSize: '9px',
+        color: '#ecf0f1',
+        fontFamily: 'Arial, sans-serif'
+      });
+      panel.add(valueText);
+      
+      // Progress bar background
+      const barBg = this.add.graphics();
+      barBg.fillStyle(0x2c3e50, 0.8);
+      barBg.fillRoundedRect(175, 83 + (index * 25), 80, 8, 4);
+      panel.add(barBg);
+      
+      // Progress bar fill
+      const bar = this.add.graphics();
+      bar.fillStyle(Phaser.Display.Color.HexStringToColor(barColor).color, 0.8);
+      const barWidth = Math.max((value / 100) * 76, 2);
+      bar.fillRoundedRect(177, 85 + (index * 25), barWidth, 4, 2);
+      panel.add(bar);
     });
-    panel.add(activity);
+
+    // Mood indicator at the bottom
+    if (entityData.mood) {
+      const moodBg = this.add.graphics();
+      moodBg.fillStyle(0x2c3e50, 0.6);
+      moodBg.fillRoundedRect(10, 155, 250, 15, 3);
+      panel.add(moodBg);
+      
+      const moodText = this.add.text(135, 162, `💭 Humor: ${entityData.mood}`, {
+        fontSize: '10px',
+        color: color,
+        fontFamily: 'Arial, sans-serif',
+        fontStyle: 'bold'
+      }).setOrigin(0.5);
+      panel.add(moodText);
+    }
   }
 
   // =================== HELPER METHODS ===================
@@ -690,26 +893,81 @@ export class UIScene extends Phaser.Scene {
   
   private createCharacterPanel(character: string, x: number, y: number, color: string, title: string) {
     const panelContainer = this.add.container(x, y);
+    const panelWidth = 270;
+    const panelHeight = 175;
     
-    // Panel background
+    // Enhanced character panel background with shadow
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x000000, 0.2);
+    shadow.fillRoundedRect(2, 2, panelWidth, panelHeight, 6);
+    panelContainer.add(shadow);
+    
     const panelBg = this.add.graphics();
-    panelBg.fillStyle(0x34495e, 0.6);
-    panelBg.fillRoundedRect(0, 0, 250, 160, 5);
-    panelBg.lineStyle(1, Phaser.Display.Color.HexStringToColor(color).color, 0.8);
-    panelBg.strokeRoundedRect(0, 0, 250, 160, 5);
+    panelBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.8, 0.8, 0.8, 0.8);
+    panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 6);
+    panelBg.lineStyle(2, Phaser.Display.Color.HexStringToColor(color).color, 0.9);
+    panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 6);
+    
+    // Inner highlight
+    panelBg.lineStyle(1, Phaser.Display.Color.HexStringToColor(color).color, 0.4);
+    panelBg.strokeRoundedRect(1, 1, panelWidth - 2, panelHeight - 2, 5);
     panelContainer.add(panelBg);
     
-    // Character title
-    const charTitle = this.add.text(10, 8, title, {
-      fontSize: '14px',
-      color: color,
-      fontFamily: 'Arial',
+    // Character header
+    const headerBg = this.add.graphics();
+    const headerColor = Phaser.Display.Color.HexStringToColor(color).color;
+    headerBg.fillGradientStyle(headerColor, headerColor, headerColor, headerColor, 0.3, 0.3, 0.1, 0.1);
+    headerBg.fillRoundedRect(0, 0, panelWidth, 30, 6);
+    panelContainer.add(headerBg);
+    
+    // Character title with better styling
+    const charTitle = this.add.text(panelWidth / 2, 15, title, {
+      fontSize: '13px',
+      color: '#ffffff',
+      fontFamily: 'Arial, sans-serif',
       fontStyle: 'bold'
-    });
+    }).setOrigin(0.5);
     panelContainer.add(charTitle);
     
-    // Stats will be added dynamically by updateEntityStatsDisplay
+    // Character portrait placeholder (could be sprite in future)
+    const portrait = this.add.graphics();
+    portrait.fillStyle(headerColor, 0.2);
+    portrait.fillCircle(35, 55, 20);
+    portrait.lineStyle(2, headerColor, 0.8);
+    portrait.strokeCircle(35, 55, 20);
+    panelContainer.add(portrait);
+    
+    // Portrait emoji
+    const portraitEmoji = this.add.text(35, 55, character === 'isa' ? '👩' : '👨', {
+      fontSize: '24px'
+    }).setOrigin(0.5);
+    panelContainer.add(portraitEmoji);
+    
+    // Activity status indicator
+    const activityBg = this.add.graphics();
+    activityBg.fillStyle(0x2c3e50, 0.7);
+    activityBg.fillRoundedRect(65, 40, panelWidth - 75, 30, 4);
+    panelContainer.add(activityBg);
+    
+    const activityLabel = this.add.text(70, 45, '🎯 Estado:', {
+      fontSize: '10px',
+      color: '#95a5a6',
+      fontFamily: 'Arial, sans-serif',
+      fontStyle: 'bold'
+    });
+    panelContainer.add(activityLabel);
+    
+    const activityText = this.add.text(70, 58, 'IDLE', {
+      fontSize: '11px',
+      color: color,
+      fontFamily: 'Arial, sans-serif',
+      fontStyle: 'bold'
+    });
+    panelContainer.add(activityText);
+    
+    // Stats will be added dynamically by updateEntityStatsDisplay starting at y: 75
     panelContainer.setData('character', character);
+    panelContainer.setData('activityText', activityText);
     
     this.leftPanel.add(panelContainer);
     
