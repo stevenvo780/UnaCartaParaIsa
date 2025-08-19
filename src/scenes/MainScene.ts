@@ -1,9 +1,13 @@
 import Phaser from 'phaser';
 import type { GameState } from '../types';
 import { gameConfig } from '../config/gameConfig';
+import { GAME_BALANCE } from '../constants/gameBalance';
 import { GameEntity } from '../entities/GameEntity';
 import { DialogueSystem } from '../systems/DialogueSystem';
+import { GameLogicManager } from '../managers/GameLogicManager';
+import { WorldRenderer } from '../managers/WorldRenderer';
 import { generateValidatedMap } from '../utils/simpleMapGeneration';
+import { logAutopoiesis } from '../utils/logger';
 
 export class MainScene extends Phaser.Scene {
   private gameState!: GameState;
@@ -11,13 +15,15 @@ export class MainScene extends Phaser.Scene {
   private isaEntity!: GameEntity;
   private stevEntity!: GameEntity;
   private dialogueSystem!: DialogueSystem;
+  private gameLogicManager!: GameLogicManager;
+  private worldRenderer!: WorldRenderer;
 
   constructor() {
     super({ key: 'MainScene' });
   }
 
   init() {
-    console.log('🎮 MainScene initialized');
+    logAutopoiesis.info('MainScene initialized');
     
     // Initialize game state with generated map
     const mapData = generateValidatedMap();
@@ -44,7 +50,10 @@ export class MainScene extends Phaser.Scene {
       terrainTiles: [],
       roads: [],
       objectLayers: [],
-      worldSize: { width: 1200, height: 800 },
+      worldSize: { 
+        width: GAME_BALANCE.WORLD.DEFAULT_WIDTH, 
+        height: GAME_BALANCE.WORLD.DEFAULT_HEIGHT 
+      },
       generatorVersion: '2.0.0'
     };
 
@@ -53,10 +62,13 @@ export class MainScene extends Phaser.Scene {
   }
 
   create() {
-    console.log('🌍 Creating main game world');
+    logAutopoiesis.info('Creating main game world');
 
     // Setup physics groups
     this.entities = this.physics.add.group();
+
+    // Initialize managers
+    this.initializeManagers();
 
     // Initialize dialogue system
     this.dialogueSystem = new DialogueSystem(this);
@@ -64,28 +76,68 @@ export class MainScene extends Phaser.Scene {
     // Create initial entities (Isa and Stev)
     this.createInitialEntities();
 
-    // Create zones and map elements visually
-    this.createZonesVisualization();
-
     // Setup camera
-    this.cameras.main.setBounds(0, 0, this.gameState.worldSize.width, this.gameState.worldSize.height);
+    this.setupCamera();
+
+    logAutopoiesis.info('MainScene created successfully', {
+      entities: this.entities.children.size,
+      zones: this.gameState.zones.length,
+      worldSize: this.gameState.worldSize
+    });
+  }
+
+  /**
+   * Initialize all managers
+   */
+  private initializeManagers(): void {
+    // Initialize game logic manager
+    this.gameLogicManager = new GameLogicManager(this, this.gameState);
+    this.gameLogicManager.initialize();
+
+    // Initialize world renderer
+    this.worldRenderer = new WorldRenderer(this, this.gameState);
+    this.worldRenderer.renderWorld();
+    
+    // Connect game logic events to UI scene
+    this.gameLogicManager.on('gameLogicUpdate', (data: any) => {
+      this.events.emit('gameLogicUpdate', data);
+    });
+    
+    logAutopoiesis.debug('All managers initialized');
+  }
+
+  /**
+   * Setup camera bounds and zoom
+   */
+  private setupCamera(): void {
+    this.cameras.main.setBounds(
+      0, 0, 
+      this.gameState.worldSize.width, 
+      this.gameState.worldSize.height
+    );
     this.cameras.main.setZoom(1);
-
-    // Setup main game loop
-    this.setupGameLoop();
-
-    // Create temporary visual elements for testing
-    this.createTestWorld();
-
-    console.log('✅ MainScene created successfully with dialogue system and map zones');
+    
+    logAutopoiesis.debug('Camera configured', {
+      bounds: this.gameState.worldSize
+    });
   }
 
   private createInitialEntities() {
     // Create Isa (circle entity)
-    this.isaEntity = new GameEntity(this, gameConfig.entityCircleInitialX, gameConfig.entityCircleInitialY, 'isa');
+    this.isaEntity = new GameEntity(
+      this, 
+      gameConfig.entityCircleInitialX, 
+      gameConfig.entityCircleInitialY, 
+      'isa'
+    );
     
     // Create Stev (square entity) 
-    this.stevEntity = new GameEntity(this, gameConfig.entitySquareInitialX, gameConfig.entitySquareInitialY, 'stev');
+    this.stevEntity = new GameEntity(
+      this, 
+      gameConfig.entitySquareInitialX, 
+      gameConfig.entitySquareInitialY, 
+      'stev'
+    );
 
     // Add to physics group
     this.entities.add(this.isaEntity);
@@ -95,41 +147,19 @@ export class MainScene extends Phaser.Scene {
     this.isaEntity.setPartnerEntity(this.stevEntity);
     this.stevEntity.setPartnerEntity(this.isaEntity);
 
-    console.log('👥 Initial entities created: Isa and Stev with autopoiesis and resonance systems');
-  }
+    // Register entities with game logic manager
+    this.gameLogicManager.registerEntity('isa', this.isaEntity);
+    this.gameLogicManager.registerEntity('stev', this.stevEntity);
 
-  private setupGameLoop() {
-    // Main game logic timer
-    this.time.addEvent({
-      delay: gameConfig.timing.mainGameLogic,
-      callback: this.updateGameLogic,
-      callbackScope: this,
-      loop: true
+    logAutopoiesis.info('Initial entities created and registered', {
+      entities: ['isa', 'stev'],
+      hasResonancePartnership: true
     });
-
-    console.log(`⏰ Game loop started with ${gameConfig.timing.mainGameLogic}ms interval`);
   }
 
-  private updateGameLogic() {
-    // Update game cycles
-    this.gameState.cycles++;
-    
-    // Update entities with autopoiesis
-    this.isaEntity.updateEntity(gameConfig.timing.mainGameLogic);
-    this.stevEntity.updateEntity(gameConfig.timing.mainGameLogic);
-    
-    // Emit update event for UI
-    this.events.emit('gameLogicUpdate', {
-      cycles: this.gameState.cycles,
-      resonance: this.gameState.resonance,
-      isaStats: this.isaEntity.getStats(),
-      stevStats: this.stevEntity.getStats()
-    });
+  // Game loop is now handled by GameLogicManager
 
-    if (this.gameState.cycles % 10 === 0) {
-      console.log(`🔄 Game cycle ${this.gameState.cycles} - Isa: ${this.isaEntity.getCurrentActivity()}, Stev: ${this.stevEntity.getCurrentActivity()}`);
-    }
-  }
+  // Game logic updates are now handled by GameLogicManager
 
   private createTestWorld() {
     // Create a natural grass background using tiles
@@ -290,7 +320,7 @@ export class MainScene extends Phaser.Scene {
    * Maneja interacciones del jugador que pueden generar diálogos
    */
   public handlePlayerInteraction(entityId: string, interactionType: string) {
-    this.dialogueSystem.handleInteractionDialogue(entityId, interactionType);
+    this.dialogueSystem.handlePlayerInteraction(entityId, interactionType);
   }
 
   update() {

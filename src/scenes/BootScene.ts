@@ -54,4 +54,67 @@ export class BootScene extends Phaser.Scene {
     // Setup global events and initial state
     this.events.emit('bootComplete');
   }
+  
+  /**
+   * Hide the loading screen with fade effect
+   */
+  private hideLoadingScreen(): void {
+    const loadingElement = document.getElementById('loading');
+    if (loadingElement) {
+      loadingElement.classList.add('fade-out');
+      setTimeout(() => {
+        loadingElement.style.display = 'none';
+      }, 500);
+    }
+  }
+  
+  /**
+   * Show error message for failed assets
+   */
+  private showAssetError(failedAssets: string[]): void {
+    const errorText = this.add.text(400, 300, [
+      '⚠️ Error cargando algunos recursos',
+      `Falló la carga de: ${failedAssets.slice(0, 3).join(', ')}`,
+      failedAssets.length > 3 ? `y ${failedAssets.length - 3} más...` : '',
+      '',
+      'Presiona cualquier tecla para continuar con fallbacks'
+    ].filter(Boolean).join('\n'), {
+      fontSize: '16px',
+      color: '#e74c3c',
+      align: 'center',
+      fontFamily: 'Arial'
+    }).setOrigin(0.5);
+    
+    this.input.keyboard?.once('keydown', () => {
+      errorText.destroy();
+      this.scene.start('MainScene');
+      this.scene.launch('UIScene');
+    });
+  }
+  
+  /**
+   * Show critical error that prevents game from starting
+   */
+  private showCriticalError(error: any): void {
+    this.add.text(400, 300, [
+      '💀 Error crítico en el juego',
+      'No es posible iniciar el juego',
+      '',
+      `Error: ${error.message || error}`,
+      '',
+      'Recarga la página para intentar de nuevo'
+    ].join('\n'), {
+      fontSize: '14px',
+      color: '#c0392b',
+      align: 'center',
+      fontFamily: 'Arial'
+    }).setOrigin(0.5);
+  }
+  
+  /**
+   * Get loading statistics
+   */
+  public getAssetStats() {
+    return this.assetManager?.getLoadingStats() || { loaded: 0, failed: 0, fallbacks: 0 };
+  }
 }

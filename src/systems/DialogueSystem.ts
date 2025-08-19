@@ -1,18 +1,44 @@
 /**
- * Sistema de Diálogos para Una Carta Para Isa
- * Adaptado al motor Phaser - Integra con el sistema de autopoiesis
+ * Sistema de Diálogos para Una Carta Para Isa - Integrado con Phaser 3
+ * Maneja diálogos contextuales, burbujas de diálogo y expresiones emocionales
+ * Usa conversaciones reales entre Isa y Stev del archivo JSON original
  */
 
-import type { ConversationState, Entity } from '../types';
-import { dialogues, getRandomDialogue } from '../utils/dialogues';
-import { gameConfig } from '../config/gameConfig';
+import type { DialogueEntry } from '../types';
 import { logAutopoiesis } from '../utils/logger';
+import { 
+  loadDialogueData, 
+  getNextDialogue, 
+  getResponseWriter, 
+  getDialogueForInteraction,
+  getSpeakerForEntity,
+  getEmotionForActivity,
+  getDialogueStats
+} from '../utils/dialogueSelector';
+
+interface ConversationState {
+  isActive: boolean;
+  participants: string[];
+  lastSpeaker: string | null;
+  lastDialogue: DialogueEntry | null;
+  startTime: number;
+}
+
+interface Entity {
+  id: string;
+  x: number;
+  y: number;
+  activity?: string;
+  emotion?: string;
+  lastInteraction?: number;
+}
 
 export class DialogueSystem {
   private scene: Phaser.Scene;
   private conversationState: ConversationState;
   private dialogueBubbles: Map<string, Phaser.GameObjects.Container> = new Map();
   private autoDialogueTimer?: Phaser.Time.TimerEvent;
+  private isInitialized: boolean = false;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -24,298 +50,316 @@ export class DialogueSystem {
       startTime: 0
     };
 
-    this.setupAutoDialogueSystem();
+    this.initializeDialogueSystem();
+  }
+
+  /**
+   * Inicializar el sistema cargando los diálogos reales
+   */
+  private async initializeDialogueSystem(): Promise<void> {
+    try {
+      await loadDialogueData();
+      this.isInitialized = true;
+      this.setupAutoDialogueSystem();
+      
+      logAutopoiesis.info('DialogueSystem inicializado con datos reales', {
+        stats: getDialogueStats()
+      });
+      
+      console.log('✅ Sistema de diálogos inicializado con conversaciones reales');
+    } catch (error) {
+      console.error('❌ Error inicializando sistema de diálogos:', error);
+      logAutopoiesis.error('Error en inicialización de DialogueSystem', { error: error?.toString() });
+    }
   }
 
   /**
    * Configurar el sistema autónomo de diálogos
    */
-  private setupAutoDialogueSystem() {
-    // Auto-iniciar conversaciones cada cierto tiempo
+  private setupAutoDialogueSystem(): void {
+    if (!this.isInitialized) return;
+
+    // Auto-diálogos cada 8-15 segundos
+    const baseInterval = 8000;
+    const variableInterval = Math.random() * 7000;
+    
     this.autoDialogueTimer = this.scene.time.addEvent({
-      delay: 8000, // Cada 8 segundos evalúa si iniciar diálogo
-      callback: this.evaluateAutoDialogue,
-      callbackScope: this,
+      delay: baseInterval + variableInterval,
+      callback: () => this.evaluateAutoDialogue(),
       loop: true
     });
-  }
 
-  /**
-   * Evalúa si debe iniciar un diálogo automático basado en contexto de entidades
-   */
-  private evaluateAutoDialogue() {
-    if (this.conversationState.isActive) return;
-    if (Math.random() > gameConfig.ui.dialogueInitiationChance) return;
-
-    const entities = this.getActiveEntities();
-    if (entities.length < 2) return;
-
-    // Seleccionar entidad iniciadora basada en estado emocional
-    const initiator = this.selectDialogueInitiator(entities);
-    if (!initiator) return;
-
-    this.initiateContextualDialogue(initiator);
-  }
-
-  /**
-   * Obtiene entidades activas que pueden participar en diálogos
-   */
-  private getActiveEntities(): Entity[] {
-    const gameState = this.scene.registry.get('gameState');
-    return gameState?.entities?.filter((entity: Entity) => 
-      !entity.isDead && 
-      entity.stats.energy > 20 &&
-      entity.activity !== 'WORKING'
-    ) || [];
-  }
-
-  /**
-   * Selecciona la entidad que debería iniciar un diálogo
-   */
-  private selectDialogueInitiator(entities: Entity[]): Entity | null {
-    // Priorizar entidades con estados emocionales que favorecen comunicación
-    const socialMoods = ['😊', '😌', '🤩', '😔'];
-    
-    const socialEntities = entities.filter(e => socialMoods.includes(e.mood));
-    if (socialEntities.length > 0) {
-      return socialEntities[Math.floor(Math.random() * socialEntities.length)];
-    }
-
-    // Si no hay entidades sociales, cualquier entidad activa
-    return entities[Math.floor(Math.random() * entities.length)];
-  }
-
-  /**
-   * Inicia un diálogo contextual basado en el estado de la entidad
-   */
-  public initiateContextualDialogue(entity: Entity) {
-    const dialogueType = this.getDialogueTypeFromContext(entity);
-    const message = getRandomDialogue(dialogueType);
-
-    if (!message) return;
-
-    this.startConversation([entity.id]);
-    this.showDialogueBubble(entity, message, this.getSpeakerFromEntity(entity.id));
-
-    logAutopoiesis.info(`Diálogo contextual iniciado`, {
-      entity: entity.id,
-      type: dialogueType,
-      mood: entity.mood,
-      activity: entity.activity
+    logAutopoiesis.debug('Sistema autónomo de diálogos configurado', {
+      baseInterval,
+      nextDialogue: baseInterval + variableInterval
     });
   }
 
   /**
-   * Determina el tipo de diálogo basado en el contexto de la entidad
+   * Evaluar si debe generar un diálogo automático
    */
-  private getDialogueTypeFromContext(entity: Entity): keyof typeof dialogues {
-    // Mapeo de estados a tipos de diálogo
-    const statePriorities = [
-      { condition: () => entity.stats.hunger < 30, type: 'hungry' as const },
-      { condition: () => entity.stats.sleepiness < 25, type: 'tired' as const },
-      { condition: () => entity.stats.loneliness < 30, type: 'lonely' as const },
-      { condition: () => entity.stats.happiness > 75, type: 'happy' as const },
-      { condition: () => entity.activity === 'MEDITATING', type: 'meditation' as const },
-      { condition: () => entity.activity === 'WRITING', type: 'writing' as const },
-      { condition: () => entity.mood === '😢', type: 'comforting' as const },
-      { condition: () => entity.mood === '🤩', type: 'playing' as const }
-    ];
+  private evaluateAutoDialogue(): void {
+    if (!this.isInitialized || this.conversationState.isActive) return;
 
-    // Encontrar el primer estado que coincida
-    for (const priority of statePriorities) {
-      if (priority.condition()) {
-        return priority.type;
+    // Obtener entidades válidas para diálogo
+    const entities = this.getAvailableEntities();
+    if (entities.length === 0) return;
+
+    // Seleccionar entidad aleatoria con distribución ponderada
+    const selectedEntity = this.selectEntityForDialogue(entities);
+    if (!selectedEntity) return;
+
+    // Generar diálogo contextual
+    this.generateContextualDialogue(selectedEntity);
+  }
+
+  /**
+   * Obtener entidades disponibles para diálogo
+   */
+  private getAvailableEntities(): Entity[] {
+    // Simular entidades del juego - en el juego real vendrían del GameState
+    return [
+      { id: 'isa_entity', x: 100, y: 100, activity: 'SOCIALIZING', emotion: 'NEUTRAL' },
+      { id: 'stev_entity', x: 200, y: 150, activity: 'SOCIALIZING', emotion: 'CURIOUS' }
+    ];
+  }
+
+  /**
+   * Seleccionar entidad para diálogo con lógica ponderada
+   */
+  private selectEntityForDialogue(entities: Entity[]): Entity | null {
+    if (entities.length === 0) return null;
+
+    // Si hay un último hablante, priorizar respuesta
+    if (this.conversationState.lastSpeaker) {
+      const otherEntities = entities.filter(e => 
+        getSpeakerForEntity(e.id) !== this.conversationState.lastSpeaker
+      );
+      
+      if (otherEntities.length > 0) {
+        return otherEntities[Math.floor(Math.random() * otherEntities.length)];
       }
     }
 
-    // Fallback a diálogo general de felicidad
-    return 'happy';
+    // Selección aleatoria ponderada por tiempo sin hablar
+    const now = Date.now();
+    const weights = entities.map(entity => {
+      const timeSinceLastInteraction = now - (entity.lastInteraction || 0);
+      return Math.min(timeSinceLastInteraction / 10000, 2.0); // Max weight de 2.0
+    });
+
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    if (totalWeight === 0) return entities[0];
+
+    let random = Math.random() * totalWeight;
+    for (let i = 0; i < entities.length; i++) {
+      random -= weights[i];
+      if (random <= 0) return entities[i];
+    }
+
+    return entities[entities.length - 1];
   }
 
   /**
-   * Muestra una burbuja de diálogo sobre una entidad
+   * Generar diálogo contextual para una entidad
    */
-  public showDialogueBubble(
-    entity: Entity, 
-    message: string, 
-    speaker: 'ISA' | 'STEV',
-    duration: number = 4000
-  ) {
-    const bubbleId = `${entity.id}-${Date.now()}`;
+  private generateContextualDialogue(entity: Entity): void {
+    const speaker = getSpeakerForEntity(entity.id);
+    const emotion = entity.emotion || getEmotionForActivity(entity.activity || 'SOCIALIZING');
     
-    // Crear contenedor para la burbuja
-    const bubble = this.scene.add.container(entity.position.x, entity.position.y - 60);
+    let dialogue: DialogueEntry | null = null;
+
+    // Si hay un diálogo previo, intentar generar respuesta contextual
+    if (this.conversationState.lastDialogue && 
+        this.conversationState.lastSpeaker !== speaker) {
+      dialogue = getResponseWriter(speaker, this.conversationState.lastDialogue);
+    }
+
+    // Si no se pudo generar respuesta, obtener diálogo general
+    if (!dialogue) {
+      dialogue = getNextDialogue(speaker, emotion, entity.activity);
+    }
+
+    if (dialogue) {
+      this.showDialogue(entity.id, dialogue);
+      entity.lastInteraction = Date.now();
+    }
+  }
+
+  /**
+   * Mostrar diálogo en burbuja visual
+   */
+  public showDialogue(entityId: string, dialogue: DialogueEntry): void {
+    this.removeDialogueBubble(entityId);
+
+    const entity = this.getAvailableEntities().find(e => e.id === entityId);
+    if (!entity) return;
+
+    // Crear contenedor de burbuja
+    const bubbleContainer = this.scene.add.container(entity.x, entity.y - 60);
+
+    // Crear fondo de burbuja
+    const bubbleWidth = Math.min(dialogue.text.length * 8 + 40, 300);
+    const bubbleHeight = 60;
     
-    // Background de la burbuja con estilo mejorado
-    const bgColor = speaker === 'ISA' ? 0x8e44ad : 0x2980b9;
-    const background = this.scene.add.graphics();
-    background.fillStyle(bgColor, 0.9);
-    background.lineStyle(2, 0xffffff, 0.8);
-    background.fillRoundedRect(-120, -30, 240, 60, 10);
-    background.strokeRoundedRect(-120, -30, 240, 60, 10);
-    
-    // Texto del diálogo con mejores estilos
-    const text = this.scene.add.text(0, 0, this.truncateMessage(message), {
-      fontSize: '12px',
-      color: '#ffffff',
-      fontFamily: 'Arial, sans-serif',
+    const bubble = this.scene.add.graphics();
+    bubble.fillStyle(0xffffff, 0.9);
+    bubble.lineStyle(2, 0x000000);
+    bubble.fillRoundedRect(-bubbleWidth/2, -bubbleHeight/2, bubbleWidth, bubbleHeight, 15);
+    bubble.strokeRoundedRect(-bubbleWidth/2, -bubbleHeight/2, bubbleWidth, bubbleHeight, 15);
+
+    // Crear texto del diálogo
+    const dialogueText = this.scene.add.text(0, 0, dialogue.text, {
+      fontSize: '14px',
+      fontFamily: 'Arial',
+      color: '#000000',
       align: 'center',
-      wordWrap: { width: 220 },
-      fontStyle: 'bold'
-    });
-    text.setOrigin(0.5);
-    
-    // Etiqueta del hablante
-    const speakerLabel = this.scene.add.text(0, -20, speaker === 'ISA' ? '💜 Isa' : '💙 Stev', {
-      fontSize: '10px',
-      color: '#ecf0f1',
-      fontFamily: 'Arial, sans-serif',
-      fontStyle: 'italic'
-    });
-    speakerLabel.setOrigin(0.5);
-    
-    // Cola de la burbuja
-    const tail = this.scene.add.graphics();
-    tail.fillStyle(bgColor, 0.9);
-    tail.fillTriangle(0, 30, -8, 40, 8, 40);
-    
+      wordWrap: { width: bubbleWidth - 20 }
+    }).setOrigin(0.5);
+
+    // Indicador de speaker
+    const speakerColor = dialogue.speaker === 'ISA' ? 0xff6b9d : 0x4ecdc4;
+    const speakerIndicator = this.scene.add.circle(-bubbleWidth/2 + 15, -bubbleHeight/2 + 15, 8, speakerColor);
+
     // Ensamblar burbuja
-    bubble.add([background, tail, speakerLabel, text]);
-    bubble.setDepth(1000);
+    bubbleContainer.add([bubble, dialogueText, speakerIndicator]);
+
+    // Animación de aparición
+    bubbleContainer.setAlpha(0);
+    bubbleContainer.setScale(0.5);
     
-    // Animación de entrada
-    bubble.setScale(0);
     this.scene.tweens.add({
-      targets: bubble,
-      scale: 1,
+      targets: bubbleContainer,
+      alpha: 1,
+      scaleX: 1,
+      scaleY: 1,
       duration: 300,
       ease: 'Back.easeOut'
     });
-    
+
     // Guardar referencia
-    this.dialogueBubbles.set(bubbleId, bubble);
-    
-    // Auto-destruir después del tiempo especificado
-    this.scene.time.delayedCall(duration, () => {
-      this.hideDialogueBubble(bubbleId);
+    this.dialogueBubbles.set(entityId, bubbleContainer);
+
+    // Auto-remover después de duración calculada
+    const displayDuration = Math.max(dialogue.text.length * 80, 3000);
+    this.scene.time.delayedCall(displayDuration, () => {
+      this.removeDialogueBubble(entityId);
     });
 
-    return bubbleId;
+    // Actualizar estado de conversación
+    this.conversationState.lastSpeaker = dialogue.speaker;
+    this.conversationState.lastDialogue = dialogue;
+    
+    // Log para telemetría
+    logAutopoiesis.info('Diálogo mostrado', {
+      entityId,
+      speaker: dialogue.speaker,
+      emotion: dialogue.emotion,
+      activity: dialogue.activity,
+      textLength: dialogue.text.length
+    });
+
+    console.log(`💬 ${dialogue.speaker}: ${dialogue.text}`);
   }
 
   /**
-   * Oculta una burbuja de diálogo específica
+   * Remover burbuja de diálogo
    */
-  public hideDialogueBubble(bubbleId: string) {
-    const bubble = this.dialogueBubbles.get(bubbleId);
-    if (!bubble) return;
+  private removeDialogueBubble(entityId: string): void {
+    const existingBubble = this.dialogueBubbles.get(entityId);
+    if (existingBubble) {
+      this.scene.tweens.add({
+        targets: existingBubble,
+        alpha: 0,
+        scaleX: 0.8,
+        scaleY: 0.8,
+        duration: 200,
+        onComplete: () => {
+          existingBubble.destroy();
+        }
+      });
+      this.dialogueBubbles.delete(entityId);
+    }
+  }
 
-    // Animación de salida
-    this.scene.tweens.add({
-      targets: bubble,
-      scale: 0,
-      alpha: 0,
-      duration: 300,
-      ease: 'Back.easeIn',
-      onComplete: () => {
-        bubble.destroy();
-        this.dialogueBubbles.delete(bubbleId);
+  /**
+   * Manejar interacción del jugador con entidad
+   */
+  public handlePlayerInteraction(entityId: string, interactionType: string): void {
+    if (!this.isInitialized) {
+      console.warn('⚠️ Sistema de diálogos no inicializado');
+      return;
+    }
+
+    const dialogue = getDialogueForInteraction(interactionType, entityId);
+    if (dialogue) {
+      this.showDialogue(entityId, dialogue);
+      
+      // Actualizar actividad de la entidad
+      const entity = this.getAvailableEntities().find(e => e.id === entityId);
+      if (entity) {
+        entity.lastInteraction = Date.now();
+        entity.activity = 'SOCIALIZING';
       }
-    });
+    }
   }
 
   /**
-   * Maneja diálogos de interacción del jugador
+   * Iniciar conversación entre entidades específicas
    */
-  public handleInteractionDialogue(
-    entityId: string, 
-    interactionType: string
-  ) {
-    const entity = this.getActiveEntities().find(e => e.id === entityId);
-    if (!entity) return;
+  public startConversation(participants: string[]): void {
+    this.conversationState.isActive = true;
+    this.conversationState.participants = participants;
+    this.conversationState.startTime = Date.now();
 
-    // Mapeo de interacciones a tipos de diálogo
-    const interactionMap: Record<string, keyof typeof dialogues> = {
-      'FEED': 'feeding',
-      'PLAY': 'playing', 
-      'COMFORT': 'comforting',
-      'DISTURB': 'disturbing',
-      'NOURISH': 'post-nutrition'
-    };
-
-    const dialogueType = interactionMap[interactionType];
-    if (!dialogueType) return;
-
-    const message = getRandomDialogue(dialogueType);
-    const speaker = this.getSpeakerFromEntity(entityId);
-    
-    this.showDialogueBubble(entity, message, speaker, 3500);
-
-    logAutopoiesis.info(`Diálogo de interacción`, {
-      entity: entityId,
-      interaction: interactionType,
-      type: dialogueType
-    });
-  }
-
-  /**
-   * Trunca mensajes muy largos para la burbuja
-   */
-  private truncateMessage(message: string, maxLength: number = 80): string {
-    if (message.length <= maxLength) return message;
-    return message.substring(0, maxLength - 3) + '...';
-  }
-
-  /**
-   * Convierte ID de entidad a speaker
-   */
-  private getSpeakerFromEntity(entityId: string): 'ISA' | 'STEV' {
-    return entityId.toLowerCase().includes('isa') ? 'ISA' : 'STEV';
-  }
-
-  /**
-   * Inicia una conversación
-   */
-  public startConversation(participants: string[]) {
-    this.conversationState = {
-      isActive: true,
+    logAutopoiesis.info('Conversación iniciada', {
       participants,
-      lastSpeaker: null,
-      lastDialogue: null,
-      startTime: Date.now()
+      timestamp: this.conversationState.startTime
+    });
+  }
+
+  /**
+   * Finalizar conversación activa
+   */
+  public endConversation(): void {
+    this.conversationState.isActive = false;
+    this.conversationState.participants = [];
+    
+    // Limpiar todas las burbujas
+    this.dialogueBubbles.forEach((_, entityId) => {
+      this.removeDialogueBubble(entityId);
+    });
+
+    logAutopoiesis.info('Conversación finalizada', {
+      duration: Date.now() - this.conversationState.startTime
+    });
+  }
+
+  /**
+   * Obtener estadísticas del sistema
+   */
+  public getSystemStats() {
+    return {
+      dialogueStats: getDialogueStats(),
+      conversationState: this.conversationState,
+      activeBubbles: this.dialogueBubbles.size,
+      isInitialized: this.isInitialized
     };
   }
 
   /**
-   * Finaliza la conversación actual
+   * Limpiar recursos del sistema
    */
-  public endConversation() {
-    this.conversationState = {
-      isActive: false,
-      participants: [],
-      lastSpeaker: null,
-      lastDialogue: null,
-      startTime: 0
-    };
-  }
-
-  /**
-   * Limpia el sistema al destruir la escena
-   */
-  public destroy() {
+  public destroy(): void {
     if (this.autoDialogueTimer) {
       this.autoDialogueTimer.destroy();
     }
-    
-    // Limpiar todas las burbujas activas
-    this.dialogueBubbles.forEach(bubble => bubble.destroy());
-    this.dialogueBubbles.clear();
-  }
 
-  /**
-   * Obtiene el estado actual de la conversación
-   */
-  public getConversationState(): ConversationState {
-    return { ...this.conversationState };
+    this.dialogueBubbles.forEach((bubble) => {
+      bubble.destroy();
+    });
+    this.dialogueBubbles.clear();
+
+    logAutopoiesis.info('DialogueSystem destruido');
   }
 }

@@ -40,14 +40,13 @@ export type EntityStateType =
   | 'fading';
 
 export type MoodType =
-  | '😊' // HAPPY
+  | '😊' // HAPPY/CONTENT
   | '😢' // SAD  
   | '😡' // ANGRY
   | '😌' // CALM
   | '🤩' // EXCITED
   | '😑' // BORED
   | '😔' // LONELY
-  | '😊' // CONTENT
   | '😰' // ANXIOUS
   | '😴'; // TIRED
 
