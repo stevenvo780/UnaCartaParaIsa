@@ -3,16 +3,16 @@
  * Extrae la lógica de input del MainScene
  */
 
-import Phaser from 'phaser';
-import type { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
-import { logAutopoiesis } from '../utils/logger';
+import Phaser from "phaser";
+import type { AnimatedGameEntity } from "../entities/AnimatedGameEntity";
+import { logAutopoiesis } from "../utils/logger";
 
-export type ControlledEntity = 'isa' | 'stev' | 'none';
+export type ControlledEntity = "isa" | "stev" | "none";
 
 export class InputManager {
   private scene: Phaser.Scene;
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
-  private controlledEntity: ControlledEntity = 'none';
+  private controlledEntity: ControlledEntity = "none";
   private wasdKeys?: Record<string, Phaser.Input.Keyboard.Key>;
   private isDragging = false;
   private lastPointerPosition = { x: 0, y: 0 };
@@ -33,46 +33,46 @@ export class InputManager {
     this.cursors = this.scene.input.keyboard.createCursorKeys();
 
     // Controles WASD
-    this.wasdKeys = this.scene.input.keyboard.addKeys('W,S,A,D') as Record<
+    this.wasdKeys = this.scene.input.keyboard.addKeys("W,S,A,D") as Record<
       string,
       Phaser.Input.Keyboard.Key
     >;
 
     // Controles de cambio de entidad
-    this.scene.input.keyboard.on('keydown-ONE', () => {
-      this.setControlledEntity('isa');
+    this.scene.input.keyboard.on("keydown-ONE", () => {
+      this.setControlledEntity("isa");
     });
-    this.scene.input.keyboard.on('keydown-TWO', () => {
-      this.setControlledEntity('stev');
+    this.scene.input.keyboard.on("keydown-TWO", () => {
+      this.setControlledEntity("stev");
     });
-    this.scene.input.keyboard.on('keydown-ZERO', () => {
-      this.setControlledEntity('none');
+    this.scene.input.keyboard.on("keydown-ZERO", () => {
+      this.setControlledEntity("none");
     });
 
     // Additional control keys
-    this.scene.input.keyboard.on('keydown-TAB', (event: KeyboardEvent) => {
+    this.scene.input.keyboard.on("keydown-TAB", (event: KeyboardEvent) => {
       event.preventDefault();
       // Cycle through entities
-      const entities: ControlledEntity[] = ['none', 'isa', 'stev'];
+      const entities: ControlledEntity[] = ["none", "isa", "stev"];
       const currentIndex = entities.indexOf(this.controlledEntity);
       const nextIndex = (currentIndex + 1) % entities.length;
       this.setControlledEntity(entities[nextIndex]);
     });
 
     // Sprint modifier
-    this.scene.input.keyboard.on('keydown-SHIFT', () => {
+    this.scene.input.keyboard.on("keydown-SHIFT", () => {
       this.isSprinting = true;
-      this.scene.events.emit('sprintStart');
+      this.scene.events.emit("sprintStart");
     });
-    this.scene.input.keyboard.on('keyup-SHIFT', () => {
+    this.scene.input.keyboard.on("keyup-SHIFT", () => {
       this.isSprinting = false;
-      this.scene.events.emit('sprintEnd');
+      this.scene.events.emit("sprintEnd");
     });
 
     // Setup mouse controls
     this.setupMouseControls();
 
-    logAutopoiesis.info('Input controls configured');
+    logAutopoiesis.info("Input controls configured");
   }
 
   /**
@@ -82,12 +82,12 @@ export class InputManager {
     if (!this.scene.input) return;
 
     // Mouse drag for camera movement
-    this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+    this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       this.isDragging = true;
       this.lastPointerPosition = { x: pointer.x, y: pointer.y };
     });
 
-    this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+    this.scene.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
       if (this.isDragging && this.scene.cameras?.main) {
         const deltaX = pointer.x - this.lastPointerPosition.x;
         const deltaY = pointer.y - this.lastPointerPosition.y;
@@ -100,18 +100,18 @@ export class InputManager {
       }
     });
 
-    this.scene.input.on('pointerup', () => {
+    this.scene.input.on("pointerup", () => {
       this.isDragging = false;
     });
 
     // Mouse wheel for zoom
     this.scene.input.on(
-      'wheel',
+      "wheel",
       (
         pointer: Phaser.Input.Pointer,
         gameObjects: Phaser.GameObjects.GameObject[],
         deltaX: number,
-        deltaY: number
+        deltaY: number,
       ) => {
         if (this.scene.cameras?.main) {
           const camera = this.scene.cameras.main;
@@ -119,7 +119,7 @@ export class InputManager {
           const newZoom = Phaser.Math.Clamp(camera.zoom * zoomFactor, 0.5, 2);
           camera.setZoom(newZoom);
         }
-      }
+      },
     );
   }
 
@@ -131,19 +131,19 @@ export class InputManager {
     this.controlledEntity = entity;
 
     // Provide visual feedback when switching control
-    if (entity !== 'none') {
+    if (entity !== "none") {
       logAutopoiesis.info(`🎮 Control activo: ${entity.toUpperCase()}`);
 
       // Emit event for UI feedback
-      this.scene.events.emit('controlChanged', {
+      this.scene.events.emit("controlChanged", {
         previous: prevEntity,
         current: entity,
       });
     } else {
-      logAutopoiesis.info('🎮 Control manual desactivado - modo AUTO');
-      this.scene.events.emit('controlChanged', {
+      logAutopoiesis.info("🎮 Control manual desactivado - modo AUTO");
+      this.scene.events.emit("controlChanged", {
         previous: prevEntity,
-        current: 'none',
+        current: "none",
       });
     }
   }
@@ -160,14 +160,14 @@ export class InputManager {
    */
   processMovementInput(
     isaEntity: AnimatedGameEntity,
-    stevEntity: AnimatedGameEntity
+    stevEntity: AnimatedGameEntity,
   ): void {
     if (!this.cursors || !this.wasdKeys) return;
 
     const currentEntity =
-      this.controlledEntity === 'isa'
+      this.controlledEntity === "isa"
         ? isaEntity
-        : this.controlledEntity === 'stev'
+        : this.controlledEntity === "stev"
           ? stevEntity
           : null;
 
@@ -200,9 +200,17 @@ export class InputManager {
 
     // Actualizar animaciones
     if (isMoving) {
-      currentEntity.playAnimation('walk');
+      // Use entity-specific walking animation if available, fallback to happy
+      const walkAnim = `${currentEntity.getEntityData().id}_walk`;
+      const fallbackAnim = `${currentEntity.getEntityData().id}_happy`;
+
+      if (!currentEntity.playAnimation(walkAnim)) {
+        currentEntity.playAnimation(fallbackAnim);
+      }
     } else {
-      currentEntity.playAnimation('idle');
+      // Use entity-specific idle animation
+      const idleAnim = `${currentEntity.getEntityData().id}_idle`;
+      currentEntity.playAnimation(idleAnim);
     }
   }
 

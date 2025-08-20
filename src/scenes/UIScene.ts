@@ -8,6 +8,15 @@ import { ResonanceLabel, UIElementPool } from '../managers/UIElementPool';
 import type { Entity, GameLogicUpdateData } from '../types';
 import { logAutopoiesis } from '../utils/logger';
 
+// Define interface at file level to be accessible
+interface StatElement {
+  label: Phaser.GameObjects.Text;
+  value: Phaser.GameObjects.Text;
+  barBg: Phaser.GameObjects.Graphics;
+  bar: Phaser.GameObjects.Graphics;
+  currentValue: number;
+}
+
 export class UIScene extends Phaser.Scene {
   private resonanceLabelPool!: UIElementPool<ResonanceLabel>;
 
@@ -1037,17 +1046,6 @@ export class UIScene extends Phaser.Scene {
     entityData: Entity,
     color: string
   ) {
-    // Clear previous dynamic stats (but keep fixed elements like background, title, portrait)
-    const existingStats = panel.list.filter(
-      (child: Phaser.GameObjects.GameObject) =>
-        (child.type === 'Text' || child.type === 'Graphics') &&
-        'y' in child &&
-        (child as any).y > 75
-    );
-    existingStats.forEach((stat: Phaser.GameObjects.GameObject) => {
-      stat.destroy();
-    });
-
     if (!entityData.stats) return;
 
     const { stats } = entityData;
@@ -1058,25 +1056,35 @@ export class UIScene extends Phaser.Scene {
       activityText.setText(entityData.activity || 'IDLE');
     }
 
-    // Create stats in two columns for better space usage
+    // Check if stats elements exist, if not create them
+    let statsElements = panel.getData('statsElements');
+    if (!statsElements) {
+      statsElements = this.createStatsElements(panel);
+      panel.setData('statsElements', statsElements);
+    }
+
+    // Define current stats data
     const statsColumn1 = [
       {
         icon: '❤️',
         label: 'Salud',
         value: Math.round(stats.health || 0),
         color: '#e74c3c',
+        key: 'health',
       },
       {
         icon: '😊',
         label: 'Felicidad',
         value: Math.round(stats.happiness || 0),
         color: '#f39c12',
+        key: 'happiness',
       },
       {
         icon: '⚡',
         label: 'Energía',
         value: Math.round(stats.energy || 0),
         color: '#3498db',
+        key: 'energy',
       },
     ];
 
@@ -1086,104 +1094,41 @@ export class UIScene extends Phaser.Scene {
         label: 'Hambre',
         value: Math.round(stats.hunger || 0),
         color: '#27ae60',
+        key: 'hunger',
       },
       {
         icon: '😴',
         label: 'Sueño',
         value: Math.round(stats.sleepiness || 0),
         color: '#9b59b6',
+        key: 'sleepiness',
       },
       {
         icon: '💰',
         label: 'Dinero',
         value: Math.round(stats.money || 0),
         color: '#f1c40f',
+        key: 'money',
       },
     ];
 
-    // First column
-    statsColumn1.forEach((stat, index) => {
-      const { value } = stat;
-      const barColor =
-        value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
-
-      // Stat label
-      const statText = this.add.text(
-        10,
-        80 + index * 25,
-        `${stat.icon} ${stat.label}`,
-        {
-          fontSize: '10px',
-          color: stat.color,
-          fontFamily: 'Arial, sans-serif',
-          fontStyle: 'bold',
+    // Animate column 1 stats
+    if (statsElements?.column1) {
+      statsColumn1.forEach((stat, index) => {
+        if (statsElements.column1[index]) {
+          this.animateStatBar(statsElements.column1[index], stat);
         }
-      );
-      panel.add(statText);
-
-      // Stat value
-      const valueText = this.add.text(10, 92 + index * 25, `${value}`, {
-        fontSize: '9px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial, sans-serif',
       });
-      panel.add(valueText);
+    }
 
-      // Progress bar background
-      const barBg = this.add.graphics();
-      barBg.fillStyle(0x2c3e50, 0.8);
-      barBg.fillRoundedRect(45, 83 + index * 25, 80, 8, 4);
-      panel.add(barBg);
-
-      // Progress bar fill
-      const bar = this.add.graphics();
-      bar.fillStyle(Phaser.Display.Color.HexStringToColor(barColor).color, 0.8);
-      const barWidth = Math.max((value / 100) * 76, 2);
-      bar.fillRoundedRect(47, 85 + index * 25, barWidth, 4, 2);
-      panel.add(bar);
-    });
-
-    // Second column
-    statsColumn2.forEach((stat, index) => {
-      const { value } = stat;
-      const barColor =
-        value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
-
-      // Stat label
-      const statText = this.add.text(
-        140,
-        80 + index * 25,
-        `${stat.icon} ${stat.label}`,
-        {
-          fontSize: '10px',
-          color: stat.color,
-          fontFamily: 'Arial, sans-serif',
-          fontStyle: 'bold',
+    // Animate column 2 stats
+    if (statsElements?.column2) {
+      statsColumn2.forEach((stat, index) => {
+        if (statsElements.column2[index]) {
+          this.animateStatBar(statsElements.column2[index], stat);
         }
-      );
-      panel.add(statText);
-
-      // Stat value
-      const valueText = this.add.text(140, 92 + index * 25, `${value}`, {
-        fontSize: '9px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial, sans-serif',
       });
-      panel.add(valueText);
-
-      // Progress bar background
-      const barBg = this.add.graphics();
-      barBg.fillStyle(0x2c3e50, 0.8);
-      barBg.fillRoundedRect(175, 83 + index * 25, 80, 8, 4);
-      panel.add(barBg);
-
-      // Progress bar fill
-      const bar = this.add.graphics();
-      bar.fillStyle(Phaser.Display.Color.HexStringToColor(barColor).color, 0.8);
-      const barWidth = Math.max((value / 100) * 76, 2);
-      bar.fillRoundedRect(177, 85 + index * 25, barWidth, 4, 2);
-      panel.add(bar);
-    });
+    }
 
     // Mood indicator at the bottom
     if (entityData.mood) {
@@ -1201,6 +1146,145 @@ export class UIScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
       panel.add(moodText);
+    }
+  }
+
+  /**
+   * Creates persistent stat elements that can be animated instead of recreated
+   */
+  private createStatsElements(panel: Phaser.GameObjects.Container) {
+    const column1Elements: StatElement[] = [];
+    const column2Elements: StatElement[] = [];
+
+    // Create column 1 stat elements (left side)
+    for (let i = 0; i < 3; i++) {
+      const statLabel = this.add.text(10, 80 + i * 25, '', {
+        fontSize: '10px',
+        color: '#ffffff',
+        fontFamily: 'Arial, sans-serif',
+        fontStyle: 'bold',
+      });
+
+      const valueText = this.add.text(10, 92 + i * 25, '0', {
+        fontSize: '9px',
+        color: '#ecf0f1',
+        fontFamily: 'Arial, sans-serif',
+      });
+
+      const barBg = this.add.graphics();
+      barBg.fillStyle(0x2c3e50, 0.8);
+      barBg.fillRoundedRect(45, 83 + i * 25, 80, 8, 4);
+
+      const bar = this.add.graphics();
+      bar.fillStyle(0x27ae60, 0.8);
+      bar.fillRoundedRect(47, 85 + i * 25, 2, 4, 2);
+
+      panel.add([statLabel, valueText, barBg, bar]);
+
+      column1Elements.push({
+        label: statLabel,
+        value: valueText,
+        barBg: barBg,
+        bar: bar,
+        currentValue: 0,
+      });
+    }
+
+    // Create column 2 stat elements (right side)
+    for (let i = 0; i < 3; i++) {
+      const statLabel = this.add.text(140, 80 + i * 25, '', {
+        fontSize: '10px',
+        color: '#ffffff',
+        fontFamily: 'Arial, sans-serif',
+        fontStyle: 'bold',
+      });
+
+      const valueText = this.add.text(140, 92 + i * 25, '0', {
+        fontSize: '9px',
+        color: '#ecf0f1',
+        fontFamily: 'Arial, sans-serif',
+      });
+
+      const barBg = this.add.graphics();
+      barBg.fillStyle(0x2c3e50, 0.8);
+      barBg.fillRoundedRect(175, 83 + i * 25, 80, 8, 4);
+
+      const bar = this.add.graphics();
+      bar.fillStyle(0x27ae60, 0.8);
+      bar.fillRoundedRect(177, 85 + i * 25, 2, 4, 2);
+
+      panel.add([statLabel, valueText, barBg, bar]);
+
+      column2Elements.push({
+        label: statLabel,
+        value: valueText,
+        barBg: barBg,
+        bar: bar,
+        currentValue: 0,
+      });
+    }
+
+    return { column1: column1Elements, column2: column2Elements };
+  }
+
+  /**
+   * Animates a stat bar to new value with smooth tween
+   */
+  private animateStatBar(
+    element: StatElement,
+    stat: {
+      icon: string;
+      label: string;
+      value: number;
+      color: string;
+      key: string;
+    }
+  ) {
+    // Update label and color
+    element.label.setText(`${stat.icon} ${stat.label}`);
+    element.label.setStyle({ color: stat.color });
+
+    // Animate value change
+    if (element.currentValue !== stat.value) {
+      this.tweens.addCounter({
+        from: element.currentValue,
+        to: stat.value,
+        duration: 800, // 800ms smooth animation
+        ease: 'Power2',
+        onUpdate: tween => {
+          const value = Math.round(tween.getValue());
+          element.value.setText(`${value}`);
+
+          // Animate bar width
+          let barColor = '#e74c3c';
+          if (value > 70) {
+            barColor = '#27ae60';
+          } else if (value > 30) {
+            barColor = '#f39c12';
+          }
+
+          const barWidth = Math.max((value / 100) * 76, 2);
+
+          element.bar.clear();
+          element.bar.fillStyle(
+            Phaser.Display.Color.HexStringToColor(barColor).color,
+            0.8
+          );
+
+          // For column 1 or column 2 position
+          const isColumn2 = element.label.x === 140;
+          const barX = isColumn2 ? 177 : 47;
+          const barY = element.label.y + 5; // Relative to label
+
+          element.bar.fillRoundedRect(barX, barY, barWidth, 4, 2);
+        },
+        onComplete: () => {
+          element.currentValue = stat.value;
+        },
+      });
+    } else {
+      // Just update text if value hasn't changed
+      element.value.setText(`${stat.value}`);
     }
   }
 
@@ -1368,7 +1452,9 @@ export class UIScene extends Phaser.Scene {
     }
   }
 
-  private updateCharacterPanels(entities: any) {
+  private updateCharacterPanels(
+    entities: Entity[] | { [key: string]: Entity }
+  ) {
     // Handle both array format and object format
     let isaEntity = null;
     let stevEntity = null;
@@ -1681,4 +1767,13 @@ export class UIScene extends Phaser.Scene {
     if (resonance > 10) return 'Pueblos Acogedores';
     return 'Praderas Verdes';
   }
+
+  // ====== ANIMATION SYSTEM FOR STAT BARS ======
+
+  public statsElements: {
+    [key: string]: {
+      label: Phaser.GameObjects.Text;
+      value: Phaser.GameObjects.Text;
+    };
+  } = {};
 }
