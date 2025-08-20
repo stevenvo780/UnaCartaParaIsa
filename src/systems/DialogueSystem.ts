@@ -5,16 +5,17 @@
  */
 
 import type { DialogueEntry } from "../types";
-import { logAutopoiesis } from "../utils/logger";
+import { randomChoice, randomFloat } from "../utils/deterministicRandom";
 import {
-  loadDialogueData,
+  getDialogueForInteraction,
+  getDialogueStats,
+  getEmotionForActivity,
   getNextDialogue,
   getResponseWriter,
-  getDialogueForInteraction,
   getSpeakerForEntity,
-  getEmotionForActivity,
-  getDialogueStats,
+  loadDialogueData,
 } from "../utils/dialogueSelector";
+import { logAutopoiesis } from "../utils/logger";
 
 interface ConversationState {
   isActive: boolean;
@@ -86,7 +87,7 @@ export class DialogueSystem {
     if (!this.isInitialized) return;
 
     const baseInterval = 8000;
-    const variableInterval = Math.random() * 7000;
+    const variableInterval = randomFloat(0, 7000);
 
     this.autoDialogueTimer = this.scene.time.addEvent({
       delay: baseInterval + variableInterval,
@@ -201,7 +202,7 @@ export class DialogueSystem {
       );
 
       if (otherEntities.length > 0) {
-        return otherEntities[Math.floor(Math.random() * otherEntities.length)];
+        return randomChoice(otherEntities);
       }
     }
 
@@ -214,7 +215,7 @@ export class DialogueSystem {
     const totalWeight = weights.reduce((sum, w) => sum + w, 0);
     if (totalWeight === 0) return entities[0];
 
-    let random = Math.random() * totalWeight;
+    let random = randomFloat(0, totalWeight);
     for (let i = 0; i < entities.length; i++) {
       random -= weights[i];
       if (random <= 0) return entities[i];

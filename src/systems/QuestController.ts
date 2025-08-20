@@ -3,10 +3,11 @@
  * Usa todas las herramientas existentes del motor para detectar y actualizar progreso
  */
 
-import type { QuestSystem } from "./QuestSystem";
-import type { DialogueSystem } from "./DialogueSystem";
 import type { ActivityType } from "../types";
+import { randomBool } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
+import type { DialogueSystem } from "./DialogueSystem";
+import type { QuestSystem } from "./QuestSystem";
 
 export class QuestController {
   private _scene: Phaser.Scene;
@@ -354,7 +355,7 @@ export class QuestController {
         (q) => q.category === "exploration" || q.tags.includes("exploration"),
       );
 
-      if (explorationQuest && Math.random() < 0.1) {
+      if (explorationQuest && randomBool(0.1)) {
         // 10% de probabilidad
         this._questSystem.startQuest(explorationQuest.id);
         logAutopoiesis.info("Exploration quest auto-triggered");

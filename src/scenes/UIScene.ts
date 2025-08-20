@@ -6,6 +6,7 @@ import {
 import { FoodUI } from "../components/FoodUI";
 import { ResonanceLabel, UIElementPool } from "../managers/UIElementPool";
 import type { Entity, GameLogicUpdateData } from "../types";
+import { randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
 
 // Define interface at file level to be accessible
@@ -1712,13 +1713,13 @@ export class UIScene extends Phaser.Scene {
       // Actualizar con estadísticas simuladas
       const stats: ExplorationStats = {
         totalAssets: 714,
-        discoveredAssets: Math.floor(Math.random() * 200) + 50,
-        biomesExplored: Math.floor(Math.random() * 6) + 1,
+        discoveredAssets: randomInt(50, 250),
+        biomesExplored: randomInt(1, 7),
         rarityBreakdown: {
-          common: Math.floor(Math.random() * 50) + 20,
-          uncommon: Math.floor(Math.random() * 30) + 10,
-          rare: Math.floor(Math.random() * 15) + 5,
-          epic: Math.floor(Math.random() * 5) + 1,
+          common: randomInt(20, 70),
+          uncommon: randomInt(10, 40),
+          rare: randomInt(5, 20),
+          epic: randomInt(1, 6),
         },
         currentBiome: "Praderas Místicas",
       };

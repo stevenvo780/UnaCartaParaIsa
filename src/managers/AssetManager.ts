@@ -3,6 +3,7 @@
  * Gestiona la carga de assets con validación, fallbacks y reporting de errores
  */
 
+import { randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
 
 export interface AssetDefinition {
@@ -733,8 +734,8 @@ export class AssetManager {
 
     ctx.fillStyle = "#27ae60";
     for (let i = 0; i < 8; i++) {
-      const x = Math.random() * 32;
-      const y = Math.random() * 32;
+      const x = randomInt(0, 32);
+      const y = randomInt(0, 32);
       ctx.fillRect(x, y, 2, 2);
     }
   }

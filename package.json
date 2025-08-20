@@ -36,6 +36,8 @@
   },
   "dependencies": {
     "@types/node": "^24.3.0",
-    "phaser": "^3.90.0"
+    "@types/seedrandom": "^3.0.8",
+    "phaser": "^3.90.0",
+    "seedrandom": "^3.0.5"
   }
 }

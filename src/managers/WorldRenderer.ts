@@ -3,6 +3,8 @@
  */
 
 import type { GameState, Zone } from "../types";
+import type { WorldEntity } from "../types/worldEntities";
+import { randomChoice, randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
 import { WorldPopulator } from "../world/WorldPopulator";
 import { BiomeType } from "../world/types";
@@ -14,7 +16,10 @@ export class WorldRenderer {
   private renderedObjects = new Map<string, Phaser.GameObjects.GameObject>();
   private zoneGraphics: Phaser.GameObjects.Graphics[] = [];
   private animationManager?: AnimationManager;
-  private decorationSprites: Phaser.GameObjects.Sprite[] = [];
+  private decorationSprites: (
+    | Phaser.GameObjects.Sprite
+    | Phaser.GameObjects.Rectangle
+  )[] = [];
   private lastCullingUpdate = 0;
   private readonly cullingUpdateInterval = 100;
   private worldPopulator: WorldPopulator;
@@ -86,10 +91,7 @@ export class WorldRenderer {
     for (let x = 0; x < worldWidth; x += tileSize) {
       for (let y = 0; y < worldHeight; y += tileSize) {
         // Seleccionar una textura de césped aleatoria de las disponibles
-        const grassKey =
-          availableGrassTextures[
-            Math.floor(Math.random() * availableGrassTextures.length)
-          ];
+        const grassKey = randomChoice(availableGrassTextures);
 
         // Verificar si la textura existe antes de usarla
         if (this.scene.textures.exists(grassKey)) {
@@ -179,7 +181,7 @@ export class WorldRenderer {
     // Añadir textura simple
     graphics.fillStyle(0x7ccd7c);
     for (let i = 0; i < 8; i++) {
-      graphics.fillCircle(Math.random() * 32, Math.random() * 32, 2);
+      graphics.fillCircle(randomInt(0, 32), randomInt(0, 32), 2);
     }
 
     graphics.generateTexture(key, 32, 32);
@@ -272,7 +274,7 @@ export class WorldRenderer {
   /**
    * Render a world entity (tree, structure, etc.) - CON DETECCIÓN DE ANIMACIONES
    */
-  private renderWorldEntity(entity: any, zoneName?: string): void {
+  private renderWorldEntity(entity: WorldEntity, zoneName?: string): void {
     try {
       // 🎯 NUEVO: Mapeo directo de tipos de entidades a texturas disponibles
       let textureKey = this.getEntityTextureKey(
@@ -330,7 +332,7 @@ export class WorldRenderer {
   /**
    * 🎬 Crear entidad animada (spritesheet con animación)
    */
-  private createAnimatedEntity(entity: any, textureKey: string): void {
+  private createAnimatedEntity(entity: WorldEntity, textureKey: string): void {
     const animatedSprite = this.scene.add.sprite(
       entity.x,
       entity.y,
@@ -381,7 +383,7 @@ export class WorldRenderer {
   /**
    * 🖼️ Crear entidad estática (sprite normal)
    */
-  private createStaticEntity(entity: any, textureKey: string): void {
+  private createStaticEntity(entity: WorldEntity, textureKey: string): void {
     const staticSprite = this.scene.add.sprite(entity.x, entity.y, textureKey);
     staticSprite.setDepth(2);
     staticSprite.setOrigin(0.5, 0.5);
@@ -402,7 +404,7 @@ export class WorldRenderer {
   /**
    * ❌ Crear entidad de fallback
    */
-  private createFallbackEntity(entity: any): void {
+  private createFallbackEntity(entity: WorldEntity): void {
     const fallbackColor = this.getFallbackColor(entity.type);
     const fallbackSprite = this.scene.add.rectangle(
       entity.x,
@@ -413,7 +415,8 @@ export class WorldRenderer {
     );
     fallbackSprite.setDepth(2);
     fallbackSprite.name = `${entity.type}_${entity.id}_fallback`;
-    this.decorationSprites.push(fallbackSprite as any);
+    // Rectangle no es un Sprite, pero lo agregamos a la lista como GameObject
+    this.decorationSprites.push(fallbackSprite);
     this.renderedObjects.set(entity.id, fallbackSprite);
 
     logAutopoiesis.warn(
@@ -600,8 +603,7 @@ export class WorldRenderer {
    * 🎯 Obtiene una textura aleatoria de un array (para variedad)
    */
   private getRandomTexture(textures: string[]): string {
-    const index = Math.floor(Math.random() * textures.length);
-    return textures[index];
+    return randomChoice(textures);
   } /**
    * 🎯 Define escalas apropiadas para diferentes tipos de entidades
    */
@@ -701,14 +703,16 @@ export class WorldRenderer {
         if (!decoration.visible) {
           decoration.setVisible(true);
         }
-        if (decoration.anims?.isPaused) {
+        // Solo intentar animaciones en sprites
+        if ("anims" in decoration && decoration.anims?.isPaused) {
           decoration.anims.resume();
         }
       } else {
         if (decoration.visible) {
           decoration.setVisible(false);
         }
-        if (decoration.anims?.isPlaying) {
+        // Solo pausar animaciones en sprites
+        if ("anims" in decoration && decoration.anims?.isPlaying) {
           decoration.anims.pause();
           pausedCount++;
         }
@@ -716,7 +720,7 @@ export class WorldRenderer {
     });
 
     // Log culling stats occasionally
-    if (Math.random() < 0.1) {
+    if (randomInt(1, 10) === 1) {
       logAutopoiesis.debug("Decoration culling performed", {
         totalDecorations: this.decorationSprites.length,
         visible: visibleCount,

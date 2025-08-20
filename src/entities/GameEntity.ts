@@ -5,6 +5,11 @@ import {
   type IEntityServices,
 } from "../interfaces/EntityServices";
 import type { ActivityType, Entity, EntityStats, MoodType } from "../types";
+import {
+  randomBool,
+  randomFloat,
+  randomInt,
+} from "../utils/deterministicRandom";
 
 export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private entityData: Entity;
@@ -180,7 +185,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private updateAI(_deltaTime: number) {
     const timeInCurrentActivity = Date.now() - this.activityStartTime;
 
-    const checkInterval = 3000 + Math.random() * 2000;
+    const checkInterval = 3000 + randomInt(0, 2000);
     if (timeInCurrentActivity > checkInterval) {
       const companion = this.partnerEntity
         ? this.partnerEntity.getEntityData()
@@ -245,8 +250,8 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   }
 
   private randomMovement() {
-    if (Math.random() < GAME_BALANCE.MOVEMENT.DIRECTION_CHANGE_PROBABILITY) {
-      const angle = Math.random() * Math.PI * 2;
+    if (randomBool(GAME_BALANCE.MOVEMENT.DIRECTION_CHANGE_PROBABILITY)) {
+      const angle = randomFloat(0, Math.PI * 2);
       const speed = this.services.config.movement.baseSpeed;
 
       this.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
@@ -289,7 +294,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       }
 
       // Add some randomness to prevent deterministic behavior
-      needScore += Math.random() * 10;
+      needScore += randomFloat(0, 10);
 
       if (needScore > highestNeed && needScore > 30) {
         highestNeed = needScore;
@@ -303,8 +308,9 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       const centerY = targetZone.bounds.y + targetZone.bounds.height / 2;
 
       // Add variation to avoid clustering
-      const variationX = (Math.random() - 0.5) * targetZone.bounds.width * 0.3;
-      const variationY = (Math.random() - 0.5) * targetZone.bounds.height * 0.3;
+      const variationX = randomFloat(-0.5, 0.5) * targetZone.bounds.width * 0.3;
+      const variationY =
+        randomFloat(-0.5, 0.5) * targetZone.bounds.height * 0.3;
 
       return {
         x: centerX + variationX,

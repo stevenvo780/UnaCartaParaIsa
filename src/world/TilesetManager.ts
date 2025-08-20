@@ -3,6 +3,8 @@
  * Compatible con Phaser.Tilemaps y autotiles
  */
 
+import { randomChoice } from "../utils/deterministicRandom";
+
 export interface TileInfo {
   id: number;
   name: string;
@@ -270,7 +272,7 @@ export class TilesetManager {
     const compatibleTiles = this.getTilesByBiome(biome, category);
     if (compatibleTiles.length === 0) return null;
 
-    return compatibleTiles[Math.floor(Math.random() * compatibleTiles.length)];
+    return randomChoice(compatibleTiles);
   }
 
   /**

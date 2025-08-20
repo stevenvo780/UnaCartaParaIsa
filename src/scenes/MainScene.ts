@@ -2,10 +2,10 @@ import Phaser from "phaser";
 import { QuestUI } from "../components/QuestUI";
 import { AnimatedGameEntity } from "../entities/AnimatedGameEntity";
 import { EntityManager } from "../managers/EntityManager";
-import { FoodAssetManager } from "../managers/FoodAssetManager";
 import { GameLogicManager } from "../managers/GameLogicManager";
 import { InputManager, type ControlledEntity } from "../managers/InputManager";
 import { SceneInitializationManager } from "../managers/SceneInitializationManager";
+import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
 import { WorldRenderer } from "../managers/WorldRenderer";
 import { DialogueSystem } from "../systems/DialogueSystem";
 import { FoodSystem } from "../systems/FoodSystem";
@@ -35,7 +35,7 @@ export class MainScene extends Phaser.Scene {
   private worldRenderer!: WorldRenderer;
   private entityManager!: EntityManager;
   private inputManager!: InputManager;
-  private foodAssetManager!: FoodAssetManager;
+  private unifiedAssetManager!: UnifiedAssetManager;
   private foodSystem!: FoodSystem;
   private generatedWorldData?: GeneratedWorldData;
 
@@ -61,10 +61,16 @@ export class MainScene extends Phaser.Scene {
   async create() {
     logAutopoiesis.info("Creating main game world");
 
+    // Obtener el manager unificado del registry
+    this.unifiedAssetManager = this.registry.get("unifiedAssetManager");
+    if (!this.unifiedAssetManager) {
+      logAutopoiesis.error("UnifiedAssetManager no encontrado en registry");
+      return;
+    }
+
     // Initialize managers and systems
     this.entityManager = new EntityManager(this);
     this.inputManager = new InputManager(this);
-    this.foodAssetManager = new FoodAssetManager(this);
     this.foodSystem = new FoodSystem(this);
     this.dialogueSystem = new DialogueSystem(this);
     this.questSystem = new QuestSystem(this);

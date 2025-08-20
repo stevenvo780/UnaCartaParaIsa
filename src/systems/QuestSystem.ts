@@ -3,13 +3,14 @@
  * Integrado con todos los sistemas existentes de Phaser y del juego
  */
 
+import { QuestCatalog } from "../data/QuestCatalog";
 import type {
   Quest,
-  QuestProgress,
   QuestEvent,
   QuestObjective,
+  QuestProgress,
 } from "../types";
-import { QuestCatalog } from "../data/QuestCatalog";
+import { randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
 
 export class QuestSystem {
@@ -489,9 +490,7 @@ export class QuestSystem {
       nextObjective.hints.length > 0
     ) {
       const randomHint =
-        nextObjective.hints[
-          Math.floor(Math.random() * nextObjective.hints.length)
-        ];
+        nextObjective.hints[randomInt(0, nextObjective.hints.length - 1)];
       this._scene.time.delayedCall(2000, () => {
         this._showNotification(`💡 ${randomHint}`, "info");
       });

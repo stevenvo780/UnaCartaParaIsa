@@ -3,6 +3,7 @@
  * Carga assets bajo demanda para optimizar rendimiento inicial
  */
 
+import { randomBool } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
 
 export interface AssetLoadRequest {
@@ -318,7 +319,7 @@ export class AssetLazyLoader {
     // Lógica simplificada - en un juego real, mapearía coordenadas a assets
     const nearbyGroups = ["terrain_basic"];
 
-    if (Math.random() > 0.7) {
+    if (randomBool(0.3)) {
       // 30% chance de necesitar decoraciones
       nearbyGroups.push("decorations");
     }
