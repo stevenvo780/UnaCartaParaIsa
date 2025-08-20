@@ -10,6 +10,14 @@ import type {
   QuestObjective,
   QuestProgress,
 } from "../types";
+import type {
+  EntityEventData,
+  GameUpdateEventData,
+  PlayerInteractionEventData,
+  FoodConsumedEventData,
+  FoodPurchasedEventData,
+  DialogueCompletedEventData,
+} from "../types/events";
 import { randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
 
@@ -234,77 +242,50 @@ export class QuestSystem {
    */
   private _checkQuestProgress(): void {
     this._questProgress.activeQuests.forEach((quest) => {
-      this._checkLocationObjectives(quest);
-      this._checkTimeObjectives(quest);
-      this._checkStatsObjectives(quest);
+      this._checkAllObjectives(quest);
     });
   }
 
   /**
-   * Verifica objetivos de ubicación
+   * Unified objective checking - replaces separate checking methods
    */
-  private _checkLocationObjectives(quest: Quest): void {
-    // Obtener posición del jugador desde el GameLogicManager
+  private _checkAllObjectives(quest: Quest): void {
     const gameLogicManager = this._scene.registry.get("gameLogicManager");
     if (!gameLogicManager) return;
 
     const entities = gameLogicManager.getEntities();
-    const isaEntity = entities.find((e: any) => e.id === "isa");
-    if (!isaEntity) return;
+    const isaEntity = entities.find((e: EntityEventData) => e.id === "isa");
 
     quest.objectives.forEach((objective) => {
-      if (
-        objective.type === "reach_location" &&
-        !objective.isCompleted &&
-        objective.targetLocation
-      ) {
-        const distance = Phaser.Math.Distance.Between(
-          isaEntity.position.x,
-          isaEntity.position.y,
-          objective.targetLocation.x,
-          objective.targetLocation.y,
-        );
+      if (objective.isCompleted) return;
 
-        if (distance <= (objective.targetLocation.radius || 50)) {
-          this.updateObjectiveProgress(quest.id, objective.id);
-        }
-      }
-    });
-  }
+      switch (objective.type) {
+        case "reach_location":
+          if (isaEntity && objective.targetLocation) {
+            const distance = Phaser.Math.Distance.Between(
+              isaEntity.position.x,
+              isaEntity.position.y,
+              objective.targetLocation.x,
+              objective.targetLocation.y,
+            );
+            if (distance <= (objective.targetLocation.radius || 50)) {
+              this.updateObjectiveProgress(quest.id, objective.id);
+            }
+          }
+          break;
 
-  /**
-   * Verifica objetivos de tiempo
-   */
-  private _checkTimeObjectives(quest: Quest): void {
-    quest.objectives.forEach((objective) => {
-      if (
-        objective.type === "survive_time" &&
-        !objective.isCompleted &&
-        objective.requiredAmount
-      ) {
-        const elapsedTime = Date.now() - (quest.startedAt || Date.now());
-        if (elapsedTime >= objective.requiredAmount * 1000) {
-          this.updateObjectiveProgress(quest.id, objective.id);
-        }
-      }
-    });
-  }
+        case "survive_time":
+          if (objective.requiredAmount) {
+            const elapsedTime = Date.now() - (quest.startedAt || Date.now());
+            if (elapsedTime >= objective.requiredAmount * 1000) {
+              this.updateObjectiveProgress(quest.id, objective.id);
+            }
+          }
+          break;
 
-  /**
-   * Verifica objetivos de estadísticas
-   */
-  private _checkStatsObjectives(quest: Quest): void {
-    const gameLogicManager = this._scene.registry.get("gameLogicManager");
-    if (!gameLogicManager) return;
-
-    const entities = gameLogicManager.getEntities();
-    const isaEntity = entities.find((e: any) => e.id === "isa");
-    if (!isaEntity) return;
-
-    quest.objectives.forEach((objective) => {
-      if (objective.type === "achieve_stats" && !objective.isCompleted) {
-        // Implementar verificación de stats cuando se definan los requisitos
-        // Por ahora, simplemente completar después de cierto tiempo
+        case "achieve_stats":
+          // TODO: Implement stats verification when requirements are defined
+          break;
       }
     });
   }
@@ -312,7 +293,7 @@ export class QuestSystem {
   /**
    * Maneja eventos de actualización del juego
    */
-  private _onGameUpdate(data: any): void {
+  private _onGameUpdate(data: GameUpdateEventData): void {
     // Integración con sistema de resonancia
     if (data.resonance > 80) {
       this._checkForResonanceQuests();
@@ -320,69 +301,59 @@ export class QuestSystem {
   }
 
   /**
-   * Maneja eventos de diálogos completados
+   * Unified event-based objective checking
    */
-  private _onDialogueCompleted(data: any): void {
+  private _checkEventBasedObjectives(
+    objectiveType: string,
+    targetValue: string,
+    matchCondition?: (objective: QuestObjective, data: any) => boolean,
+  ): void {
     this._questProgress.activeQuests.forEach((quest) => {
       quest.objectives.forEach((objective) => {
-        if (
-          objective.type === "talk_to_npc" &&
-          objective.target === data.speakerId
-        ) {
-          this.updateObjectiveProgress(quest.id, objective.id);
-        }
-      });
-    });
-  }
+        if (objective.type === objectiveType && !objective.isCompleted) {
+          const matches = matchCondition
+            ? matchCondition(objective, targetValue)
+            : objective.target === targetValue;
 
-  /**
-   * Maneja eventos de comida consumida
-   */
-  private _onFoodConsumed(data: any): void {
-    this._questProgress.activeQuests.forEach((quest) => {
-      quest.objectives.forEach((objective) => {
-        if (
-          objective.type === "complete_activity" &&
-          objective.target === "eating"
-        ) {
-          this.updateObjectiveProgress(quest.id, objective.id);
-        }
-      });
-    });
-  }
-
-  /**
-   * Maneja eventos de compra de comida
-   */
-  private _onFoodPurchased(data: any): void {
-    this._questProgress.activeQuests.forEach((quest) => {
-      quest.objectives.forEach((objective) => {
-        if (
-          objective.type === "collect_resource" &&
-          objective.target === "food"
-        ) {
-          this.updateObjectiveProgress(quest.id, objective.id);
-        }
-      });
-    });
-  }
-
-  /**
-   * Maneja interacciones del jugador
-   */
-  private _onPlayerInteraction(data: any): void {
-    this._questProgress.activeQuests.forEach((quest) => {
-      quest.objectives.forEach((objective) => {
-        if (objective.type === "interact_with_entity") {
-          if (
-            objective.target === "partner_entity" ||
-            objective.target === data.entityId
-          ) {
+          if (matches) {
             this.updateObjectiveProgress(quest.id, objective.id);
           }
         }
       });
     });
+  }
+
+  /**
+   * Maneja eventos de diálogos completados
+   */
+  private _onDialogueCompleted(data: DialogueCompletedEventData): void {
+    this._checkEventBasedObjectives("talk_to_npc", data.speaker);
+  }
+
+  /**
+   * Maneja eventos de comida consumida
+   */
+  private _onFoodConsumed(_data: FoodConsumedEventData): void {
+    this._checkEventBasedObjectives("complete_activity", "eating");
+  }
+
+  /**
+   * Maneja eventos de compra de comida
+   */
+  private _onFoodPurchased(_data: FoodPurchasedEventData): void {
+    this._checkEventBasedObjectives("collect_resource", "food");
+  }
+
+  /**
+   * Maneja interacciones del jugador
+   */
+  private _onPlayerInteraction(data: PlayerInteractionEventData): void {
+    this._checkEventBasedObjectives(
+      "interact_with_entity",
+      data.entityId,
+      (objective, entityId) =>
+        objective.target === "partner_entity" || objective.target === entityId,
+    );
   }
 
   /**
@@ -401,7 +372,7 @@ export class QuestSystem {
           if (reward.statsBoost && gameLogicManager) {
             // Aplicar boost de stats a las entidades
             const entities = gameLogicManager.getEntities();
-            entities.forEach((entity: any) => {
+            entities.forEach((entity: EntityEventData) => {
               if (entity.stats && reward.statsBoost) {
                 Object.entries(reward.statsBoost).forEach(([stat, value]) => {
                   if (

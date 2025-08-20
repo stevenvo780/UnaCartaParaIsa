@@ -4,6 +4,14 @@
  */
 
 import type { ActivityType } from "../types";
+import type {
+  EntityEventData,
+  GameUpdateEventData,
+  PlayerInteractionEventData,
+  FoodConsumedEventData,
+  DialogueCompletedEventData,
+  QuestEventData,
+} from "../types/events";
 import { randomBool } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
 import type { DialogueSystem } from "./DialogueSystem";
@@ -86,7 +94,7 @@ export class QuestController {
 
     const entities = gameLogicManager.getEntities();
 
-    entities.forEach((entity: any) => {
+    entities.forEach((entity: EntityEventData) => {
       if (entity.activity) {
         const previousActivity = this._currentActivities.get(entity.id);
         this._currentActivities.set(entity.id, entity.activity);
@@ -130,7 +138,7 @@ export class QuestController {
   /**
    * Maneja eventos de actualización del juego
    */
-  private _onGameUpdate(data: any): void {
+  private _onGameUpdate(data: GameUpdateEventData): void {
     // Verificar objetivos de estadísticas
     this._checkStatsObjectives(data);
 
@@ -157,7 +165,7 @@ export class QuestController {
   /**
    * Verifica objetivos relacionados con estadísticas
    */
-  private _checkStatsObjectives(data: any): void {
+  private _checkStatsObjectives(data: GameUpdateEventData): void {
     const activeQuests = this._questSystem.getActiveQuests();
 
     activeQuests.forEach((quest) => {
@@ -200,7 +208,7 @@ export class QuestController {
   /**
    * Maneja interacciones del jugador
    */
-  private _onPlayerInteraction(data: any): void {
+  private _onPlayerInteraction(data: PlayerInteractionEventData): void {
     // Verificar objetivos de interacción
     const activeQuests = this._questSystem.getActiveQuests();
 
@@ -228,7 +236,7 @@ export class QuestController {
   /**
    * Maneja eventos de comida consumida
    */
-  private _onFoodConsumed(data: any): void {
+  private _onFoodConsumed(data: FoodConsumedEventData): void {
     const activeQuests = this._questSystem.getActiveQuests();
 
     activeQuests.forEach((quest) => {
@@ -257,7 +265,7 @@ export class QuestController {
   /**
    * Maneja eventos de diálogo iniciado
    */
-  private _onDialogueStarted(data: any): void {
+  private _onDialogueStarted(data: DialogueCompletedEventData): void {
     const activeQuests = this._questSystem.getActiveQuests();
 
     activeQuests.forEach((quest) => {
@@ -282,7 +290,7 @@ export class QuestController {
 
     const entities = gameLogicManager.getEntities();
     const lowHungerEntities = entities.filter(
-      (e: any) => e.stats && e.stats.hunger < 30,
+      (e: EntityEventData) => e.stats && e.stats.hunger < 30,
     );
 
     if (lowHungerEntities.length > 0) {
@@ -309,8 +317,8 @@ export class QuestController {
     if (!gameLogicManager) return;
 
     const entities = gameLogicManager.getEntities();
-    const isaEntity = entities.find((e: any) => e.id === "isa");
-    const stevEntity = entities.find((e: any) => e.id === "stev");
+    const isaEntity = entities.find((e: EntityEventData) => e.id === "isa");
+    const stevEntity = entities.find((e: EntityEventData) => e.id === "stev");
 
     if (isaEntity && stevEntity) {
       const distance = Phaser.Math.Distance.Between(
@@ -366,8 +374,8 @@ export class QuestController {
   /**
    * Muestra diálogo específico de misión usando el sistema existente
    */
-  private _showQuestDialogue(quest: any, stage: string): void {
-    const dialogue = quest.dialogues.find((d: any) => d.stage === stage);
+  private _showQuestDialogue(quest: QuestEventData, stage: string): void {
+    const dialogue = quest.dialogues.find((d) => d.stage === stage);
     if (dialogue) {
       // Usar el sistema de diálogos existente
       this._scene.events.emit("show_dialogue", {
@@ -446,7 +454,7 @@ export class QuestController {
     entityIds: string[];
     activity: ActivityType;
     location: { x: number; y: number };
-    stats?: any;
+    stats?: EntityEventData;
     duration?: number;
   }): void {
     const activeQuests = this._questSystem.getActiveQuests();

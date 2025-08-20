@@ -4,6 +4,8 @@
  * Migrado de Dúo Eterno - preserva exactitud científica
  */
 
+import { logAutopoiesis } from "./logger";
+
 export const PRECISION_CONSTANTS = {
   HIGH_PRECISION_EPSILON: 1e-12,
   EFFECTIVE_ZERO: 1e-10,
@@ -50,7 +52,7 @@ export const areEqual = (
  */
 export const safeClamp = (value: number, min: number, max: number): number => {
   if (!isFinite(min) || !isFinite(max)) {
-    console.warn(`🔧 safeClamp: límites no finitos (min: ${min}, max: ${max})`);
+    logAutopoiesis.warn("safeClamp: límites no finitos", { min, max });
     return isFinite(value) ? value : 0;
   }
 
@@ -79,33 +81,39 @@ export const validateNumber = (
   } = {},
 ): boolean => {
   if (!isFinite(value)) {
-    console.warn(`⚠️ ${paramName}: valor no finito (${value})`);
+    logAutopoiesis.warn("Valor no finito", { paramName, value });
     return false;
   }
 
   if (!options.allowNegative && value < 0) {
-    console.warn(`⚠️ ${paramName}: valor negativo no permitido (${value})`);
+    logAutopoiesis.warn("Valor negativo no permitido", { paramName, value });
     return false;
   }
 
   if (options.maxAbsValue && Math.abs(value) > options.maxAbsValue) {
-    console.warn(
-      `⚠️ ${paramName}: valor absoluto excede límite (${value} > ${options.maxAbsValue})`,
-    );
+    logAutopoiesis.warn("Valor absoluto excede límite", {
+      paramName,
+      value,
+      maxAbsValue: options.maxAbsValue,
+    });
     return false;
   }
 
   if (options.minValue !== undefined && value < options.minValue) {
-    console.warn(
-      `⚠️ ${paramName}: valor menor al mínimo (${value} < ${options.minValue})`,
-    );
+    logAutopoiesis.warn("Valor menor al mínimo", {
+      paramName,
+      value,
+      minValue: options.minValue,
+    });
     return false;
   }
 
   if (options.maxValue !== undefined && value > options.maxValue) {
-    console.warn(
-      `⚠️ ${paramName}: valor mayor al máximo (${value} > ${options.maxValue})`,
-    );
+    logAutopoiesis.warn("Valor mayor al máximo", {
+      paramName,
+      value,
+      maxValue: options.maxValue,
+    });
     return false;
   }
 

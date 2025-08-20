@@ -138,7 +138,9 @@ export class FoodInventorySystem {
   /**
    * Obtiene comidas próximas a echarse a perder
    */
-  getFoodsNearExpiry(warningThreshold = GAME_BALANCE.FOOD.EXPIRY_WARNING_THRESHOLD): FoodInventoryItem[] {
+  getFoodsNearExpiry(
+    warningThreshold = GAME_BALANCE.FOOD.EXPIRY_WARNING_THRESHOLD,
+  ): FoodInventoryItem[] {
     const currentTime = Date.now();
     const nearExpiry: FoodInventoryItem[] = [];
 

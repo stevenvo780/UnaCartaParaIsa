@@ -158,10 +158,7 @@ export class FoodUI extends BaseUIComponent {
       .setOrigin(0, 0.5);
 
     // Money indicator
-    const moneyContainer = this.scene.add.container(
-      this.PANEL_WIDTH - 100,
-      30,
-    );
+    const moneyContainer = this.scene.add.container(this.PANEL_WIDTH - 100, 30);
     const moneyBg = this.scene.add.graphics();
     moneyBg.fillStyle(this.COLORS.warning, 0.2);
     moneyBg.fillRoundedRect(0, -12, 90, 24, 12);

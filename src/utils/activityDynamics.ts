@@ -1,6 +1,7 @@
 /*\n * Documentación científica (resumen):\n * - Eficiencia temporal por actividad: curva en campana por tramos alrededor de una duración óptima.\n * - Prioridad: w(v,α)=1−(v/100)^α (α∈[0.1,10]) para modelar urgencia no lineal.\n * - Decaimiento híbrido lineal estable y costes de supervivencia por minuto.\n * - Modificadores circadianos: multiplicadores nocturnos para descanso/energía.\n */
 import { gameConfig } from "../config/gameConfig";
 import type { ActivityType, EntityStats, ZoneType } from "../types";
+import { logAutopoiesis } from "./logger";
 
 interface TimeOfDayModifiers {
   isNight: boolean;
@@ -76,44 +77,162 @@ interface EfficiencyParams {
 }
 
 const ACTIVITY_EFFICIENCY_PARAMS: Record<ActivityType, EfficiencyParams> = {
-  WORKING: { rampUpFactor: 0.5, baseEfficiency: 0.5, peakEfficiency: 1.0, degradationRate: 0.8, minEfficiency: 0.2 },
-  RESTING: { rampUpFactor: 0.3, baseEfficiency: 0.4, peakEfficiency: 1.0, degradationRate: 0.7, minEfficiency: 0.3 },
-  SOCIALIZING: { rampUpFactor: 0.2, baseEfficiency: 0.6, peakEfficiency: 1.0, degradationRate: 0.6, minEfficiency: 0.4 },
-  DANCING: { rampUpFactor: 0.4, baseEfficiency: 0.7, peakEfficiency: 1.0, degradationRate: 0.7, minEfficiency: 0.3 },
-  SHOPPING: { rampUpFactor: 0.0, baseEfficiency: 1.0, peakEfficiency: 1.0, degradationRate: 0.8, minEfficiency: 0.2 },
-  COOKING: { rampUpFactor: 0.3, baseEfficiency: 0.5, peakEfficiency: 1.0, degradationRate: 0.6, minEfficiency: 0.4 },
-  EXERCISING: { rampUpFactor: 0.5, baseEfficiency: 0.6, peakEfficiency: 1.0, degradationRate: 0.8, minEfficiency: 0.2 },
-  MEDITATING: { rampUpFactor: 0.6, baseEfficiency: 0.4, peakEfficiency: 1.0, degradationRate: 0.5, minEfficiency: 0.5 },
-  WRITING: { rampUpFactor: 0.4, baseEfficiency: 0.5, peakEfficiency: 1.0, degradationRate: 0.6, minEfficiency: 0.4 },
-  WANDERING: { rampUpFactor: 0.0, baseEfficiency: 1.0, peakEfficiency: 1.0, degradationRate: 0.5, minEfficiency: 0.5 },
-  EXPLORING: { rampUpFactor: 0.3, baseEfficiency: 0.6, peakEfficiency: 1.0, degradationRate: 0.7, minEfficiency: 0.3 },
-  CONTEMPLATING: { rampUpFactor: 0.7, baseEfficiency: 0.3, peakEfficiency: 1.0, degradationRate: 0.6, minEfficiency: 0.4 },
-  HIDING: { rampUpFactor: 0.5, baseEfficiency: 0.7, peakEfficiency: 0.9, degradationRate: 0.6, minEfficiency: 0.3 },
-  EATING: { rampUpFactor: 0.4, baseEfficiency: 0.8, peakEfficiency: 1.0, degradationRate: 0.5, minEfficiency: 0.5 },
-  SLEEPING: { rampUpFactor: 0.6, baseEfficiency: 0.4, peakEfficiency: 1.0, degradationRate: 0.3, minEfficiency: 0.7 },
-  PLAYING: { rampUpFactor: 0.3, baseEfficiency: 0.7, peakEfficiency: 1.0, degradationRate: 0.6, minEfficiency: 0.4 },
+  WORKING: {
+    rampUpFactor: 0.5,
+    baseEfficiency: 0.5,
+    peakEfficiency: 1.0,
+    degradationRate: 0.8,
+    minEfficiency: 0.2,
+  },
+  RESTING: {
+    rampUpFactor: 0.3,
+    baseEfficiency: 0.4,
+    peakEfficiency: 1.0,
+    degradationRate: 0.7,
+    minEfficiency: 0.3,
+  },
+  SOCIALIZING: {
+    rampUpFactor: 0.2,
+    baseEfficiency: 0.6,
+    peakEfficiency: 1.0,
+    degradationRate: 0.6,
+    minEfficiency: 0.4,
+  },
+  DANCING: {
+    rampUpFactor: 0.4,
+    baseEfficiency: 0.7,
+    peakEfficiency: 1.0,
+    degradationRate: 0.7,
+    minEfficiency: 0.3,
+  },
+  SHOPPING: {
+    rampUpFactor: 0.0,
+    baseEfficiency: 1.0,
+    peakEfficiency: 1.0,
+    degradationRate: 0.8,
+    minEfficiency: 0.2,
+  },
+  COOKING: {
+    rampUpFactor: 0.3,
+    baseEfficiency: 0.5,
+    peakEfficiency: 1.0,
+    degradationRate: 0.6,
+    minEfficiency: 0.4,
+  },
+  EXERCISING: {
+    rampUpFactor: 0.5,
+    baseEfficiency: 0.6,
+    peakEfficiency: 1.0,
+    degradationRate: 0.8,
+    minEfficiency: 0.2,
+  },
+  MEDITATING: {
+    rampUpFactor: 0.6,
+    baseEfficiency: 0.4,
+    peakEfficiency: 1.0,
+    degradationRate: 0.5,
+    minEfficiency: 0.5,
+  },
+  WRITING: {
+    rampUpFactor: 0.4,
+    baseEfficiency: 0.5,
+    peakEfficiency: 1.0,
+    degradationRate: 0.6,
+    minEfficiency: 0.4,
+  },
+  WANDERING: {
+    rampUpFactor: 0.0,
+    baseEfficiency: 1.0,
+    peakEfficiency: 1.0,
+    degradationRate: 0.5,
+    minEfficiency: 0.5,
+  },
+  EXPLORING: {
+    rampUpFactor: 0.3,
+    baseEfficiency: 0.6,
+    peakEfficiency: 1.0,
+    degradationRate: 0.7,
+    minEfficiency: 0.3,
+  },
+  CONTEMPLATING: {
+    rampUpFactor: 0.7,
+    baseEfficiency: 0.3,
+    peakEfficiency: 1.0,
+    degradationRate: 0.6,
+    minEfficiency: 0.4,
+  },
+  HIDING: {
+    rampUpFactor: 0.5,
+    baseEfficiency: 0.7,
+    peakEfficiency: 0.9,
+    degradationRate: 0.6,
+    minEfficiency: 0.3,
+  },
+  EATING: {
+    rampUpFactor: 0.4,
+    baseEfficiency: 0.8,
+    peakEfficiency: 1.0,
+    degradationRate: 0.5,
+    minEfficiency: 0.5,
+  },
+  SLEEPING: {
+    rampUpFactor: 0.6,
+    baseEfficiency: 0.4,
+    peakEfficiency: 1.0,
+    degradationRate: 0.3,
+    minEfficiency: 0.7,
+  },
+  PLAYING: {
+    rampUpFactor: 0.3,
+    baseEfficiency: 0.7,
+    peakEfficiency: 1.0,
+    degradationRate: 0.6,
+    minEfficiency: 0.4,
+  },
 };
 
-const createEfficiencyFunction = (params: EfficiencyParams, optimal: number) => 
+const createEfficiencyFunction =
+  (params: EfficiencyParams, optimal: number) =>
   (timeSpent: number): number => {
-    const { rampUpFactor, baseEfficiency, peakEfficiency, degradationRate, minEfficiency } = params;
-    
+    const {
+      rampUpFactor,
+      baseEfficiency,
+      peakEfficiency,
+      degradationRate,
+      minEfficiency,
+    } = params;
+
     if (timeSpent < optimal * rampUpFactor) {
-      return baseEfficiency + (timeSpent / (optimal * rampUpFactor)) * (peakEfficiency - baseEfficiency);
+      return (
+        baseEfficiency +
+        (timeSpent / (optimal * rampUpFactor)) *
+          (peakEfficiency - baseEfficiency)
+      );
     }
     if (timeSpent <= optimal) {
       const rampDownStart = optimal * rampUpFactor;
       const rampDownRange = optimal - rampDownStart;
-      return peakEfficiency - ((timeSpent - rampDownStart) / rampDownRange) * (peakEfficiency - baseEfficiency) * 0.2;
+      return (
+        peakEfficiency -
+        ((timeSpent - rampDownStart) / rampDownRange) *
+          (peakEfficiency - baseEfficiency) *
+          0.2
+      );
     }
-    return Math.max(minEfficiency, peakEfficiency - ((timeSpent - optimal) / optimal) * degradationRate);
+    return Math.max(
+      minEfficiency,
+      peakEfficiency - ((timeSpent - optimal) / optimal) * degradationRate,
+    );
   };
 
 const EFFICIENCY_FUNCTIONS = Object.fromEntries(
   Object.entries(ACTIVITY_EFFICIENCY_PARAMS).map(([activity, params]) => [
     activity,
-    createEfficiencyFunction(params, ACTIVITY_OPTIMAL_DURATIONS[activity as ActivityType])
-  ])
+    createEfficiencyFunction(
+      params,
+      ACTIVITY_OPTIMAL_DURATIONS[activity as ActivityType],
+    ),
+  ]),
 ) as Record<ActivityType, (timeSpent: number) => number>;
 
 export const getActivityDynamics = () => ({
@@ -358,7 +477,7 @@ export const calculateActivityPriority = (
    */
   const effects = ACTIVITY_EFFECTS[activity];
   if (!effects) {
-    console.warn(`No effects found for activity: ${activity}`);
+    logAutopoiesis.warn("No effects found for activity", { activity });
     return 0;
   }
 

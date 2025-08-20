@@ -39,7 +39,7 @@ export abstract class BaseUIComponent {
   private createBaseUI(): void {
     this.createBackground();
     this.createHeader();
-    
+
     if (this.config.modal) {
       this.createModalOverlay();
     }
@@ -62,7 +62,7 @@ export abstract class BaseUIComponent {
       this.config.height,
       DS.RADIUS.xl,
       DS.COLORS.surface,
-      0.95
+      0.95,
     );
 
     this.background.lineStyle(2, DS.COLORS.primary, 0.6);
@@ -71,7 +71,7 @@ export abstract class BaseUIComponent {
       0,
       this.config.width,
       this.config.height,
-      DS.RADIUS.xl
+      DS.RADIUS.xl,
     );
 
     this.container.add(this.background);
@@ -88,16 +88,20 @@ export abstract class BaseUIComponent {
     headerBg.fillRoundedRect(0, 0, this.config.width, 60, 16);
     headerBg.fillRect(0, 44, this.config.width, 16);
 
-    const titleIcon = this.scene.add.text(25, 30, this.config.icon || "📋", {
-      fontSize: "20px",
-    }).setOrigin(0, 0.5);
+    const titleIcon = this.scene.add
+      .text(25, 30, this.config.icon || "📋", {
+        fontSize: "20px",
+      })
+      .setOrigin(0, 0.5);
 
-    const titleText = this.scene.add.text(
-      55,
-      30,
-      this.config.title,
-      DS.getTextStyle("lg", DS.COLORS.text, "bold")
-    ).setOrigin(0, 0.5);
+    const titleText = this.scene.add
+      .text(
+        55,
+        30,
+        this.config.title,
+        DS.getTextStyle("lg", DS.COLORS.text, "bold"),
+      )
+      .setOrigin(0, 0.5);
 
     this.header.add([headerBg, titleIcon, titleText]);
 
@@ -123,9 +127,9 @@ export abstract class BaseUIComponent {
     buttonBg.lineStyle(2, DS.COLORS.text, 0.8);
     buttonBg.strokeCircle(0, 0, 15);
 
-    const closeIcon = this.scene.add.text(0, 0, "×", 
-      DS.getTextStyle("xl", DS.COLORS.text, "bold")
-    ).setOrigin(0.5);
+    const closeIcon = this.scene.add
+      .text(0, 0, "×", DS.getTextStyle("xl", DS.COLORS.text, "bold"))
+      .setOrigin(0.5);
 
     button.add([buttonBg, closeIcon]);
     button.setSize(30, 30);
@@ -146,16 +150,16 @@ export abstract class BaseUIComponent {
       -this.scene.cameras.main.width / 2,
       -this.scene.cameras.main.height / 2,
       this.scene.cameras.main.width,
-      this.scene.cameras.main.height
+      this.scene.cameras.main.height,
     );
     overlay.setInteractive(
       new (window as any).Phaser.Geom.Rectangle(
         -this.scene.cameras.main.width / 2,
         -this.scene.cameras.main.height / 2,
         this.scene.cameras.main.width,
-        this.scene.cameras.main.height
+        this.scene.cameras.main.height,
       ),
-      (window as any).Phaser.Geom.Rectangle.Contains
+      (window as any).Phaser.Geom.Rectangle.Contains,
     );
     overlay.on("pointerdown", () => this.hide());
 

@@ -13,18 +13,20 @@ import type {
   GameState,
   IGameLogicManager,
 } from "../types";
+import { EntityManager } from "./EntityManager";
 import { logAutopoiesis } from "../utils/logger";
 
 export class GameLogicManager implements IGameLogicManager {
   private _scene: Phaser.Scene;
   private _gameState: GameState;
   private _gameLoopTimer?: Phaser.Time.TimerEvent;
-  private _entities = new Map<string, Entity>(); // Support both Entity and AnimatedGameEntity
+  private _entityManager: EntityManager;
   private _eventEmitter: Phaser.Events.EventEmitter;
 
   public constructor(scene: Phaser.Scene, initialGameState: GameState) {
     this._scene = scene;
     this._gameState = initialGameState;
+    this._entityManager = new EntityManager();
     this._eventEmitter = new Phaser.Events.EventEmitter();
   }
 
@@ -69,7 +71,7 @@ export class GameLogicManager implements IGameLogicManager {
   private _updateGameLogic(): void {
     this._gameState.cycles++;
 
-    this._entities.forEach((entity) => {
+    this._entityManager.getAllEntities().forEach((entity) => {
       // Check if entity has updateEntity method (AnimatedGameEntity)
       if (
         entity &&
@@ -83,8 +85,8 @@ export class GameLogicManager implements IGameLogicManager {
 
     this._updateResonance();
 
-    const isaEntity = this._entities.get("isa");
-    const stevEntity = this._entities.get("stev");
+    const isaEntity = this._entityManager.getEntity("isa");
+    const stevEntity = this._entityManager.getEntity("stev");
 
     // Get entity data safely
     const getEntityData = (entity: unknown): Entity | null => {
@@ -103,7 +105,9 @@ export class GameLogicManager implements IGameLogicManager {
     const isaData = getEntityData(isaEntity);
     const stevData = getEntityData(stevEntity);
 
-    const entityArray = Array.from(this._entities.values())
+    const entityArray = Array.from(
+      this._entityManager.getAllEntities().values(),
+    )
       .map((entity) => getEntityData(entity))
       .filter(Boolean);
 
@@ -128,8 +132,8 @@ export class GameLogicManager implements IGameLogicManager {
    * Update resonance calculations between entities
    */
   private _updateResonance(): void {
-    const isaEntity = this._entities.get("isa");
-    const stevEntity = this._entities.get("stev");
+    const isaEntity = this._entityManager.getEntity("isa");
+    const stevEntity = this._entityManager.getEntity("stev");
 
     if (isaEntity && stevEntity) {
       // Get entity data safely
@@ -171,7 +175,7 @@ export class GameLogicManager implements IGameLogicManager {
    * Register an entity for game logic updates
    */
   public registerEntity(entityId: string, entity: any): void {
-    this._entities.set(entityId, entity);
+    this._entityManager.registerEntity(entityId, entity);
     logAutopoiesis.debug(`Entity registered: ${entityId}`);
   }
 
@@ -179,8 +183,8 @@ export class GameLogicManager implements IGameLogicManager {
    * Unregister an entity
    */
   public unregisterEntity(entityId: string): void {
-    if (this._entities.has(entityId)) {
-      this._entities.delete(entityId);
+    if (this._entityManager.hasEntity(entityId)) {
+      this._entityManager.unregisterEntity(entityId);
       logAutopoiesis.debug(`Entity unregistered: ${entityId}`);
     }
   }
@@ -192,7 +196,7 @@ export class GameLogicManager implements IGameLogicManager {
     entityId: string,
     interactionType: string,
   ): void {
-    const entity = this._entities.get(entityId);
+    const entity = this._entityManager.getEntity(entityId);
     if (!entity) {
       logAutopoiesis.warn(
         `Player interaction failed - entity not found: ${entityId}`,
@@ -231,18 +235,18 @@ export class GameLogicManager implements IGameLogicManager {
    * Get specific entity by ID
    */
   public getEntity(entityId: string): Entity | undefined {
-    return this._entities.get(entityId);
+    return this._entityManager.getEntity(entityId);
   }
 
   /**
    * Get all registered entities
    */
   public getEntities(): Entity[] {
-    return Array.from(this._entities.values());
+    return this._entityManager.getEntities();
   }
 
   public getAllEntities(): Map<string, Entity> {
-    return new Map(this._entities);
+    return this._entityManager.getAllEntities();
   }
 
   /**
@@ -318,14 +322,7 @@ export class GameLogicManager implements IGameLogicManager {
    * Log current game status for debugging
    */
   private _logGameStatus(): void {
-    const entityStates = Array.from(this._entities.entries()).map(
-      ([id, entity]) => ({
-        id,
-        activity: (entity as any).activity ?? "unknown",
-        mood: entity.mood ?? "unknown",
-        alive: !(entity as any).isDead,
-      }),
-    );
+    const entityStates = this._entityManager.exportEntityStates();
 
     logAutopoiesis.info(`Game cycle ${this._gameState.cycles}`, {
       resonance: this._gameState.resonance.toFixed(2),
@@ -347,7 +344,7 @@ export class GameLogicManager implements IGameLogicManager {
     return {
       cycles: this._gameState.cycles,
       resonance: this._gameState.resonance,
-      entities: this._entities.size,
+      entities: this._entityManager.getAllEntities().size,
       togetherTime: this._gameState.togetherTime,
       uptime: Date.now() - this._gameState.lastSave,
     };
@@ -361,7 +358,7 @@ export class GameLogicManager implements IGameLogicManager {
       this._gameLoopTimer.destroy();
     }
 
-    this._entities.clear();
+    this._entityManager.clearAllEntities();
     this._eventEmitter.removeAllListeners();
 
     logAutopoiesis.info("GameLogicManager destroyed");

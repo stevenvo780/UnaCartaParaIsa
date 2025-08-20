@@ -9,6 +9,8 @@ export interface WorldEntity {
   y: number;
   assetKey?: string;
   scale?: number;
+  rotation?: number;
+  depth?: number;
   metadata?: Record<string, unknown>;
 }
 

@@ -814,21 +814,21 @@ export class QuestUI {
 
     // TODO: Implementar modal de detalle de misión
     // Por ahora, mostrar información en consola
-    console.group(`🎯 Misión: ${quest.title}`);
-    console.log(`📝 Descripción: ${quest.description}`);
-    console.log(`⭐ Dificultad: ${quest.difficulty}`);
-    console.log("📋 Objetivos:");
-    quest.objectives.forEach((obj, index) => {
-      const status = obj.isCompleted ? "✅" : "⏳";
-      console.log(`  ${status} ${index + 1}. ${obj.description}`);
+    logAutopoiesis.info("Quest details", {
+      title: quest.title,
+      description: quest.description,
+      difficulty: quest.difficulty,
+      objectives: quest.objectives.map((obj, index) => ({
+        index: index + 1,
+        description: obj.description,
+        completed: obj.isCompleted,
+      })),
+      rewards:
+        quest.rewards?.map((reward) => ({
+          type: reward.type,
+          amount: reward.amount || "N/A",
+        })) || [],
     });
-    if (quest.rewards && quest.rewards.length > 0) {
-      console.log("🎁 Recompensas:");
-      quest.rewards.forEach((reward) => {
-        console.log(`  - ${reward.type}: ${reward.amount || "N/A"}`);
-      });
-    }
-    console.groupEnd();
   }
 
   /**

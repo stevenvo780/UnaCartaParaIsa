@@ -31,7 +31,7 @@ export class AnimationHelpers {
    */
   static createInfiniteAnimation(
     scene: Phaser.Scene,
-    config: RepeatAnimationConfig
+    config: RepeatAnimationConfig,
   ): Phaser.Tweens.Tween {
     return scene.tweens.add({
       targets: config.targets,
@@ -41,9 +41,11 @@ export class AnimationHelpers {
       ease: config.ease ?? "Sine.easeInOut",
       ...Object.fromEntries(
         ["scaleX", "scaleY", "alpha", "x", "y"]
-          .filter(key => config[key as keyof RepeatAnimationConfig] !== undefined)
-          .map(key => [key, config[key as keyof RepeatAnimationConfig]])
-      )
+          .filter(
+            (key) => config[key as keyof RepeatAnimationConfig] !== undefined,
+          )
+          .map((key) => [key, config[key as keyof RepeatAnimationConfig]]),
+      ),
     });
   }
 
@@ -52,7 +54,7 @@ export class AnimationHelpers {
    */
   static createPulseAnimation(
     scene: Phaser.Scene,
-    config: PulseAnimationConfig
+    config: PulseAnimationConfig,
   ): Phaser.Tweens.Tween {
     return AnimationHelpers.createInfiniteAnimation(scene, {
       targets: config.targets,
@@ -71,7 +73,7 @@ export class AnimationHelpers {
   static createGlowAnimation(
     scene: Phaser.Scene,
     targets: any,
-    duration = 1500
+    duration = 1500,
   ): Phaser.Tweens.Tween {
     return AnimationHelpers.createInfiniteAnimation(scene, {
       targets,
@@ -89,7 +91,7 @@ export class AnimationHelpers {
     scene: Phaser.Scene,
     targets: any,
     amplitude = 10,
-    duration = 3000
+    duration = 3000,
   ): Phaser.Tweens.Tween {
     const originalY = targets.y || 0;
     return AnimationHelpers.createInfiniteAnimation(scene, {

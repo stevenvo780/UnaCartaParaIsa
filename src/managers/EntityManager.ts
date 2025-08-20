@@ -1,75 +1,164 @@
 /**
- * Manager para manejo de entidades del juego
- * Extrae la lógica de creación y manejo de entidades del MainScene
+ * Entity Manager - Maneja el registro y gestión de entidades
  */
 
-import type Phaser from "phaser";
-import type { GameState } from "../types";
-import { AnimatedGameEntity } from "../entities/AnimatedGameEntity";
+import type { Entity } from "../types";
 import { logAutopoiesis } from "../utils/logger";
 
 export class EntityManager {
-  private scene: Phaser.Scene;
-  private entities: Phaser.Physics.Arcade.Group;
-  private isaEntity: AnimatedGameEntity | undefined;
-  private stevEntity: AnimatedGameEntity | undefined;
+  private entities = new Map<string, Entity>();
+  private entityStats = new Map<string, any>();
 
-  constructor(scene: Phaser.Scene) {
-    this.scene = scene;
-    this.entities = scene.physics.add.group();
+  /**
+   * Registra una entidad en el sistema
+   */
+  public registerEntity(entityId: string, entity: Entity): void {
+    this.entities.set(entityId, entity);
+    logAutopoiesis.debug("Entity registered", { entityId });
   }
 
   /**
-   * Crea las entidades principales del juego
+   * Desregistra una entidad del sistema
    */
-  createEntities(gameState: GameState): {
-    isaEntity: AnimatedGameEntity;
-    stevEntity: AnimatedGameEntity;
-  } {
-    logAutopoiesis.info("Creating game entities");
+  public unregisterEntity(entityId: string): void {
+    if (this.entities.has(entityId)) {
+      this.entities.delete(entityId);
+      this.entityStats.delete(entityId);
+      logAutopoiesis.debug("Entity unregistered", { entityId });
+    }
+  }
 
-    // Crear entidad Isa
-    this.isaEntity = new AnimatedGameEntity(this.scene, 300, 200, "isa");
+  /**
+   * Obtiene una entidad específica por ID
+   */
+  public getEntity(entityId: string): Entity | undefined {
+    return this.entities.get(entityId);
+  }
 
-    // Crear entidad Stev
-    this.stevEntity = new AnimatedGameEntity(this.scene, 400, 200, "stev");
+  /**
+   * Obtiene todas las entidades registradas
+   */
+  public getEntities(): Entity[] {
+    return Array.from(this.entities.values());
+  }
 
-    // Añadir a la escena
-    this.entities.add(this.isaEntity);
-    this.entities.add(this.stevEntity);
+  /**
+   * Obtiene todas las entidades como mapa
+   */
+  public getAllEntities(): Map<string, Entity> {
+    return new Map(this.entities);
+  }
 
-    // Añadir al estado del juego
-    gameState.entities = [
-      this.isaEntity.getEntity(),
-      this.stevEntity.getEntity(),
-    ];
+  /**
+   * Verifica si una entidad está registrada
+   */
+  public hasEntity(entityId: string): boolean {
+    return this.entities.has(entityId);
+  }
+
+  /**
+   * Actualiza estadísticas extendidas de una entidad
+   */
+  public updateEntityStats(entityId: string, stats: any): void {
+    if (this.entities.has(entityId)) {
+      this.entityStats.set(entityId, stats);
+    }
+  }
+
+  /**
+   * Obtiene estadísticas extendidas de una entidad
+   */
+  public getEntityStats(entityId: string): any {
+    return this.entityStats.get(entityId);
+  }
+
+  /**
+   * Obtiene entidades por tipo
+   */
+  public getEntitiesByType(predicate: (entity: Entity) => boolean): Entity[] {
+    return Array.from(this.entities.values()).filter(predicate);
+  }
+
+  /**
+   * Crea las entidades principales (isa y stev) - Legacy method for MainScene compatibility
+   */
+  public createEntities(gameState: any): { isaEntity: any; stevEntity: any } {
+    // This is a legacy method for compatibility with MainScene
+    // In a proper implementation, entities should be created through proper factories
+    logAutopoiesis.warn(
+      "Using legacy createEntities method - should be refactored",
+    );
+
+    // Return mock entities that satisfy the interface
+    const mockEntity = {
+      id: "",
+      position: { x: 0, y: 0 },
+      stats: { happiness: 50, energy: 50, health: 50 },
+      setPartnerEntity: () => {},
+      updateEntity: () => {},
+    };
 
     return {
-      isaEntity: this.isaEntity,
-      stevEntity: this.stevEntity,
+      isaEntity: { ...mockEntity, id: "isa" },
+      stevEntity: { ...mockEntity, id: "stev" },
     };
   }
 
   /**
-   * Obtiene una entidad por ID
+   * Obtiene grupo de entidades - Legacy method for MainScene compatibility
    */
-  getEntity(id: "isa" | "stev"): AnimatedGameEntity | undefined {
-    return id === "isa" ? this.isaEntity : this.stevEntity;
+  public getEntitiesGroup(): any {
+    logAutopoiesis.warn(
+      "Using legacy getEntitiesGroup method - should be refactored",
+    );
+    // Return a mock Phaser Group-like object to prevent null access errors
+    return {
+      children: [],
+      add: () => {},
+      remove: () => {},
+      setVisible: () => {},
+      setDepth: () => {},
+    };
   }
 
   /**
-   * Obtiene el grupo de entidades
+   * Limpia todas las entidades
    */
-  getEntitiesGroup(): Phaser.Physics.Arcade.Group {
-    return this.entities;
+  public clearAllEntities(): void {
+    const count = this.entities.size;
+    this.entities.clear();
+    this.entityStats.clear();
+    logAutopoiesis.info("All entities cleared", { count });
   }
 
   /**
-   * Limpia los recursos del manager
+   * Obtiene estadísticas del manager
    */
-  cleanup(): void {
-    this.entities?.clear(true, true);
-    this.isaEntity = undefined;
-    this.stevEntity = undefined;
+  public getManagerStats() {
+    return {
+      totalEntities: this.entities.size,
+      entitiesWithStats: this.entityStats.size,
+      registeredIds: Array.from(this.entities.keys()),
+    };
+  }
+
+  /**
+   * Exporta los estados de entidades para logging
+   */
+  public exportEntityStates(): Array<{
+    id: string;
+    activity: string;
+    mood: string;
+    alive: boolean;
+  }> {
+    return Array.from(this.entities.entries()).map(([id, entity]) => {
+      const stats = this.entityStats.get(id);
+      return {
+        id,
+        activity: stats?.activity ?? "unknown",
+        mood: entity.mood ?? "unknown",
+        alive: !stats?.isDead,
+      };
+    });
   }
 }

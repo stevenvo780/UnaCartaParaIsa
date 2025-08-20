@@ -264,7 +264,6 @@ export class ProductionOptimizer {
       preloadCritical: this.isProduction,
     };
   }
-
 }
 
 // Crear instancia global

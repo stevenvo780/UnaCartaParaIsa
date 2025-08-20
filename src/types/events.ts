@@ -68,6 +68,85 @@ export interface DialogueCriteria {
 }
 
 /**
+ * Datos de entidad para eventos
+ */
+export interface EntityEventData {
+  id: string;
+  stats: EntityStats;
+  activity: ActivityType;
+  position: Position;
+  mood: string;
+}
+
+/**
+ * Datos de actualización del juego
+ */
+export interface GameUpdateEventData {
+  entities: EntityEventData[];
+  resonance: number;
+  cycles: number;
+  deltaTime: number;
+  togetherTime: number;
+}
+
+/**
+ * Datos de interacción del jugador
+ */
+export interface PlayerInteractionEventData {
+  entityId: string;
+  interactionType: string;
+  timestamp: number;
+}
+
+/**
+ * Datos de consumo de comida
+ */
+export interface FoodConsumedEventData {
+  foodId: string;
+  consumerId: string;
+  nutritionValue: number;
+  timestamp: number;
+}
+
+/**
+ * Datos de compra de comida
+ */
+export interface FoodPurchasedEventData {
+  foodId: string;
+  quantity: number;
+  totalCost: number;
+  timestamp: number;
+}
+
+/**
+ * Datos de diálogo completado
+ */
+export interface DialogueCompletedEventData {
+  dialogueId: string;
+  speaker: string;
+  listener: string;
+  duration: number;
+  timestamp: number;
+}
+
+/**
+ * Datos de misión para eventos
+ */
+export interface QuestEventData {
+  id: string;
+  dialogues: Array<{
+    stage: string;
+    speaker: string;
+    text: string;
+  }>;
+  objectives: Array<{
+    type: string;
+    target?: any;
+    completed: boolean;
+  }>;
+}
+
+/**
  * Datos generados del mundo
  */
 export interface GeneratedWorldData {

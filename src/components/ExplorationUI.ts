@@ -310,5 +310,4 @@ export class ExplorationUI extends BaseUIComponent {
       });
     });
   }
-
 }

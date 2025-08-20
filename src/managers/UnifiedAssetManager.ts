@@ -442,13 +442,14 @@ export class UnifiedAssetManager {
   // ==========================================
 
   public async loadEssentialFoodAssets(): Promise<void> {
+    // Mapeo de nombres lógicos a archivos reales
     const essentialFoods = [
-      "bread",
-      "burger",
-      "apple_pie",
-      "icecream",
-      "sandwich",
-      "pizza",
+      { key: "bread", file: "07_bread.png" },
+      { key: "burger", file: "15_burger.png" },
+      { key: "apple_pie", file: "05_apple_pie.png" },
+      { key: "icecream", file: "57_icecream.png" },
+      { key: "sandwich", file: "92_sandwich.png" },
+      { key: "pizza", file: "81_pizza.png" },
     ];
 
     logAutopoiesis.info("Cargando assets esenciales de comida", {
@@ -456,9 +457,9 @@ export class UnifiedAssetManager {
     });
 
     // Generar definiciones dinámicas para comida
-    const foodAssets = essentialFoods.map((foodId) => ({
-      key: foodId,
-      path: `assets/consumable_items/${foodId}.png`,
+    const foodAssets = essentialFoods.map(({ key, file }) => ({
+      key,
+      path: `assets/consumable_items/food/${file}`,
       type: "image" as const,
       priority: "medium" as const,
       category: "food" as const,

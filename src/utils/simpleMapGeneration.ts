@@ -116,7 +116,7 @@ export function createExpandedMapElements(): MapElement[] {
       color: "#3498db",
     },
     {
-      id: "north_bridge", 
+      id: "north_bridge",
       position: { x: 800, y: 50 },
       size: { width: 200, height: 40 },
       type: "decoration",
