@@ -63,10 +63,30 @@ export interface RadiusScale {
 }
 
 export interface ShadowConfig {
-  sm: { color: number; alpha: number; blur: number; offset: { x: number; y: number } };
-  md: { color: number; alpha: number; blur: number; offset: { x: number; y: number } };
-  lg: { color: number; alpha: number; blur: number; offset: { x: number; y: number } };
-  xl: { color: number; alpha: number; blur: number; offset: { x: number; y: number } };
+  sm: {
+    color: number;
+    alpha: number;
+    blur: number;
+    offset: { x: number; y: number };
+  };
+  md: {
+    color: number;
+    alpha: number;
+    blur: number;
+    offset: { x: number; y: number };
+  };
+  lg: {
+    color: number;
+    alpha: number;
+    blur: number;
+    offset: { x: number; y: number };
+  };
+  xl: {
+    color: number;
+    alpha: number;
+    blur: number;
+    offset: { x: number; y: number };
+  };
 }
 
 export interface AnimationConfig {
@@ -149,13 +169,13 @@ export class UIDesignSystem {
 
   // Escala tipográfica responsiva
   public static readonly TYPOGRAPHY: TypographyScale = {
-    xs: '10px',
-    sm: '12px',
-    base: '14px',
-    lg: '16px',
-    xl: '20px',
-    xxl: '24px',
-    xxxl: '32px',
+    xs: "10px",
+    sm: "12px",
+    base: "14px",
+    lg: "16px",
+    xl: "20px",
+    xxl: "24px",
+    xxxl: "32px",
   };
 
   // Sistema de espaciado consistente
@@ -194,12 +214,12 @@ export class UIDesignSystem {
       slow: 500,
     },
     easing: {
-      easeOut: 'Power2.easeOut',
-      easeIn: 'Power2.easeIn',
-      easeInOut: 'Power2.easeInOut',
-      backOut: 'Back.easeOut',
-      backIn: 'Back.easeIn',
-      bounce: 'Bounce.easeOut',
+      easeOut: "Power2.easeOut",
+      easeIn: "Power2.easeIn",
+      easeInOut: "Power2.easeInOut",
+      backOut: "Back.easeOut",
+      backIn: "Back.easeIn",
+      bounce: "Bounce.easeOut",
     },
   };
 
@@ -233,10 +253,10 @@ export class UIDesignSystem {
    * Determina el breakpoint actual basado en el ancho de pantalla
    */
   public static getCurrentBreakpoint(width: number): keyof BreakpointConfig {
-    if (width >= this.BREAKPOINTS.wide) return 'wide';
-    if (width >= this.BREAKPOINTS.desktop) return 'desktop';
-    if (width >= this.BREAKPOINTS.tablet) return 'tablet';
-    return 'mobile';
+    if (width >= this.BREAKPOINTS.wide) return "wide";
+    if (width >= this.BREAKPOINTS.desktop) return "desktop";
+    if (width >= this.BREAKPOINTS.tablet) return "tablet";
+    return "mobile";
   }
 
   /**
@@ -244,25 +264,31 @@ export class UIDesignSystem {
    */
   public static getResponsiveDimensions(
     width: number,
-    dimensions: Partial<Record<keyof BreakpointConfig, number>>
+    dimensions: Partial<Record<keyof BreakpointConfig, number>>,
   ): number {
     const breakpoint = this.getCurrentBreakpoint(width);
-    return dimensions[breakpoint] ?? dimensions.desktop ?? dimensions.tablet ?? dimensions.mobile ?? 0;
+    return (
+      dimensions[breakpoint] ??
+      dimensions.desktop ??
+      dimensions.tablet ??
+      dimensions.mobile ??
+      0
+    );
   }
 
   /**
    * Genera un objeto de estilo de texto consistente
    */
   public static getTextStyle(
-    size: keyof TypographyScale = 'base',
+    size: keyof TypographyScale = "base",
     color: number = this.COLORS.text,
-    weight: 'normal' | 'bold' = 'normal'
+    weight: "normal" | "bold" = "normal",
   ): Phaser.Types.GameObjects.Text.TextStyle {
     return {
       fontSize: this.TYPOGRAPHY[size],
-      color: `#${color.toString(16).padStart(6, '0')}`,
-      fontFamily: 'Arial, sans-serif',
-      fontStyle: weight === 'bold' ? 'bold' : 'normal',
+      color: `#${color.toString(16).padStart(6, "0")}`,
+      fontFamily: "Arial, sans-serif",
+      fontStyle: weight === "bold" ? "bold" : "normal",
     };
   }
 
@@ -277,7 +303,7 @@ export class UIDesignSystem {
     height: number,
     radius: number = this.RADIUS.lg,
     color: number = this.COLORS.surface,
-    alpha: number = 0.9
+    alpha: number = 0.9,
   ): void {
     // Shadow
     graphics.fillStyle(this.COLORS.shadow, 0.3);
@@ -303,13 +329,13 @@ export class UIDesignSystem {
     scene: Phaser.Scene,
     element: Phaser.GameObjects.GameObject,
     scaleAmount: number = 1.05,
-    duration: number = this.ANIMATIONS.duration.fast
+    duration: number = this.ANIMATIONS.duration.fast,
   ): void {
     if (!element.setInteractive) return;
 
     const interactiveElement = element as any;
 
-    interactiveElement.on('pointerover', () => {
+    interactiveElement.on("pointerover", () => {
       this.createAccessibleAnimation(scene, {
         targets: element,
         scaleX: scaleAmount,
@@ -319,7 +345,7 @@ export class UIDesignSystem {
       });
     });
 
-    interactiveElement.on('pointerout', () => {
+    interactiveElement.on("pointerout", () => {
       this.createAccessibleAnimation(scene, {
         targets: element,
         scaleX: 1,
@@ -337,7 +363,7 @@ export class UIDesignSystem {
     scene: Phaser.Scene,
     targets: any[],
     delay: number = 0,
-    stagger: number = 100
+    stagger: number = 100,
   ): void {
     targets.forEach((target, index) => {
       // Configuración inicial
@@ -363,7 +389,7 @@ export class UIDesignSystem {
     scene: Phaser.Scene,
     target: any,
     intensity: number = 0.1,
-    duration: number = 2000
+    duration: number = 2000,
   ): void {
     // Respetar preferencias de movimiento reducido
     if (this.ACCESSIBILITY.reducedMotion) {
@@ -378,7 +404,7 @@ export class UIDesignSystem {
       duration,
       yoyo: true,
       repeat: -1,
-      ease: 'Sine.easeInOut',
+      ease: "Sine.easeInOut",
     });
   }
 
@@ -389,16 +415,20 @@ export class UIDesignSystem {
     scene: Phaser.Scene,
     element: Phaser.GameObjects.GameObject,
     width: number,
-    height: number
+    height: number,
   ): Phaser.GameObjects.Graphics {
     const focusIndicator = scene.add.graphics();
-    focusIndicator.lineStyle(this.ACCESSIBILITY.focusOutlineWidth, this.ACCESSIBILITY.focusOutlineColor, 1);
+    focusIndicator.lineStyle(
+      this.ACCESSIBILITY.focusOutlineWidth,
+      this.ACCESSIBILITY.focusOutlineColor,
+      1,
+    );
     focusIndicator.strokeRoundedRect(
       -width / 2 - this.ACCESSIBILITY.focusOutlineWidth,
       -height / 2 - this.ACCESSIBILITY.focusOutlineWidth,
       width + this.ACCESSIBILITY.focusOutlineWidth * 2,
       height + this.ACCESSIBILITY.focusOutlineWidth * 2,
-      this.RADIUS.sm
+      this.RADIUS.sm,
     );
     focusIndicator.setVisible(false);
 
@@ -408,7 +438,10 @@ export class UIDesignSystem {
   /**
    * Verifica si un elemento cumple con el tamaño mínimo táctil
    */
-  public static ensureMinimumTouchSize(width: number, height: number): { width: number; height: number } {
+  public static ensureMinimumTouchSize(
+    width: number,
+    height: number,
+  ): { width: number; height: number } {
     return {
       width: Math.max(width, this.ACCESSIBILITY.minimumTouchSize),
       height: Math.max(height, this.ACCESSIBILITY.minimumTouchSize),
@@ -434,17 +467,27 @@ export class UIDesignSystem {
   /**
    * Crea animaciones respetando las preferencias de accesibilidad
    */
-  public static createAccessibleAnimation(scene: Phaser.Scene, config: any): Phaser.Tweens.Tween | null {
+  public static createAccessibleAnimation(
+    scene: Phaser.Scene,
+    config: any,
+  ): Phaser.Tweens.Tween | null {
     if (this.ACCESSIBILITY.reducedMotion) {
       // Para movimiento reducido, aplicar cambios instantáneamente
-      const targets = Array.isArray(config.targets) ? config.targets : [config.targets];
+      const targets = Array.isArray(config.targets)
+        ? config.targets
+        : [config.targets];
       targets.forEach((target: any) => {
-        Object.keys(config).forEach(key => {
-          if (key !== 'targets' && key !== 'duration' && key !== 'ease' && target[key] !== undefined) {
+        Object.keys(config).forEach((key) => {
+          if (
+            key !== "targets" &&
+            key !== "duration" &&
+            key !== "ease" &&
+            target[key] !== undefined
+          ) {
             const value = config[key];
-            if (typeof value === 'object' && value.to !== undefined) {
+            if (typeof value === "object" && value.to !== undefined) {
               target[key] = value.to;
-            } else if (typeof value !== 'object') {
+            } else if (typeof value !== "object") {
               target[key] = value;
             }
           }
@@ -459,7 +502,9 @@ export class UIDesignSystem {
   /**
    * Configura las preferencias de accesibilidad
    */
-  public static setAccessibilityPreferences(options: Partial<AccessibilityConfig>): void {
+  public static setAccessibilityPreferences(
+    options: Partial<AccessibilityConfig>,
+  ): void {
     Object.assign(this.ACCESSIBILITY, options);
   }
 }

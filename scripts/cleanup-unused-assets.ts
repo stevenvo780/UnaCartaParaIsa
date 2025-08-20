@@ -3,8 +3,8 @@
  * Escanea el código fuente y remueve assets que no están referenciados
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
+import { promises as fs } from "fs";
+import path from "path";
 
 interface AssetUsageReport {
   totalAssets: number;
@@ -14,9 +14,9 @@ interface AssetUsageReport {
 }
 
 class AssetCleanup {
-  private readonly assetsDir = path.join(__dirname, '../public/assets');
-  private readonly srcDir = path.join(__dirname, '../src');
-  private readonly ignoredDirs = ['ui_icons', 'consumable_items']; // Assets claramente no utilizados
+  private readonly assetsDir = path.join(__dirname, "../public/assets");
+  private readonly srcDir = path.join(__dirname, "../src");
+  private readonly ignoredDirs = ["ui_icons", "consumable_items"]; // Assets claramente no utilizados
 
   /**
    * Escanea archivos fuente por referencias a assets
@@ -26,7 +26,7 @@ class AssetCleanup {
 
     const scanFile = async (filePath: string) => {
       try {
-        const content = await fs.readFile(filePath, 'utf-8');
+        const content = await fs.readFile(filePath, "utf-8");
 
         // Buscar referencias a assets (patrones comunes)
         const patterns = [
@@ -35,11 +35,11 @@ class AssetCleanup {
           /"[^"]*\.(png|jpg|jpeg|webp|gif)"/g,
         ];
 
-        patterns.forEach(pattern => {
+        patterns.forEach((pattern) => {
           const matches = content.match(pattern);
           if (matches) {
-            matches.forEach(match => {
-              const cleanMatch = match.replace(/['"]/g, '');
+            matches.forEach((match) => {
+              const cleanMatch = match.replace(/['"]/g, "");
               references.add(cleanMatch);
             });
           }
@@ -77,18 +77,23 @@ class AssetCleanup {
   async getAllAssets(): Promise<string[]> {
     const assets: string[] = [];
 
-    const scanAssets = async (dir: string, baseDir = '') => {
+    const scanAssets = async (dir: string, baseDir = "") => {
       try {
         const entries = await fs.readdir(dir, { withFileTypes: true });
 
         for (const entry of entries) {
           const fullPath = path.join(dir, entry.name);
-          const relativePath = baseDir ? path.join(baseDir, entry.name) : entry.name;
+          const relativePath = baseDir
+            ? path.join(baseDir, entry.name)
+            : entry.name;
 
           if (entry.isDirectory()) {
             await scanAssets(fullPath, relativePath);
-          } else if (entry.isFile() && /\.(png|jpg|jpeg|webp|gif)$/.test(entry.name)) {
-            assets.push(`assets/${relativePath.replace(/\\/g, '/')}`);
+          } else if (
+            entry.isFile() &&
+            /\.(png|jpg|jpeg|webp|gif)$/.test(entry.name)
+          ) {
+            assets.push(`assets/${relativePath.replace(/\\/g, "/")}`);
           }
         }
       } catch (error) {
@@ -105,7 +110,7 @@ class AssetCleanup {
    */
   async getAssetSize(assetPath: string): Promise<number> {
     try {
-      const fullPath = path.join(__dirname, '../public', assetPath);
+      const fullPath = path.join(__dirname, "../public", assetPath);
       const stats = await fs.stat(fullPath);
       return stats.size;
     } catch {
@@ -117,20 +122,21 @@ class AssetCleanup {
    * Genera reporte de uso de assets
    */
   async generateUsageReport(): Promise<AssetUsageReport> {
-    console.log('🔍 Escaneando código fuente por referencias a assets...');
+    console.log("🔍 Escaneando código fuente por referencias a assets...");
     const usedReferences = await this.scanSourceForAssetReferences();
 
-    console.log('📁 Listando todos los assets disponibles...');
+    console.log("📁 Listando todos los assets disponibles...");
     const allAssets = await this.getAllAssets();
 
     const usedAssets: string[] = [];
     const unusedAssets: string[] = [];
     let sizeSaved = 0;
 
-    console.log('🔗 Comparando assets con referencias...');
+    console.log("🔗 Comparando assets con referencias...");
     for (const asset of allAssets) {
       const isUsed = Array.from(usedReferences).some(
-        ref => asset.includes(ref) || ref.includes(asset.replace('assets/', ''))
+        (ref) =>
+          asset.includes(ref) || ref.includes(asset.replace("assets/", "")),
       );
 
       if (isUsed) {
@@ -153,7 +159,7 @@ class AssetCleanup {
    * Remueve assets no utilizados de directorios específicos
    */
   async cleanupUnusedAssets(dryRun = true): Promise<void> {
-    console.log('🧹 Limpiando assets no utilizados...');
+    console.log("🧹 Limpiando assets no utilizados...");
 
     let totalCleaned = 0;
     let sizeCleaned = 0;
@@ -164,14 +170,16 @@ class AssetCleanup {
       try {
         const exists = await fs.access(dirPath).then(
           () => true,
-          () => false
+          () => false,
         );
         if (!exists) continue;
 
         const stats = await fs.stat(dirPath);
         const dirSize = await this.getDirSize(dirPath);
 
-        console.log(`📂 Procesando directorio: ${dir} (${this.formatBytes(dirSize)})`);
+        console.log(
+          `📂 Procesando directorio: ${dir} (${this.formatBytes(dirSize)})`,
+        );
 
         if (!dryRun) {
           await fs.rmdir(dirPath, { recursive: true });
@@ -187,10 +195,12 @@ class AssetCleanup {
       }
     }
 
-    console.log('\n📊 Resumen de limpieza:');
+    console.log("\n📊 Resumen de limpieza:");
     console.log(`   Directorios procesados: ${totalCleaned}`);
     console.log(`   Espacio liberado: ${this.formatBytes(sizeCleaned)}`);
-    console.log(`   Modo: ${dryRun ? 'DRY RUN (sin cambios)' : 'LIMPIEZA REAL'}`);
+    console.log(
+      `   Modo: ${dryRun ? "DRY RUN (sin cambios)" : "LIMPIEZA REAL"}`,
+    );
   }
 
   /**
@@ -223,10 +233,10 @@ class AssetCleanup {
    * Formatea bytes en formato legible
    */
   public formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
 
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
@@ -239,19 +249,21 @@ async function main() {
 
   try {
     // Generar reporte
-    console.log('🚀 Iniciando análisis de assets...\n');
+    console.log("🚀 Iniciando análisis de assets...\n");
     const report = await cleanup.generateUsageReport();
 
-    console.log('\n📋 Reporte de Assets:');
+    console.log("\n📋 Reporte de Assets:");
     console.log(`   Total assets: ${report.totalAssets}`);
     console.log(`   Assets utilizados: ${report.usedAssets.length}`);
     console.log(`   Assets no utilizados: ${report.unusedAssets.length}`);
-    console.log(`   Espacio potencial a liberar: ${cleanup.formatBytes(report.sizeSaved)}`);
+    console.log(
+      `   Espacio potencial a liberar: ${cleanup.formatBytes(report.sizeSaved)}`,
+    );
 
     // Mostrar algunos assets no utilizados como ejemplo
     if (report.unusedAssets.length > 0) {
-      console.log('\n🗑️ Ejemplos de assets no utilizados:');
-      report.unusedAssets.slice(0, 10).forEach(asset => {
+      console.log("\n🗑️ Ejemplos de assets no utilizados:");
+      report.unusedAssets.slice(0, 10).forEach((asset) => {
         console.log(`   - ${asset}`);
       });
 
@@ -261,18 +273,20 @@ async function main() {
     }
 
     // Limpiar directorios específicos (DRY RUN por defecto)
-    console.log('\n🧹 Iniciando limpieza de directorios innecesarios...');
-    const dryRun = !process.argv.includes('--execute');
+    console.log("\n🧹 Iniciando limpieza de directorios innecesarios...");
+    const dryRun = !process.argv.includes("--execute");
 
     if (dryRun) {
-      console.log('ℹ️ Ejecutando en modo DRY RUN. Usa --execute para aplicar cambios reales.');
+      console.log(
+        "ℹ️ Ejecutando en modo DRY RUN. Usa --execute para aplicar cambios reales.",
+      );
     }
 
     await cleanup.cleanupUnusedAssets(dryRun);
 
-    console.log('\n✅ Análisis completado!');
+    console.log("\n✅ Análisis completado!");
   } catch (error) {
-    console.error('❌ Error durante el análisis:', error);
+    console.error("❌ Error durante el análisis:", error);
     process.exit(1);
   }
 }

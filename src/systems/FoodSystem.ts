@@ -3,12 +3,12 @@
  * Maneja toda la mecánica de comer, comprar y efectos de la comida
  */
 
-import Phaser from 'phaser';
-import { FoodCatalog } from '../data/FoodCatalog';
-import type { EntityStats } from '../types';
-import type { EatingAction, FoodItem } from '../types/food';
-import { logAutopoiesis } from '../utils/logger';
-import { FoodInventorySystem } from './FoodInventorySystem';
+import Phaser from "phaser";
+import { FoodCatalog } from "../data/FoodCatalog";
+import type { EntityStats } from "../types";
+import type { EatingAction, FoodItem } from "../types/food";
+import { logAutopoiesis } from "../utils/logger";
+import { FoodInventorySystem } from "./FoodInventorySystem";
 
 export class FoodSystem {
   private scene: Phaser.Scene;
@@ -24,22 +24,26 @@ export class FoodSystem {
     this.foodItems = scene.add.group();
 
     this.setupPeriodicCleanup();
-    logAutopoiesis.info('Sistema de comida inicializado');
+    logAutopoiesis.info("Sistema de comida inicializado");
   }
 
   /**
    * Inicia el proceso de comer para una entidad
    */
-  startEating(entityId: string, foodId: string, position: { x: number; y: number }): boolean {
+  startEating(
+    entityId: string,
+    foodId: string,
+    position: { x: number; y: number },
+  ): boolean {
     // Verificar si ya está comiendo
     if (this.activeEatingActions.has(entityId)) {
-      logAutopoiesis.warn('La entidad ya está comiendo', { entityId });
+      logAutopoiesis.warn("La entidad ya está comiendo", { entityId });
       return false;
     }
 
     // Verificar si tiene la comida en el inventario
     if (!this.inventory.hasFood(foodId)) {
-      logAutopoiesis.warn('No tiene la comida en el inventario', {
+      logAutopoiesis.warn("No tiene la comida en el inventario", {
         entityId,
         foodId,
       });
@@ -64,7 +68,7 @@ export class FoodSystem {
     // Crear visual de comida
     this.createFoodVisual(food, position);
 
-    logAutopoiesis.info('Entidad empezó a comer', {
+    logAutopoiesis.info("Entidad empezó a comer", {
       entityId,
       foodId: food.id,
       duration: food.consumeTime,
@@ -91,7 +95,7 @@ export class FoodSystem {
 
         this.activeEatingActions.delete(entityId);
 
-        logAutopoiesis.info('Comida completada', {
+        logAutopoiesis.info("Comida completada", {
           entityId,
           foodId: action.foodId,
           duration: elapsed,
@@ -109,34 +113,46 @@ export class FoodSystem {
     const newStats = { ...stats };
 
     // Aplicar efectos de la comida
-    newStats.hunger = Math.min(100, Math.max(0, newStats.hunger + food.hungerRestore));
-    newStats.happiness = Math.min(100, Math.max(0, newStats.happiness + food.happinessBonus));
-    newStats.energy = Math.min(100, Math.max(0, newStats.energy + food.energyEffect));
-    newStats.health = Math.min(100, Math.max(0, newStats.health + food.healthEffect));
+    newStats.hunger = Math.min(
+      100,
+      Math.max(0, newStats.hunger + food.hungerRestore),
+    );
+    newStats.happiness = Math.min(
+      100,
+      Math.max(0, newStats.happiness + food.happinessBonus),
+    );
+    newStats.energy = Math.min(
+      100,
+      Math.max(0, newStats.energy + food.energyEffect),
+    );
+    newStats.health = Math.min(
+      100,
+      Math.max(0, newStats.health + food.healthEffect),
+    );
 
     // Efectos secundarios basados en categoría
     switch (food.category) {
-      case 'junk':
+      case "junk":
         // La comida chatarra puede aumentar el estrés a largo plazo
         if (newStats.stress !== undefined) {
           newStats.stress = Math.min(100, newStats.stress + 2);
         }
         break;
 
-      case 'healthy':
+      case "healthy":
         // La comida saludable reduce el estrés
         if (newStats.stress !== undefined) {
           newStats.stress = Math.max(0, newStats.stress - 3);
         }
         break;
 
-      case 'dessert':
+      case "dessert":
         // Los postres dan mucha felicidad pero pueden afectar la salud
         newStats.happiness = Math.min(100, newStats.happiness + 5);
         break;
     }
 
-    logAutopoiesis.info('Efectos de comida aplicados', {
+    logAutopoiesis.info("Efectos de comida aplicados", {
       foodId: food.id,
       category: food.category,
       effects: {
@@ -153,7 +169,11 @@ export class FoodSystem {
   /**
    * Compra comida de una tienda
    */
-  buyFood(foodId: string, quantity = 1, playerMoney: number): { success: boolean; cost: number; newMoney: number } {
+  buyFood(
+    foodId: string,
+    quantity = 1,
+    playerMoney: number,
+  ): { success: boolean; cost: number; newMoney: number } {
     const food = FoodCatalog.getFoodById(foodId);
     if (!food) {
       return { success: false, cost: 0, newMoney: playerMoney };
@@ -162,7 +182,7 @@ export class FoodSystem {
     const totalCost = food.price * quantity;
 
     if (playerMoney < totalCost) {
-      logAutopoiesis.warn('No tiene suficiente dinero para comprar', {
+      logAutopoiesis.warn("No tiene suficiente dinero para comprar", {
         foodId,
         quantity,
         cost: totalCost,
@@ -178,7 +198,7 @@ export class FoodSystem {
 
     const newMoney = playerMoney - totalCost;
 
-    logAutopoiesis.info('Comida comprada exitosamente', {
+    logAutopoiesis.info("Comida comprada exitosamente", {
       foodId: food.id,
       quantity,
       cost: totalCost,
@@ -191,26 +211,30 @@ export class FoodSystem {
   /**
    * Crea una tienda de comida en una posición
    */
-  createFoodStore(x: number, y: number, availableFoods: string[] = []): Phaser.GameObjects.Sprite {
-    const store = this.scene.add.sprite(x, y, 'food_store');
+  createFoodStore(
+    x: number,
+    y: number,
+    availableFoods: string[] = [],
+  ): Phaser.GameObjects.Sprite {
+    const store = this.scene.add.sprite(x, y, "food_store");
     store.setScale(0.8);
     store.setInteractive();
 
     // Si no se especifican comidas, usar algunas por defecto
     if (availableFoods.length === 0) {
-      availableFoods = ['bread', 'burger', 'apple_pie', 'icecream', 'sandwich'];
+      availableFoods = ["bread", "burger", "apple_pie", "icecream", "sandwich"];
     }
 
     // Guardar las comidas disponibles en el sprite
     (store as any).availableFoods = availableFoods;
 
-    store.on('pointerdown', () => {
+    store.on("pointerdown", () => {
       this.openFoodStore(availableFoods);
     });
 
     this.foodStores.add(store);
 
-    logAutopoiesis.info('Tienda de comida creada', {
+    logAutopoiesis.info("Tienda de comida creada", {
       position: { x, y },
       availableFoods,
     });
@@ -223,8 +247,10 @@ export class FoodSystem {
    */
   private openFoodStore(availableFoods: string[]): void {
     // Emitir evento para que la UI maneje la tienda
-    this.scene.events.emit('openFoodStore', {
-      foods: availableFoods.map(id => FoodCatalog.getFoodById(id)).filter(Boolean),
+    this.scene.events.emit("openFoodStore", {
+      foods: availableFoods
+        .map((id) => FoodCatalog.getFoodById(id))
+        .filter(Boolean),
       inventory: this.inventory.getInventory(),
       stats: this.inventory.getInventoryStats(),
     });
@@ -233,9 +259,16 @@ export class FoodSystem {
   /**
    * Crea efectos visuales al comer
    */
-  private createFoodVisual(food: FoodItem, position: { x: number; y: number }): void {
+  private createFoodVisual(
+    food: FoodItem,
+    position: { x: number; y: number },
+  ): void {
     // Crear sprite temporal de la comida
-    const foodSprite = this.scene.add.image(position.x, position.y - 30, food.id);
+    const foodSprite = this.scene.add.image(
+      position.x,
+      position.y - 30,
+      food.id,
+    );
     foodSprite.setScale(0.5);
     foodSprite.setAlpha(0.8);
 
@@ -246,14 +279,19 @@ export class FoodSystem {
       alpha: 0,
       scale: 0.2,
       duration: food.consumeTime,
-      ease: 'Power2',
+      ease: "Power2",
       onComplete: () => {
         foodSprite.destroy();
       },
     });
 
     // Crear efecto visual simple de consumo (círculos que se desvanecen)
-    const effectColor = food.category === 'healthy' ? 0x00ff00 : food.category === 'dessert' ? 0xff69b4 : 0xffd700;
+    const effectColor =
+      food.category === "healthy"
+        ? 0x00ff00
+        : food.category === "dessert"
+          ? 0xff69b4
+          : 0xffd700;
 
     // Crear múltiples círculos como efecto visual
     for (let i = 0; i < 3; i++) {
@@ -263,7 +301,7 @@ export class FoodSystem {
           position.y - 20 + Phaser.Math.Between(-10, 10),
           3,
           effectColor,
-          0.8
+          0.8,
         );
 
         // Animar el círculo
@@ -274,7 +312,7 @@ export class FoodSystem {
           alpha: 0,
           y: circle.y - 20,
           duration: 800,
-          ease: 'Power2',
+          ease: "Power2",
           onComplete: () => {
             circle.destroy();
           },
@@ -306,7 +344,7 @@ export class FoodSystem {
     }
 
     this.activeEatingActions.delete(entityId);
-    logAutopoiesis.info('Acción de comer cancelada', { entityId });
+    logAutopoiesis.info("Acción de comer cancelada", { entityId });
     return true;
   }
 
@@ -335,7 +373,11 @@ export class FoodSystem {
    * Obtiene comida recomendada para una entidad
    */
   getRecommendedFood(stats: EntityStats): FoodItem[] {
-    return FoodCatalog.getRecommendedFood(stats.hunger || 50, stats.happiness || 50, stats.money || 0);
+    return FoodCatalog.getRecommendedFood(
+      stats.hunger || 50,
+      stats.happiness || 50,
+      stats.money || 0,
+    );
   }
 
   /**
@@ -345,6 +387,6 @@ export class FoodSystem {
     this.activeEatingActions.clear();
     this.foodStores.clear(true, true);
     this.foodItems.clear(true, true);
-    logAutopoiesis.info('Sistema de comida limpiado');
+    logAutopoiesis.info("Sistema de comida limpiado");
   }
 }

@@ -46,8 +46,8 @@ export const GAME_BALANCE = {
     ENTITY_SIZE: 32,
     ANIMATION_DURATION: 300,
     FADE_DURATION: 500,
-    TWEEN_EASE: 'Back.easeOut',
-    TWEEN_EASE_IN: 'Back.easeIn',
+    TWEEN_EASE: "Back.easeOut",
+    TWEEN_EASE_IN: "Back.easeIn",
   },
 
   MOVEMENT: {

@@ -4,11 +4,11 @@
  * Migrado de Dúo Eterno - preserva lógica científica de personalidades y decisiones
  */
 
-import type { Entity, ActivityType, MoodType } from '../types';
-import { ACTIVITY_TYPES } from '../constants';
-import { calculateActivityPriority } from './activityDynamics';
-import { gameConfig } from '../config/gameConfig';
-import { logAutopoiesis } from './logger';
+import type { Entity, ActivityType, MoodType } from "../types";
+import { ACTIVITY_TYPES } from "../constants";
+import { calculateActivityPriority } from "./activityDynamics";
+import { gameConfig } from "../config/gameConfig";
+import { logAutopoiesis } from "./logger";
 
 interface PersonalityProfile {
   socialPreference: number;
@@ -17,7 +17,7 @@ interface PersonalityProfile {
   energyEfficiency: number;
 }
 
-const ENTITY_PERSONALITIES: Record<'isa' | 'stev', PersonalityProfile> = {
+const ENTITY_PERSONALITIES: Record<"isa" | "stev", PersonalityProfile> = {
   isa: {
     socialPreference: 0.7,
     activityPersistence: 0.6,
@@ -41,55 +41,55 @@ const MOOD_MODIFIERS: Record<
     energyConservation: number;
   }
 > = {
-  '😊': {
+  "😊": {
     activityChange: 0.3,
     socialSeek: 0.7,
     riskTaking: 0.6,
     energyConservation: 0.3,
   },
-  '🤩': {
+  "🤩": {
     activityChange: 0.8,
     socialSeek: 0.8,
     riskTaking: 0.8,
     energyConservation: 0.2,
   },
-  '😌': {
+  "😌": {
     activityChange: 0.1,
     socialSeek: 0.4,
     riskTaking: 0.3,
     energyConservation: 0.6,
   },
-  '😢': {
+  "😢": {
     activityChange: 0.4,
     socialSeek: 0.9,
     riskTaking: 0.2,
     energyConservation: 0.7,
   },
-  '😰': {
+  "😰": {
     activityChange: 0.7,
     socialSeek: 0.6,
     riskTaking: 0.1,
     energyConservation: 0.8,
   },
-  '😡': {
+  "😡": {
     activityChange: 0.6,
     socialSeek: 0.3,
     riskTaking: 0.7,
     energyConservation: 0.4,
   },
-  '😑': {
+  "😑": {
     activityChange: 0.8,
     socialSeek: 0.4,
     riskTaking: 0.5,
     energyConservation: 0.3,
   },
-  '😔': {
+  "😔": {
     activityChange: 0.5,
     socialSeek: 0.9,
     riskTaking: 0.3,
     energyConservation: 0.6,
   },
-  '😴': {
+  "😴": {
     activityChange: 0.1,
     socialSeek: 0.2,
     riskTaking: 0.1,
@@ -114,7 +114,7 @@ const habitBias = new Map<string, Map<ActivityType, number>>();
  * Obtiene el perfil de personalidad para una entidad
  */
 const getPersonalityProfile = (entityId: string): PersonalityProfile => {
-  if (entityId === 'stev') {
+  if (entityId === "stev") {
     return ENTITY_PERSONALITIES.stev;
   }
   return ENTITY_PERSONALITIES.isa;
@@ -123,19 +123,27 @@ const getPersonalityProfile = (entityId: string): PersonalityProfile => {
 /**
  * Aplica modificadores de mood a la puntuación de una actividad
  */
-const applyMoodModifiers = (baseScore: number, activity: ActivityType, mood: MoodType): number => {
+const applyMoodModifiers = (
+  baseScore: number,
+  activity: ActivityType,
+  mood: MoodType,
+): number => {
   const modifiers = MOOD_MODIFIERS[mood];
   let score = baseScore;
 
-  if (activity === 'SOCIALIZING') {
+  if (activity === "SOCIALIZING") {
     score += modifiers.socialSeek * 15;
   }
 
-  if (activity === 'RESTING' || activity === 'MEDITATING') {
+  if (activity === "RESTING" || activity === "MEDITATING") {
     score += modifiers.energyConservation * 10;
   }
 
-  if (activity === 'WANDERING' || activity === 'EXPLORING' || activity === 'DANCING') {
+  if (
+    activity === "WANDERING" ||
+    activity === "EXPLORING" ||
+    activity === "DANCING"
+  ) {
     score += modifiers.riskTaking * 8;
   }
 
@@ -145,7 +153,10 @@ const applyMoodModifiers = (baseScore: number, activity: ActivityType, mood: Moo
 /**
  * Calcula inercia de actividad - resistencia a cambiar
  */
-const calculateActivityInertia = (entity: Entity, currentTime: number): number => {
+const calculateActivityInertia = (
+  entity: Entity,
+  currentTime: number,
+): number => {
   const personality = getPersonalityProfile(entity.id);
   const session = activitySessions.get(entity.id);
 
@@ -183,7 +194,11 @@ const getHabitBias = (entityId: string, activity: ActivityType): number => {
 /**
  * Actualiza el bias de hábito cuando se completa una actividad
  */
-const updateHabitBias = (entityId: string, activity: ActivityType, satisfaction: number): void => {
+const updateHabitBias = (
+  entityId: string,
+  activity: ActivityType,
+  satisfaction: number,
+): void => {
   if (!habitBias.has(entityId)) {
     habitBias.set(entityId, new Map());
   }
@@ -200,7 +215,11 @@ const updateHabitBias = (entityId: string, activity: ActivityType, satisfaction:
 /**
  * Determina si se debe cambiar de actividad basado en urgencia y thresholds
  */
-const shouldChangeActivity = (entity: Entity, currentTime: number, urgencyScore: number): boolean => {
+const shouldChangeActivity = (
+  entity: Entity,
+  currentTime: number,
+  urgencyScore: number,
+): boolean => {
   const inertia = calculateActivityInertia(entity, currentTime);
   const threshold = gameConfig.ai.decisionChangeThreshold || 5;
 
@@ -214,11 +233,14 @@ const shouldChangeActivity = (entity: Entity, currentTime: number, urgencyScore:
  * Fórmula: P(i) = exp((s_i - max s)/τ) / Σ exp((s_j - max s)/τ).
  * τ (tau) controla exploración: menor τ → elecciones más “greedy”.
  */
-const softmaxPick = (scores: { activity: ActivityType; score: number }[], temperature = 0.7): ActivityType => {
+const softmaxPick = (
+  scores: { activity: ActivityType; score: number }[],
+  temperature = 0.7,
+): ActivityType => {
   const tau = Math.max(0.1, temperature);
-  const maxScore = Math.max(...scores.map(s => s.score));
+  const maxScore = Math.max(...scores.map((s) => s.score));
 
-  const exps = scores.map(s => Math.exp((s.score - maxScore) / tau));
+  const exps = scores.map((s) => Math.exp((s.score - maxScore) / tau));
   const sum = exps.reduce((a, b) => a + b, 0);
 
   const seed = (Date.now() * 1664525 + 1013904223) % 2147483647;
@@ -237,7 +259,11 @@ const softmaxPick = (scores: { activity: ActivityType; score: number }[], temper
 /**
  * Inicia una nueva sesión de actividad
  */
-const startActivitySession = (entityId: string, activity: ActivityType, currentTime: number): void => {
+const startActivitySession = (
+  entityId: string,
+  activity: ActivityType,
+  currentTime: number,
+): void => {
   const personality = getPersonalityProfile(entityId);
 
   const baseDuration = 30000;
@@ -260,38 +286,53 @@ const startActivitySession = (entityId: string, activity: ActivityType, currentT
 export const makeIntelligentDecision = (
   entity: Entity,
   companion: Entity | null,
-  currentTime: number
+  currentTime: number,
 ): ActivityType => {
   const personality = getPersonalityProfile(entity.id);
 
   const activityScores: { activity: ActivityType; score: number }[] = [];
 
   for (const activity of ACTIVITY_TYPES) {
-    const baseScore = calculateActivityPriority(activity, entity.stats, currentTime - (entity.lastActivityChange || 0));
+    const baseScore = calculateActivityPriority(
+      activity,
+      entity.stats,
+      currentTime - (entity.lastActivityChange || 0),
+    );
 
-    const moodModifiedScore = applyMoodModifiers(baseScore, activity, entity.mood);
+    const moodModifiedScore = applyMoodModifiers(
+      baseScore,
+      activity,
+      entity.mood,
+    );
 
     let personalityModifiedScore = moodModifiedScore;
 
-    if (activity === 'SOCIALIZING' && companion && !companion.isDead) {
+    if (activity === "SOCIALIZING" && companion && !companion.isDead) {
       const personalityInfluence = gameConfig.ai.personalityInfluence || 0.5;
-      personalityModifiedScore += personality.socialPreference * 15 * personalityInfluence;
+      personalityModifiedScore +=
+        personality.socialPreference * 15 * personalityInfluence;
     }
 
-    if (activity === 'MEDITATING' || activity === 'RESTING') {
+    if (activity === "MEDITATING" || activity === "RESTING") {
       const personalityInfluence = gameConfig.ai.personalityInfluence || 0.5;
-      personalityModifiedScore += personality.energyEfficiency * 10 * personalityInfluence;
+      personalityModifiedScore +=
+        personality.energyEfficiency * 10 * personalityInfluence;
     }
 
-    if (activity === 'WANDERING' || activity === 'EXERCISING' || activity === 'EXPLORING') {
+    if (
+      activity === "WANDERING" ||
+      activity === "EXERCISING" ||
+      activity === "EXPLORING"
+    ) {
       const personalityInfluence = gameConfig.ai.personalityInfluence || 0.5;
-      personalityModifiedScore += personality.riskTolerance * 8 * personalityInfluence;
+      personalityModifiedScore +=
+        personality.riskTolerance * 8 * personalityInfluence;
     }
 
     activityScores.push({ activity, score: personalityModifiedScore });
   }
 
-  const biasedScores = activityScores.map(s => ({
+  const biasedScores = activityScores.map((s) => ({
     activity: s.activity,
     score: s.score + getHabitBias(entity.id, s.activity),
   }));
@@ -300,7 +341,8 @@ export const makeIntelligentDecision = (
 
   const tau = gameConfig.ai.softmaxTau || 0.7;
   const chosen = softmaxPick(biasedScores, tau);
-  const chosenScore = biasedScores.find(a => a.activity === chosen)?.score ?? 0;
+  const chosenScore =
+    biasedScores.find((a) => a.activity === chosen)?.score ?? 0;
 
   if (Math.random() < 0.1) {
     logAutopoiesis.info(`${entity.id} AI decision`, {
@@ -316,7 +358,8 @@ export const makeIntelligentDecision = (
     if (shouldChangeActivity(entity, currentTime, chosenScore)) {
       const oldSession = activitySessions.get(entity.id);
       if (oldSession) {
-        const satisfaction = oldSession.effectiveness * 0.7 + Math.random() * 0.3;
+        const satisfaction =
+          oldSession.effectiveness * 0.7 + Math.random() * 0.3;
         updateHabitBias(entity.id, oldSession.activity, satisfaction);
       }
 
@@ -326,7 +369,7 @@ export const makeIntelligentDecision = (
         from: entity.activity,
         to: chosen,
         urgency: chosenScore.toFixed(1),
-        reason: 'AI decision',
+        reason: "AI decision",
       });
 
       return chosen;
@@ -341,7 +384,10 @@ export const makeIntelligentDecision = (
 /**
  * Actualiza la efectividad de la sesión actual
  */
-export const updateSessionEffectiveness = (entityId: string, effectiveness: number): void => {
+export const updateSessionEffectiveness = (
+  entityId: string,
+  effectiveness: number,
+): void => {
   const session = activitySessions.get(entityId);
   if (session) {
     session.effectiveness = Math.max(0, Math.min(1, effectiveness));

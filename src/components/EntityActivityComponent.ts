@@ -3,7 +3,7 @@
  * Separa la lógica de actividades del GameEntity
  */
 
-import type { ActivityType, MoodType } from '../types';
+import type { ActivityType, MoodType } from "../types";
 
 export class EntityActivityComponent {
   private _currentActivity: ActivityType;
@@ -11,7 +11,10 @@ export class EntityActivityComponent {
   private _lastActivityChange: number;
   private _mood: MoodType;
 
-  public constructor(initialActivity: ActivityType = 'WANDERING', initialMood: MoodType = '😊') {
+  public constructor(
+    initialActivity: ActivityType = "WANDERING",
+    initialMood: MoodType = "😊",
+  ) {
     this._currentActivity = initialActivity;
     this._mood = initialMood;
     this._activityStartTime = Date.now();
@@ -76,27 +79,27 @@ export class EntityActivityComponent {
    */
   public getActivitySprite(): string {
     switch (this._currentActivity) {
-      case 'RESTING':
-      case 'SLEEPING':
-        return 'entity_sleeping';
-      case 'EXERCISING':
-      case 'DANCING':
-        return 'entity_active';
-      case 'SOCIALIZING':
-        return 'entity_social';
-      case 'WORKING':
-      case 'WRITING':
-        return 'entity_working';
-      case 'EATING':
-        return 'entity_eating';
-      case 'COOKING':
-        return 'entity_cooking';
-      case 'SHOPPING':
-        return 'entity_shopping';
-      case 'WANDERING':
-      case 'EXPLORING':
+      case "RESTING":
+      case "SLEEPING":
+        return "entity_sleeping";
+      case "EXERCISING":
+      case "DANCING":
+        return "entity_active";
+      case "SOCIALIZING":
+        return "entity_social";
+      case "WORKING":
+      case "WRITING":
+        return "entity_working";
+      case "EATING":
+        return "entity_eating";
+      case "COOKING":
+        return "entity_cooking";
+      case "SHOPPING":
+        return "entity_shopping";
+      case "WANDERING":
+      case "EXPLORING":
       default:
-        return 'entity_idle';
+        return "entity_idle";
     }
   }
 
@@ -105,26 +108,26 @@ export class EntityActivityComponent {
    */
   public getPreferredActivitiesForMood(): ActivityType[] {
     switch (this._mood) {
-      case '😊': // Happy
-        return ['SOCIALIZING', 'DANCING', 'PLAYING'];
-      case '😢': // Sad
-        return ['RESTING', 'WRITING', 'CONTEMPLATING'];
-      case '😡': // Angry
-        return ['EXERCISING', 'WORKING', 'WANDERING'];
-      case '😌': // Content
-        return ['MEDITATING', 'RESTING', 'WRITING'];
-      case '🤩': // Excited
-        return ['DANCING', 'SOCIALIZING', 'EXPLORING'];
-      case '😑': // Neutral
-        return ['WANDERING', 'WORKING', 'RESTING'];
-      case '😔': // Disappointed
-        return ['HIDING', 'RESTING', 'CONTEMPLATING'];
-      case '😰': // Anxious
-        return ['MEDITATING', 'HIDING', 'RESTING'];
-      case '😴': // Sleepy
-        return ['RESTING', 'SLEEPING', 'MEDITATING'];
+      case "😊": // Happy
+        return ["SOCIALIZING", "DANCING", "PLAYING"];
+      case "😢": // Sad
+        return ["RESTING", "WRITING", "CONTEMPLATING"];
+      case "😡": // Angry
+        return ["EXERCISING", "WORKING", "WANDERING"];
+      case "😌": // Content
+        return ["MEDITATING", "RESTING", "WRITING"];
+      case "🤩": // Excited
+        return ["DANCING", "SOCIALIZING", "EXPLORING"];
+      case "😑": // Neutral
+        return ["WANDERING", "WORKING", "RESTING"];
+      case "😔": // Disappointed
+        return ["HIDING", "RESTING", "CONTEMPLATING"];
+      case "😰": // Anxious
+        return ["MEDITATING", "HIDING", "RESTING"];
+      case "😴": // Sleepy
+        return ["RESTING", "SLEEPING", "MEDITATING"];
       default:
-        return ['WANDERING', 'RESTING'];
+        return ["WANDERING", "RESTING"];
     }
   }
 

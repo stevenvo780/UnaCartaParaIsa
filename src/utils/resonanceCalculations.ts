@@ -28,13 +28,16 @@ export const preciseRound = (value: number, decimals = 6): number => {
 export const areEqual = (
   a: number,
   b: number,
-  epsilon: number = PRECISION_CONSTANTS.HIGH_PRECISION_EPSILON
+  epsilon: number = PRECISION_CONSTANTS.HIGH_PRECISION_EPSILON,
 ): boolean => {
   if (a === b) return true;
 
   const diff = Math.abs(a - b);
 
-  if (Math.abs(a) < PRECISION_CONSTANTS.EFFECTIVE_ZERO && Math.abs(b) < PRECISION_CONSTANTS.EFFECTIVE_ZERO) {
+  if (
+    Math.abs(a) < PRECISION_CONSTANTS.EFFECTIVE_ZERO &&
+    Math.abs(b) < PRECISION_CONSTANTS.EFFECTIVE_ZERO
+  ) {
     return diff <= epsilon;
   }
 
@@ -73,7 +76,7 @@ export const validateNumber = (
     maxAbsValue?: number;
     minValue?: number;
     maxValue?: number;
-  } = {}
+  } = {},
 ): boolean => {
   if (!isFinite(value)) {
     console.warn(`⚠️ ${paramName}: valor no finito (${value})`);
@@ -86,17 +89,23 @@ export const validateNumber = (
   }
 
   if (options.maxAbsValue && Math.abs(value) > options.maxAbsValue) {
-    console.warn(`⚠️ ${paramName}: valor absoluto excede límite (${value} > ${options.maxAbsValue})`);
+    console.warn(
+      `⚠️ ${paramName}: valor absoluto excede límite (${value} > ${options.maxAbsValue})`,
+    );
     return false;
   }
 
   if (options.minValue !== undefined && value < options.minValue) {
-    console.warn(`⚠️ ${paramName}: valor menor al mínimo (${value} < ${options.minValue})`);
+    console.warn(
+      `⚠️ ${paramName}: valor menor al mínimo (${value} < ${options.minValue})`,
+    );
     return false;
   }
 
   if (options.maxValue !== undefined && value > options.maxValue) {
-    console.warn(`⚠️ ${paramName}: valor mayor al máximo (${value} > ${options.maxValue})`);
+    console.warn(
+      `⚠️ ${paramName}: valor mayor al máximo (${value} > ${options.maxValue})`,
+    );
     return false;
   }
 
@@ -132,14 +141,16 @@ export const calculateResonance = (
   entityDistance: number,
   harmonyLevel: number,
   timeBonus = 0,
-  baseResonance = 50
+  baseResonance = 50,
 ): number => {
-  if (!validateNumber(entityDistance, 'entityDistance', { allowNegative: false })) {
+  if (
+    !validateNumber(entityDistance, "entityDistance", { allowNegative: false })
+  ) {
     return 0;
   }
 
   if (
-    !validateNumber(harmonyLevel, 'harmonyLevel', {
+    !validateNumber(harmonyLevel, "harmonyLevel", {
       allowNegative: false,
       maxAbsValue: 100,
     })
@@ -148,7 +159,7 @@ export const calculateResonance = (
   }
 
   if (
-    !validateNumber(baseResonance, 'baseResonance', {
+    !validateNumber(baseResonance, "baseResonance", {
       allowNegative: false,
       maxAbsValue: 100,
     })
@@ -157,7 +168,8 @@ export const calculateResonance = (
   }
 
   const maxDistance = 500;
-  const normalizedDistance = Math.log(1 + entityDistance / maxDistance) / Math.log(2);
+  const normalizedDistance =
+    Math.log(1 + entityDistance / maxDistance) / Math.log(2);
 
   const proximityFactor = Math.exp(-normalizedDistance * 2);
 
@@ -166,7 +178,10 @@ export const calculateResonance = (
   const timeFactor = timeBonus > 0 ? Math.exp(-timeBonus / 5000) * 15 : 0;
 
   const resonanceRaw =
-    baseResonance + proximityFactor * 25 * PRECISION_CONSTANTS.GOLDEN_RATIO_CONJUGATE + harmonyFactor * 20 + timeFactor;
+    baseResonance +
+    proximityFactor * 25 * PRECISION_CONSTANTS.GOLDEN_RATIO_CONJUGATE +
+    harmonyFactor * 20 +
+    timeFactor;
 
   return preciseRound(safeClamp(resonanceRaw, 0, 100), 3);
 };
@@ -178,8 +193,12 @@ export const calculateResonance = (
  * @param distanceScale Escala de influencia de la distancia
  * @returns Factor de cercanía (0-1)
  */
-export const calculateCloseness = (distance: number, bondDistance = 150, distanceScale = 50): number => {
-  if (!validateNumber(distance, 'distance', { allowNegative: false })) {
+export const calculateCloseness = (
+  distance: number,
+  bondDistance = 150,
+  distanceScale = 50,
+): number => {
+  if (!validateNumber(distance, "distance", { allowNegative: false })) {
     return 0;
   }
 
@@ -199,18 +218,22 @@ export const calculateProximityResonanceChange = (
   isaStats: { happiness: number; energy: number; health: number },
   stevStats: { happiness: number; energy: number; health: number },
   currentResonance: number,
-  deltaTime: number
+  deltaTime: number,
 ): {
   resonanceChange: number;
-  effect: 'BONDING' | 'SEPARATION' | 'NEUTRAL';
+  effect: "BONDING" | "SEPARATION" | "NEUTRAL";
   closeness: number;
 } => {
-  const distance = Math.sqrt(Math.pow(isaPosition.x - stevPosition.x, 2) + Math.pow(isaPosition.y - stevPosition.y, 2));
+  const distance = Math.sqrt(
+    Math.pow(isaPosition.x - stevPosition.x, 2) +
+      Math.pow(isaPosition.y - stevPosition.y, 2),
+  );
 
   const closeness = calculateCloseness(distance);
 
   const isaMood = (isaStats.happiness + isaStats.energy + isaStats.health) / 3;
-  const stevMood = (stevStats.happiness + stevStats.energy + stevStats.health) / 3;
+  const stevMood =
+    (stevStats.happiness + stevStats.energy + stevStats.health) / 3;
   const moodBonus = (isaMood + stevMood) / 200;
 
   const statDifference = Math.abs(isaMood - stevMood);
@@ -220,24 +243,30 @@ export const calculateProximityResonanceChange = (
   const SEPARATION_DECAY = 1.8;
   const STRESS_DECAY = 0.7;
 
-  const gain = BOND_GAIN_PER_SEC * closeness * moodBonus * synergy * (1 - currentResonance / 100);
+  const gain =
+    BOND_GAIN_PER_SEC *
+    closeness *
+    moodBonus *
+    synergy *
+    (1 - currentResonance / 100);
 
-  const separation = SEPARATION_DECAY * (1 - closeness) * (currentResonance / 100);
+  const separation =
+    SEPARATION_DECAY * (1 - closeness) * (currentResonance / 100);
 
   const criticalStatsCount = [isaStats, stevStats].reduce((count, stats) => {
-    return count + Object.values(stats).filter(stat => stat < 20).length;
+    return count + Object.values(stats).filter((stat) => stat < 20).length;
   }, 0);
   const stress = STRESS_DECAY * criticalStatsCount * (currentResonance / 100);
 
   const resonanceChange = (gain - separation - stress) * (deltaTime / 1000);
 
-  let effect: 'BONDING' | 'SEPARATION' | 'NEUTRAL';
+  let effect: "BONDING" | "SEPARATION" | "NEUTRAL";
   if (resonanceChange > 0.1) {
-    effect = 'BONDING';
+    effect = "BONDING";
   } else if (resonanceChange < -0.1) {
-    effect = 'SEPARATION';
+    effect = "SEPARATION";
   } else {
-    effect = 'NEUTRAL';
+    effect = "NEUTRAL";
   }
 
   return {
@@ -255,7 +284,7 @@ export const calculateProximityResonanceChange = (
  */
 export const calculateResonanceModifiers = (
   resonance: number,
-  proximity: number
+  proximity: number,
 ): {
   happinessMultiplier: number;
   energyMultiplier: number;

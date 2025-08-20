@@ -20,31 +20,45 @@ export default tseslint.config(
     },
     rules: {
       // ==========================================
-      // PRETTIER INTEGRATION (AI-Agent strict formatting)
+      // PRETTIER HANDLES ALL FORMATTING
       // ==========================================
-      'prettier/prettier': [
-        'warn', // Warn instead of error to avoid build failures
-        {
-          semi: true,
-          trailingComma: 'es5',
-          singleQuote: true,
-          printWidth: 120,
-          tabWidth: 2,
-          useTabs: false,
-          bracketSpacing: true,
-          arrowParens: 'avoid',
-          endOfLine: 'auto',
-        },
-      ],
+      'prettier/prettier': 'warn',
       
-      // Relaxed whitespace and formatting rules
-      'no-multiple-empty-lines': ['warn', { max: 3, maxEOF: 2, maxBOF: 1 }],
-      'no-trailing-spaces': 'warn',
-      'eol-last': 'warn',
-      // Disable indent rule to avoid conflict with prettier
+      // Disable ALL formatting rules that conflict with Prettier
       'indent': 'off',
-      'quotes': ['warn', 'single', { avoidEscape: true, allowTemplateLiterals: true }],
-      'semi': ['warn', 'always'],
+      'linebreak-style': 'off',
+      'quotes': 'off',
+      'semi': 'off',
+      'comma-dangle': 'off',
+      'comma-spacing': 'off',
+      'comma-style': 'off',
+      'computed-property-spacing': 'off',
+      'func-call-spacing': 'off',
+      'key-spacing': 'off',
+      'keyword-spacing': 'off',
+      'no-multiple-empty-lines': 'off',
+      'no-trailing-spaces': 'off',
+      'object-curly-spacing': 'off',
+      'space-before-blocks': 'off',
+      'space-before-function-paren': 'off',
+      'space-in-parens': 'off',
+      'space-infix-ops': 'off',
+      'space-unary-ops': 'off',
+      'arrow-spacing': 'off',
+      'block-spacing': 'off',
+      'brace-style': 'off',
+      'eol-last': 'off',
+      '@typescript-eslint/indent': 'off',
+      '@typescript-eslint/comma-dangle': 'off',
+      '@typescript-eslint/comma-spacing': 'off',
+      '@typescript-eslint/func-call-spacing': 'off',
+      '@typescript-eslint/keyword-spacing': 'off',
+      '@typescript-eslint/object-curly-spacing': 'off',
+      '@typescript-eslint/space-before-blocks': 'off',
+      '@typescript-eslint/space-before-function-paren': 'off',
+      '@typescript-eslint/space-infix-ops': 'off',
+      '@typescript-eslint/quotes': 'off',
+      '@typescript-eslint/semi': 'off',
 
       // ==========================================
       // TYPESCRIPT RULES (AI-Agent friendly but strict on quality)
@@ -108,7 +122,7 @@ export default tseslint.config(
       'no-unused-expressions': 'warn',
       'no-useless-return': 'warn',
       'no-useless-concat': 'warn',
-      'consistent-return': 'warn',
+      'consistent-return': 'off',
 
       // ==========================================
       // COMPLEXITY CONTROL (Very Relaxed)
@@ -203,7 +217,7 @@ export default tseslint.config(
       'max-statements': 'off',
       'complexity': 'off',
       'no-await-in-loop': 'off', // Allow in utility scripts
-      'prettier/prettier': 'warn', // Still enforce formatting but not critical
+      'prettier/prettier': 'warn',
     },
   },
 

@@ -1,9 +1,9 @@
-import Phaser from 'phaser';
-import { gameConfig } from './config/gameConfig';
-import { BootScene } from './scenes/BootScene';
-import { MainScene } from './scenes/MainScene';
-import { UIScene } from './scenes/UIScene';
-import { productionOptimizer } from './utils/productionOptimizer';
+import Phaser from "phaser";
+import { gameConfig } from "./config/gameConfig";
+import { BootScene } from "./scenes/BootScene";
+import { MainScene } from "./scenes/MainScene";
+import { UIScene } from "./scenes/UIScene";
+import { productionOptimizer } from "./utils/productionOptimizer";
 
 // Obtener optimizaciones de producción
 const phaserOptimizations = productionOptimizer.getPhaserOptimizations();
@@ -12,8 +12,8 @@ const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: 1200,
   height: 800,
-  backgroundColor: '#2c3e50',
-  parent: 'game-container',
+  backgroundColor: "#2c3e50",
+  parent: "game-container",
   pixelArt: true,
   scale: {
     mode: Phaser.Scale.RESIZE,
@@ -28,7 +28,7 @@ const config: Phaser.Types.Core.GameConfig = {
     },
   },
   physics: {
-    default: 'arcade',
+    default: "arcade",
     arcade: {
       gravity: { x: 0, y: 0 },
       debug: gameConfig.debugMode,
@@ -41,7 +41,7 @@ const config: Phaser.Types.Core.GameConfig = {
   ...phaserOptimizations,
   callbacks: {
     postBoot(game) {
-      game.registry.set('gameConfig', gameConfig);
+      game.registry.set("gameConfig", gameConfig);
 
       if (gameConfig.debugMode) {
         (
@@ -56,15 +56,15 @@ const config: Phaser.Types.Core.GameConfig = {
             scenes: Record<string, Phaser.Scene>;
           }
         ).scenes = {
-          boot: game.scene.getScene('BootScene'),
-          main: game.scene.getScene('MainScene'),
-          ui: game.scene.getScene('UIScene'),
+          boot: game.scene.getScene("BootScene"),
+          main: game.scene.getScene("MainScene"),
+          ui: game.scene.getScene("UIScene"),
         };
         // Solo en modo debug, usar console.log para información de desarrollo
         if (gameConfig.debugMode) {
-          console.log('🎮 Una Carta Para Isa - Debug mode enabled');
-          console.log('🔧 Access game object via window.game');
-          console.log('🎭 Access scenes via window.scenes');
+          console.log("🎮 Una Carta Para Isa - Debug mode enabled");
+          console.log("🔧 Access game object via window.game");
+          console.log("🎭 Access scenes via window.scenes");
         }
       }
     },

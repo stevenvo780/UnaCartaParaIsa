@@ -1,7 +1,10 @@
-import Phaser from 'phaser';
-import { GAME_BALANCE } from '../constants/gameBalance';
-import { EntityServicesFactory, type IEntityServices } from '../interfaces/EntityServices';
-import type { ActivityType, Entity, EntityStats, MoodType } from '../types';
+import Phaser from "phaser";
+import { GAME_BALANCE } from "../constants/gameBalance";
+import {
+  EntityServicesFactory,
+  type IEntityServices,
+} from "../interfaces/EntityServices";
+import type { ActivityType, Entity, EntityStats, MoodType } from "../types";
 
 export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private entityData: Entity;
@@ -9,17 +12,23 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private activityStartTime: number;
   private resonance: number;
   private partnerEntity: GameEntity | null = null;
-  private currentSprite = '';
+  private currentSprite = "";
   private services: IEntityServices;
   private colorHue: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, entityId: 'isa' | 'stev', services?: IEntityServices) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    entityId: "isa" | "stev",
+    services?: IEntityServices,
+  ) {
     // Use fallback sprites since main entity sprites are now handled by AnimatedGameEntity
-    const initialSprite = entityId === 'isa' ? 'woman' : 'man';
+    const initialSprite = entityId === "isa" ? "woman" : "man";
     super(scene, x, y, initialSprite);
 
     this.services = services || EntityServicesFactory.create();
-    this.colorHue = entityId === 'isa' ? 300 : 220;
+    this.colorHue = entityId === "isa" ? 300 : 220;
 
     this.currentSprite = initialSprite;
 
@@ -29,8 +38,8 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     this.entityData = {
       id: entityId,
       position: { x, y },
-      state: 'idle',
-      activity: 'WANDERING',
+      state: "idle",
+      activity: "WANDERING",
       stats: {
         hunger: this.services.config.entityInitialStats,
         sleepiness: this.services.config.entityInitialStats,
@@ -48,7 +57,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       },
       lastActivityChange: Date.now(),
       pulsePhase: 0,
-      mood: '😊',
+      mood: "😊",
       isDead: false,
       resonance: this.services.config.initialResonance,
     };
@@ -86,10 +95,13 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     this.setCollideWorldBounds(true);
     this.setBounce(0.2);
 
-    if (this.entityData.id === 'isa') {
+    if (this.entityData.id === "isa") {
       this.setCircle(GAME_BALANCE.MOVEMENT.ENTITY_COLLISION_RADIUS);
     } else {
-      this.setSize(GAME_BALANCE.MOVEMENT.SQUARE_ENTITY_SIZE, GAME_BALANCE.MOVEMENT.SQUARE_ENTITY_SIZE);
+      this.setSize(
+        GAME_BALANCE.MOVEMENT.SQUARE_ENTITY_SIZE,
+        GAME_BALANCE.MOVEMENT.SQUARE_ENTITY_SIZE,
+      );
     }
   }
 
@@ -99,11 +111,14 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
     // Log each 5 seconds to see if updateEntity is working
     if (now % 5000 < 100) {
-      this.services.logger.info(`updateEntity called for ${this.entityData.id}`, {
-        deltaTime,
-        timeSinceLastUpdate,
-        stats: this.entityData.stats,
-      });
+      this.services.logger.info(
+        `updateEntity called for ${this.entityData.id}`,
+        {
+          deltaTime,
+          timeSinceLastUpdate,
+          stats: this.entityData.stats,
+        },
+      );
     }
 
     this.applyAutopoiesis(timeSinceLastUpdate);
@@ -121,12 +136,12 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
   private applyAutopoiesis(deltaTimeMs: number) {
     const hour = new Date().getHours();
-    const getPhase = (): 'dawn' | 'day' | 'dusk' | 'night' => {
-      if (hour < 6) return 'night';
-      if (hour < 12) return 'dawn';
-      if (hour < 18) return 'day';
-      if (hour < 22) return 'dusk';
-      return 'night';
+    const getPhase = (): "dawn" | "day" | "dusk" | "night" => {
+      if (hour < 6) return "night";
+      if (hour < 12) return "dawn";
+      if (hour < 18) return "day";
+      if (hour < 22) return "dusk";
+      return "night";
     };
 
     const timeOfDay = {
@@ -141,17 +156,21 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     this.entityData.stats = this.services.activityCalculator.applyHybridDecay(
       this.entityData.stats,
       this.entityData.activity,
-      deltaTimeMs
+      deltaTimeMs,
     );
 
-    this.entityData.stats = this.services.activityCalculator.applySurvivalCosts(this.entityData.stats, deltaTimeMs);
-
-    this.entityData.stats = this.services.activityCalculator.applyActivityEffectsWithTimeModifiers(
-      this.entityData.activity,
+    this.entityData.stats = this.services.activityCalculator.applySurvivalCosts(
       this.entityData.stats,
       deltaTimeMs,
-      timeOfDay
     );
+
+    this.entityData.stats =
+      this.services.activityCalculator.applyActivityEffectsWithTimeModifiers(
+        this.entityData.activity,
+        this.entityData.stats,
+        deltaTimeMs,
+        timeOfDay,
+      );
 
     this.updateMood();
 
@@ -163,13 +182,16 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
     const checkInterval = 3000 + Math.random() * 2000;
     if (timeInCurrentActivity > checkInterval) {
-      const companion = this.partnerEntity ? this.partnerEntity.getEntityData() : null;
+      const companion = this.partnerEntity
+        ? this.partnerEntity.getEntityData()
+        : null;
 
-      const suggestedActivity = this.services.aiDecisionEngine.makeIntelligentDecision(
-        this.entityData,
-        companion,
-        Date.now()
-      );
+      const suggestedActivity =
+        this.services.aiDecisionEngine.makeIntelligentDecision(
+          this.entityData,
+          companion,
+          Date.now(),
+        );
 
       if (suggestedActivity !== this.entityData.activity) {
         this.changeActivity(suggestedActivity);
@@ -192,7 +214,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
   private updateMovement(_deltaTime: number) {
     // Get current game state and zones from scene registry
-    const gameState = this.scene.registry.get('gameState');
+    const gameState = this.scene.registry.get("gameState");
     if (gameState?.zones) {
       // Find best zone target based on needs
       const target = this.findBestZoneTarget(gameState.zones);
@@ -213,7 +235,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     if (this.body) {
       this.setVelocity(
         this.body.velocity.x * this.services.config.movement.friction,
-        this.body.velocity.y * this.services.config.movement.friction
+        this.body.velocity.y * this.services.config.movement.friction,
       );
     }
 
@@ -243,22 +265,22 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
       // Calculate need score based on zone type and entity stats
       switch (zone.type) {
-        case 'food':
+        case "food":
           needScore = stats.hunger;
           break;
-        case 'rest':
+        case "rest":
           needScore = stats.sleepiness;
           break;
-        case 'social':
+        case "social":
           needScore = stats.loneliness;
           break;
-        case 'play':
+        case "play":
           needScore = stats.boredom;
           break;
-        case 'work':
+        case "work":
           needScore = 100 - stats.money; // Higher need if low money
           break;
-        case 'energy':
+        case "energy":
           needScore = 100 - stats.energy; // Higher need if low energy
           break;
         default:
@@ -323,7 +345,10 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     } else {
       // Slow down when near target
       if (this.body) {
-        this.setVelocity(this.body.velocity.x * 0.8, this.body.velocity.y * 0.8);
+        this.setVelocity(
+          this.body.velocity.x * 0.8,
+          this.body.velocity.y * 0.8,
+        );
       }
     }
   }
@@ -338,7 +363,10 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     if (this.entityData.pulsePhase !== undefined) {
       this.entityData.pulsePhase += GAME_BALANCE.VISUALS.PULSE_SPEED;
       const basePulse = GAME_BALANCE.VISUALS.BASE_PULSE_SCALE ?? 1.5;
-      const pulse = basePulse + Math.sin(this.entityData.pulsePhase) * (GAME_BALANCE.VISUALS.PULSE_AMPLITUDE ?? 0.1);
+      const pulse =
+        basePulse +
+        Math.sin(this.entityData.pulsePhase) *
+          (GAME_BALANCE.VISUALS.PULSE_AMPLITUDE ?? 0.1);
       this.setScale(pulse);
     }
 
@@ -357,7 +385,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       4;
 
     // For base GameEntity, just use simple fallback sprites
-    const newSprite = this.entityData.id === 'isa' ? 'woman' : 'man';
+    const newSprite = this.entityData.id === "isa" ? "woman" : "man";
 
     if (newSprite !== this.currentSprite) {
       this.currentSprite = newSprite;
@@ -388,12 +416,12 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private updateMood() {
     const { stats } = this.entityData;
 
-    if (stats.happiness > 70) this.entityData.mood = '😊';
-    else if (stats.energy < 30) this.entityData.mood = '😴';
-    else if (stats.loneliness > 70) this.entityData.mood = '😔';
-    else if (stats.boredom > 70) this.entityData.mood = '😑';
-    else if (stats.hunger > 80) this.entityData.mood = '😰';
-    else this.entityData.mood = '😌';
+    if (stats.happiness > 70) this.entityData.mood = "😊";
+    else if (stats.energy < 30) this.entityData.mood = "😴";
+    else if (stats.loneliness > 70) this.entityData.mood = "😔";
+    else if (stats.boredom > 70) this.entityData.mood = "😑";
+    else if (stats.hunger > 80) this.entityData.mood = "😰";
+    else this.entityData.mood = "😌";
   }
 
   private checkCriticalStates() {
@@ -402,7 +430,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     if (stats.health <= 0 && !this.entityData.isDead) {
       this.entityData.isDead = true;
       this.entityData.timeOfDeath = Date.now();
-      this.entityData.state = 'dead';
+      this.entityData.state = "dead";
       this.services.logger.warn(`${this.entityData.id} has died!`, { stats });
     }
 
@@ -468,30 +496,50 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     const myStats = this.getStats();
     const partnerStats = this.partnerEntity.getStats();
 
-    const result = this.services.resonanceCalculator.calculateProximityResonanceChange(
-      myPosition,
-      partnerPosition,
-      myStats,
-      partnerStats,
-      this.resonance,
-      deltaTime
-    );
+    const result =
+      this.services.resonanceCalculator.calculateProximityResonanceChange(
+        myPosition,
+        partnerPosition,
+        myStats,
+        partnerStats,
+        this.resonance,
+        deltaTime,
+      );
 
-    this.resonance = Math.max(0, Math.min(100, this.resonance + result.resonanceChange));
+    this.resonance = Math.max(
+      0,
+      Math.min(100, this.resonance + result.resonanceChange),
+    );
 
     // Sync resonance with entity data stats
     this.entityData.stats.resonance = this.resonance;
     this.entityData.resonance = this.resonance;
 
-    const modifiers = this.services.resonanceCalculator.calculateResonanceModifiers(this.resonance, result.closeness);
+    const modifiers =
+      this.services.resonanceCalculator.calculateResonanceModifiers(
+        this.resonance,
+        result.closeness,
+      );
 
-    this.entityData.stats.happiness = Math.min(100, this.entityData.stats.happiness * modifiers.happinessMultiplier);
+    this.entityData.stats.happiness = Math.min(
+      100,
+      this.entityData.stats.happiness * modifiers.happinessMultiplier,
+    );
 
-    this.entityData.stats.energy = Math.min(100, this.entityData.stats.energy * modifiers.energyMultiplier);
+    this.entityData.stats.energy = Math.min(
+      100,
+      this.entityData.stats.energy * modifiers.energyMultiplier,
+    );
 
-    this.entityData.stats.health = Math.min(100, this.entityData.stats.health * modifiers.healthMultiplier);
+    this.entityData.stats.health = Math.min(
+      100,
+      this.entityData.stats.health * modifiers.healthMultiplier,
+    );
 
-    this.entityData.stats.loneliness = Math.max(0, this.entityData.stats.loneliness * modifiers.lonelinessPenalty);
+    this.entityData.stats.loneliness = Math.max(
+      0,
+      this.entityData.stats.loneliness * modifiers.lonelinessPenalty,
+    );
 
     if (Math.abs(result.resonanceChange) > 0.5) {
       this.services.logger.info(`${this.entityData.id} resonance updated`, {

@@ -1,9 +1,12 @@
-import Phaser from 'phaser';
-import { ExplorationUI, type ExplorationStats } from '../components/ExplorationUI';
-import { FoodUI } from '../components/FoodUI';
-import { ResonanceLabel, UIElementPool } from '../managers/UIElementPool';
-import type { Entity, GameLogicUpdateData } from '../types';
-import { logAutopoiesis } from '../utils/logger';
+import Phaser from "phaser";
+import {
+  ExplorationUI,
+  type ExplorationStats,
+} from "../components/ExplorationUI";
+import { FoodUI } from "../components/FoodUI";
+import { ResonanceLabel, UIElementPool } from "../managers/UIElementPool";
+import type { Entity, GameLogicUpdateData } from "../types";
+import { logAutopoiesis } from "../utils/logger";
 
 // Define interface at file level to be accessible
 interface StatElement {
@@ -37,11 +40,11 @@ export class UIScene extends Phaser.Scene {
   private showMinimap = true;
 
   constructor() {
-    super({ key: 'UIScene' });
+    super({ key: "UIScene" });
   }
 
   create() {
-    logAutopoiesis.info('🎨 Creating Modern Game UI');
+    logAutopoiesis.info("🎨 Creating Modern Game UI");
 
     this.initializePools();
 
@@ -58,23 +61,27 @@ export class UIScene extends Phaser.Scene {
     this.setupModernNavigation();
 
     // Connect to game logic
-    const mainScene = this.scene.get('MainScene');
-    mainScene.events.on('gameLogicUpdate', this.updateUI, this);
+    const mainScene = this.scene.get("MainScene");
+    mainScene.events.on("gameLogicUpdate", this.updateUI, this);
 
     // Handle resize events
-    this.scale.on('resize', this.handleResize, this);
-    this.events.on('shutdown', this.destroy, this);
+    this.scale.on("resize", this.handleResize, this);
+    this.events.on("shutdown", this.destroy, this);
 
-    logAutopoiesis.info('✅ Modern UI Scene created');
+    logAutopoiesis.info("✅ Modern UI Scene created");
   }
 
   /**
    * Inicializar pools de elementos UI
    */
   private initializePools(): void {
-    this.resonanceLabelPool = new UIElementPool<ResonanceLabel>(() => new ResonanceLabel(this), 'ResonanceLabel', 3);
+    this.resonanceLabelPool = new UIElementPool<ResonanceLabel>(
+      () => new ResonanceLabel(this),
+      "ResonanceLabel",
+      3,
+    );
 
-    logAutopoiesis.debug('UI element pools initialized');
+    logAutopoiesis.debug("UI element pools initialized");
   }
 
   /**
@@ -120,7 +127,16 @@ export class UIScene extends Phaser.Scene {
     topBg.fillRect(0, 0, this.cameras.main.width, 70);
 
     // Subtle gradient overlay
-    topBg.fillGradientStyle(0x6c5ce7, 0x74b9ff, 0x6c5ce7, 0x74b9ff, 0.1, 0.1, 0.2, 0.2);
+    topBg.fillGradientStyle(
+      0x6c5ce7,
+      0x74b9ff,
+      0x6c5ce7,
+      0x74b9ff,
+      0.1,
+      0.1,
+      0.2,
+      0.2,
+    );
     topBg.fillRect(0, 0, this.cameras.main.width, 70);
 
     // Bottom accent line
@@ -137,19 +153,19 @@ export class UIScene extends Phaser.Scene {
     const titleContainer = this.add.container(25, 35);
 
     const titleText = this.add
-      .text(0, 0, 'Una Carta Para Isa', {
-        fontSize: '22px',
-        color: '#FFFFFF',
-        fontFamily: 'Arial, sans-serif',
-        fontStyle: 'bold',
-        stroke: '#6C5CE7',
+      .text(0, 0, "Una Carta Para Isa", {
+        fontSize: "22px",
+        color: "#FFFFFF",
+        fontFamily: "Arial, sans-serif",
+        fontStyle: "bold",
+        stroke: "#6C5CE7",
         strokeThickness: 1,
       })
       .setOrigin(0, 0.5);
 
     const titleIcon = this.add
-      .text(-30, 0, '💌', {
-        fontSize: '24px',
+      .text(-30, 0, "💌", {
+        fontSize: "24px",
       })
       .setOrigin(0.5, 0.5);
 
@@ -164,7 +180,7 @@ export class UIScene extends Phaser.Scene {
       duration: 3000,
       yoyo: true,
       repeat: -1,
-      ease: 'Sine.easeInOut',
+      ease: "Sine.easeInOut",
     });
 
     // Modern status indicators
@@ -178,27 +194,27 @@ export class UIScene extends Phaser.Scene {
     // Create modern indicator pills
     const indicators = [
       {
-        icon: '💫',
-        label: 'Resonancia',
-        value: '0%',
+        icon: "💫",
+        label: "Resonancia",
+        value: "0%",
         color: 0x74b9ff,
-        dataKey: 'resonanceText',
+        dataKey: "resonanceText",
         width: 140,
       },
       {
-        icon: '⚡',
-        label: 'Ciclos',
-        value: '0',
+        icon: "⚡",
+        label: "Ciclos",
+        value: "0",
         color: 0x00cec9,
-        dataKey: 'cyclesText',
+        dataKey: "cyclesText",
         width: 110,
       },
       {
-        icon: '⏰',
-        label: 'Tiempo',
-        value: '00:00',
+        icon: "⏰",
+        label: "Tiempo",
+        value: "00:00",
         color: 0xfdcb6e,
-        dataKey: 'timeText',
+        dataKey: "timeText",
         width: 120,
       },
     ];
@@ -231,7 +247,7 @@ export class UIScene extends Phaser.Scene {
 
       const iconText = this.add
         .text(0, 0, indicator.icon, {
-          fontSize: '14px',
+          fontSize: "14px",
         })
         .setOrigin(0.5, 0.5);
 
@@ -240,19 +256,19 @@ export class UIScene extends Phaser.Scene {
       // Value text
       const valueText = this.add
         .text(indicator.width / 2 + 20, 0, indicator.value, {
-          fontSize: '11px',
-          color: '#FFFFFF',
-          fontFamily: 'Arial, sans-serif',
-          fontStyle: 'bold',
+          fontSize: "11px",
+          color: "#FFFFFF",
+          fontFamily: "Arial, sans-serif",
+          fontStyle: "bold",
         })
         .setOrigin(0.5, 0.5);
 
       // Label text
       const labelText = this.add
         .text(indicator.width / 2 + 20, -8, indicator.label, {
-          fontSize: '8px',
-          color: '#B2BEC3',
-          fontFamily: 'Arial, sans-serif',
+          fontSize: "8px",
+          color: "#B2BEC3",
+          fontFamily: "Arial, sans-serif",
         })
         .setOrigin(0.5, 0.5);
 
@@ -268,30 +284,30 @@ export class UIScene extends Phaser.Scene {
         duration: 2000 + index * 500,
         yoyo: true,
         repeat: -1,
-        ease: 'Sine.easeInOut',
+        ease: "Sine.easeInOut",
       });
 
       // Hover effects
       container.setSize(indicator.width, 30);
       container.setInteractive();
 
-      container.on('pointerover', () => {
+      container.on("pointerover", () => {
         this.tweens.add({
           targets: container,
           scaleX: 1.05,
           scaleY: 1.05,
           duration: 200,
-          ease: 'Back.easeOut',
+          ease: "Back.easeOut",
         });
       });
 
-      container.on('pointerout', () => {
+      container.on("pointerout", () => {
         this.tweens.add({
           targets: container,
           scaleX: 1,
           scaleY: 1,
           duration: 200,
-          ease: 'Back.easeOut',
+          ease: "Back.easeOut",
         });
       });
 
@@ -321,8 +337,8 @@ export class UIScene extends Phaser.Scene {
     menuBg.fillCircle(-3, -3, 8);
 
     const menuIcon = this.add
-      .text(0, 0, '⚙️', {
-        fontSize: '16px',
+      .text(0, 0, "⚙️", {
+        fontSize: "16px",
       })
       .setOrigin(0.5, 0.5);
 
@@ -331,41 +347,41 @@ export class UIScene extends Phaser.Scene {
     menuBtn.setInteractive();
 
     // Modern hover effects
-    menuBtn.on('pointerover', () => {
+    menuBtn.on("pointerover", () => {
       this.tweens.add({
         targets: [menuBtn],
         scaleX: 1.2,
         scaleY: 1.2,
         duration: 200,
-        ease: 'Back.easeOut',
+        ease: "Back.easeOut",
       });
 
       this.tweens.add({
         targets: menuIcon,
         rotation: Math.PI * 0.25,
         duration: 300,
-        ease: 'Power2.easeOut',
+        ease: "Power2.easeOut",
       });
     });
 
-    menuBtn.on('pointerout', () => {
+    menuBtn.on("pointerout", () => {
       this.tweens.add({
         targets: [menuBtn],
         scaleX: 1,
         scaleY: 1,
         duration: 200,
-        ease: 'Back.easeOut',
+        ease: "Back.easeOut",
       });
 
       this.tweens.add({
         targets: menuIcon,
         rotation: 0,
         duration: 300,
-        ease: 'Power2.easeOut',
+        ease: "Power2.easeOut",
       });
     });
 
-    menuBtn.on('pointerdown', () => {
+    menuBtn.on("pointerdown", () => {
       // Scale down effect
       this.tweens.add({
         targets: menuBtn,
@@ -373,7 +389,7 @@ export class UIScene extends Phaser.Scene {
         scaleY: 0.9,
         duration: 100,
         yoyo: true,
-        ease: 'Power2.easeOut',
+        ease: "Power2.easeOut",
         onComplete: () => {
           this.toggleGameMenu();
         },
@@ -389,18 +405,30 @@ export class UIScene extends Phaser.Scene {
       duration: 2000,
       yoyo: true,
       repeat: -1,
-      ease: 'Sine.easeInOut',
+      ease: "Sine.easeInOut",
     });
   }
 
   private createBottomBar() {
     const barHeight = 80;
-    this.bottomBar = this.add.container(0, this.cameras.main.height - barHeight);
+    this.bottomBar = this.add.container(
+      0,
+      this.cameras.main.height - barHeight,
+    );
     this.bottomBar.setScrollFactor(0);
 
     // Bottom bar background
     const bottomBg = this.add.graphics();
-    bottomBg.fillGradientStyle(0x34495e, 0x34495e, 0x2c3e50, 0x2c3e50, 0.9, 0.9, 1, 1);
+    bottomBg.fillGradientStyle(
+      0x34495e,
+      0x34495e,
+      0x2c3e50,
+      0x2c3e50,
+      0.9,
+      0.9,
+      1,
+      1,
+    );
     bottomBg.fillRect(0, 0, this.cameras.main.width, barHeight);
     bottomBg.lineStyle(2, 0x1abc9c, 0.8);
     bottomBg.lineBetween(0, 2, this.cameras.main.width, 2);
@@ -423,15 +451,31 @@ export class UIScene extends Phaser.Scene {
     const spacing = 90;
 
     // Auto control button
-    const autoBtn = this.createModernButton(startX, 20, buttonWidth, buttonHeight, '🤖 AUTO', '#95a5a6', () => {
-      this.setControlMode('auto');
-    });
+    const autoBtn = this.createModernButton(
+      startX,
+      20,
+      buttonWidth,
+      buttonHeight,
+      "🤖 AUTO",
+      "#95a5a6",
+      () => {
+        this.setControlMode("auto");
+      },
+    );
     this.bottomBar.add(autoBtn);
 
     // Isa control button
-    const isaBtn = this.createModernButton(startX + spacing, 20, buttonWidth, buttonHeight, '👩 ISA', '#e91e63', () => {
-      this.setControlMode('isa');
-    });
+    const isaBtn = this.createModernButton(
+      startX + spacing,
+      20,
+      buttonWidth,
+      buttonHeight,
+      "👩 ISA",
+      "#e91e63",
+      () => {
+        this.setControlMode("isa");
+      },
+    );
     this.bottomBar.add(isaBtn);
 
     // Stev control button
@@ -440,11 +484,11 @@ export class UIScene extends Phaser.Scene {
       20,
       buttonWidth,
       buttonHeight,
-      '👨 STEV',
-      '#3498db',
+      "👨 STEV",
+      "#3498db",
       () => {
-        this.setControlMode('stev');
-      }
+        this.setControlMode("stev");
+      },
     );
     this.bottomBar.add(stevBtn);
   }
@@ -456,15 +500,31 @@ export class UIScene extends Phaser.Scene {
     const spacing = 70;
 
     // Pause/Play button
-    const pauseBtn = this.createModernButton(centerX - spacing, 20, buttonWidth, buttonHeight, '⏸️', '#f39c12', () => {
-      this.togglePause();
-    });
+    const pauseBtn = this.createModernButton(
+      centerX - spacing,
+      20,
+      buttonWidth,
+      buttonHeight,
+      "⏸️",
+      "#f39c12",
+      () => {
+        this.togglePause();
+      },
+    );
     this.bottomBar.add(pauseBtn);
 
     // Settings button
-    const settingsBtn = this.createModernButton(centerX, 20, buttonWidth, buttonHeight, '⚙️', '#9b59b6', () => {
-      this.openSettings();
-    });
+    const settingsBtn = this.createModernButton(
+      centerX,
+      20,
+      buttonWidth,
+      buttonHeight,
+      "⚙️",
+      "#9b59b6",
+      () => {
+        this.openSettings();
+      },
+    );
     this.bottomBar.add(settingsBtn);
 
     // Screenshot button
@@ -473,11 +533,11 @@ export class UIScene extends Phaser.Scene {
       20,
       buttonWidth,
       buttonHeight,
-      '📷',
-      '#1abc9c',
+      "📷",
+      "#1abc9c",
       () => {
         this.takeScreenshot();
-      }
+      },
     );
     this.bottomBar.add(screenshotBtn);
   }
@@ -495,32 +555,64 @@ export class UIScene extends Phaser.Scene {
     speedContainer.add(speedBg);
 
     // Speed label
-    const speedLabel = this.add.text(10, 8, '⚡ Velocidad:', {
-      fontSize: '10px',
-      color: '#ecf0f1',
-      fontFamily: 'Arial',
+    const speedLabel = this.add.text(10, 8, "⚡ Velocidad:", {
+      fontSize: "10px",
+      color: "#ecf0f1",
+      fontFamily: "Arial",
     });
     speedContainer.add(speedLabel);
 
     // Speed buttons
-    const slowBtn = this.createModernButton(10, 20, 25, 15, '0.5x', '#e74c3c', () => {
-      this.setGameSpeed(0.5);
-    });
+    const slowBtn = this.createModernButton(
+      10,
+      20,
+      25,
+      15,
+      "0.5x",
+      "#e74c3c",
+      () => {
+        this.setGameSpeed(0.5);
+      },
+    );
     speedContainer.add(slowBtn);
 
-    const normalBtn = this.createModernButton(40, 20, 25, 15, '1x', '#95a5a6', () => {
-      this.setGameSpeed(1);
-    });
+    const normalBtn = this.createModernButton(
+      40,
+      20,
+      25,
+      15,
+      "1x",
+      "#95a5a6",
+      () => {
+        this.setGameSpeed(1);
+      },
+    );
     speedContainer.add(normalBtn);
 
-    const fastBtn = this.createModernButton(70, 20, 25, 15, '2x', '#f39c12', () => {
-      this.setGameSpeed(2);
-    });
+    const fastBtn = this.createModernButton(
+      70,
+      20,
+      25,
+      15,
+      "2x",
+      "#f39c12",
+      () => {
+        this.setGameSpeed(2);
+      },
+    );
     speedContainer.add(fastBtn);
 
-    const turboBtn = this.createModernButton(100, 20, 25, 15, '5x', '#e67e22', () => {
-      this.setGameSpeed(5);
-    });
+    const turboBtn = this.createModernButton(
+      100,
+      20,
+      25,
+      15,
+      "5x",
+      "#e67e22",
+      () => {
+        this.setGameSpeed(5);
+      },
+    );
     speedContainer.add(turboBtn);
 
     this.bottomBar.add(speedContainer);
@@ -540,7 +632,16 @@ export class UIScene extends Phaser.Scene {
     this.leftPanel.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(0x34495e, 0x2c3e50, 0x34495e, 0x2c3e50, 0.96, 0.96, 0.96, 0.96);
+    panelBg.fillGradientStyle(
+      0x34495e,
+      0x2c3e50,
+      0x34495e,
+      0x2c3e50,
+      0.96,
+      0.96,
+      0.96,
+      0.96,
+    );
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
     panelBg.lineStyle(3, 0x1abc9c, 0.8);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
@@ -552,29 +653,46 @@ export class UIScene extends Phaser.Scene {
 
     // Enhanced panel header
     const headerBg = this.add.graphics();
-    headerBg.fillGradientStyle(0x1abc9c, 0x16a085, 0x1abc9c, 0x16a085, 0.2, 0.2, 0.1, 0.1);
+    headerBg.fillGradientStyle(
+      0x1abc9c,
+      0x16a085,
+      0x1abc9c,
+      0x16a085,
+      0.2,
+      0.2,
+      0.1,
+      0.1,
+    );
     headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
     this.leftPanel.add(headerBg);
 
     // Panel title with better styling
     const title = this.add
-      .text(panelWidth / 2, 18, '📊 ESTADÍSTICAS DE PERSONAJES', {
-        fontSize: '14px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial, sans-serif',
-        fontStyle: 'bold',
+      .text(panelWidth / 2, 18, "📊 ESTADÍSTICAS DE PERSONAJES", {
+        fontSize: "14px",
+        color: "#ecf0f1",
+        fontFamily: "Arial, sans-serif",
+        fontStyle: "bold",
       })
       .setOrigin(0.5);
     this.leftPanel.add(title);
 
     // Character panels with improved spacing
-    this.createCharacterPanel('isa', 15, 50, '#e91e63', '👩 ISA');
-    this.createCharacterPanel('stev', 15, 235, '#3498db', '👨 STEV');
+    this.createCharacterPanel("isa", 15, 50, "#e91e63", "👩 ISA");
+    this.createCharacterPanel("stev", 15, 235, "#3498db", "👨 STEV");
 
     // Enhanced toggle button
-    const toggleBtn = this.createModernButton(panelWidth - 35, 8, 30, 20, '◀', '#95a5a6', () => {
-      this.toggleLeftPanel();
-    });
+    const toggleBtn = this.createModernButton(
+      panelWidth - 35,
+      8,
+      30,
+      20,
+      "◀",
+      "#95a5a6",
+      () => {
+        this.toggleLeftPanel();
+      },
+    );
     this.leftPanel.add(toggleBtn);
   }
 
@@ -593,7 +711,16 @@ export class UIScene extends Phaser.Scene {
     this.rightPanel.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(0x34495e, 0x2c3e50, 0x34495e, 0x2c3e50, 0.96, 0.96, 0.96, 0.96);
+    panelBg.fillGradientStyle(
+      0x34495e,
+      0x2c3e50,
+      0x34495e,
+      0x2c3e50,
+      0.96,
+      0.96,
+      0.96,
+      0.96,
+    );
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
     panelBg.lineStyle(3, 0x9b59b6, 0.8);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
@@ -605,17 +732,26 @@ export class UIScene extends Phaser.Scene {
 
     // Enhanced panel header
     const headerBg = this.add.graphics();
-    headerBg.fillGradientStyle(0x9b59b6, 0x8e44ad, 0x9b59b6, 0x8e44ad, 0.2, 0.2, 0.1, 0.1);
+    headerBg.fillGradientStyle(
+      0x9b59b6,
+      0x8e44ad,
+      0x9b59b6,
+      0x8e44ad,
+      0.2,
+      0.2,
+      0.1,
+      0.1,
+    );
     headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
     this.rightPanel.add(headerBg);
 
     // Panel title with better styling
     const title = this.add
-      .text(panelWidth / 2, 18, '🎯 INFORMACIÓN DEL MUNDO', {
-        fontSize: '12px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial, sans-serif',
-        fontStyle: 'bold',
+      .text(panelWidth / 2, 18, "🎯 INFORMACIÓN DEL MUNDO", {
+        fontSize: "12px",
+        color: "#ecf0f1",
+        fontFamily: "Arial, sans-serif",
+        fontStyle: "bold",
       })
       .setOrigin(0.5);
     this.rightPanel.add(title);
@@ -627,20 +763,25 @@ export class UIScene extends Phaser.Scene {
     zoneBg.fillRoundedRect(10, 0, panelWidth - 20, 80, 5);
     zoneSection.add(zoneBg);
 
-    const zoneTitle = this.add.text(15, 10, '🗺️ ZONA ACTUAL', {
-      fontSize: '11px',
-      color: '#9b59b6',
-      fontFamily: 'Arial, sans-serif',
-      fontStyle: 'bold',
+    const zoneTitle = this.add.text(15, 10, "🗺️ ZONA ACTUAL", {
+      fontSize: "11px",
+      color: "#9b59b6",
+      fontFamily: "Arial, sans-serif",
+      fontStyle: "bold",
     });
     zoneSection.add(zoneTitle);
 
-    const zoneInfo = this.add.text(15, 25, 'Zona: Ninguna\nTipo: ---\nBeneficio: ---\nDistancia: ---', {
-      fontSize: '10px',
-      color: '#bdc3c7',
-      fontFamily: 'Arial, sans-serif',
-      lineSpacing: 2,
-    });
+    const zoneInfo = this.add.text(
+      15,
+      25,
+      "Zona: Ninguna\nTipo: ---\nBeneficio: ---\nDistancia: ---",
+      {
+        fontSize: "10px",
+        color: "#bdc3c7",
+        fontFamily: "Arial, sans-serif",
+        lineSpacing: 2,
+      },
+    );
     zoneSection.add(zoneInfo);
     this.rightPanel.add(zoneSection);
 
@@ -651,27 +792,40 @@ export class UIScene extends Phaser.Scene {
     activitiesBg.fillRoundedRect(10, 0, panelWidth - 20, 90, 5);
     activitiesSection.add(activitiesBg);
 
-    const activitiesTitle = this.add.text(15, 10, '📋 ACTIVIDADES', {
-      fontSize: '11px',
-      color: '#f39c12',
-      fontFamily: 'Arial, sans-serif',
-      fontStyle: 'bold',
+    const activitiesTitle = this.add.text(15, 10, "📋 ACTIVIDADES", {
+      fontSize: "11px",
+      color: "#f39c12",
+      fontFamily: "Arial, sans-serif",
+      fontStyle: "bold",
     });
     activitiesSection.add(activitiesTitle);
 
-    const activitiesText = this.add.text(15, 25, '👩 Isa: IDLE\n👨 Stev: IDLE\n\n⏱️ Tiempo: 00:00', {
-      fontSize: '10px',
-      color: '#ecf0f1',
-      fontFamily: 'Arial, sans-serif',
-      lineSpacing: 3,
-    });
+    const activitiesText = this.add.text(
+      15,
+      25,
+      "👩 Isa: IDLE\n👨 Stev: IDLE\n\n⏱️ Tiempo: 00:00",
+      {
+        fontSize: "10px",
+        color: "#ecf0f1",
+        fontFamily: "Arial, sans-serif",
+        lineSpacing: 3,
+      },
+    );
     activitiesSection.add(activitiesText);
     this.rightPanel.add(activitiesSection);
 
     // Enhanced toggle button
-    const toggleBtn = this.createModernButton(8, 8, 30, 20, '▶', '#95a5a6', () => {
-      this.toggleRightPanel();
-    });
+    const toggleBtn = this.createModernButton(
+      8,
+      8,
+      30,
+      20,
+      "▶",
+      "#95a5a6",
+      () => {
+        this.toggleRightPanel();
+      },
+    );
     this.rightPanel.add(toggleBtn);
   }
 
@@ -686,7 +840,16 @@ export class UIScene extends Phaser.Scene {
 
     // Minimap background with improved styling
     const minimapBg = this.add.graphics();
-    minimapBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.95, 0.95, 0.95, 0.95);
+    minimapBg.fillGradientStyle(
+      0x2c3e50,
+      0x34495e,
+      0x2c3e50,
+      0x34495e,
+      0.95,
+      0.95,
+      0.95,
+      0.95,
+    );
     minimapBg.fillRoundedRect(0, 0, minimapSize, minimapSize, 8);
     minimapBg.lineStyle(2, 0x3498db, 0.7);
     minimapBg.strokeRoundedRect(0, 0, minimapSize, minimapSize, 8);
@@ -694,11 +857,11 @@ export class UIScene extends Phaser.Scene {
 
     // Minimap title with better positioning
     const title = this.add
-      .text(minimapSize / 2, 12, '🗺️ MAPA', {
-        fontSize: '11px',
-        color: '#3498db',
-        fontFamily: 'Arial',
-        fontStyle: 'bold',
+      .text(minimapSize / 2, 12, "🗺️ MAPA", {
+        fontSize: "11px",
+        color: "#3498db",
+        fontFamily: "Arial",
+        fontStyle: "bold",
       })
       .setOrigin(0.5);
     this.minimapContainer.add(title);
@@ -736,15 +899,23 @@ export class UIScene extends Phaser.Scene {
     this.minimapContainer.add(mapContent);
 
     // Improved toggle button
-    const toggleBtn = this.createModernButton(minimapSize - 20, 2, 16, 16, '×', '#e74c3c', () => {
-      this.toggleMinimap();
-    });
+    const toggleBtn = this.createModernButton(
+      minimapSize - 20,
+      2,
+      16,
+      16,
+      "×",
+      "#e74c3c",
+      () => {
+        this.toggleMinimap();
+      },
+    );
     this.minimapContainer.add(toggleBtn);
   }
 
   private setupModernNavigation() {
     // Mouse drag navigation - improved bounds detection
-    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       // Calculate accurate UI bounds to avoid navigation conflicts
       const topBarHeight = 60;
       const bottomBarHeight = 80;
@@ -767,9 +938,9 @@ export class UIScene extends Phaser.Scene {
       }
     });
 
-    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
       if (this.isDraggingCamera) {
-        const mainScene = this.scene.get('MainScene');
+        const mainScene = this.scene.get("MainScene");
         if (mainScene && mainScene.cameras && mainScene.cameras.main) {
           const camera = mainScene.cameras.main;
 
@@ -794,7 +965,7 @@ export class UIScene extends Phaser.Scene {
       }
     });
 
-    this.input.on('pointerup', () => {
+    this.input.on("pointerup", () => {
       if (this.isDraggingCamera) {
         this.isDraggingCamera = false;
         // Remove visual feedback (removed clearTint - not available on Camera)
@@ -803,115 +974,141 @@ export class UIScene extends Phaser.Scene {
 
     // Enhanced keyboard camera controls
     const cursors = this.input.keyboard?.createCursorKeys();
-    const wasd = this.input.keyboard?.addKeys('W,S,A,D,SHIFT') as any;
+    const wasd = this.input.keyboard?.addKeys("W,S,A,D,SHIFT") as any;
 
     // Use UIScene's update loop for camera controls to avoid conflicts
-    this.events.on('update', () => {
-      const mainScene = this.scene.get('MainScene');
-      if (mainScene && mainScene.cameras && mainScene.cameras.main && !this.isDraggingCamera) {
+    this.events.on("update", () => {
+      const mainScene = this.scene.get("MainScene");
+      if (
+        mainScene &&
+        mainScene.cameras &&
+        mainScene.cameras.main &&
+        !this.isDraggingCamera
+      ) {
         const camera = mainScene.cameras.main;
         const baseSpeed = wasd?.SHIFT?.isDown ? 12 : 6; // Faster with shift
 
         // Keyboard navigation
         if (cursors?.up.isDown || wasd?.W?.isDown) {
-          camera.scrollY = Phaser.Math.Clamp(camera.scrollY - baseSpeed, -500, 2000);
+          camera.scrollY = Phaser.Math.Clamp(
+            camera.scrollY - baseSpeed,
+            -500,
+            2000,
+          );
         }
         if (cursors?.down.isDown || wasd?.S?.isDown) {
-          camera.scrollY = Phaser.Math.Clamp(camera.scrollY + baseSpeed, -500, 2000);
+          camera.scrollY = Phaser.Math.Clamp(
+            camera.scrollY + baseSpeed,
+            -500,
+            2000,
+          );
         }
         if (cursors?.left.isDown || wasd?.A?.isDown) {
-          camera.scrollX = Phaser.Math.Clamp(camera.scrollX - baseSpeed, -500, 2000);
+          camera.scrollX = Phaser.Math.Clamp(
+            camera.scrollX - baseSpeed,
+            -500,
+            2000,
+          );
         }
         if (cursors?.right.isDown || wasd?.D?.isDown) {
-          camera.scrollX = Phaser.Math.Clamp(camera.scrollX + baseSpeed, -500, 2000);
+          camera.scrollX = Phaser.Math.Clamp(
+            camera.scrollX + baseSpeed,
+            -500,
+            2000,
+          );
         }
       }
     });
 
     // Mouse wheel zoom (optional enhancement)
     this.input.on(
-      'wheel',
+      "wheel",
       (
         _pointer: Phaser.Input.Pointer,
         _gameObjects: Phaser.GameObjects.GameObject[],
         _deltaX: number,
-        deltaY: number
+        deltaY: number,
       ) => {
-        const mainScene = this.scene.get('MainScene');
+        const mainScene = this.scene.get("MainScene");
         if (mainScene && mainScene.cameras && mainScene.cameras.main) {
           const camera = mainScene.cameras.main;
           const zoomSpeed = 0.1;
-          const newZoom = deltaY < 0 ? camera.zoom + zoomSpeed : camera.zoom - zoomSpeed;
+          const newZoom =
+            deltaY < 0 ? camera.zoom + zoomSpeed : camera.zoom - zoomSpeed;
           camera.setZoom(Phaser.Math.Clamp(newZoom, 0.5, 2.0));
         }
-      }
+      },
     );
   }
 
-  private updateEntityStatsDisplay(panel: Phaser.GameObjects.Container, entityData: Entity, color: string) {
+  private updateEntityStatsDisplay(
+    panel: Phaser.GameObjects.Container,
+    entityData: Entity,
+    color: string,
+  ) {
     if (!entityData.stats) return;
 
     const { stats } = entityData;
 
     // Update activity text if it exists
-    const activityText = panel.getData('activityText');
+    const activityText = panel.getData("activityText");
     if (activityText && entityData.activity) {
-      activityText.setText(entityData.activity || 'IDLE');
+      activityText.setText(entityData.activity || "IDLE");
     }
 
     // Check if stats elements exist, if not create them
-    let statsElements = panel.getData('statsElements');
+    let statsElements = panel.getData("statsElements");
     if (!statsElements) {
       statsElements = this.createStatsElements(panel);
-      panel.setData('statsElements', statsElements);
+      panel.setData("statsElements", statsElements);
     }
 
     // Define current stats data
     const statsColumn1 = [
       {
-        icon: '❤️',
-        label: 'Salud',
+        icon: "❤️",
+        label: "Salud",
         value: Math.round(stats.health || 0),
-        color: '#e74c3c',
-        key: 'health',
+        color: "#e74c3c",
+        key: "health",
       },
       {
-        icon: '😊',
-        label: 'Felicidad',
+        icon: "😊",
+        label: "Felicidad",
         value: Math.round(stats.happiness || 0),
-        color: '#f39c12',
-        key: 'happiness',
+        color: "#f39c12",
+        key: "happiness",
       },
       {
-        icon: '⚡',
-        label: 'Energía',
+        icon: "⚡",
+        label: "Energía",
         value: Math.round(stats.energy || 0),
-        color: '#3498db',
-        key: 'energy',
+        color: "#3498db",
+        key: "energy",
       },
     ];
 
     const statsColumn2 = [
       {
-        icon: '🍎',
-        label: 'Hambre',
+        icon: "🍎",
+        label: "Hambre",
         value: Math.round(stats.hunger || 0),
-        color: '#27ae60',
-        key: 'hunger',
+        color: "#27ae60",
+        key: "hunger",
       },
       {
-        icon: '😴',
-        label: 'Sueño',
+        icon: "😴",
+        label: "Sueño",
         value: Math.round(stats.sleepiness || 0),
-        color: '#9b59b6',
-        key: 'sleepiness',
+        color: "#9b59b6",
+        key: "sleepiness",
       },
       {
-        icon: '💰',
-        label: 'Dinero',
+        icon: "💰",
+        label: "Dinero",
         value: Math.round(stats.money || 0),
-        color: '#f1c40f',
-        key: 'money',
+        color: "#f1c40f",
+        key: "money",
       },
     ];
 
@@ -942,10 +1139,10 @@ export class UIScene extends Phaser.Scene {
 
       const moodText = this.add
         .text(135, 162, `💭 Humor: ${entityData.mood}`, {
-          fontSize: '10px',
+          fontSize: "10px",
           color,
-          fontFamily: 'Arial, sans-serif',
-          fontStyle: 'bold',
+          fontFamily: "Arial, sans-serif",
+          fontStyle: "bold",
         })
         .setOrigin(0.5);
       panel.add(moodText);
@@ -961,17 +1158,17 @@ export class UIScene extends Phaser.Scene {
 
     // Create column 1 stat elements (left side)
     for (let i = 0; i < 3; i++) {
-      const statLabel = this.add.text(10, 80 + i * 25, '', {
-        fontSize: '10px',
-        color: '#ffffff',
-        fontFamily: 'Arial, sans-serif',
-        fontStyle: 'bold',
+      const statLabel = this.add.text(10, 80 + i * 25, "", {
+        fontSize: "10px",
+        color: "#ffffff",
+        fontFamily: "Arial, sans-serif",
+        fontStyle: "bold",
       });
 
-      const valueText = this.add.text(10, 92 + i * 25, '0', {
-        fontSize: '9px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial, sans-serif',
+      const valueText = this.add.text(10, 92 + i * 25, "0", {
+        fontSize: "9px",
+        color: "#ecf0f1",
+        fontFamily: "Arial, sans-serif",
       });
 
       const barBg = this.add.graphics();
@@ -995,17 +1192,17 @@ export class UIScene extends Phaser.Scene {
 
     // Create column 2 stat elements (right side)
     for (let i = 0; i < 3; i++) {
-      const statLabel = this.add.text(140, 80 + i * 25, '', {
-        fontSize: '10px',
-        color: '#ffffff',
-        fontFamily: 'Arial, sans-serif',
-        fontStyle: 'bold',
+      const statLabel = this.add.text(140, 80 + i * 25, "", {
+        fontSize: "10px",
+        color: "#ffffff",
+        fontFamily: "Arial, sans-serif",
+        fontStyle: "bold",
       });
 
-      const valueText = this.add.text(140, 92 + i * 25, '0', {
-        fontSize: '9px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial, sans-serif',
+      const valueText = this.add.text(140, 92 + i * 25, "0", {
+        fontSize: "9px",
+        color: "#ecf0f1",
+        fontFamily: "Arial, sans-serif",
       });
 
       const barBg = this.add.graphics();
@@ -1041,7 +1238,7 @@ export class UIScene extends Phaser.Scene {
       value: number;
       color: string;
       key: string;
-    }
+    },
   ) {
     // Update label and color
     element.label.setText(`${stat.icon} ${stat.label}`);
@@ -1053,23 +1250,26 @@ export class UIScene extends Phaser.Scene {
         from: element.currentValue,
         to: stat.value,
         duration: 800, // 800ms smooth animation
-        ease: 'Power2',
-        onUpdate: tween => {
+        ease: "Power2",
+        onUpdate: (tween) => {
           const value = Math.round(tween.getValue());
           element.value.setText(`${value}`);
 
           // Animate bar width
-          let barColor = '#e74c3c';
+          let barColor = "#e74c3c";
           if (value > 70) {
-            barColor = '#27ae60';
+            barColor = "#27ae60";
           } else if (value > 30) {
-            barColor = '#f39c12';
+            barColor = "#f39c12";
           }
 
           const barWidth = Math.max((value / 100) * 76, 2);
 
           element.bar.clear();
-          element.bar.fillStyle(Phaser.Display.Color.HexStringToColor(barColor).color, 0.8);
+          element.bar.fillStyle(
+            Phaser.Display.Color.HexStringToColor(barColor).color,
+            0.8,
+          );
 
           // For column 1 or column 2 position
           const isColumn2 = element.label.x === 140;
@@ -1097,7 +1297,7 @@ export class UIScene extends Phaser.Scene {
     height: number,
     text: string,
     color: string,
-    callback: () => void
+    callback: () => void,
   ) {
     const button = this.add.container(x, y);
 
@@ -1109,23 +1309,32 @@ export class UIScene extends Phaser.Scene {
 
     const label = this.add
       .text(width / 2, height / 2, text, {
-        fontSize: '11px',
-        color: '#ffffff',
-        fontFamily: 'Arial',
-        fontStyle: 'bold',
+        fontSize: "11px",
+        color: "#ffffff",
+        fontFamily: "Arial",
+        fontStyle: "bold",
       })
       .setOrigin(0.5);
     button.add(label);
 
-    button.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
-    button.on('pointerdown', callback);
-    button.on('pointerover', () => bg.setAlpha(1));
-    button.on('pointerout', () => bg.setAlpha(0.8));
+    button.setInteractive(
+      new Phaser.Geom.Rectangle(0, 0, width, height),
+      Phaser.Geom.Rectangle.Contains,
+    );
+    button.on("pointerdown", callback);
+    button.on("pointerover", () => bg.setAlpha(1));
+    button.on("pointerout", () => bg.setAlpha(0.8));
 
     return button;
   }
 
-  private createCharacterPanel(character: string, x: number, y: number, color: string, title: string) {
+  private createCharacterPanel(
+    character: string,
+    x: number,
+    y: number,
+    color: string,
+    title: string,
+  ) {
     const panelContainer = this.add.container(x, y);
     const panelWidth = 270;
     const panelHeight = 175;
@@ -1137,30 +1346,56 @@ export class UIScene extends Phaser.Scene {
     panelContainer.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.8, 0.8, 0.8, 0.8);
+    panelBg.fillGradientStyle(
+      0x2c3e50,
+      0x34495e,
+      0x2c3e50,
+      0x34495e,
+      0.8,
+      0.8,
+      0.8,
+      0.8,
+    );
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 6);
-    panelBg.lineStyle(2, Phaser.Display.Color.HexStringToColor(color).color, 0.9);
+    panelBg.lineStyle(
+      2,
+      Phaser.Display.Color.HexStringToColor(color).color,
+      0.9,
+    );
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 6);
 
     // Inner highlight
-    panelBg.lineStyle(1, Phaser.Display.Color.HexStringToColor(color).color, 0.4);
+    panelBg.lineStyle(
+      1,
+      Phaser.Display.Color.HexStringToColor(color).color,
+      0.4,
+    );
     panelBg.strokeRoundedRect(1, 1, panelWidth - 2, panelHeight - 2, 5);
     panelContainer.add(panelBg);
 
     // Character header
     const headerBg = this.add.graphics();
     const headerColor = Phaser.Display.Color.HexStringToColor(color).color;
-    headerBg.fillGradientStyle(headerColor, headerColor, headerColor, headerColor, 0.3, 0.3, 0.1, 0.1);
+    headerBg.fillGradientStyle(
+      headerColor,
+      headerColor,
+      headerColor,
+      headerColor,
+      0.3,
+      0.3,
+      0.1,
+      0.1,
+    );
     headerBg.fillRoundedRect(0, 0, panelWidth, 30, 6);
     panelContainer.add(headerBg);
 
     // Character title with better styling
     const charTitle = this.add
       .text(panelWidth / 2, 15, title, {
-        fontSize: '13px',
-        color: '#ffffff',
-        fontFamily: 'Arial, sans-serif',
-        fontStyle: 'bold',
+        fontSize: "13px",
+        color: "#ffffff",
+        fontFamily: "Arial, sans-serif",
+        fontStyle: "bold",
       })
       .setOrigin(0.5);
     panelContainer.add(charTitle);
@@ -1175,8 +1410,8 @@ export class UIScene extends Phaser.Scene {
 
     // Portrait emoji
     const portraitEmoji = this.add
-      .text(35, 55, character === 'isa' ? '👩' : '👨', {
-        fontSize: '24px',
+      .text(35, 55, character === "isa" ? "👩" : "👨", {
+        fontSize: "24px",
       })
       .setOrigin(0.5);
     panelContainer.add(portraitEmoji);
@@ -1187,105 +1422,109 @@ export class UIScene extends Phaser.Scene {
     activityBg.fillRoundedRect(65, 40, panelWidth - 75, 30, 4);
     panelContainer.add(activityBg);
 
-    const activityLabel = this.add.text(70, 45, '🎯 Estado:', {
-      fontSize: '10px',
-      color: '#95a5a6',
-      fontFamily: 'Arial, sans-serif',
-      fontStyle: 'bold',
+    const activityLabel = this.add.text(70, 45, "🎯 Estado:", {
+      fontSize: "10px",
+      color: "#95a5a6",
+      fontFamily: "Arial, sans-serif",
+      fontStyle: "bold",
     });
     panelContainer.add(activityLabel);
 
-    const activityText = this.add.text(70, 58, 'IDLE', {
-      fontSize: '11px',
+    const activityText = this.add.text(70, 58, "IDLE", {
+      fontSize: "11px",
       color,
-      fontFamily: 'Arial, sans-serif',
-      fontStyle: 'bold',
+      fontFamily: "Arial, sans-serif",
+      fontStyle: "bold",
     });
     panelContainer.add(activityText);
 
     // Stats will be added dynamically by updateEntityStatsDisplay starting at y: 75
-    panelContainer.setData('character', character);
-    panelContainer.setData('activityText', activityText);
+    panelContainer.setData("character", character);
+    panelContainer.setData("activityText", activityText);
 
     this.leftPanel.add(panelContainer);
 
     // Store reference for updates
-    if (character === 'isa') {
-      this.leftPanel.setData('isaStatsPanel', panelContainer);
+    if (character === "isa") {
+      this.leftPanel.setData("isaStatsPanel", panelContainer);
     } else {
-      this.leftPanel.setData('stevStatsPanel', panelContainer);
+      this.leftPanel.setData("stevStatsPanel", panelContainer);
     }
   }
 
-  private updateCharacterPanels(entities: Entity[] | { [key: string]: Entity }) {
+  private updateCharacterPanels(
+    entities: Entity[] | { [key: string]: Entity },
+  ) {
     // Handle both array format and object format
     let isaEntity = null;
     let stevEntity = null;
 
     if (Array.isArray(entities)) {
-      isaEntity = entities.find(entity => entity.id === 'isa');
-      stevEntity = entities.find(entity => entity.id === 'stev');
-    } else if (entities && typeof entities === 'object') {
+      isaEntity = entities.find((entity) => entity.id === "isa");
+      stevEntity = entities.find((entity) => entity.id === "stev");
+    } else if (entities && typeof entities === "object") {
       // Handle object format: { isa: {...}, stev: {...} }
       isaEntity = entities.isa;
       stevEntity = entities.stev;
     }
 
     if (isaEntity) {
-      const isaPanel = this.leftPanel.getData('isaStatsPanel');
+      const isaPanel = this.leftPanel.getData("isaStatsPanel");
       if (isaPanel && isaEntity.stats) {
         // Create Entity-like object from the data
         const entityData = {
-          id: 'isa',
+          id: "isa",
           stats: isaEntity.stats,
           activity: isaEntity.activity,
           mood: isaEntity.mood,
           position: isaEntity.position,
-          state: 'idle' as const,
+          state: "idle" as const,
           isDead: false,
           resonance: isaEntity.resonance || 0,
         };
-        this.updateEntityStatsDisplay(isaPanel, entityData, '#e91e63');
+        this.updateEntityStatsDisplay(isaPanel, entityData, "#e91e63");
       }
     }
 
     if (stevEntity) {
-      const stevPanel = this.leftPanel.getData('stevStatsPanel');
+      const stevPanel = this.leftPanel.getData("stevStatsPanel");
       if (stevPanel && stevEntity.stats) {
         // Create Entity-like object from the data
         const entityData = {
-          id: 'stev',
+          id: "stev",
           stats: stevEntity.stats,
           activity: stevEntity.activity,
           mood: stevEntity.mood,
           position: stevEntity.position,
-          state: 'idle' as const,
+          state: "idle" as const,
           isDead: false,
           resonance: stevEntity.resonance || 0,
         };
-        this.updateEntityStatsDisplay(stevPanel, entityData, '#3498db');
+        this.updateEntityStatsDisplay(stevPanel, entityData, "#3498db");
       }
     }
   }
 
   private updateTopBarInfo(data: GameLogicUpdateData) {
     // Update resonance indicator
-    const resonanceContainer = this.topBar.list.find((child: Phaser.GameObjects.GameObject) =>
-      (child as any).getData?.('resonanceText')
+    const resonanceContainer = this.topBar.list.find(
+      (child: Phaser.GameObjects.GameObject) =>
+        (child as any).getData?.("resonanceText"),
     ) as Phaser.GameObjects.Container;
     if (resonanceContainer && data.resonance !== undefined) {
-      const resonanceText = resonanceContainer.getData('resonanceText');
+      const resonanceText = resonanceContainer.getData("resonanceText");
       if (resonanceText) {
         resonanceText.setText(`Resonancia: ${Math.round(data.resonance)}%`);
       }
     }
 
     // Update cycles indicator
-    const cyclesContainer = this.topBar.list.find((child: Phaser.GameObjects.GameObject) =>
-      (child as any).getData?.('cyclesText')
+    const cyclesContainer = this.topBar.list.find(
+      (child: Phaser.GameObjects.GameObject) =>
+        (child as any).getData?.("cyclesText"),
     ) as Phaser.GameObjects.Container;
     if (cyclesContainer && data.cycles !== undefined) {
-      const cyclesText = cyclesContainer.getData('cyclesText');
+      const cyclesText = cyclesContainer.getData("cyclesText");
       if (cyclesText) {
         cyclesText.setText(`Ciclos: ${data.cycles}`);
       }
@@ -1304,17 +1543,20 @@ export class UIScene extends Phaser.Scene {
 
   // =================== CONTROL METHODS ===================
 
-  private setControlMode(mode: 'auto' | 'isa' | 'stev') {
+  private setControlMode(mode: "auto" | "isa" | "stev") {
     // this.currentControlMode = mode; // Comentado temporalmente
-    const mainScene = this.scene.get('MainScene');
-    mainScene.events.emit('changeEntityControl', mode === 'auto' ? 'none' : mode);
+    const mainScene = this.scene.get("MainScene");
+    mainScene.events.emit(
+      "changeEntityControl",
+      mode === "auto" ? "none" : mode,
+    );
 
     logAutopoiesis.info(`Control mode changed to: ${mode}`);
   }
 
   private setGameSpeed(speed: number) {
     // Use GameLogicManager for speed control instead
-    const mainScene = this.scene.get('MainScene') as any;
+    const mainScene = this.scene.get("MainScene") as any;
     if (mainScene?.gameLogicManager) {
       mainScene.gameLogicManager.setGameSpeed(speed);
     }
@@ -1322,29 +1564,29 @@ export class UIScene extends Phaser.Scene {
   }
 
   private togglePause() {
-    const mainScene = this.scene.get('MainScene');
+    const mainScene = this.scene.get("MainScene");
     if (mainScene.scene.isPaused()) {
       mainScene.scene.resume();
-      logAutopoiesis.info('Game resumed');
+      logAutopoiesis.info("Game resumed");
     } else {
       mainScene.scene.pause();
-      logAutopoiesis.info('Game paused');
+      logAutopoiesis.info("Game paused");
     }
   }
 
   private openSettings() {
     // Placeholder for settings menu
-    logAutopoiesis.info('Settings menu requested');
+    logAutopoiesis.info("Settings menu requested");
   }
 
   private takeScreenshot() {
     // Placeholder for screenshot functionality
-    logAutopoiesis.info('Screenshot requested');
+    logAutopoiesis.info("Screenshot requested");
   }
 
   private toggleGameMenu() {
     // Placeholder for game menu
-    logAutopoiesis.info('Game menu toggle requested');
+    logAutopoiesis.info("Game menu toggle requested");
   }
 
   private toggleLeftPanel() {
@@ -1355,20 +1597,22 @@ export class UIScene extends Phaser.Scene {
       targets: this.leftPanel,
       x: targetX,
       duration: 300,
-      ease: 'Power2',
+      ease: "Power2",
     });
   }
 
   private toggleRightPanel() {
     this.rightPanelExpanded = !this.rightPanelExpanded;
     const panelWidth = 200;
-    const targetX = this.rightPanelExpanded ? this.cameras.main.width - panelWidth - 10 : this.cameras.main.width + 10;
+    const targetX = this.rightPanelExpanded
+      ? this.cameras.main.width - panelWidth - 10
+      : this.cameras.main.width + 10;
 
     this.tweens.add({
       targets: this.rightPanel,
       x: targetX,
       duration: 300,
-      ease: 'Power2',
+      ease: "Power2",
     });
   }
 
@@ -1414,7 +1658,7 @@ export class UIScene extends Phaser.Scene {
       this.resonanceLabelPool.destroy();
     }
 
-    logAutopoiesis.debug('UIScene destroyed - pools cleaned up');
+    logAutopoiesis.debug("UIScene destroyed - pools cleaned up");
   }
 
   /**
@@ -1422,7 +1666,7 @@ export class UIScene extends Phaser.Scene {
    */
   private createFoodUI(): void {
     this.foodUI = new FoodUI(this);
-    logAutopoiesis.info('Food UI creada');
+    logAutopoiesis.info("Food UI creada");
   }
 
   /**
@@ -1434,16 +1678,16 @@ export class UIScene extends Phaser.Scene {
     // Añadir botón para abrir el atlas en el top bar
     this.addExplorationButton();
 
-    logAutopoiesis.info('🗺️ Exploration UI creada');
+    logAutopoiesis.info("🗺️ Exploration UI creada");
   }
 
   /**
    * Añade botón de exploración al top bar
    */
   private addExplorationButton(): void {
-    const button = this.add.text(this.cameras.main.width - 80, 20, '🗺️', {
-      fontSize: '24px',
-      fontStyle: 'bold',
+    const button = this.add.text(this.cameras.main.width - 80, 20, "🗺️", {
+      fontSize: "24px",
+      fontStyle: "bold",
     });
     button.setOrigin(0.5);
     button.setInteractive({ useHandCursor: true });
@@ -1451,18 +1695,18 @@ export class UIScene extends Phaser.Scene {
     button.setDepth(1001);
 
     // Efectos de hover
-    button.on('pointerover', () => {
+    button.on("pointerover", () => {
       button.setScale(1.1);
       button.setTint(0x3498db);
     });
 
-    button.on('pointerout', () => {
+    button.on("pointerout", () => {
       button.setScale(1.0);
       button.clearTint();
     });
 
     // Abrir UI de exploración
-    button.on('pointerdown', () => {
+    button.on("pointerdown", () => {
       this.explorationUI.toggle();
 
       // Actualizar con estadísticas simuladas
@@ -1476,7 +1720,7 @@ export class UIScene extends Phaser.Scene {
           rare: Math.floor(Math.random() * 15) + 5,
           epic: Math.floor(Math.random() * 5) + 1,
         },
-        currentBiome: 'Praderas Místicas',
+        currentBiome: "Praderas Místicas",
       };
 
       this.explorationUI.updateStats(stats);
@@ -1516,12 +1760,12 @@ export class UIScene extends Phaser.Scene {
     const resonance = gameData.resonance || 0;
     const cycles = gameData.cycles || 0;
 
-    if (resonance > 50) return 'Reino Místico';
-    if (cycles > 50) return 'Bosques Ancestrales';
-    if (resonance > 25) return 'Pantanos Serenos';
-    if (cycles > 25) return 'Montañas Rocosas';
-    if (resonance > 10) return 'Pueblos Acogedores';
-    return 'Praderas Verdes';
+    if (resonance > 50) return "Reino Místico";
+    if (cycles > 50) return "Bosques Ancestrales";
+    if (resonance > 25) return "Pantanos Serenos";
+    if (cycles > 25) return "Montañas Rocosas";
+    if (resonance > 10) return "Pueblos Acogedores";
+    return "Praderas Verdes";
   }
 
   // ====== ANIMATION SYSTEM FOR STAT BARS ======

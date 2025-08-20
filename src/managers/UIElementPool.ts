@@ -3,7 +3,7 @@
  * Evita la creación/destrucción constante de objetos UI
  */
 
-import { logAutopoiesis } from '../utils/logger';
+import { logAutopoiesis } from "../utils/logger";
 
 export interface PoolableUIElement {
   gameObject: Phaser.GameObjects.GameObject;
@@ -17,10 +17,10 @@ export class ResonanceLabel implements PoolableUIElement {
   public isActive = false;
 
   constructor(scene: Phaser.Scene) {
-    this.gameObject = scene.add.text(0, 0, '', {
-      fontSize: '12px',
-      color: '#ffffff',
-      fontFamily: 'Arial',
+    this.gameObject = scene.add.text(0, 0, "", {
+      fontSize: "12px",
+      color: "#ffffff",
+      fontFamily: "Arial",
     });
     this.gameObject.setScrollFactor(0);
     this.gameObject.setVisible(false);
@@ -66,7 +66,9 @@ export class UIElementPool<T extends PoolableUIElement> {
 
     if (!element) {
       element = this.createElementFn();
-      logAutopoiesis.debug(`Pool '${this.poolName}' expanded - new element created`);
+      logAutopoiesis.debug(
+        `Pool '${this.poolName}' expanded - new element created`,
+      );
     }
 
     this.activeElements.add(element);
@@ -78,7 +80,9 @@ export class UIElementPool<T extends PoolableUIElement> {
    */
   public release(element: T): void {
     if (!this.activeElements.has(element)) {
-      logAutopoiesis.warn(`Attempting to release element not from this pool: ${this.poolName}`);
+      logAutopoiesis.warn(
+        `Attempting to release element not from this pool: ${this.poolName}`,
+      );
       return;
     }
 
@@ -91,7 +95,7 @@ export class UIElementPool<T extends PoolableUIElement> {
    * Libera todos los elementos activos
    */
   public releaseAll(): void {
-    this.activeElements.forEach(element => {
+    this.activeElements.forEach((element) => {
       element.reset();
       this.pool.push(element);
     });
@@ -104,7 +108,7 @@ export class UIElementPool<T extends PoolableUIElement> {
    * Destruye el pool y todos sus elementos
    */
   public destroy(): void {
-    [...this.activeElements, ...this.pool].forEach(element => {
+    [...this.activeElements, ...this.pool].forEach((element) => {
       if (element.gameObject && element.gameObject.destroy) {
         element.gameObject.destroy();
       }

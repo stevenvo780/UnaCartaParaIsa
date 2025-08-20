@@ -2,63 +2,74 @@
  * Tipos para el sistema de misiones RPG
  */
 
-import type { EntityStats } from './entities';
+import type { EntityStats } from "./entities";
 
 /**
  * Estado de una misión
  */
-export type QuestStatus = 'not_started' | 'available' | 'active' | 'completed' | 'failed' | 'abandoned';
+export type QuestStatus =
+  | "not_started"
+  | "available"
+  | "active"
+  | "completed"
+  | "failed"
+  | "abandoned";
 
 /**
  * Tipo de objetivo de misión
  */
 export type QuestObjectiveType =
-  | 'find_item'
-  | 'talk_to_npc'
-  | 'reach_location'
-  | 'collect_resource'
-  | 'survive_time'
-  | 'achieve_stats'
-  | 'complete_activity'
-  | 'interact_with_entity'
-  | 'custom';
+  | "find_item"
+  | "talk_to_npc"
+  | "reach_location"
+  | "collect_resource"
+  | "survive_time"
+  | "achieve_stats"
+  | "complete_activity"
+  | "interact_with_entity"
+  | "custom";
 
 /**
  * Dificultad de la misión
  */
-export type QuestDifficulty = 'easy' | 'medium' | 'hard' | 'legendary';
+export type QuestDifficulty = "easy" | "medium" | "hard" | "legendary";
 
 /**
  * Categoría de misión
  */
 export type QuestCategory =
-  | 'main_story'
-  | 'side_quest'
-  | 'daily'
-  | 'exploration'
-  | 'social'
-  | 'survival'
-  | 'romance'
-  | 'mystery'
-  | 'tutorial';
+  | "main_story"
+  | "side_quest"
+  | "daily"
+  | "exploration"
+  | "social"
+  | "survival"
+  | "romance"
+  | "mystery"
+  | "tutorial";
 
 /**
  * Tipo de recompensa
  */
 export type RewardType =
-  | 'money'
-  | 'food'
-  | 'stats_boost'
-  | 'unlock_feature'
-  | 'dialogue_option'
-  | 'title'
-  | 'experience';
+  | "money"
+  | "food"
+  | "stats_boost"
+  | "unlock_feature"
+  | "dialogue_option"
+  | "title"
+  | "experience";
 
 /**
  * Condición para desbloquear una misión
  */
 export interface QuestRequirement {
-  type: 'quest_completed' | 'stats_threshold' | 'time_elapsed' | 'location_visited' | 'item_owned';
+  type:
+    | "quest_completed"
+    | "stats_threshold"
+    | "time_elapsed"
+    | "location_visited"
+    | "item_owned";
   questId?: string;
   statsRequired?: Partial<EntityStats>;
   timeRequired?: number;
@@ -99,8 +110,8 @@ export interface QuestObjective {
  * Diálogo específico de misión
  */
 export interface QuestDialogue {
-  stage: 'intro' | 'progress' | 'completion' | 'failure';
-  speaker: 'isa' | 'stev' | 'narrator' | 'system';
+  stage: "intro" | "progress" | "completion" | "failure";
+  speaker: "isa" | "stev" | "narrator" | "system";
   text: string;
   mood?: string;
   conditions?: {
@@ -161,7 +172,7 @@ export interface QuestProgress {
   availableQuests: Map<string, Quest>;
   questHistory: {
     questId: string;
-    action: 'started' | 'completed' | 'failed' | 'abandoned';
+    action: "started" | "completed" | "failed" | "abandoned";
     timestamp: number;
   }[];
   totalQuestsCompleted: number;
@@ -173,7 +184,12 @@ export interface QuestProgress {
  * Evento del sistema de misiones
  */
 export interface QuestEvent {
-  type: 'quest_started' | 'quest_completed' | 'quest_failed' | 'objective_completed' | 'quest_available';
+  type:
+    | "quest_started"
+    | "quest_completed"
+    | "quest_failed"
+    | "objective_completed"
+    | "quest_available";
   questId: string;
   objectiveId?: string;
   timestamp: number;

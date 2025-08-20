@@ -4,18 +4,33 @@
  */
 
 // Import types for use in this file
-import type { Position, Size, Rect, Color } from './core';
-import type { ZoneType } from './zones';
-import type { EntityStats, MoodType, Entity } from './entities';
+import type { Position, Size, Rect, Color } from "./core";
+import type { ZoneType } from "./zones";
+import type { EntityStats, MoodType, Entity } from "./entities";
 
 // Core types (no dependencies)
-export type { Position, Size, Rect, Color } from './core';
+export type { Position, Size, Rect, Color } from "./core";
 
 // Domain-specific types
-export type { ActivityType, EntityActivity, ActivityModifiers, ActivityDefinition } from './activities';
-export type { ZoneType, Zone as ZoneDefinition } from './zones';
-export type { EntityStateType, MoodType, EntityStats, Entity } from './entities';
-export type { FoodCategory, FoodItem, FoodInventoryItem, EatingAction } from './food';
+export type {
+  ActivityType,
+  EntityActivity,
+  ActivityModifiers,
+  ActivityDefinition,
+} from "./activities";
+export type { ZoneType, Zone as ZoneDefinition } from "./zones";
+export type {
+  EntityStateType,
+  MoodType,
+  EntityStats,
+  Entity,
+} from "./entities";
+export type {
+  FoodCategory,
+  FoodItem,
+  FoodInventoryItem,
+  EatingAction,
+} from "./food";
 export type {
   QuestStatus,
   QuestObjectiveType,
@@ -30,7 +45,7 @@ export type {
   QuestProgress,
   QuestEvent,
   QuestSystemConfig,
-} from './quests';
+} from "./quests";
 
 // Event system types
 export type {
@@ -45,22 +60,29 @@ export type {
   PlayerInteractionData,
   TypedEventEmitter,
   IGameLogicManager,
-} from './events';
+} from "./events";
 
 // Game-specific types that remain centralized
-export type InteractionType = 'NOURISH' | 'FEED' | 'PLAY' | 'COMFORT' | 'DISTURB' | 'WAKE_UP' | 'LET_SLEEP';
+export type InteractionType =
+  | "NOURISH"
+  | "FEED"
+  | "PLAY"
+  | "COMFORT"
+  | "DISTURB"
+  | "WAKE_UP"
+  | "LET_SLEEP";
 
 export interface MapElement {
   id: string;
   type:
-    | 'obstacle'
-    | 'food_zone'
-    | 'rest_zone'
-    | 'play_zone'
-    | 'social_zone'
-    | 'work_zone'
-    | 'comfort_zone'
-    | 'decoration';
+    | "obstacle"
+    | "food_zone"
+    | "rest_zone"
+    | "play_zone"
+    | "social_zone"
+    | "work_zone"
+    | "comfort_zone"
+    | "decoration";
   position: Position;
   size: Size;
   color: string;
@@ -92,7 +114,7 @@ export interface Zone {
 }
 
 export interface DialogueEntry {
-  speaker: 'ISA' | 'STEV';
+  speaker: "ISA" | "STEV";
   text: string;
   emotion: string;
   activity: string;
@@ -117,7 +139,7 @@ export interface TerrainTile {
   x: number;
   y: number;
   assetId: string;
-  type: 'grass' | 'stone' | 'water' | 'path';
+  type: "grass" | "stone" | "water" | "path";
   variant?: number;
 }
 
@@ -125,7 +147,7 @@ export interface RoadPolyline {
   id: string;
   points: Position[];
   width: number;
-  type: 'main' | 'secondary' | 'path';
+  type: "main" | "secondary" | "path";
 }
 
 export interface ObjectLayer {

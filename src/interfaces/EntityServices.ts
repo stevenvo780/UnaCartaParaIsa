@@ -3,8 +3,8 @@
  * Permite inyección de dependencias y mejor testabilidad
  */
 
-import type { Entity, EntityStats, ActivityType } from '../types';
-import { logAutopoiesis } from '../utils/logger';
+import type { Entity, EntityStats, ActivityType } from "../types";
+import { logAutopoiesis } from "../utils/logger";
 
 /**
  * Tipo para datos de tiempo del día
@@ -13,7 +13,7 @@ export interface TimeOfDayData {
   hour: number;
   isDay: boolean;
   isNight: boolean;
-  phase: 'dawn' | 'day' | 'dusk' | 'night';
+  phase: "dawn" | "day" | "dusk" | "night";
   lightLevel: number;
   modifier: number;
 }
@@ -38,7 +38,12 @@ export interface IGameConfig {
 /**
  * Tipo para datos de logging
  */
-export type LogData = Record<string, unknown> | string | number | boolean | null;
+export type LogData =
+  | Record<string, unknown>
+  | string
+  | number
+  | boolean
+  | null;
 
 /**
  * Interface para servicios de logging
@@ -54,7 +59,11 @@ export interface ILogger {
  * Interface para cálculos de actividad
  */
 export interface IActivityCalculator {
-  applyHybridDecay(stats: EntityStats, activity: ActivityType, deltaTime: number): EntityStats;
+  applyHybridDecay(
+    stats: EntityStats,
+    activity: ActivityType,
+    deltaTime: number,
+  ): EntityStats;
 
   applySurvivalCosts(stats: EntityStats, deltaTime: number): EntityStats;
 
@@ -62,7 +71,7 @@ export interface IActivityCalculator {
     activity: ActivityType,
     stats: EntityStats,
     deltaTime: number,
-    timeOfDay: TimeOfDayData
+    timeOfDay: TimeOfDayData,
   ): EntityStats;
 }
 
@@ -76,7 +85,7 @@ export interface IResonanceCalculator {
     myStats: EntityStats,
     partnerStats: EntityStats,
     currentResonance: number,
-    deltaTime: number
+    deltaTime: number,
   ): {
     resonanceChange: number;
     closeness: number;
@@ -85,7 +94,7 @@ export interface IResonanceCalculator {
 
   calculateResonanceModifiers(
     resonance: number,
-    closeness: number
+    closeness: number,
   ): {
     happinessMultiplier: number;
     energyMultiplier: number;
@@ -98,7 +107,11 @@ export interface IResonanceCalculator {
  * Interface para motor de decisiones AI
  */
 export interface IAIDecisionEngine {
-  makeIntelligentDecision(entity: Entity, companion: Entity | null, currentTime: number): ActivityType;
+  makeIntelligentDecision(
+    entity: Entity,
+    companion: Entity | null,
+    currentTime: number,
+  ): ActivityType;
 }
 
 /**
@@ -168,19 +181,41 @@ export class EntityServicesFactory {
         },
       },
       activityCalculator: {
-        applyHybridDecay: (stats: EntityStats, _activity: ActivityType, deltaTime: number) => {
+        applyHybridDecay: (
+          stats: EntityStats,
+          _activity: ActivityType,
+          deltaTime: number,
+        ) => {
           // Basic degradation over time
           const secondsElapsed = deltaTime / 1000;
           const degradationRate = 0.1; // Degradation per second
 
           return {
             ...stats,
-            hunger: Math.min(100, stats.hunger + degradationRate * secondsElapsed * 0.8),
-            energy: Math.max(0, stats.energy - degradationRate * secondsElapsed * 0.6),
-            happiness: Math.max(0, stats.happiness - degradationRate * secondsElapsed * 0.3),
-            sleepiness: Math.min(100, stats.sleepiness + degradationRate * secondsElapsed * 0.5),
-            boredom: Math.min(100, stats.boredom + degradationRate * secondsElapsed * 0.7),
-            loneliness: Math.min(100, stats.loneliness + degradationRate * secondsElapsed * 0.4),
+            hunger: Math.min(
+              100,
+              stats.hunger + degradationRate * secondsElapsed * 0.8,
+            ),
+            energy: Math.max(
+              0,
+              stats.energy - degradationRate * secondsElapsed * 0.6,
+            ),
+            happiness: Math.max(
+              0,
+              stats.happiness - degradationRate * secondsElapsed * 0.3,
+            ),
+            sleepiness: Math.min(
+              100,
+              stats.sleepiness + degradationRate * secondsElapsed * 0.5,
+            ),
+            boredom: Math.min(
+              100,
+              stats.boredom + degradationRate * secondsElapsed * 0.7,
+            ),
+            loneliness: Math.min(
+              100,
+              stats.loneliness + degradationRate * secondsElapsed * 0.4,
+            ),
           };
         },
         applySurvivalCosts: (stats: EntityStats, deltaTime: number) => {
@@ -191,14 +226,17 @@ export class EntityServicesFactory {
           return {
             ...stats,
             health: Math.max(0, stats.health - baseCost * secondsElapsed * 0.2),
-            stress: Math.min(100, stats.stress + baseCost * secondsElapsed * 0.3),
+            stress: Math.min(
+              100,
+              stats.stress + baseCost * secondsElapsed * 0.3,
+            ),
           };
         },
         applyActivityEffectsWithTimeModifiers: (
           activity: ActivityType,
           stats: EntityStats,
           deltaTime: number,
-          _timeOfDay: TimeOfDayData
+          _timeOfDay: TimeOfDayData,
         ) => {
           // Apply positive effects based on activity
           const secondsElapsed = deltaTime / 1000;
@@ -207,33 +245,72 @@ export class EntityServicesFactory {
           const modifiedStats = { ...stats };
 
           switch (activity) {
-            case 'RESTING':
-              modifiedStats.energy = Math.min(100, stats.energy + effectStrength * secondsElapsed * 2);
-              modifiedStats.sleepiness = Math.max(0, stats.sleepiness - effectStrength * secondsElapsed * 1.5);
+            case "RESTING":
+              modifiedStats.energy = Math.min(
+                100,
+                stats.energy + effectStrength * secondsElapsed * 2,
+              );
+              modifiedStats.sleepiness = Math.max(
+                0,
+                stats.sleepiness - effectStrength * secondsElapsed * 1.5,
+              );
               break;
-            case 'SOCIALIZING':
-              modifiedStats.loneliness = Math.max(0, stats.loneliness - effectStrength * secondsElapsed * 2);
-              modifiedStats.happiness = Math.min(100, stats.happiness + effectStrength * secondsElapsed);
+            case "SOCIALIZING":
+              modifiedStats.loneliness = Math.max(
+                0,
+                stats.loneliness - effectStrength * secondsElapsed * 2,
+              );
+              modifiedStats.happiness = Math.min(
+                100,
+                stats.happiness + effectStrength * secondsElapsed,
+              );
               break;
-            case 'EATING':
-              modifiedStats.hunger = Math.max(0, stats.hunger - effectStrength * secondsElapsed * 3);
-              modifiedStats.energy = Math.min(100, stats.energy + effectStrength * secondsElapsed * 0.5);
+            case "EATING":
+              modifiedStats.hunger = Math.max(
+                0,
+                stats.hunger - effectStrength * secondsElapsed * 3,
+              );
+              modifiedStats.energy = Math.min(
+                100,
+                stats.energy + effectStrength * secondsElapsed * 0.5,
+              );
               break;
-            case 'PLAYING':
-              modifiedStats.boredom = Math.max(0, stats.boredom - effectStrength * secondsElapsed * 2);
-              modifiedStats.happiness = Math.min(100, stats.happiness + effectStrength * secondsElapsed * 1.5);
+            case "PLAYING":
+              modifiedStats.boredom = Math.max(
+                0,
+                stats.boredom - effectStrength * secondsElapsed * 2,
+              );
+              modifiedStats.happiness = Math.min(
+                100,
+                stats.happiness + effectStrength * secondsElapsed * 1.5,
+              );
               break;
-            case 'WORKING':
-              modifiedStats.money = Math.min(100, stats.money + effectStrength * secondsElapsed * 1.5);
-              modifiedStats.stress = Math.min(100, stats.stress + effectStrength * secondsElapsed * 0.8);
+            case "WORKING":
+              modifiedStats.money = Math.min(
+                100,
+                stats.money + effectStrength * secondsElapsed * 1.5,
+              );
+              modifiedStats.stress = Math.min(
+                100,
+                stats.stress + effectStrength * secondsElapsed * 0.8,
+              );
               break;
-            case 'EXERCISING':
-              modifiedStats.health = Math.min(100, stats.health + effectStrength * secondsElapsed);
-              modifiedStats.energy = Math.max(0, stats.energy - effectStrength * secondsElapsed * 0.5);
+            case "EXERCISING":
+              modifiedStats.health = Math.min(
+                100,
+                stats.health + effectStrength * secondsElapsed,
+              );
+              modifiedStats.energy = Math.max(
+                0,
+                stats.energy - effectStrength * secondsElapsed * 0.5,
+              );
               break;
             default:
               // WANDERING or other activities
-              modifiedStats.boredom = Math.max(0, stats.boredom - effectStrength * secondsElapsed * 0.5);
+              modifiedStats.boredom = Math.max(
+                0,
+                stats.boredom - effectStrength * secondsElapsed * 0.5,
+              );
               break;
           }
 
@@ -247,13 +324,16 @@ export class EntityServicesFactory {
           _myStats: EntityStats,
           _partnerStats: EntityStats,
           _currentResonance: number,
-          _deltaTime: number
+          _deltaTime: number,
         ) => ({
           resonanceChange: 0,
           closeness: 0,
-          effect: 'none',
+          effect: "none",
         }),
-        calculateResonanceModifiers: (_resonance: number, _closeness: number) => ({
+        calculateResonanceModifiers: (
+          _resonance: number,
+          _closeness: number,
+        ) => ({
           happinessMultiplier: 1,
           energyMultiplier: 1,
           healthMultiplier: 1,
@@ -261,7 +341,7 @@ export class EntityServicesFactory {
         }),
       },
       aiDecisionEngine: {
-        makeIntelligentDecision: () => 'rest' as ActivityType,
+        makeIntelligentDecision: () => "rest" as ActivityType,
       },
     };
   }
@@ -296,8 +376,8 @@ export class MockEntityServices implements IEntityServices {
   };
 
   activityCalculator: IActivityCalculator = {
-    applyHybridDecay: stats => stats,
-    applySurvivalCosts: stats => stats,
+    applyHybridDecay: (stats) => stats,
+    applySurvivalCosts: (stats) => stats,
     applyActivityEffectsWithTimeModifiers: (_activity, stats) => stats,
   };
 
@@ -305,7 +385,7 @@ export class MockEntityServices implements IEntityServices {
     calculateProximityResonanceChange: () => ({
       resonanceChange: 0,
       closeness: 0,
-      effect: 'neutral',
+      effect: "neutral",
     }),
     calculateResonanceModifiers: () => ({
       happinessMultiplier: 1,
@@ -316,6 +396,6 @@ export class MockEntityServices implements IEntityServices {
   };
 
   aiDecisionEngine: IAIDecisionEngine = {
-    makeIntelligentDecision: entity => entity.activity,
+    makeIntelligentDecision: (entity) => entity.activity,
   };
 }

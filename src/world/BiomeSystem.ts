@@ -3,11 +3,16 @@
  * integración con zonas funcionales y renderizado
  */
 
-import { TerrainGenerator } from './TerrainGenerator';
-import { getBiomeDefinition, DEFAULT_WORLD_CONFIG } from './BiomeDefinitions';
-import { BiomeType, type GeneratedWorld, type WorldGenConfig, type WorldLayer } from './types';
-import type { Zone, MapElement } from '../types';
-import { logAutopoiesis } from '../utils/logger';
+import { TerrainGenerator } from "./TerrainGenerator";
+import { getBiomeDefinition, DEFAULT_WORLD_CONFIG } from "./BiomeDefinitions";
+import {
+  BiomeType,
+  type GeneratedWorld,
+  type WorldGenConfig,
+  type WorldLayer,
+} from "./types";
+import type { Zone, MapElement } from "../types";
+import { logAutopoiesis } from "../utils/logger";
 
 export class BiomeSystem {
   private generator: TerrainGenerator;
@@ -18,7 +23,7 @@ export class BiomeSystem {
     this.config = { ...DEFAULT_WORLD_CONFIG, ...config };
     this.generator = new TerrainGenerator(this.config);
 
-    logAutopoiesis.info('🌍 BiomeSystem inicializado', {
+    logAutopoiesis.info("🌍 BiomeSystem inicializado", {
       worldSize: `${this.config.width}x${this.config.height}`,
       enabledBiomes: this.config.biomes.enabled.length,
       seed: this.config.seed,
@@ -29,11 +34,11 @@ export class BiomeSystem {
    * Genera un nuevo mundo con biomas
    */
   public generateWorld(): GeneratedWorld {
-    logAutopoiesis.info('🚀 Generando nuevo mundo con biomas');
+    logAutopoiesis.info("🚀 Generando nuevo mundo con biomas");
 
     this.currentWorld = this.generator.generateWorld();
 
-    logAutopoiesis.info('✅ Mundo generado', {
+    logAutopoiesis.info("✅ Mundo generado", {
       generationTime: `${this.currentWorld.metadata.generationTime.toFixed(2)}ms`,
       totalAssets: this.currentWorld.metadata.totalAssets,
       biomes: Object.keys(this.currentWorld.metadata.biomeDistribution).length,
@@ -65,7 +70,7 @@ export class BiomeSystem {
       adaptedZones.push(adaptedZone);
     }
 
-    logAutopoiesis.info('🎯 Zonas funcionales integradas con biomas', {
+    logAutopoiesis.info("🎯 Zonas funcionales integradas con biomas", {
       originalZones: zones.length,
       adaptedZones: adaptedZones.length,
     });
@@ -78,8 +83,12 @@ export class BiomeSystem {
    */
   private adaptZoneToBiome(zone: Zone, world: GeneratedWorld): Zone {
     // Convertir coordenadas pixel a tile
-    const centerTileX = Math.floor((zone.bounds.x + zone.bounds.width / 2) / this.config.tileSize);
-    const centerTileY = Math.floor((zone.bounds.y + zone.bounds.height / 2) / this.config.tileSize);
+    const centerTileX = Math.floor(
+      (zone.bounds.x + zone.bounds.width / 2) / this.config.tileSize,
+    );
+    const centerTileY = Math.floor(
+      (zone.bounds.y + zone.bounds.height / 2) / this.config.tileSize,
+    );
 
     // Obtener bioma dominante en la zona
     const dominantBiome = this.getDominantBiomeInArea(
@@ -87,7 +96,7 @@ export class BiomeSystem {
       centerTileY,
       Math.ceil(zone.bounds.width / this.config.tileSize),
       Math.ceil(zone.bounds.height / this.config.tileSize),
-      world.biomeMap
+      world.biomeMap,
     );
 
     const biomeDef = getBiomeDefinition(dominantBiome);
@@ -100,12 +109,18 @@ export class BiomeSystem {
         biome: dominantBiome,
         biomeColor: biomeDef.color,
         biomeName: biomeDef.name,
-        environmentalEffects: this.calculateEnvironmentalEffects(zone.type, dominantBiome),
+        environmentalEffects: this.calculateEnvironmentalEffects(
+          zone.type,
+          dominantBiome,
+        ),
       },
     };
 
     // Ajustar color de la zona para que armonice con el bioma
-    adaptedZone.color = this.blendZoneColorWithBiome(zone.color, biomeDef.color);
+    adaptedZone.color = this.blendZoneColorWithBiome(
+      zone.color,
+      biomeDef.color,
+    );
 
     return adaptedZone;
   }
@@ -118,14 +133,20 @@ export class BiomeSystem {
     centerY: number,
     width: number,
     height: number,
-    biomeMap: BiomeType[][]
+    biomeMap: BiomeType[][],
   ): BiomeType {
     const biomeCounts = new Map<BiomeType, number>();
 
     const startX = Math.max(0, centerX - Math.floor(width / 2));
-    const endX = Math.min(biomeMap[0].length - 1, centerX + Math.floor(width / 2));
+    const endX = Math.min(
+      biomeMap[0].length - 1,
+      centerX + Math.floor(width / 2),
+    );
     const startY = Math.max(0, centerY - Math.floor(height / 2));
-    const endY = Math.min(biomeMap.length - 1, centerY + Math.floor(height / 2));
+    const endY = Math.min(
+      biomeMap.length - 1,
+      centerY + Math.floor(height / 2),
+    );
 
     for (let y = startY; y <= endY; y++) {
       for (let x = startX; x <= endX; x++) {
@@ -151,7 +172,10 @@ export class BiomeSystem {
   /**
    * Calcula efectos ambientales basados en el tipo de zona y bioma
    */
-  private calculateEnvironmentalEffects(zoneType: string, biome: BiomeType): Record<string, number> {
+  private calculateEnvironmentalEffects(
+    zoneType: string,
+    biome: BiomeType,
+  ): Record<string, number> {
     const baseEffects: Record<string, number> = {};
 
     // Efectos según bioma
@@ -201,7 +225,10 @@ export class BiomeSystem {
   /**
    * Mezcla el color de una zona con el color del bioma
    */
-  private blendZoneColorWithBiome(zoneColor: string, biomeColor: string): string {
+  private blendZoneColorWithBiome(
+    zoneColor: string,
+    biomeColor: string,
+  ): string {
     // Extraer valores RGBA
     const zoneRgba = this.parseRgbaColor(zoneColor);
     const biomeRgb = this.parseHexColor(biomeColor);
@@ -219,8 +246,12 @@ export class BiomeSystem {
   /**
    * Parsea un color RGBA string
    */
-  private parseRgbaColor(color: string): { r: number; g: number; b: number; a: number } | null {
-    const match = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(color);
+  private parseRgbaColor(
+    color: string,
+  ): { r: number; g: number; b: number; a: number } | null {
+    const match = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(
+      color,
+    );
     if (!match) return null;
 
     return {
@@ -234,7 +265,9 @@ export class BiomeSystem {
   /**
    * Parsea un color hex
    */
-  private parseHexColor(hex: string): { r: number; g: number; b: number } | null {
+  private parseHexColor(
+    hex: string,
+  ): { r: number; g: number; b: number } | null {
     const match = /^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     if (!match) return null;
 
@@ -254,7 +287,7 @@ export class BiomeSystem {
 
     // Recorrer las capas de assets y convertir algunos a MapElements interactivos
     for (const layer of world.layers) {
-      if (layer.name === 'props' || layer.name === 'structures') {
+      if (layer.name === "props" || layer.name === "structures") {
         for (const tile of layer.tiles) {
           // Convertir algunos assets en elementos interactivos
           if (this.shouldBeInteractive(tile.asset)) {
@@ -266,7 +299,7 @@ export class BiomeSystem {
                 width: this.config.tileSize,
                 height: this.config.tileSize,
               },
-              color: '#ffffff',
+              color: "#ffffff",
               metadata: {
                 assetId: tile.asset,
                 interactive: true,
@@ -280,7 +313,7 @@ export class BiomeSystem {
       }
     }
 
-    logAutopoiesis.info('🎮 Elementos interactivos generados desde biomas', {
+    logAutopoiesis.info("🎮 Elementos interactivos generados desde biomas", {
       totalElements: elements.length,
     });
 
@@ -291,19 +324,27 @@ export class BiomeSystem {
    * Determina si un asset debería ser un elemento interactivo
    */
   private shouldBeInteractive(asset: string): boolean {
-    const interactiveAssets = ['flowers_white.png', 'flowers_red.png', 'Well_Hay_1.png', 'House.png', 'tree_idol_'];
+    const interactiveAssets = [
+      "flowers_white.png",
+      "flowers_red.png",
+      "Well_Hay_1.png",
+      "House.png",
+      "tree_idol_",
+    ];
 
-    return interactiveAssets.some(pattern => asset.includes(pattern));
+    return interactiveAssets.some((pattern) => asset.includes(pattern));
   }
 
   /**
    * Obtiene el tipo de elemento basado en el asset
    */
-  private getElementTypeFromAsset(asset: string): 'food_zone' | 'social_zone' | 'comfort_zone' | 'decoration' {
-    if (asset.includes('flower')) return 'food_zone';
-    if (asset.includes('Well') || asset.includes('House')) return 'social_zone';
-    if (asset.includes('tree_idol')) return 'comfort_zone';
-    return 'decoration';
+  private getElementTypeFromAsset(
+    asset: string,
+  ): "food_zone" | "social_zone" | "comfort_zone" | "decoration" {
+    if (asset.includes("flower")) return "food_zone";
+    if (asset.includes("Well") || asset.includes("House")) return "social_zone";
+    if (asset.includes("tree_idol")) return "comfort_zone";
+    return "decoration";
   }
 
   /**
@@ -315,7 +356,12 @@ export class BiomeSystem {
     const tileX = Math.floor(x / this.config.tileSize);
     const tileY = Math.floor(y / this.config.tileSize);
 
-    if (tileX < 0 || tileX >= this.config.width || tileY < 0 || tileY >= this.config.height) {
+    if (
+      tileX < 0 ||
+      tileX >= this.config.width ||
+      tileY < 0 ||
+      tileY >= this.config.height
+    ) {
       return null;
     }
 
@@ -352,11 +398,16 @@ export class BiomeSystem {
   /**
    * Regenera el mundo con nueva configuración
    */
-  public regenerateWorld(newConfig: Partial<WorldGenConfig> = {}): GeneratedWorld {
+  public regenerateWorld(
+    newConfig: Partial<WorldGenConfig> = {},
+  ): GeneratedWorld {
     this.config = { ...this.config, ...newConfig };
     this.generator = new TerrainGenerator(this.config);
 
-    logAutopoiesis.info('🔄 Regenerando mundo con nueva configuración', newConfig);
+    logAutopoiesis.info(
+      "🔄 Regenerando mundo con nueva configuración",
+      newConfig,
+    );
 
     return this.generateWorld();
   }

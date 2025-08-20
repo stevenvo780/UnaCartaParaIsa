@@ -3,7 +3,7 @@
  * Implementa algoritmos de ruido Perlin y Simplex adaptados para la generación de biomas
  */
 
-import type { NoiseOptions } from './types';
+import type { NoiseOptions } from "./types";
 
 export class NoiseGenerator {
   private p: number[] = [];
@@ -79,9 +79,17 @@ export class NoiseGenerator {
     const BB = this.perm[B + 1];
 
     return this.lerp(
-      this.lerp(this.grad(this.perm[AA], x, y), this.grad(this.perm[BA], x - 1, y), u),
-      this.lerp(this.grad(this.perm[AB], x, y - 1), this.grad(this.perm[BB], x - 1, y - 1), u),
-      v
+      this.lerp(
+        this.grad(this.perm[AA], x, y),
+        this.grad(this.perm[BA], x - 1, y),
+        u,
+      ),
+      this.lerp(
+        this.grad(this.perm[AB], x, y - 1),
+        this.grad(this.perm[BB], x - 1, y - 1),
+        u,
+      ),
+      v,
     );
   }
 
@@ -143,7 +151,9 @@ export class NoiseGenerator {
         const pointX = cellX + this.hash2D(cellX, cellY) / 256;
         const pointY = cellY + this.hash2D(cellX + 1, cellY) / 256;
 
-        const dist = Math.sqrt(Math.pow(x * scale - pointX, 2) + Math.pow(y * scale - pointY, 2));
+        const dist = Math.sqrt(
+          Math.pow(x * scale - pointX, 2) + Math.pow(y * scale - pointY, 2),
+        );
 
         minDist = Math.min(minDist, dist);
       }
@@ -198,7 +208,7 @@ export class NoiseProcessor {
     const range = max - min;
     if (range === 0) return map;
 
-    return map.map(row => row.map(value => (value - min) / range));
+    return map.map((row) => row.map((value) => (value - min) / range));
   }
 
   /**
@@ -277,7 +287,7 @@ export class NoiseProcessor {
    */
   public static blend(maps: number[][][], weights: number[]): number[][] {
     if (maps.length === 0 || maps.length !== weights.length) {
-      throw new Error('Maps and weights arrays must have the same length');
+      throw new Error("Maps and weights arrays must have the same length");
     }
 
     const height = maps[0].length;

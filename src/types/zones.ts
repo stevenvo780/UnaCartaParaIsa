@@ -3,21 +3,21 @@
  */
 
 export type ZoneType =
-  | 'kitchen'
-  | 'bedroom'
-  | 'living'
-  | 'bathroom'
-  | 'office'
-  | 'gym'
-  | 'library'
-  | 'social'
-  | 'recreation'
-  | 'food'
-  | 'rest'
-  | 'play'
-  | 'comfort'
-  | 'work'
-  | 'energy';
+  | "kitchen"
+  | "bedroom"
+  | "living"
+  | "bathroom"
+  | "office"
+  | "gym"
+  | "library"
+  | "social"
+  | "recreation"
+  | "food"
+  | "rest"
+  | "play"
+  | "comfort"
+  | "work"
+  | "energy";
 
 export interface Zone {
   id: string;

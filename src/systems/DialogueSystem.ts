@@ -4,8 +4,8 @@
  * Usa conversaciones reales entre Isa y Stev del archivo JSON original
  */
 
-import type { DialogueEntry } from '../types';
-import { logAutopoiesis } from '../utils/logger';
+import type { DialogueEntry } from "../types";
+import { logAutopoiesis } from "../utils/logger";
 import {
   loadDialogueData,
   getNextDialogue,
@@ -14,7 +14,7 @@ import {
   getSpeakerForEntity,
   getEmotionForActivity,
   getDialogueStats,
-} from '../utils/dialogueSelector';
+} from "../utils/dialogueSelector";
 
 interface ConversationState {
   isActive: boolean;
@@ -62,16 +62,18 @@ export class DialogueSystem {
       this.isInitialized = true;
       this.setupAutoDialogueSystem();
 
-      logAutopoiesis.info('DialogueSystem inicializado con datos reales', {
+      logAutopoiesis.info("DialogueSystem inicializado con datos reales", {
         stats: getDialogueStats(),
       });
 
-      logAutopoiesis.info('✅ Sistema de diálogos inicializado con conversaciones reales');
+      logAutopoiesis.info(
+        "✅ Sistema de diálogos inicializado con conversaciones reales",
+      );
     } catch (error) {
-      logAutopoiesis.error('❌ Error inicializando sistema de diálogos', {
+      logAutopoiesis.error("❌ Error inicializando sistema de diálogos", {
         error: String(error),
       });
-      logAutopoiesis.error('Error en inicialización de DialogueSystem', {
+      logAutopoiesis.error("Error en inicialización de DialogueSystem", {
         error: error?.toString(),
       });
     }
@@ -89,14 +91,14 @@ export class DialogueSystem {
     this.autoDialogueTimer = this.scene.time.addEvent({
       delay: baseInterval + variableInterval,
       callback: () => {
-        this.evaluateAutoDialogue().catch(error => {
-          logAutopoiesis.error('Error in auto dialogue evaluation:', error);
+        this.evaluateAutoDialogue().catch((error) => {
+          logAutopoiesis.error("Error in auto dialogue evaluation:", error);
         });
       },
       loop: true,
     });
 
-    logAutopoiesis.debug('Sistema autónomo de diálogos configurado', {
+    logAutopoiesis.debug("Sistema autónomo de diálogos configurado", {
       baseInterval,
       nextDialogue: baseInterval + variableInterval,
     });
@@ -124,7 +126,7 @@ export class DialogueSystem {
     const entities: Entity[] = [];
 
     // Obtener entidades reales del MainScene
-    const mainScene = this.scene.scene.get('MainScene') as Phaser.Scene & {
+    const mainScene = this.scene.scene.get("MainScene") as Phaser.Scene & {
       isaEntity?: {
         active: boolean;
         getPosition(): { x: number; y: number };
@@ -143,11 +145,11 @@ export class DialogueSystem {
       if (mainScene.isaEntity?.active) {
         const position = mainScene.isaEntity.getPosition();
         entities.push({
-          id: 'isa_entity',
+          id: "isa_entity",
           x: position.x,
           y: position.y,
-          activity: mainScene.isaEntity.getCurrentActivity() || 'SOCIALIZING',
-          emotion: mainScene.isaEntity.getMood() || 'NEUTRAL',
+          activity: mainScene.isaEntity.getCurrentActivity() || "SOCIALIZING",
+          emotion: mainScene.isaEntity.getMood() || "NEUTRAL",
         });
       }
 
@@ -155,11 +157,11 @@ export class DialogueSystem {
       if (mainScene.stevEntity?.active) {
         const position = mainScene.stevEntity.getPosition();
         entities.push({
-          id: 'stev_entity',
+          id: "stev_entity",
           x: position.x,
           y: position.y,
-          activity: mainScene.stevEntity.getCurrentActivity() || 'SOCIALIZING',
-          emotion: mainScene.stevEntity.getMood() || 'CURIOUS',
+          activity: mainScene.stevEntity.getCurrentActivity() || "SOCIALIZING",
+          emotion: mainScene.stevEntity.getMood() || "CURIOUS",
         });
       }
     }
@@ -168,18 +170,18 @@ export class DialogueSystem {
     if (entities.length === 0) {
       return [
         {
-          id: 'isa_entity',
+          id: "isa_entity",
           x: 100,
           y: 100,
-          activity: 'SOCIALIZING',
-          emotion: 'NEUTRAL',
+          activity: "SOCIALIZING",
+          emotion: "NEUTRAL",
         },
         {
-          id: 'stev_entity',
+          id: "stev_entity",
           x: 200,
           y: 150,
-          activity: 'SOCIALIZING',
-          emotion: 'CURIOUS',
+          activity: "SOCIALIZING",
+          emotion: "CURIOUS",
         },
       ];
     }
@@ -194,7 +196,9 @@ export class DialogueSystem {
     if (entities.length === 0) return null;
 
     if (this.conversationState.lastSpeaker) {
-      const otherEntities = entities.filter(e => getSpeakerForEntity(e.id) !== this.conversationState.lastSpeaker);
+      const otherEntities = entities.filter(
+        (e) => getSpeakerForEntity(e.id) !== this.conversationState.lastSpeaker,
+      );
 
       if (otherEntities.length > 0) {
         return otherEntities[Math.floor(Math.random() * otherEntities.length)];
@@ -202,7 +206,7 @@ export class DialogueSystem {
     }
 
     const now = Date.now();
-    const weights = entities.map(entity => {
+    const weights = entities.map((entity) => {
       const timeSinceLastInteraction = now - (entity.lastInteraction || 0);
       return Math.min(timeSinceLastInteraction / 10000, 2.0);
     });
@@ -224,12 +228,19 @@ export class DialogueSystem {
    */
   private async generateContextualDialogue(entity: Entity): Promise<void> {
     const speaker = getSpeakerForEntity(entity.id);
-    const emotion = entity.emotion || getEmotionForActivity(entity.activity || 'SOCIALIZING');
+    const emotion =
+      entity.emotion || getEmotionForActivity(entity.activity || "SOCIALIZING");
 
     let dialogue: DialogueEntry | null = null;
 
-    if (this.conversationState.lastDialogue && this.conversationState.lastSpeaker !== speaker) {
-      dialogue = await getResponseWriter(speaker, this.conversationState.lastDialogue);
+    if (
+      this.conversationState.lastDialogue &&
+      this.conversationState.lastSpeaker !== speaker
+    ) {
+      dialogue = await getResponseWriter(
+        speaker,
+        this.conversationState.lastDialogue,
+      );
     }
 
     if (!dialogue) {
@@ -248,27 +259,54 @@ export class DialogueSystem {
   public showDialogue(entityId: string, dialogue: DialogueEntry): void {
     this.removeDialogueBubble(entityId);
 
-    const entity = this.getAvailableEntities().find(e => e.id === entityId);
+    const entity = this.getAvailableEntities().find((e) => e.id === entityId);
     if (!entity) return;
 
     // Posicionar burbuja sobre la entidad con un offset hacia arriba
     const bubbleOffsetY = -80; // Más arriba para mejor visibilidad
-    const bubbleContainer = this.scene.add.container(entity.x, entity.y + bubbleOffsetY);
+    const bubbleContainer = this.scene.add.container(
+      entity.x,
+      entity.y + bubbleOffsetY,
+    );
 
     // Ajustar tamaño de burbuja basado en el texto
     const textLines = Math.ceil(dialogue.text.length / 35);
-    const bubbleWidth = Math.min(Math.max(dialogue.text.length * 7 + 40, 200), 320);
+    const bubbleWidth = Math.min(
+      Math.max(dialogue.text.length * 7 + 40, 200),
+      320,
+    );
     const bubbleHeight = Math.max(textLines * 20 + 20, 50);
 
     // Crear burbuja con estilo mejorado
     const bubble = this.scene.add.graphics();
 
     // Gradiente de fondo más atractivo
-    const bubbleColor = dialogue.speaker === 'ISA' ? 0xff6b9d : 0x4ecdc4;
-    bubble.fillGradientStyle(0xffffff, 0xffffff, bubbleColor, bubbleColor, 0.95, 0.95, 0.1, 0.1);
+    const bubbleColor = dialogue.speaker === "ISA" ? 0xff6b9d : 0x4ecdc4;
+    bubble.fillGradientStyle(
+      0xffffff,
+      0xffffff,
+      bubbleColor,
+      bubbleColor,
+      0.95,
+      0.95,
+      0.1,
+      0.1,
+    );
     bubble.lineStyle(3, bubbleColor, 0.8);
-    bubble.fillRoundedRect(-bubbleWidth / 2, -bubbleHeight / 2, bubbleWidth, bubbleHeight, 12);
-    bubble.strokeRoundedRect(-bubbleWidth / 2, -bubbleHeight / 2, bubbleWidth, bubbleHeight, 12);
+    bubble.fillRoundedRect(
+      -bubbleWidth / 2,
+      -bubbleHeight / 2,
+      bubbleWidth,
+      bubbleHeight,
+      12,
+    );
+    bubble.strokeRoundedRect(
+      -bubbleWidth / 2,
+      -bubbleHeight / 2,
+      bubbleWidth,
+      bubbleHeight,
+      12,
+    );
 
     // Añadir "cola" de la burbuja apuntando al personaje
     const tailSize = 12;
@@ -278,7 +316,7 @@ export class DialogueSystem {
       -tailSize,
       bubbleHeight / 2 + tailSize,
       tailSize,
-      bubbleHeight / 2 + tailSize
+      bubbleHeight / 2 + tailSize,
     );
     bubble.lineStyle(3, bubbleColor, 0.8);
     bubble.strokeTriangle(
@@ -287,36 +325,36 @@ export class DialogueSystem {
       -tailSize,
       bubbleHeight / 2 + tailSize,
       tailSize,
-      bubbleHeight / 2 + tailSize
+      bubbleHeight / 2 + tailSize,
     );
 
     // Texto del diálogo con mejor formato
     const dialogueText = this.scene.add
       .text(0, -5, dialogue.text, {
-        fontSize: '12px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#2c3e50',
-        align: 'center',
+        fontSize: "12px",
+        fontFamily: "Arial, sans-serif",
+        color: "#2c3e50",
+        align: "center",
         wordWrap: { width: bubbleWidth - 30 },
         lineSpacing: 2,
       })
       .setOrigin(0.5);
 
     // Indicador del hablante con emoji
-    const speakerEmoji = dialogue.speaker === 'ISA' ? '👩' : '👨';
+    const speakerEmoji = dialogue.speaker === "ISA" ? "👩" : "👨";
     const speakerIndicator = this.scene.add
       .text(-bubbleWidth / 2 + 15, -bubbleHeight / 2 + 15, speakerEmoji, {
-        fontSize: '16px',
+        fontSize: "16px",
       })
       .setOrigin(0.5);
 
     // Nombre del hablante
     const speakerName = this.scene.add
       .text(bubbleWidth / 2 - 10, -bubbleHeight / 2 + 8, dialogue.speaker, {
-        fontSize: '10px',
-        fontFamily: 'Arial, sans-serif',
-        color: `#${bubbleColor.toString(16).padStart(6, '0')}`,
-        fontStyle: 'bold',
+        fontSize: "10px",
+        fontFamily: "Arial, sans-serif",
+        color: `#${bubbleColor.toString(16).padStart(6, "0")}`,
+        fontStyle: "bold",
       })
       .setOrigin(1, 0);
 
@@ -335,7 +373,7 @@ export class DialogueSystem {
       scaleY: 1,
       rotation: 0,
       duration: 400,
-      ease: 'Elastic.easeOut',
+      ease: "Elastic.easeOut",
     });
 
     // Hacer que la burbuja siga a la entidad si se mueve
@@ -351,7 +389,7 @@ export class DialogueSystem {
     this.conversationState.lastSpeaker = dialogue.speaker;
     this.conversationState.lastDialogue = dialogue;
 
-    logAutopoiesis.info('Diálogo mostrado', {
+    logAutopoiesis.info("Diálogo mostrado", {
       entityId,
       speaker: dialogue.speaker,
       emotion: dialogue.emotion,
@@ -386,9 +424,12 @@ export class DialogueSystem {
   /**
    * Manejar interacción del jugador con entidad
    */
-  public handlePlayerInteraction(entityId: string, interactionType: string): void {
+  public handlePlayerInteraction(
+    entityId: string,
+    interactionType: string,
+  ): void {
     if (!this.isInitialized) {
-      logAutopoiesis.warn('⚠️ Sistema de diálogos no inicializado');
+      logAutopoiesis.warn("⚠️ Sistema de diálogos no inicializado");
       return;
     }
 
@@ -396,10 +437,10 @@ export class DialogueSystem {
     if (dialogue) {
       this.showDialogue(entityId, dialogue);
 
-      const entity = this.getAvailableEntities().find(e => e.id === entityId);
+      const entity = this.getAvailableEntities().find((e) => e.id === entityId);
       if (entity) {
         entity.lastInteraction = Date.now();
-        entity.activity = 'SOCIALIZING';
+        entity.activity = "SOCIALIZING";
       }
     }
   }
@@ -412,7 +453,7 @@ export class DialogueSystem {
     this.conversationState.participants = participants;
     this.conversationState.startTime = Date.now();
 
-    logAutopoiesis.info('Conversación iniciada', {
+    logAutopoiesis.info("Conversación iniciada", {
       participants,
       timestamp: this.conversationState.startTime,
     });
@@ -429,7 +470,7 @@ export class DialogueSystem {
       this.removeDialogueBubble(entityId);
     });
 
-    logAutopoiesis.info('Conversación finalizada', {
+    logAutopoiesis.info("Conversación finalizada", {
       duration: Date.now() - this.conversationState.startTime,
     });
   }
@@ -454,11 +495,11 @@ export class DialogueSystem {
       this.autoDialogueTimer.destroy();
     }
 
-    this.dialogueBubbles.forEach(bubble => {
+    this.dialogueBubbles.forEach((bubble) => {
       bubble.destroy();
     });
     this.dialogueBubbles.clear();
 
-    logAutopoiesis.info('DialogueSystem destruido');
+    logAutopoiesis.info("DialogueSystem destruido");
   }
 }

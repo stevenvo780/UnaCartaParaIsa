@@ -941,6 +941,9 @@ export class WorldRenderer {
       flowers_white: "flowers_white_anim",
       chicken: "chicken_anim",
       wildlife: "chicken_anim", // Usar pollo animado para wildlife
+      // 🎭 Personajes animados
+      woman: "woman_anim",
+      man: "man_anim",
     };
 
     // Si existe una versión animada, verificar que esté cargada

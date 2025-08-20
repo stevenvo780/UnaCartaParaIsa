@@ -2,12 +2,28 @@
  * Tipos relacionados con entidades del juego
  */
 
-import type { ActivityType } from './activities';
-import type { Position } from './core';
+import type { ActivityType } from "./activities";
+import type { Position } from "./core";
 
-export type EntityStateType = 'idle' | 'moving' | 'interacting' | 'resting' | 'seeking' | 'dead' | 'fading';
+export type EntityStateType =
+  | "idle"
+  | "moving"
+  | "interacting"
+  | "resting"
+  | "seeking"
+  | "dead"
+  | "fading";
 
-export type MoodType = '😊' | '😢' | '😡' | '😌' | '🤩' | '😑' | '😔' | '😰' | '😴';
+export type MoodType =
+  | "😊"
+  | "😢"
+  | "😡"
+  | "😌"
+  | "🤩"
+  | "😑"
+  | "😔"
+  | "😰"
+  | "😴";
 
 export interface EntityStats {
   health: number;

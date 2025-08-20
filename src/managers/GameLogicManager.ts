@@ -3,10 +3,17 @@
  * Centraliza actualizaciones, timers y estado del juego
  */
 
-import { gameConfig } from '../config/gameConfig';
-import { GAME_BALANCE } from '../constants/gameBalance';
-import type { Entity, EntityStats, GameEvents, GameLogicUpdateData, GameState, IGameLogicManager } from '../types';
-import { logAutopoiesis } from '../utils/logger';
+import { gameConfig } from "../config/gameConfig";
+import { GAME_BALANCE } from "../constants/gameBalance";
+import type {
+  Entity,
+  EntityStats,
+  GameEvents,
+  GameLogicUpdateData,
+  GameState,
+  IGameLogicManager,
+} from "../types";
+import { logAutopoiesis } from "../utils/logger";
 
 export class GameLogicManager implements IGameLogicManager {
   private _scene: Phaser.Scene;
@@ -26,7 +33,7 @@ export class GameLogicManager implements IGameLogicManager {
    */
   public initialize(): void {
     this._setupGameLoop();
-    logAutopoiesis.info('GameLogicManager initialized', {
+    logAutopoiesis.info("GameLogicManager initialized", {
       entities: this._gameState.entities.length,
       zones: this._gameState.zones.length,
     });
@@ -51,7 +58,7 @@ export class GameLogicManager implements IGameLogicManager {
       loop: true,
     });
 
-    logAutopoiesis.debug('Game logic loop started', {
+    logAutopoiesis.debug("Game logic loop started", {
       interval: gameConfig.timing.mainGameLogic,
     });
   }
@@ -62,13 +69,13 @@ export class GameLogicManager implements IGameLogicManager {
   private _updateGameLogic(): void {
     this._gameState.cycles++;
 
-    this._entities.forEach(entity => {
+    this._entities.forEach((entity) => {
       // Check if entity has updateEntity method (AnimatedGameEntity)
       if (
         entity &&
-        typeof entity === 'object' &&
-        'updateEntity' in entity &&
-        typeof entity.updateEntity === 'function'
+        typeof entity === "object" &&
+        "updateEntity" in entity &&
+        typeof entity.updateEntity === "function"
       ) {
         entity.updateEntity(gameConfig.timing.mainGameLogic);
       }
@@ -76,13 +83,17 @@ export class GameLogicManager implements IGameLogicManager {
 
     this._updateResonance();
 
-    const isaEntity = this._entities.get('isa');
-    const stevEntity = this._entities.get('stev');
+    const isaEntity = this._entities.get("isa");
+    const stevEntity = this._entities.get("stev");
 
     // Get entity data safely
     const getEntityData = (entity: unknown): Entity | null => {
       if (!entity) return null;
-      if (typeof entity === 'object' && 'getEntityData' in entity && typeof entity.getEntityData === 'function') {
+      if (
+        typeof entity === "object" &&
+        "getEntityData" in entity &&
+        typeof entity.getEntityData === "function"
+      ) {
         return entity.getEntityData();
       }
       // Assume it's already Entity data
@@ -93,7 +104,7 @@ export class GameLogicManager implements IGameLogicManager {
     const stevData = getEntityData(stevEntity);
 
     const entityArray = Array.from(this._entities.values())
-      .map(entity => getEntityData(entity))
+      .map((entity) => getEntityData(entity))
       .filter(Boolean);
 
     const updateData: GameLogicUpdateData = {
@@ -106,7 +117,7 @@ export class GameLogicManager implements IGameLogicManager {
       stevStats: stevData?.stats ?? ({} as EntityStats),
     };
 
-    this.emit('gameLogicUpdate', updateData);
+    this.emit("gameLogicUpdate", updateData);
 
     if (this._gameState.cycles % GAME_BALANCE.CYCLE_LOG_FREQUENCY === 0) {
       this._logGameStatus();
@@ -117,14 +128,18 @@ export class GameLogicManager implements IGameLogicManager {
    * Update resonance calculations between entities
    */
   private _updateResonance(): void {
-    const isaEntity = this._entities.get('isa');
-    const stevEntity = this._entities.get('stev');
+    const isaEntity = this._entities.get("isa");
+    const stevEntity = this._entities.get("stev");
 
     if (isaEntity && stevEntity) {
       // Get entity data safely
       const getEntityData = (entity: unknown): Entity | null => {
         if (!entity) return null;
-        if (typeof entity === 'object' && 'getEntityData' in entity && typeof entity.getEntityData === 'function') {
+        if (
+          typeof entity === "object" &&
+          "getEntityData" in entity &&
+          typeof entity.getEntityData === "function"
+        ) {
           return entity.getEntityData();
         }
         return entity as Entity;
@@ -141,7 +156,9 @@ export class GameLogicManager implements IGameLogicManager {
 
         const isaPos = isaData.position ?? { x: 0, y: 0 };
         const stevPos = stevData.position ?? { x: 0, y: 0 };
-        const distance = Math.sqrt(Math.pow(isaPos.x - stevPos.x, 2) + Math.pow(isaPos.y - stevPos.y, 2));
+        const distance = Math.sqrt(
+          Math.pow(isaPos.x - stevPos.x, 2) + Math.pow(isaPos.y - stevPos.y, 2),
+        );
 
         if (distance < 100) {
           this._gameState.togetherTime += gameConfig.timing.mainGameLogic;
@@ -171,10 +188,15 @@ export class GameLogicManager implements IGameLogicManager {
   /**
    * Handle player interactions with entities
    */
-  public handlePlayerInteraction(entityId: string, interactionType: string): void {
+  public handlePlayerInteraction(
+    entityId: string,
+    interactionType: string,
+  ): void {
     const entity = this._entities.get(entityId);
     if (!entity) {
-      logAutopoiesis.warn(`Player interaction failed - entity not found: ${entityId}`);
+      logAutopoiesis.warn(
+        `Player interaction failed - entity not found: ${entityId}`,
+      );
       return;
     }
 
@@ -185,13 +207,13 @@ export class GameLogicManager implements IGameLogicManager {
       entityId,
     };
 
-    this.emit('playerInteraction', {
+    this.emit("playerInteraction", {
       entityId,
       interactionType,
       timestamp: Date.now(),
     });
 
-    logAutopoiesis.info('Player interaction processed', {
+    logAutopoiesis.info("Player interaction processed", {
       entityId,
       interactionType,
       resonance: this._gameState.resonance,
@@ -226,14 +248,22 @@ export class GameLogicManager implements IGameLogicManager {
   /**
    * Subscribe to game logic events
    */
-  public on<K extends keyof GameEvents>(event: K, listener: (data: GameEvents[K]) => void, context?: any): void {
+  public on<K extends keyof GameEvents>(
+    event: K,
+    listener: (data: GameEvents[K]) => void,
+    context?: any,
+  ): void {
     this._eventEmitter.on(event, listener, context);
   }
 
   /**
    * Unsubscribe from game logic events
    */
-  public off<K extends keyof GameEvents>(event: K, listener?: (data: GameEvents[K]) => void, context?: any): void {
+  public off<K extends keyof GameEvents>(
+    event: K,
+    listener?: (data: GameEvents[K]) => void,
+    context?: any,
+  ): void {
     this._eventEmitter.off(event, listener, context);
   }
 
@@ -250,7 +280,7 @@ export class GameLogicManager implements IGameLogicManager {
   public pause(): void {
     if (this._gameLoopTimer) {
       this._gameLoopTimer.paused = true;
-      logAutopoiesis.info('Game logic paused');
+      logAutopoiesis.info("Game logic paused");
     }
   }
 
@@ -260,7 +290,7 @@ export class GameLogicManager implements IGameLogicManager {
   public resume(): void {
     if (this._gameLoopTimer) {
       this._gameLoopTimer.paused = false;
-      logAutopoiesis.info('Game logic resumed');
+      logAutopoiesis.info("Game logic resumed");
     }
   }
 
@@ -288,12 +318,14 @@ export class GameLogicManager implements IGameLogicManager {
    * Log current game status for debugging
    */
   private _logGameStatus(): void {
-    const entityStates = Array.from(this._entities.entries()).map(([id, entity]) => ({
-      id,
-      activity: entity.activity ?? 'unknown',
-      mood: entity.mood ?? 'unknown',
-      alive: !entity.isDead,
-    }));
+    const entityStates = Array.from(this._entities.entries()).map(
+      ([id, entity]) => ({
+        id,
+        activity: entity.activity ?? "unknown",
+        mood: entity.mood ?? "unknown",
+        alive: !entity.isDead,
+      }),
+    );
 
     logAutopoiesis.info(`Game cycle ${this._gameState.cycles}`, {
       resonance: this._gameState.resonance.toFixed(2),
@@ -332,6 +364,6 @@ export class GameLogicManager implements IGameLogicManager {
     this._entities.clear();
     this._eventEmitter.removeAllListeners();
 
-    logAutopoiesis.info('GameLogicManager destroyed');
+    logAutopoiesis.info("GameLogicManager destroyed");
   }
 }

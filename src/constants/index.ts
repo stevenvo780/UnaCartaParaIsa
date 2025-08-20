@@ -132,19 +132,19 @@ export const PHYSICS = {
 
 export const ACTIVITIES = {
   TYPES: [
-    'RESTING',
-    'MEDITATING',
-    'SOCIALIZING',
-    'WORKING',
-    'EXERCISING',
-    'WANDERING',
-    'WRITING',
-    'EXPLORING',
-    'CONTEMPLATING',
-    'DANCING',
-    'HIDING',
-    'SHOPPING',
-    'COOKING',
+    "RESTING",
+    "MEDITATING",
+    "SOCIALIZING",
+    "WORKING",
+    "EXERCISING",
+    "WANDERING",
+    "WRITING",
+    "EXPLORING",
+    "CONTEMPLATING",
+    "DANCING",
+    "HIDING",
+    "SHOPPING",
+    "COOKING",
   ] as const,
 
   OPTIMAL_DURATION: {
@@ -180,19 +180,19 @@ export const ACTIVITIES = {
   },
 
   PREFERRED_ZONES: {
-    RESTING: 'rest',
-    MEDITATING: 'comfort',
-    SOCIALIZING: 'social',
-    WORKING: 'work',
-    EXERCISING: 'play',
-    WANDERING: 'play',
-    WRITING: 'comfort',
-    EXPLORING: 'play',
-    CONTEMPLATING: 'comfort',
-    DANCING: 'social',
-    HIDING: 'comfort',
-    SHOPPING: 'work',
-    COOKING: 'food',
+    RESTING: "rest",
+    MEDITATING: "comfort",
+    SOCIALIZING: "social",
+    WORKING: "work",
+    EXERCISING: "play",
+    WANDERING: "play",
+    WRITING: "comfort",
+    EXPLORING: "play",
+    CONTEMPLATING: "comfort",
+    DANCING: "social",
+    HIDING: "comfort",
+    SHOPPING: "work",
+    COOKING: "food",
   },
 } as const;
 
@@ -206,17 +206,17 @@ export const MOVEMENT_CONFIG = {
 } as const;
 
 export const NEED_TO_ZONE_MAPPING = {
-  hunger: 'kitchen',
-  thirst: 'kitchen',
-  energy: 'bedroom',
-  sleepiness: 'bedroom',
-  social: 'living',
-  entertainment: 'living',
-  loneliness: 'social',
-  happiness: 'play',
-  boredom: 'recreation',
-  money: 'work',
-  health: 'bedroom',
+  hunger: "kitchen",
+  thirst: "kitchen",
+  energy: "bedroom",
+  sleepiness: "bedroom",
+  social: "living",
+  entertainment: "living",
+  loneliness: "social",
+  happiness: "play",
+  boredom: "recreation",
+  money: "work",
+  health: "bedroom",
 } as const;
 
 export const RESONANCE_THRESHOLDS = {
@@ -225,8 +225,24 @@ export const RESONANCE_THRESHOLDS = {
   HIGH: 0.8,
 } as const;
 
-export type ZoneType = 'kitchen' | 'bedroom' | 'living' | 'bathroom' | 'outdoor';
+export type ZoneType =
+  | "kitchen"
+  | "bedroom"
+  | "living"
+  | "bathroom"
+  | "outdoor";
 
-export type EntityStateType = 'idle' | 'moving' | 'interacting' | 'resting' | 'seeking';
+export type EntityStateType =
+  | "idle"
+  | "moving"
+  | "interacting"
+  | "resting"
+  | "seeking";
 
-export const { MAIN_GAME_LOGIC, DEGRADATION_UPDATE, NATURAL_CYCLE_MS, BREATHING_CYCLE_MS, ATTENTION_SPAN_MS } = TIMING;
+export const {
+  MAIN_GAME_LOGIC,
+  DEGRADATION_UPDATE,
+  NATURAL_CYCLE_MS,
+  BREATHING_CYCLE_MS,
+  ATTENTION_SPAN_MS,
+} = TIMING;

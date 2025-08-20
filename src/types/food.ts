@@ -2,7 +2,7 @@
  * Tipos y interfaces para el sistema de comida
  */
 
-export type FoodCategory = 'healthy' | 'junk' | 'dessert' | 'drink' | 'snack';
+export type FoodCategory = "healthy" | "junk" | "dessert" | "drink" | "snack";
 
 export interface FoodItem {
   id: string;

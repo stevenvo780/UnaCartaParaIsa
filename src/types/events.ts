@@ -2,10 +2,10 @@
  * Sistema de eventos tipado para el juego
  */
 
-import type { Entity, EntityStats } from './entities';
-import type { FoodItem } from './food';
-import type { Zone } from './zones';
-import type { GeneratedWorld } from '../world/types';
+import type { Entity, EntityStats } from "./entities";
+import type { FoodItem } from "./food";
+import type { Zone } from "./zones";
+import type { GeneratedWorld } from "../world/types";
 
 /**
  * Datos de actualización de game logic
@@ -45,7 +45,7 @@ export interface FoodStoreData {
 export interface DialogueCriteria {
   mood?: string;
   activity?: string;
-  timeOfDay?: 'dawn' | 'day' | 'dusk' | 'night';
+  timeOfDay?: "dawn" | "day" | "dusk" | "night";
   resonanceLevel?: number;
   statsThreshold?: Partial<EntityStats>;
   tags?: string[];
@@ -116,8 +116,16 @@ export interface GameEvents {
  * Event emitter tipado
  */
 export interface TypedEventEmitter<T extends Record<string, any>> {
-  on<K extends keyof T>(event: K, listener: (data: T[K]) => void, context?: any): void;
-  off<K extends keyof T>(event: K, listener?: (data: T[K]) => void, context?: any): void;
+  on<K extends keyof T>(
+    event: K,
+    listener: (data: T[K]) => void,
+    context?: any,
+  ): void;
+  off<K extends keyof T>(
+    event: K,
+    listener?: (data: T[K]) => void,
+    context?: any,
+  ): void;
   emit<K extends keyof T>(event: K, data: T[K]): void;
 }
 

@@ -3,10 +3,10 @@
  * Extrae la lógica de creación y manejo de entidades del MainScene
  */
 
-import type Phaser from 'phaser';
-import type { GameState } from '../types';
-import { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
-import { logAutopoiesis } from '../utils/logger';
+import type Phaser from "phaser";
+import type { GameState } from "../types";
+import { AnimatedGameEntity } from "../entities/AnimatedGameEntity";
+import { logAutopoiesis } from "../utils/logger";
 
 export class EntityManager {
   private scene: Phaser.Scene;
@@ -26,20 +26,23 @@ export class EntityManager {
     isaEntity: AnimatedGameEntity;
     stevEntity: AnimatedGameEntity;
   } {
-    logAutopoiesis.info('Creating game entities');
+    logAutopoiesis.info("Creating game entities");
 
     // Crear entidad Isa
-    this.isaEntity = new AnimatedGameEntity(this.scene, 300, 200, 'isa');
+    this.isaEntity = new AnimatedGameEntity(this.scene, 300, 200, "isa");
 
     // Crear entidad Stev
-    this.stevEntity = new AnimatedGameEntity(this.scene, 400, 200, 'stev');
+    this.stevEntity = new AnimatedGameEntity(this.scene, 400, 200, "stev");
 
     // Añadir a la escena
     this.entities.add(this.isaEntity);
     this.entities.add(this.stevEntity);
 
     // Añadir al estado del juego
-    gameState.entities = [this.isaEntity.getEntity(), this.stevEntity.getEntity()];
+    gameState.entities = [
+      this.isaEntity.getEntity(),
+      this.stevEntity.getEntity(),
+    ];
 
     return {
       isaEntity: this.isaEntity,
@@ -50,8 +53,8 @@ export class EntityManager {
   /**
    * Obtiene una entidad por ID
    */
-  getEntity(id: 'isa' | 'stev'): AnimatedGameEntity | undefined {
-    return id === 'isa' ? this.isaEntity : this.stevEntity;
+  getEntity(id: "isa" | "stev"): AnimatedGameEntity | undefined {
+    return id === "isa" ? this.isaEntity : this.stevEntity;
   }
 
   /**

@@ -2,10 +2,10 @@
  * BiomeAssetRenderer - Sistema ultra-diverso que aprovecha todos los assets disponibles
  */
 
-import Phaser from 'phaser';
-import { logAutopoiesis } from '../utils/logger';
-import { CreativeAssetLoader, type AssetInfo } from './CreativeAssetLoader';
-import { BiomeType, type GeneratedWorld } from './types';
+import Phaser from "phaser";
+import { logAutopoiesis } from "../utils/logger";
+import { CreativeAssetLoader, type AssetInfo } from "./CreativeAssetLoader";
+import { BiomeType, type GeneratedWorld } from "./types";
 
 interface BiomeVisualConfig {
   terrainAssets: AssetInfo[];
@@ -135,78 +135,105 @@ export class BiomeAssetRenderer {
 
     // GRASSLAND - Praderas verdes naturales
     const grasslandConfig = this.biomeConfigs.get(BiomeType.GRASSLAND);
-    grasslandConfig.terrainAssets = allAssets.getAssetsByBiome('grassland');
+    grasslandConfig.terrainAssets = allAssets.getAssetsByBiome("grassland");
     grasslandConfig.decorationAssets = [
-      ...allAssets.getAssetsByBiome('forest').filter(a => a.type === 'foliage'),
-      ...allAssets.getAssetsByBiome('forest').filter(a => a.type === 'mushroom'),
+      ...allAssets
+        .getAssetsByBiome("forest")
+        .filter((a) => a.type === "foliage"),
+      ...allAssets
+        .getAssetsByBiome("forest")
+        .filter((a) => a.type === "mushroom"),
     ];
-    grasslandConfig.structureAssets = allAssets.getAssetsByBiome('village').filter(a => a.rarity === 'common');
+    grasslandConfig.structureAssets = allAssets
+      .getAssetsByBiome("village")
+      .filter((a) => a.rarity === "common");
     grasslandConfig.propAssets = allAssets
-      .getAssetsByBiome('village')
-      .filter(a => a.type === 'prop' && a.rarity === 'common');
+      .getAssetsByBiome("village")
+      .filter((a) => a.type === "prop" && a.rarity === "common");
 
     // FOREST - Bosques mágicos diversos
     const forestConfig = this.biomeConfigs.get(BiomeType.FOREST);
-    forestConfig.terrainAssets = allAssets.getAssetsByBiome('grassland');
+    forestConfig.terrainAssets = allAssets.getAssetsByBiome("grassland");
     forestConfig.decorationAssets = [
-      ...allAssets.getAssetsByBiome('forest'),
-      ...allAssets.getAssetsByBiome('mystical'),
-      ...allAssets.getAssetsByBiome('magical'),
+      ...allAssets.getAssetsByBiome("forest"),
+      ...allAssets.getAssetsByBiome("mystical"),
+      ...allAssets.getAssetsByBiome("magical"),
     ];
-    forestConfig.structureAssets = allAssets.getAssetsByBiome('village').filter(a => a.rarity !== 'epic');
-    forestConfig.propAssets = allAssets.getAssetsByBiome('village').filter(a => a.type === 'prop');
+    forestConfig.structureAssets = allAssets
+      .getAssetsByBiome("village")
+      .filter((a) => a.rarity !== "epic");
+    forestConfig.propAssets = allAssets
+      .getAssetsByBiome("village")
+      .filter((a) => a.type === "prop");
 
     // WETLAND - Pantanos y humedales
     const wetlandConfig = this.biomeConfigs.get(BiomeType.WETLAND);
-    wetlandConfig.terrainAssets = allAssets.getAssetsByBiome('wetland');
+    wetlandConfig.terrainAssets = allAssets.getAssetsByBiome("wetland");
     wetlandConfig.decorationAssets = [
-      ...allAssets.getAssetsByBiome('wetland'),
-      ...allAssets.getAssetsByBiome('forest').filter(a => a.key.includes('willow')),
+      ...allAssets.getAssetsByBiome("wetland"),
+      ...allAssets
+        .getAssetsByBiome("forest")
+        .filter((a) => a.key.includes("willow")),
     ];
-    wetlandConfig.structureAssets = allAssets.getAssetsByBiome('wetland').filter(a => a.type === 'ruin');
+    wetlandConfig.structureAssets = allAssets
+      .getAssetsByBiome("wetland")
+      .filter((a) => a.type === "ruin");
     wetlandConfig.propAssets = [];
 
     // VILLAGE - Pueblos con arquitectura
     const villageConfig = this.biomeConfigs.get(BiomeType.VILLAGE);
-    villageConfig.terrainAssets = allAssets.getAssetsByBiome('village');
-    villageConfig.decorationAssets = allAssets.getAssetsByBiome('village').filter(a => a.type === 'foliage');
-    villageConfig.structureAssets = allAssets.getAssetsByBiome('village').filter(a => a.type === 'structure');
-    villageConfig.propAssets = allAssets.getAssetsByBiome('village').filter(a => a.type === 'prop');
+    villageConfig.terrainAssets = allAssets.getAssetsByBiome("village");
+    villageConfig.decorationAssets = allAssets
+      .getAssetsByBiome("village")
+      .filter((a) => a.type === "foliage");
+    villageConfig.structureAssets = allAssets
+      .getAssetsByBiome("village")
+      .filter((a) => a.type === "structure");
+    villageConfig.propAssets = allAssets
+      .getAssetsByBiome("village")
+      .filter((a) => a.type === "prop");
 
     // MOUNTAINOUS - Montañas rocosas con ruinas
     const mountainConfig = this.biomeConfigs.get(BiomeType.MOUNTAINOUS);
-    mountainConfig.terrainAssets = allAssets.getAssetsByBiome('mountain');
+    mountainConfig.terrainAssets = allAssets.getAssetsByBiome("mountain");
     mountainConfig.decorationAssets = [
-      ...allAssets.getAssetsByBiome('mountain'),
-      ...allAssets.getAssetsByBiome('desert'),
+      ...allAssets.getAssetsByBiome("mountain"),
+      ...allAssets.getAssetsByBiome("desert"),
     ];
     mountainConfig.structureAssets = [
-      ...allAssets.getAssetsByBiome('ancient'),
-      ...allAssets.getAssetsByBiome('desert'),
+      ...allAssets.getAssetsByBiome("ancient"),
+      ...allAssets.getAssetsByBiome("desert"),
     ];
-    mountainConfig.propAssets = allAssets.getAssetsByBiome('village').filter(a => a.rarity === 'uncommon');
+    mountainConfig.propAssets = allAssets
+      .getAssetsByBiome("village")
+      .filter((a) => a.rarity === "uncommon");
 
     // MYSTICAL - Bioma mágico épico
     const mysticalConfig = this.biomeConfigs.get(BiomeType.MYSTICAL);
-    mysticalConfig.terrainAssets = allAssets.getAssetsByBiome('grassland');
+    mysticalConfig.terrainAssets = allAssets.getAssetsByBiome("grassland");
     mysticalConfig.decorationAssets = [
-      ...allAssets.getAssetsByBiome('mystical'),
-      ...allAssets.getAssetsByBiome('luminous'),
-      ...allAssets.getAssetsByBiome('ethereal'),
-      ...allAssets.getAssetsByBiome('sacred'),
+      ...allAssets.getAssetsByBiome("mystical"),
+      ...allAssets.getAssetsByBiome("luminous"),
+      ...allAssets.getAssetsByBiome("ethereal"),
+      ...allAssets.getAssetsByBiome("sacred"),
     ];
     mysticalConfig.structureAssets = [
-      ...allAssets.getAssetsByBiome('sacred'),
-      ...allAssets.getAssetsByBiome('ethereal'),
+      ...allAssets.getAssetsByBiome("sacred"),
+      ...allAssets.getAssetsByBiome("ethereal"),
     ];
-    mysticalConfig.propAssets = allAssets.getAssetsByBiome('village').filter(a => a.rarity === 'rare');
+    mysticalConfig.propAssets = allAssets
+      .getAssetsByBiome("village")
+      .filter((a) => a.rarity === "rare");
   }
 
   /**
    * Carga y renderiza mundo ultra-diverso
    */
-  async renderDiverseWorld(world: GeneratedWorld, playerLevel: number = 1): Promise<void> {
-    logAutopoiesis.info('🌍 Renderizando mundo con assets creativos reales');
+  async renderDiverseWorld(
+    world: GeneratedWorld,
+    playerLevel: number = 1,
+  ): Promise<void> {
+    logAutopoiesis.info("🌍 Renderizando mundo con assets creativos reales");
 
     // 1. Cargar todos los assets
     await this.creativeLoader.loadAllAssets();
@@ -220,7 +247,9 @@ export class BiomeAssetRenderer {
     await this.renderStructureLayer(world, playerLevel);
     await this.renderPropLayer(world, playerLevel);
 
-    logAutopoiesis.info('✅ Mundo renderizado exitosamente con assets creativos');
+    logAutopoiesis.info(
+      "✅ Mundo renderizado exitosamente con assets creativos",
+    );
   }
 
   /**
@@ -237,20 +266,30 @@ export class BiomeAssetRenderer {
         if (!config || config.terrainAssets.length === 0) continue;
 
         // Selección inteligente de terreno
-        const assetIndex = this.getVariedIndex(x, y, tile.biomeStrength, config.terrainAssets.length);
+        const assetIndex = this.getVariedIndex(
+          x,
+          y,
+          tile.biomeStrength,
+          config.terrainAssets.length,
+        );
         const selectedAsset = config.terrainAssets[assetIndex];
 
         if (selectedAsset && this.scene.textures.exists(selectedAsset.key)) {
           const sprite = this.scene.add.image(
             x * tileSize + tileSize / 2,
             y * tileSize + tileSize / 2,
-            selectedAsset.key
+            selectedAsset.key,
           );
 
           sprite.setDisplaySize(tileSize, tileSize);
 
           // Aplicar variaciones visuales
-          this.applyBiomeVariations(sprite, tile.biome, tile.biomeStrength, config);
+          this.applyBiomeVariations(
+            sprite,
+            tile.biome,
+            tile.biomeStrength,
+            config,
+          );
 
           this.worldContainer.add(sprite);
         }
@@ -261,7 +300,10 @@ export class BiomeAssetRenderer {
   /**
    * Renderiza decoraciones naturales (árboles, rocas, hongos)
    */
-  private async renderDecorationLayer(world: GeneratedWorld, playerLevel: number): Promise<void> {
+  private async renderDecorationLayer(
+    world: GeneratedWorld,
+    playerLevel: number,
+  ): Promise<void> {
     const tileSize = 32;
 
     for (let y = 0; y < world.terrain.length; y++) {
@@ -272,22 +314,33 @@ export class BiomeAssetRenderer {
         if (!config || config.decorationAssets.length === 0) continue;
 
         // Probabilidad de decoración basada en bioma y fuerza
-        const decorationChance = config.probability.decoration * tile.biomeStrength;
+        const decorationChance =
+          config.probability.decoration * tile.biomeStrength;
         const random = this.getSeededRandom(x, y, 1);
 
         if (random < decorationChance) {
           // Filtrar por nivel del jugador
-          const availableDecorations = config.decorationAssets.filter(asset => (asset.unlockLevel ?? 0) <= playerLevel);
+          const availableDecorations = config.decorationAssets.filter(
+            (asset) => (asset.unlockLevel ?? 0) <= playerLevel,
+          );
 
           if (availableDecorations.length > 0) {
-            const assetIndex = this.getVariedIndex(x, y, tile.biomeStrength, availableDecorations.length);
+            const assetIndex = this.getVariedIndex(
+              x,
+              y,
+              tile.biomeStrength,
+              availableDecorations.length,
+            );
             const selectedAsset = availableDecorations[assetIndex];
 
-            if (selectedAsset && this.scene.textures.exists(selectedAsset.key)) {
+            if (
+              selectedAsset &&
+              this.scene.textures.exists(selectedAsset.key)
+            ) {
               const sprite = this.scene.add.image(
                 x * tileSize + tileSize / 2,
                 y * tileSize + tileSize / 2,
-                selectedAsset.key
+                selectedAsset.key,
               );
 
               // Tamaño basado en rareza
@@ -295,7 +348,11 @@ export class BiomeAssetRenderer {
               sprite.setDisplaySize(baseSize, baseSize);
 
               // Variaciones creativas
-              this.applyDecorationVariations(sprite, selectedAsset, tile.biomeStrength);
+              this.applyDecorationVariations(
+                sprite,
+                selectedAsset,
+                tile.biomeStrength,
+              );
 
               this.decorationContainer.add(sprite);
             }
@@ -308,7 +365,10 @@ export class BiomeAssetRenderer {
   /**
    * Renderiza estructuras (casas, ruinas, edificios)
    */
-  private async renderStructureLayer(world: GeneratedWorld, playerLevel: number): Promise<void> {
+  private async renderStructureLayer(
+    world: GeneratedWorld,
+    playerLevel: number,
+  ): Promise<void> {
     const tileSize = 32;
 
     for (let y = 0; y < world.terrain.length; y++) {
@@ -318,27 +378,42 @@ export class BiomeAssetRenderer {
 
         if (!config || config.structureAssets.length === 0) continue;
 
-        const structureChance = config.probability.structure * tile.biomeStrength;
+        const structureChance =
+          config.probability.structure * tile.biomeStrength;
         const random = this.getSeededRandom(x, y, 2);
 
         if (random < structureChance) {
-          const availableStructures = config.structureAssets.filter(asset => (asset.unlockLevel ?? 0) <= playerLevel);
+          const availableStructures = config.structureAssets.filter(
+            (asset) => (asset.unlockLevel ?? 0) <= playerLevel,
+          );
 
           if (availableStructures.length > 0) {
-            const assetIndex = this.getVariedIndex(x, y, tile.biomeStrength, availableStructures.length);
+            const assetIndex = this.getVariedIndex(
+              x,
+              y,
+              tile.biomeStrength,
+              availableStructures.length,
+            );
             const selectedAsset = availableStructures[assetIndex];
 
-            if (selectedAsset && this.scene.textures.exists(selectedAsset.key)) {
+            if (
+              selectedAsset &&
+              this.scene.textures.exists(selectedAsset.key)
+            ) {
               const sprite = this.scene.add.image(
                 x * tileSize + tileSize / 2,
                 y * tileSize + tileSize / 2 - 16, // Offset hacia arriba
-                selectedAsset.key
+                selectedAsset.key,
               );
 
               const structureSize = tileSize * 2; // Estructuras más grandes
               sprite.setDisplaySize(structureSize, structureSize);
 
-              this.applyStructureVariations(sprite, selectedAsset, tile.biomeStrength);
+              this.applyStructureVariations(
+                sprite,
+                selectedAsset,
+                tile.biomeStrength,
+              );
 
               this.structureContainer.add(sprite);
             }
@@ -351,7 +426,10 @@ export class BiomeAssetRenderer {
   /**
    * Renderiza props pequeños (mobiliario, objetos)
    */
-  private async renderPropLayer(world: GeneratedWorld, playerLevel: number): Promise<void> {
+  private async renderPropLayer(
+    world: GeneratedWorld,
+    playerLevel: number,
+  ): Promise<void> {
     const tileSize = 32;
 
     for (let y = 0; y < world.terrain.length; y++) {
@@ -365,23 +443,37 @@ export class BiomeAssetRenderer {
         const random = this.getSeededRandom(x, y, 3);
 
         if (random < propChance) {
-          const availableProps = config.propAssets.filter(asset => (asset.unlockLevel ?? 0) <= playerLevel);
+          const availableProps = config.propAssets.filter(
+            (asset) => (asset.unlockLevel ?? 0) <= playerLevel,
+          );
 
           if (availableProps.length > 0) {
-            const assetIndex = this.getVariedIndex(x, y, tile.biomeStrength, availableProps.length);
+            const assetIndex = this.getVariedIndex(
+              x,
+              y,
+              tile.biomeStrength,
+              availableProps.length,
+            );
             const selectedAsset = availableProps[assetIndex];
 
-            if (selectedAsset && this.scene.textures.exists(selectedAsset.key)) {
+            if (
+              selectedAsset &&
+              this.scene.textures.exists(selectedAsset.key)
+            ) {
               const sprite = this.scene.add.image(
                 x * tileSize + tileSize / 2,
                 y * tileSize + tileSize / 2,
-                selectedAsset.key
+                selectedAsset.key,
               );
 
               const propSize = tileSize * 0.75; // Props más pequeños
               sprite.setDisplaySize(propSize, propSize);
 
-              this.applyPropVariations(sprite, selectedAsset, tile.biomeStrength);
+              this.applyPropVariations(
+                sprite,
+                selectedAsset,
+                tile.biomeStrength,
+              );
 
               this.propContainer.add(sprite);
             }
@@ -398,7 +490,7 @@ export class BiomeAssetRenderer {
     sprite: Phaser.GameObjects.Image,
     biome: BiomeType,
     strength: number,
-    config: BiomeVisualConfig
+    config: BiomeVisualConfig,
   ): void {
     // Tinte del bioma
     sprite.setTint(config.tintColor);
@@ -420,18 +512,22 @@ export class BiomeAssetRenderer {
   /**
    * Aplica variaciones creativas a decoraciones
    */
-  private applyDecorationVariations(sprite: Phaser.GameObjects.Image, asset: AssetInfo, strength: number): void {
+  private applyDecorationVariations(
+    sprite: Phaser.GameObjects.Image,
+    asset: AssetInfo,
+    strength: number,
+  ): void {
     // Variaciones por rareza
     switch (asset.rarity) {
-      case 'epic':
+      case "epic":
         sprite.setTint(0xffd700); // Dorado
         sprite.setScale(1.5 + strength * 0.5);
         break;
-      case 'rare':
+      case "rare":
         sprite.setTint(0x9932cc); // Púrpura
         sprite.setScale(1.2 + strength * 0.3);
         break;
-      case 'uncommon':
+      case "uncommon":
         sprite.setTint(0x1e90ff); // Azul
         sprite.setScale(1.0 + strength * 0.2);
         break;
@@ -440,7 +536,7 @@ export class BiomeAssetRenderer {
     }
 
     // Efectos especiales para assets épicos
-    if (asset.rarity === 'epic') {
+    if (asset.rarity === "epic") {
       this.addGlowEffect(sprite);
     }
   }
@@ -448,10 +544,14 @@ export class BiomeAssetRenderer {
   /**
    * Aplica variaciones a estructuras
    */
-  private applyStructureVariations(sprite: Phaser.GameObjects.Image, asset: AssetInfo, strength: number): void {
+  private applyStructureVariations(
+    sprite: Phaser.GameObjects.Image,
+    asset: AssetInfo,
+    strength: number,
+  ): void {
     sprite.setScale(1.5 + strength * 0.5);
 
-    if (asset.rarity === 'rare' || asset.rarity === 'epic') {
+    if (asset.rarity === "rare" || asset.rarity === "epic") {
       sprite.setTint(0xfff8dc); // Color marfil para estructuras especiales
     }
   }
@@ -459,7 +559,11 @@ export class BiomeAssetRenderer {
   /**
    * Aplica variaciones a props
    */
-  private applyPropVariations(sprite: Phaser.GameObjects.Image, asset: AssetInfo, strength: number): void {
+  private applyPropVariations(
+    sprite: Phaser.GameObjects.Image,
+    asset: AssetInfo,
+    strength: number,
+  ): void {
     sprite.setScale(0.5 + strength * 0.5);
 
     // Rotación aleatoria para props
@@ -481,11 +585,11 @@ export class BiomeAssetRenderer {
    */
   private getSizeByRarity(rarity?: string): number {
     switch (rarity) {
-      case 'epic':
+      case "epic":
         return 64;
-      case 'rare':
+      case "rare":
         return 48;
-      case 'uncommon':
+      case "uncommon":
         return 40;
       default:
         return 32;
@@ -495,7 +599,12 @@ export class BiomeAssetRenderer {
   /**
    * Genera índice variado basado en posición y fuerza
    */
-  private getVariedIndex(x: number, y: number, strength: number, arrayLength: number): number {
+  private getVariedIndex(
+    x: number,
+    y: number,
+    strength: number,
+    arrayLength: number,
+  ): number {
     const seed = (x * 73 + y * 137 + Math.floor(strength * 100)) % 1000;
     return seed % arrayLength;
   }
@@ -518,7 +627,10 @@ export class BiomeAssetRenderer {
     const propCount = this.propContainer?.list?.length || 0;
 
     const assetStats = this.creativeLoader.getAssetStats();
-    const totalAssets = Object.values(assetStats).reduce((sum, count) => sum + count, 0);
+    const totalAssets = Object.values(assetStats).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
 
     return {
       totalAssets,
@@ -526,7 +638,8 @@ export class BiomeAssetRenderer {
       decorationSprites: decorationCount,
       structureSprites: structureCount,
       propSprites: propCount,
-      totalRendered: terrainCount + decorationCount + structureCount + propCount,
+      totalRendered:
+        terrainCount + decorationCount + structureCount + propCount,
     };
   }
 
@@ -547,9 +660,9 @@ export class BiomeAssetRenderer {
       if (this.propContainer) {
         this.propContainer.removeAll(true);
       }
-      logAutopoiesis.info('🧹 BiomeAssetRenderer limpiado exitosamente');
+      logAutopoiesis.info("🧹 BiomeAssetRenderer limpiado exitosamente");
     } catch (error) {
-      logAutopoiesis.error('Error limpiando BiomeAssetRenderer:', error);
+      logAutopoiesis.error("Error limpiando BiomeAssetRenderer:", error);
     }
   }
 }

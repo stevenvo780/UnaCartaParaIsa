@@ -3,22 +3,22 @@
  */
 
 export type ActivityType =
-  | 'RESTING'
-  | 'MEDITATING'
-  | 'SOCIALIZING'
-  | 'WORKING'
-  | 'EXERCISING'
-  | 'WANDERING'
-  | 'WRITING'
-  | 'EXPLORING'
-  | 'CONTEMPLATING'
-  | 'DANCING'
-  | 'HIDING'
-  | 'SHOPPING'
-  | 'COOKING'
-  | 'EATING'
-  | 'SLEEPING'
-  | 'PLAYING';
+  | "RESTING"
+  | "MEDITATING"
+  | "SOCIALIZING"
+  | "WORKING"
+  | "EXERCISING"
+  | "WANDERING"
+  | "WRITING"
+  | "EXPLORING"
+  | "CONTEMPLATING"
+  | "DANCING"
+  | "HIDING"
+  | "SHOPPING"
+  | "COOKING"
+  | "EATING"
+  | "SLEEPING"
+  | "PLAYING";
 
 export interface EntityActivity {
   type: ActivityType;

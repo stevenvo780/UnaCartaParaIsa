@@ -3,8 +3,8 @@
  * Maneja configuraciones y optimizaciones para el entorno de producción
  */
 
-import { logAutopoiesis } from './logger';
-import { gameConfig } from '../config/gameConfig';
+import { logAutopoiesis } from "./logger";
+import { gameConfig } from "../config/gameConfig";
 
 export interface ProductionSettings {
   minifyAssets: boolean;
@@ -74,7 +74,7 @@ export class ProductionOptimizer {
       this.setupPerformanceOptimizations();
     }
 
-    logAutopoiesis.info('Production optimizer initialized', {
+    logAutopoiesis.info("Production optimizer initialized", {
       isProduction: this.isProduction,
       settings: this.settings,
     });
@@ -114,7 +114,7 @@ export class ProductionOptimizer {
     // Mantener funcionalidad original en window para debugging si es necesario
     (window as any).__originalConsole = originalConsole;
 
-    logAutopoiesis.info('Console methods optimized for production');
+    logAutopoiesis.info("Console methods optimized for production");
   }
 
   /**
@@ -122,23 +122,23 @@ export class ProductionOptimizer {
    */
   private optimizePhaserConfig(): void {
     // Estas optimizaciones se aplicarían al crear el juego
-    logAutopoiesis.info('Phaser config optimized for production');
+    logAutopoiesis.info("Phaser config optimized for production");
   }
 
   /**
    * Configurar service worker para caching
    */
   private setupServiceWorker(): void {
-    if ('serviceWorker' in navigator) {
+    if ("serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register('/sw.js')
-        .then(registration => {
-          logAutopoiesis.info('Service Worker registered', {
+        .register("/sw.js")
+        .then((registration) => {
+          logAutopoiesis.info("Service Worker registered", {
             scope: registration.scope,
           });
         })
-        .catch(error => {
-          logAutopoiesis.warn('Service Worker registration failed', {
+        .catch((error) => {
+          logAutopoiesis.warn("Service Worker registration failed", {
             error: String(error),
           });
         });
@@ -155,7 +155,7 @@ export class ProductionOptimizer {
         const usedMB = memory.usedJSHeapSize / 1024 / 1024;
 
         if (usedMB > this.settings.memoryThreshold / 1024 / 1024) {
-          logAutopoiesis.warn('High memory usage detected', {
+          logAutopoiesis.warn("High memory usage detected", {
             used: `${usedMB.toFixed(2)}MB`,
             limit: `${(this.settings.memoryThreshold / 1024 / 1024).toFixed(2)}MB`,
           });
@@ -171,7 +171,7 @@ export class ProductionOptimizer {
    */
   private setupPerformanceOptimizations(): void {
     // Configurar requestIdleCallback si está disponible
-    if ('requestIdleCallback' in window) {
+    if ("requestIdleCallback" in window) {
       this.scheduleNonCriticalTasks();
     }
 
@@ -194,13 +194,13 @@ export class ProductionOptimizer {
    * Configurar observer para carga lazy
    */
   private setupIntersectionObserver(): void {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
           // Trigger lazy loading
           const element = entry.target as HTMLElement;
           if (element.dataset.src) {
-            element.setAttribute('src', element.dataset.src);
+            element.setAttribute("src", element.dataset.src);
             observer.unobserve(element);
           }
         }
@@ -208,7 +208,7 @@ export class ProductionOptimizer {
     });
 
     // Observer se configuraría para elementos específicos
-    logAutopoiesis.debug('Intersection Observer configured');
+    logAutopoiesis.debug("Intersection Observer configured");
   }
 
   /**
@@ -224,7 +224,7 @@ export class ProductionOptimizer {
       (window as any).gc();
     }
 
-    logAutopoiesis.info('Memory optimization triggered');
+    logAutopoiesis.info("Memory optimization triggered");
   }
 
   /**
@@ -232,7 +232,7 @@ export class ProductionOptimizer {
    */
   private cleanupUnusedAssets(): void {
     // Esta función se integraría con AssetLazyLoader
-    logAutopoiesis.debug('Unused assets cleanup completed');
+    logAutopoiesis.debug("Unused assets cleanup completed");
   }
 
   /**
@@ -240,7 +240,7 @@ export class ProductionOptimizer {
    */
   private compactDialogueCache(): void {
     // Esta función se integraría con DialogueChunkLoader
-    logAutopoiesis.debug('Dialogue cache compaction completed');
+    logAutopoiesis.debug("Dialogue cache compaction completed");
   }
 
   /**
@@ -268,7 +268,7 @@ export class ProductionOptimizer {
       baseConfig.render = {
         antialias: false, // Disable antialiasing for performance
         pixelArt: true, // Optimize for pixel art
-        powerPreference: 'high-performance',
+        powerPreference: "high-performance",
       };
 
       baseConfig.fps = {
@@ -277,7 +277,7 @@ export class ProductionOptimizer {
       };
 
       baseConfig.physics = {
-        default: 'arcade',
+        default: "arcade",
         arcade: {
           fps: 60,
           fixedStep: true,
@@ -316,17 +316,17 @@ export class ProductionOptimizer {
     return {
       optimization: {
         splitChunks: {
-          chunks: 'all',
+          chunks: "all",
           cacheGroups: {
             vendor: {
               test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
+              name: "vendors",
+              chunks: "all",
             },
             dialogues: {
               test: /dialogos.*\.json$/,
-              name: 'dialogues',
-              chunks: 'all',
+              name: "dialogues",
+              chunks: "all",
             },
           },
         },
@@ -336,7 +336,7 @@ export class ProductionOptimizer {
       resolve: {
         alias: {
           // Usar versiones minificadas en producción
-          phaser: 'phaser/dist/phaser.min.js',
+          phaser: "phaser/dist/phaser.min.js",
         },
       },
     };

@@ -719,13 +719,19 @@ export class WorldPopulator {
   private getExteriorThematicTypes(biome: BiomeType): string[] {
     switch (biome) {
       case BiomeType.MYSTICAL:
-        return ["mystical_circles", "crystal_formations", "sacred_springs"];
+        return [
+          "mystical_circles",
+          "crystal_formations",
+          "sacred_springs",
+          "woman",
+          "man",
+        ];
       case BiomeType.VILLAGE:
-        return ["flower_meadows", "ancient_groves"];
+        return ["flower_meadows", "ancient_groves", "woman", "man"];
       case BiomeType.FOREST:
-        return ["ancient_groves", "sacred_springs"];
+        return ["ancient_groves", "sacred_springs", "woman", "man"];
       default:
-        return ["flower_meadows", "campfire_sites"];
+        return ["flower_meadows", "campfire_sites", "woman", "man"];
     }
   }
 

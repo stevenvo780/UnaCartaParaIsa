@@ -2,28 +2,28 @@
  * Asset Loader creativo que carga dinámicamente assets para crear mundos diversos
  */
 
-import type Phaser from 'phaser';
-import { logAutopoiesis } from '../utils/logger';
+import type Phaser from "phaser";
+import { logAutopoiesis } from "../utils/logger";
 
 export interface AssetInfo {
   key: string;
   path: string;
   type:
-    | 'terrain'
-    | 'water'
-    | 'road'
-    | 'autotile'
-    | 'decoration'
-    | 'tree'
-    | 'rock'
-    | 'structure'
-    | 'prop'
-    | 'mushroom'
-    | 'ruin'
-    | 'foliage';
+    | "terrain"
+    | "water"
+    | "road"
+    | "autotile"
+    | "decoration"
+    | "tree"
+    | "rock"
+    | "structure"
+    | "prop"
+    | "mushroom"
+    | "ruin"
+    | "foliage";
   biome?: string;
   variant?: number;
-  rarity?: 'common' | 'uncommon' | 'rare' | 'epic';
+  rarity?: "common" | "uncommon" | "rare" | "epic";
   unlockLevel?: number;
 }
 
@@ -44,18 +44,18 @@ export class CreativeAssetLoader {
    * Inicializa las categorías de assets disponibles
    */
   private initializeAssetCategories(): void {
-    this.assetsByType.set('terrain', []);
-    this.assetsByType.set('water', []);
-    this.assetsByType.set('roads', []);
-    this.assetsByType.set('autotiles', []);
-    this.assetsByType.set('decorations', []);
-    this.assetsByType.set('trees', []);
-    this.assetsByType.set('rocks', []);
-    this.assetsByType.set('structures', []);
-    this.assetsByType.set('props', []);
-    this.assetsByType.set('mushrooms', []);
-    this.assetsByType.set('ruins', []);
-    this.assetsByType.set('foliage', []);
+    this.assetsByType.set("terrain", []);
+    this.assetsByType.set("water", []);
+    this.assetsByType.set("roads", []);
+    this.assetsByType.set("autotiles", []);
+    this.assetsByType.set("decorations", []);
+    this.assetsByType.set("trees", []);
+    this.assetsByType.set("rocks", []);
+    this.assetsByType.set("structures", []);
+    this.assetsByType.set("props", []);
+    this.assetsByType.set("mushrooms", []);
+    this.assetsByType.set("ruins", []);
+    this.assetsByType.set("foliage", []);
   }
 
   /**
@@ -69,8 +69,8 @@ export class CreativeAssetLoader {
       const assetInfo: AssetInfo = {
         key: `cesped${i}`,
         path: `assets/terrain/base/cesped${i}.png`,
-        type: 'terrain',
-        biome: 'grassland',
+        type: "terrain",
+        biome: "grassland",
         variant: i,
       };
       terrainAssets.push(assetInfo);
@@ -80,14 +80,14 @@ export class CreativeAssetLoader {
     // Cargar assets base especiales
     const baseAssets = [
       {
-        key: 'grass_middle',
-        path: 'assets/terrain/base/Grass_Middle.png',
-        biome: 'grassland',
+        key: "grass_middle",
+        path: "assets/terrain/base/Grass_Middle.png",
+        biome: "grassland",
       },
       {
-        key: 'textured_grass',
-        path: 'assets/terrain/base/TexturedGrass.png',
-        biome: 'grassland',
+        key: "textured_grass",
+        path: "assets/terrain/base/TexturedGrass.png",
+        biome: "grassland",
       },
     ];
 
@@ -95,14 +95,14 @@ export class CreativeAssetLoader {
       const assetInfo: AssetInfo = {
         key: asset.key,
         path: asset.path,
-        type: 'terrain',
+        type: "terrain",
         biome: asset.biome,
       };
       terrainAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
     }
 
-    this.assetsByType.set('terrain', terrainAssets);
+    this.assetsByType.set("terrain", terrainAssets);
     return terrainAssets;
   }
 
@@ -114,107 +114,107 @@ export class CreativeAssetLoader {
 
     // Cargar tile base de agua
     const waterBase: AssetInfo = {
-      key: 'water_middle',
-      path: 'assets/water/Water_Middle.png',
-      type: 'water',
-      biome: 'wetland',
+      key: "water_middle",
+      path: "assets/water/Water_Middle.png",
+      type: "water",
+      biome: "wetland",
     };
     waterAssets.push(waterBase);
     this.loadedAssets.set(waterBase.key, waterBase);
 
     // Cargar tiles organizados de agua (patrón tile_XX_YY)
     const waterTilePatterns = [
-      '00_02',
-      '00_03',
-      '00_04',
-      '00_05',
-      '00_06',
-      '00_07',
-      '00_08',
-      '00_09',
-      '00_10',
-      '00_11',
-      '01_00',
-      '01_01',
-      '01_02',
-      '01_03',
-      '01_04',
-      '01_05',
-      '01_06',
-      '01_07',
-      '01_08',
-      '01_09',
-      '01_10',
-      '01_11',
-      '02_00',
-      '02_01',
-      '02_02',
-      '02_03',
-      '02_04',
-      '02_05',
-      '02_06',
-      '02_07',
-      '02_08',
-      '02_09',
-      '02_10',
-      '02_11',
-      '03_00',
-      '03_01',
-      '03_02',
-      '03_03',
-      '03_04',
-      '03_05',
-      '03_06',
-      '03_07',
-      '03_08',
-      '03_09',
-      '03_10',
-      '03_11',
-      '04_00',
-      '04_01',
-      '04_02',
-      '04_03',
-      '04_04',
-      '04_05',
-      '04_06',
-      '04_07',
-      '04_08',
-      '04_09',
-      '04_10',
-      '04_11',
-      '05_00',
-      '05_01',
-      '05_02',
-      '05_03',
-      '05_04',
-      '05_05',
-      '05_06',
-      '05_07',
-      '05_08',
-      '05_09',
-      '05_10',
-      '05_11',
-      '09_00',
-      '09_01',
-      '09_02',
-      '09_03',
-      '09_04',
-      '09_05',
-      '09_06',
-      '09_07',
-      '09_08',
-      '09_09',
-      '09_10',
-      '09_11',
+      "00_02",
+      "00_03",
+      "00_04",
+      "00_05",
+      "00_06",
+      "00_07",
+      "00_08",
+      "00_09",
+      "00_10",
+      "00_11",
+      "01_00",
+      "01_01",
+      "01_02",
+      "01_03",
+      "01_04",
+      "01_05",
+      "01_06",
+      "01_07",
+      "01_08",
+      "01_09",
+      "01_10",
+      "01_11",
+      "02_00",
+      "02_01",
+      "02_02",
+      "02_03",
+      "02_04",
+      "02_05",
+      "02_06",
+      "02_07",
+      "02_08",
+      "02_09",
+      "02_10",
+      "02_11",
+      "03_00",
+      "03_01",
+      "03_02",
+      "03_03",
+      "03_04",
+      "03_05",
+      "03_06",
+      "03_07",
+      "03_08",
+      "03_09",
+      "03_10",
+      "03_11",
+      "04_00",
+      "04_01",
+      "04_02",
+      "04_03",
+      "04_04",
+      "04_05",
+      "04_06",
+      "04_07",
+      "04_08",
+      "04_09",
+      "04_10",
+      "04_11",
+      "05_00",
+      "05_01",
+      "05_02",
+      "05_03",
+      "05_04",
+      "05_05",
+      "05_06",
+      "05_07",
+      "05_08",
+      "05_09",
+      "05_10",
+      "05_11",
+      "09_00",
+      "09_01",
+      "09_02",
+      "09_03",
+      "09_04",
+      "09_05",
+      "09_06",
+      "09_07",
+      "09_08",
+      "09_09",
+      "09_10",
+      "09_11",
     ];
 
     for (const pattern of waterTilePatterns) {
       const assetInfo: AssetInfo = {
         key: `water_tile_${pattern}`,
         path: `assets/water/tile_${pattern}.png`,
-        type: 'water',
-        biome: 'wetland',
-        variant: parseInt(pattern.replace('_', ''), 10),
+        type: "water",
+        biome: "wetland",
+        variant: parseInt(pattern.replace("_", ""), 10),
       };
       waterAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
@@ -222,22 +222,22 @@ export class CreativeAssetLoader {
 
     // Cargar tiles especiales
     const specialWater = [
-      { key: 'water_0198', path: 'assets/water/tile_0198.png' },
-      { key: 'water_0230', path: 'assets/water/tile_0230.png' },
+      { key: "water_0198", path: "assets/water/tile_0198.png" },
+      { key: "water_0230", path: "assets/water/tile_0230.png" },
     ];
 
     for (const special of specialWater) {
       const assetInfo: AssetInfo = {
         key: special.key,
         path: special.path,
-        type: 'water',
-        biome: 'wetland',
+        type: "water",
+        biome: "wetland",
       };
       waterAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
     }
 
-    this.assetsByType.set('water', waterAssets);
+    this.assetsByType.set("water", waterAssets);
     return waterAssets;
   }
 
@@ -249,79 +249,79 @@ export class CreativeAssetLoader {
 
     const roadTypes = [
       {
-        key: 'road_cross',
-        path: 'assets/roads/road_path_cross.png',
-        type: 'intersection',
+        key: "road_cross",
+        path: "assets/roads/road_path_cross.png",
+        type: "intersection",
       },
       {
-        key: 'road_curve_ne',
-        path: 'assets/roads/road_path_curve_ne.png',
-        type: 'curve',
+        key: "road_curve_ne",
+        path: "assets/roads/road_path_curve_ne.png",
+        type: "curve",
       },
       {
-        key: 'road_curve_nw',
-        path: 'assets/roads/road_path_curve_nw.png',
-        type: 'curve',
+        key: "road_curve_nw",
+        path: "assets/roads/road_path_curve_nw.png",
+        type: "curve",
       },
       {
-        key: 'road_curve_se',
-        path: 'assets/roads/road_path_curve_se.png',
-        type: 'curve',
+        key: "road_curve_se",
+        path: "assets/roads/road_path_curve_se.png",
+        type: "curve",
       },
       {
-        key: 'road_curve_sw',
-        path: 'assets/roads/road_path_curve_sw.png',
-        type: 'curve',
+        key: "road_curve_sw",
+        path: "assets/roads/road_path_curve_sw.png",
+        type: "curve",
       },
       {
-        key: 'road_end_e',
-        path: 'assets/roads/road_path_end_e.png',
-        type: 'end',
+        key: "road_end_e",
+        path: "assets/roads/road_path_end_e.png",
+        type: "end",
       },
       {
-        key: 'road_end_n',
-        path: 'assets/roads/road_path_end_n.png',
-        type: 'end',
+        key: "road_end_n",
+        path: "assets/roads/road_path_end_n.png",
+        type: "end",
       },
       {
-        key: 'road_end_s',
-        path: 'assets/roads/road_path_end_s.png',
-        type: 'end',
+        key: "road_end_s",
+        path: "assets/roads/road_path_end_s.png",
+        type: "end",
       },
       {
-        key: 'road_end_w',
-        path: 'assets/roads/road_path_end_w.png',
-        type: 'end',
+        key: "road_end_w",
+        path: "assets/roads/road_path_end_w.png",
+        type: "end",
       },
       {
-        key: 'road_straight_h',
-        path: 'assets/roads/road_path_straight_h.png',
-        type: 'straight',
+        key: "road_straight_h",
+        path: "assets/roads/road_path_straight_h.png",
+        type: "straight",
       },
       {
-        key: 'road_straight_v',
-        path: 'assets/roads/road_path_straight_v.png',
-        type: 'straight',
+        key: "road_straight_v",
+        path: "assets/roads/road_path_straight_v.png",
+        type: "straight",
       },
       {
-        key: 'road_t',
-        path: 'assets/roads/road_path_t.png',
-        type: 't_junction',
+        key: "road_t",
+        path: "assets/roads/road_path_t.png",
+        type: "t_junction",
       },
       {
-        key: 'road_t_e',
-        path: 'assets/roads/road_path_t_e.png',
-        type: 't_junction',
+        key: "road_t_e",
+        path: "assets/roads/road_path_t_e.png",
+        type: "t_junction",
       },
       {
-        key: 'road_t_s',
-        path: 'assets/roads/road_path_t_s.png',
-        type: 't_junction',
+        key: "road_t_s",
+        path: "assets/roads/road_path_t_s.png",
+        type: "t_junction",
       },
       {
-        key: 'road_t_w',
-        path: 'assets/roads/road_path_t_w.png',
-        type: 't_junction',
+        key: "road_t_w",
+        path: "assets/roads/road_path_t_w.png",
+        type: "t_junction",
       },
     ];
 
@@ -329,14 +329,14 @@ export class CreativeAssetLoader {
       const assetInfo: AssetInfo = {
         key: road.key,
         path: road.path,
-        type: 'road',
-        biome: 'village',
+        type: "road",
+        biome: "village",
       };
       roadAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
     }
 
-    this.assetsByType.set('roads', roadAssets);
+    this.assetsByType.set("roads", roadAssets);
     return roadAssets;
   }
 
@@ -349,80 +349,80 @@ export class CreativeAssetLoader {
     const autotileTypes = [
       // Grass edges
       {
-        key: 'grass_edge_n',
-        path: 'assets/terrain/autotiles/grass_edge_n.png',
-        from: 'grassland',
-        to: 'other',
+        key: "grass_edge_n",
+        path: "assets/terrain/autotiles/grass_edge_n.png",
+        from: "grassland",
+        to: "other",
       },
       {
-        key: 'grass_edge_s',
-        path: 'assets/terrain/autotiles/grass_edge_s.png',
-        from: 'grassland',
-        to: 'other',
+        key: "grass_edge_s",
+        path: "assets/terrain/autotiles/grass_edge_s.png",
+        from: "grassland",
+        to: "other",
       },
       {
-        key: 'grass_edge_e',
-        path: 'assets/terrain/autotiles/grass_edge_e.png',
-        from: 'grassland',
-        to: 'other',
+        key: "grass_edge_e",
+        path: "assets/terrain/autotiles/grass_edge_e.png",
+        from: "grassland",
+        to: "other",
       },
       {
-        key: 'grass_edge_w',
-        path: 'assets/terrain/autotiles/grass_edge_w.png',
-        from: 'grassland',
-        to: 'other',
+        key: "grass_edge_w",
+        path: "assets/terrain/autotiles/grass_edge_w.png",
+        from: "grassland",
+        to: "other",
       },
 
       // Water edges
       {
-        key: 'water_edge_n',
-        path: 'assets/terrain/autotiles/water_edge_n.png',
-        from: 'wetland',
-        to: 'other',
+        key: "water_edge_n",
+        path: "assets/terrain/autotiles/water_edge_n.png",
+        from: "wetland",
+        to: "other",
       },
       {
-        key: 'water_edge_s',
-        path: 'assets/terrain/autotiles/water_edge_s.png',
-        from: 'wetland',
-        to: 'other',
+        key: "water_edge_s",
+        path: "assets/terrain/autotiles/water_edge_s.png",
+        from: "wetland",
+        to: "other",
       },
       {
-        key: 'water_edge_e',
-        path: 'assets/terrain/autotiles/water_edge_e.png',
-        from: 'wetland',
-        to: 'other',
+        key: "water_edge_e",
+        path: "assets/terrain/autotiles/water_edge_e.png",
+        from: "wetland",
+        to: "other",
       },
       {
-        key: 'water_edge_w',
-        path: 'assets/terrain/autotiles/water_edge_w.png',
-        from: 'wetland',
-        to: 'other',
+        key: "water_edge_w",
+        path: "assets/terrain/autotiles/water_edge_w.png",
+        from: "wetland",
+        to: "other",
       },
 
       // Water corners
       {
-        key: 'water_corner_ne',
-        path: 'assets/terrain/autotiles/water_corner_ne.png',
-        from: 'wetland',
-        to: 'other',
+        key: "water_corner_ne",
+        path: "assets/terrain/autotiles/water_corner_ne.png",
+        from: "wetland",
+        to: "other",
       },
       {
-        key: 'water_corner_nw',
-        path: 'assets/terrain/autotiles/water_corner_nw.png',
-        from: 'wetland',
-        to: 'other',
+        key: "water_corner_nw",
+        path: "assets/terrain/autotiles/water_corner_nw.png",
+        from: "wetland",
+        to: "other",
       },
       {
-        key: 'water_corner_se',
-        path: 'assets/terrain/autotiles/water_corner_se.png',
-        from: 'wetland',
-        to: 'other',
+        key: "water_corner_se",
+        path: "assets/terrain/autotiles/water_corner_se.png",
+        from: "wetland",
+        to: "other",
       },
       {
-        key: 'water_corner_sw',
-        path: 'assets/terrain/autotiles/water_corner_sw.png',
-        from: 'wetland',
-        to: 'other',
+        key: "water_corner_sw",
+        path: "assets/terrain/autotiles/water_corner_sw.png",
+        from: "wetland",
+        to: "other",
       },
     ];
 
@@ -430,14 +430,14 @@ export class CreativeAssetLoader {
       const assetInfo: AssetInfo = {
         key: autotile.key,
         path: autotile.path,
-        type: 'autotile',
+        type: "autotile",
         biome: autotile.from,
       };
       autotileAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
     }
 
-    this.assetsByType.set('autotiles', autotileAssets);
+    this.assetsByType.set("autotiles", autotileAssets);
     return autotileAssets;
   }
 
@@ -445,7 +445,7 @@ export class CreativeAssetLoader {
    * Carga todos los assets de forma asíncrona
    */
   async loadAllAssets(): Promise<void> {
-    logAutopoiesis.info('🎨 Cargando assets creativamente...');
+    logAutopoiesis.info("🎨 Cargando assets creativamente...");
 
     // Cargar en paralelo para mejor performance
     await Promise.all([
@@ -465,18 +465,20 @@ export class CreativeAssetLoader {
     // Cargar en Phaser
     await this.loadAssetsInPhaser();
 
-    logAutopoiesis.info(`✅ Cargados ${this.loadedAssets.size} assets únicos organizados en categorías`);
+    logAutopoiesis.info(
+      `✅ Cargados ${this.loadedAssets.size} assets únicos organizados en categorías`,
+    );
   }
 
   /**
    * Carga los assets en el cache de Phaser
    */
   private async loadAssetsInPhaser(): Promise<void> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       let loadedCount = 0;
       const totalAssets = this.loadedAssets.size;
 
-      this.scene.load.on('filecomplete', () => {
+      this.scene.load.on("filecomplete", () => {
         loadedCount++;
         if (loadedCount >= totalAssets) {
           resolve();
@@ -512,7 +514,9 @@ export class CreativeAssetLoader {
    */
   getRandomAsset(type: string, biome?: string): AssetInfo | null {
     const typeAssets = this.assetsByType.get(type) || [];
-    const filteredAssets = biome ? typeAssets.filter(a => a.biome === biome) : typeAssets;
+    const filteredAssets = biome
+      ? typeAssets.filter((a) => a.biome === biome)
+      : typeAssets;
 
     if (filteredAssets.length === 0) return null;
 
@@ -531,7 +535,7 @@ export class CreativeAssetLoader {
    * Obtiene tile de agua específico
    */
   getWaterTile(row: number, col: number): AssetInfo | null {
-    const key = `water_tile_${row.toString().padStart(2, '0')}_${col.toString().padStart(2, '0')}`;
+    const key = `water_tile_${row.toString().padStart(2, "0")}_${col.toString().padStart(2, "0")}`;
     return this.loadedAssets.get(key) || null;
   }
 
@@ -540,9 +544,9 @@ export class CreativeAssetLoader {
    */
   getAutotileForTransition(
     fromBiome: string,
-    direction: 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
+    direction: "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw",
   ): AssetInfo | null {
-    const key = `${fromBiome}_${direction.includes('corner') ? 'corner' : 'edge'}_${direction}`;
+    const key = `${fromBiome}_${direction.includes("corner") ? "corner" : "edge"}_${direction}`;
     return this.loadedAssets.get(key) || null;
   }
 
@@ -589,28 +593,28 @@ export class CreativeAssetLoader {
     const treeDefinitions = [
       // Árboles mágicos
       {
-        name: 'blue_green_balls_tree',
+        name: "blue_green_balls_tree",
         count: 3,
-        biome: 'magical',
-        rarity: 'uncommon',
+        biome: "magical",
+        rarity: "uncommon",
       },
-      { name: 'curved_tree', count: 3, biome: 'mystical', rarity: 'rare' },
-      { name: 'light_balls_tree', count: 3, biome: 'luminous', rarity: 'epic' },
-      { name: 'luminous_tree', count: 4, biome: 'luminous', rarity: 'epic' },
-      { name: 'mega_tree', count: 2, biome: 'ancient', rarity: 'rare' },
-      { name: 'swirling_tree', count: 3, biome: 'mystical', rarity: 'rare' },
-      { name: 'white_tree', count: 2, biome: 'ethereal', rarity: 'uncommon' },
+      { name: "curved_tree", count: 3, biome: "mystical", rarity: "rare" },
+      { name: "light_balls_tree", count: 3, biome: "luminous", rarity: "epic" },
+      { name: "luminous_tree", count: 4, biome: "luminous", rarity: "epic" },
+      { name: "mega_tree", count: 2, biome: "ancient", rarity: "rare" },
+      { name: "swirling_tree", count: 3, biome: "mystical", rarity: "rare" },
+      { name: "white_tree", count: 2, biome: "ethereal", rarity: "uncommon" },
 
       // Árboles naturales
-      { name: 'tree_emerald', count: 4, biome: 'forest', rarity: 'common' },
-      { name: 'willow', count: 3, biome: 'wetland', rarity: 'common' },
-      { name: 'oak_tree', count: 1, biome: 'forest', rarity: 'common' },
+      { name: "tree_emerald", count: 4, biome: "forest", rarity: "common" },
+      { name: "willow", count: 3, biome: "wetland", rarity: "common" },
+      { name: "oak_tree", count: 1, biome: "forest", rarity: "common" },
 
       // Árboles tótem
-      { name: 'tree_idol_deer', count: 1, biome: 'sacred', rarity: 'epic' },
-      { name: 'tree_idol_dragon', count: 1, biome: 'sacred', rarity: 'epic' },
-      { name: 'tree_idol_human', count: 1, biome: 'sacred', rarity: 'epic' },
-      { name: 'tree_idol_wolf', count: 1, biome: 'sacred', rarity: 'epic' },
+      { name: "tree_idol_deer", count: 1, biome: "sacred", rarity: "epic" },
+      { name: "tree_idol_dragon", count: 1, biome: "sacred", rarity: "epic" },
+      { name: "tree_idol_human", count: 1, biome: "sacred", rarity: "epic" },
+      { name: "tree_idol_wolf", count: 1, biome: "sacred", rarity: "epic" },
     ];
 
     for (const treeDef of treeDefinitions) {
@@ -618,7 +622,7 @@ export class CreativeAssetLoader {
         const assetInfo: AssetInfo = {
           key: `${treeDef.name}${i}`,
           path: `assets/foliage/trees/${treeDef.name}${i}.png`,
-          type: 'tree',
+          type: "tree",
           biome: treeDef.biome,
           variant: i,
           rarity: treeDef.rarity as any,
@@ -628,7 +632,7 @@ export class CreativeAssetLoader {
       }
     }
 
-    this.assetsByType.set('trees', treeAssets);
+    this.assetsByType.set("trees", treeAssets);
     return treeAssets;
   }
 
@@ -645,10 +649,10 @@ export class CreativeAssetLoader {
         const rockInfo: AssetInfo = {
           key: `rock${rockType}_${variant}`,
           path: `assets/rocks/rock${rockType}_${variant}.png`,
-          type: 'rock',
-          biome: 'mountain',
+          type: "rock",
+          biome: "mountain",
           variant,
-          rarity: 'common',
+          rarity: "common",
         };
         rockAssets.push(rockInfo);
         this.loadedAssets.set(rockInfo.key, rockInfo);
@@ -657,10 +661,10 @@ export class CreativeAssetLoader {
         const rockNoShadow: AssetInfo = {
           key: `rock${rockType}_${variant}_no_shadow`,
           path: `assets/rocks/rock${rockType}_${variant}_no_shadow.png`,
-          type: 'rock',
-          biome: 'mountain',
+          type: "rock",
+          biome: "mountain",
           variant,
-          rarity: 'common',
+          rarity: "common",
         };
         rockAssets.push(rockNoShadow);
         this.loadedAssets.set(rockNoShadow.key, rockNoShadow);
@@ -669,26 +673,26 @@ export class CreativeAssetLoader {
 
     // Rocas especiales
     const specialRocks = [
-      { name: 'rock_brown_1', biome: 'desert' },
-      { name: 'rock_brown_2', biome: 'desert' },
-      { name: 'rock_brown_4', biome: 'desert' },
-      { name: 'rock_brown_6', biome: 'desert' },
-      { name: 'rock_brown_9', biome: 'desert' },
+      { name: "rock_brown_1", biome: "desert" },
+      { name: "rock_brown_2", biome: "desert" },
+      { name: "rock_brown_4", biome: "desert" },
+      { name: "rock_brown_6", biome: "desert" },
+      { name: "rock_brown_9", biome: "desert" },
     ];
 
     for (const rock of specialRocks) {
       const assetInfo: AssetInfo = {
         key: rock.name,
         path: `assets/rocks/${rock.name}.png`,
-        type: 'rock',
+        type: "rock",
         biome: rock.biome,
-        rarity: 'uncommon',
+        rarity: "uncommon",
       };
       rockAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
     }
 
-    this.assetsByType.set('rocks', rockAssets);
+    this.assetsByType.set("rocks", rockAssets);
     return rockAssets;
   }
 
@@ -701,66 +705,66 @@ export class CreativeAssetLoader {
     const structures = [
       // Casas y edificios
       {
-        key: 'house',
-        path: 'assets/structures/estructuras_completas/House.png',
-        biome: 'village',
-        rarity: 'uncommon',
+        key: "house",
+        path: "assets/structures/estructuras_completas/House.png",
+        biome: "village",
+        rarity: "uncommon",
       },
       {
-        key: 'house_hay_1',
-        path: 'assets/structures/estructuras_completas/House_Hay_1.png',
-        biome: 'village',
-        rarity: 'common',
+        key: "house_hay_1",
+        path: "assets/structures/estructuras_completas/House_Hay_1.png",
+        biome: "village",
+        rarity: "common",
       },
       {
-        key: 'house_hay_2',
-        path: 'assets/structures/estructuras_completas/House_Hay_2.png',
-        biome: 'village',
-        rarity: 'common',
+        key: "house_hay_2",
+        path: "assets/structures/estructuras_completas/House_Hay_2.png",
+        biome: "village",
+        rarity: "common",
       },
       {
-        key: 'house_hay_3',
-        path: 'assets/structures/estructuras_completas/House_Hay_3.png',
-        biome: 'village',
-        rarity: 'common',
+        key: "house_hay_3",
+        path: "assets/structures/estructuras_completas/House_Hay_3.png",
+        biome: "village",
+        rarity: "common",
       },
       {
-        key: 'house_hay_4_purple',
-        path: 'assets/structures/estructuras_completas/House_Hay_4_Purple.png',
-        biome: 'village',
-        rarity: 'rare',
+        key: "house_hay_4_purple",
+        path: "assets/structures/estructuras_completas/House_Hay_4_Purple.png",
+        biome: "village",
+        rarity: "rare",
       },
 
       // Otras estructuras
       {
-        key: 'well_hay_1',
-        path: 'assets/structures/estructuras_completas/Well_Hay_1.png',
-        biome: 'village',
-        rarity: 'uncommon',
+        key: "well_hay_1",
+        path: "assets/structures/estructuras_completas/Well_Hay_1.png",
+        biome: "village",
+        rarity: "uncommon",
       },
       {
-        key: 'city_wall_gate_1',
-        path: 'assets/structures/estructuras_completas/CityWall_Gate_1.png',
-        biome: 'city',
-        rarity: 'rare',
+        key: "city_wall_gate_1",
+        path: "assets/structures/estructuras_completas/CityWall_Gate_1.png",
+        biome: "city",
+        rarity: "rare",
       },
       {
-        key: 'fences',
-        path: 'assets/structures/estructuras_completas/Fences.png',
-        biome: 'village',
-        rarity: 'common',
+        key: "fences",
+        path: "assets/structures/estructuras_completas/Fences.png",
+        biome: "village",
+        rarity: "common",
       },
     ];
 
     // Assets numerados
     for (let i = 1; i <= 11; i++) {
       const assetInfo: AssetInfo = {
-        key: `structure_${i.toString().padStart(3, '0')}`,
-        path: `assets/structures/estructuras_completas/Assets_source_002_${i.toString().padStart(3, '0')}.png`,
-        type: 'structure',
-        biome: 'village',
+        key: `structure_${i.toString().padStart(3, "0")}`,
+        path: `assets/structures/estructuras_completas/Assets_source_002_${i.toString().padStart(3, "0")}.png`,
+        type: "structure",
+        biome: "village",
         variant: i,
-        rarity: 'common',
+        rarity: "common",
       };
       structureAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
@@ -770,7 +774,7 @@ export class CreativeAssetLoader {
       const assetInfo: AssetInfo = {
         key: structure.key,
         path: structure.path,
-        type: 'structure',
+        type: "structure",
         biome: structure.biome,
         rarity: structure.rarity as any,
       };
@@ -778,7 +782,7 @@ export class CreativeAssetLoader {
       this.loadedAssets.set(assetInfo.key, assetInfo);
     }
 
-    this.assetsByType.set('structures', structureAssets);
+    this.assetsByType.set("structures", structureAssets);
     return structureAssets;
   }
 
@@ -790,26 +794,26 @@ export class CreativeAssetLoader {
 
     const propCategories = [
       // Sillas y mobiliario
-      { prefix: 'silla', count: 6, biome: 'village' },
-      { prefix: 'sillas', count: 6, biome: 'village' },
-      { prefix: 'sillas_de_calle', count: 4, biome: 'city' },
+      { prefix: "silla", count: 6, biome: "village" },
+      { prefix: "sillas", count: 6, biome: "village" },
+      { prefix: "sillas_de_calle", count: 4, biome: "city" },
 
       // Ventanas
-      { prefix: 'ventana', count: 13, biome: 'city' },
+      { prefix: "ventana", count: 13, biome: "city" },
 
       // Iluminación
-      { prefix: 'lamparas', count: 3, biome: 'city' },
-      { prefix: 'poste', count: 4, biome: 'city' },
+      { prefix: "lamparas", count: 3, biome: "city" },
+      { prefix: "poste", count: 4, biome: "city" },
 
       // Basura y objetos urbanos
-      { prefix: 'basuras', count: 4, biome: 'city' },
-      { prefix: 'basuras_calle', count: 6, biome: 'city' },
-      { prefix: 'botellas', count: 3, biome: 'city' },
-      { prefix: 'cajas', count: 3, biome: 'village' },
+      { prefix: "basuras", count: 4, biome: "city" },
+      { prefix: "basuras_calle", count: 6, biome: "city" },
+      { prefix: "botellas", count: 3, biome: "city" },
+      { prefix: "cajas", count: 3, biome: "village" },
 
       // Decoraciones
-      { prefix: 'sombrilla', count: 3, biome: 'village' },
-      { prefix: 'ropas_tendidas', count: 3, biome: 'village' },
+      { prefix: "sombrilla", count: 3, biome: "village" },
+      { prefix: "ropas_tendidas", count: 3, biome: "village" },
     ];
 
     for (const category of propCategories) {
@@ -817,10 +821,10 @@ export class CreativeAssetLoader {
         const assetInfo: AssetInfo = {
           key: `${category.prefix}${i}`,
           path: `assets/props/${category.prefix}${i}.png`,
-          type: 'prop',
+          type: "prop",
           biome: category.biome,
           variant: i,
-          rarity: 'common',
+          rarity: "common",
         };
         propAssets.push(assetInfo);
         this.loadedAssets.set(assetInfo.key, assetInfo);
@@ -830,32 +834,32 @@ export class CreativeAssetLoader {
     // Props especiales de Phaser
     const specialProps = [
       {
-        key: 'barrel_small_empty',
-        path: 'assets/props/Barrel_Small_Empty.png',
-        biome: 'village',
+        key: "barrel_small_empty",
+        path: "assets/props/Barrel_Small_Empty.png",
+        biome: "village",
       },
       {
-        key: 'basket_empty',
-        path: 'assets/props/Basket_Empty.png',
-        biome: 'village',
+        key: "basket_empty",
+        path: "assets/props/Basket_Empty.png",
+        biome: "village",
       },
-      { key: 'bench_1', path: 'assets/props/Bench_1.png', biome: 'village' },
-      { key: 'bench_3', path: 'assets/props/Bench_3.png', biome: 'village' },
-      { key: 'chest', path: 'assets/props/Chest.png', biome: 'village' },
+      { key: "bench_1", path: "assets/props/Bench_1.png", biome: "village" },
+      { key: "bench_3", path: "assets/props/Bench_3.png", biome: "village" },
+      { key: "chest", path: "assets/props/Chest.png", biome: "village" },
       {
-        key: 'fireplace_1',
-        path: 'assets/props/Fireplace_1.png',
-        biome: 'village',
-      },
-      {
-        key: 'lamp_post_3',
-        path: 'assets/props/LampPost_3.png',
-        biome: 'city',
+        key: "fireplace_1",
+        path: "assets/props/Fireplace_1.png",
+        biome: "village",
       },
       {
-        key: 'table_medium_1',
-        path: 'assets/props/Table_Medium_1.png',
-        biome: 'village',
+        key: "lamp_post_3",
+        path: "assets/props/LampPost_3.png",
+        biome: "city",
+      },
+      {
+        key: "table_medium_1",
+        path: "assets/props/Table_Medium_1.png",
+        biome: "village",
       },
     ];
 
@@ -863,15 +867,15 @@ export class CreativeAssetLoader {
       const assetInfo: AssetInfo = {
         key: prop.key,
         path: prop.path,
-        type: 'prop',
+        type: "prop",
         biome: prop.biome,
-        rarity: 'uncommon',
+        rarity: "uncommon",
       };
       propAssets.push(assetInfo);
       this.loadedAssets.set(assetInfo.key, assetInfo);
     }
 
-    this.assetsByType.set('props', propAssets);
+    this.assetsByType.set("props", propAssets);
     return propAssets;
   }
 
@@ -882,9 +886,9 @@ export class CreativeAssetLoader {
     const mushroomAssets: AssetInfo[] = [];
 
     const mushroomTypes = [
-      { prefix: 'beige_green_mushroom', count: 3, biome: 'forest' },
-      { prefix: 'chanterelles', count: 3, biome: 'forest' },
-      { prefix: 'white-red_mushroom', count: 3, biome: 'mystical' },
+      { prefix: "beige_green_mushroom", count: 3, biome: "forest" },
+      { prefix: "chanterelles", count: 3, biome: "forest" },
+      { prefix: "white-red_mushroom", count: 3, biome: "mystical" },
     ];
 
     for (const mushroomType of mushroomTypes) {
@@ -892,17 +896,17 @@ export class CreativeAssetLoader {
         const assetInfo: AssetInfo = {
           key: `${mushroomType.prefix}${i}`,
           path: `assets/mushrooms/${mushroomType.prefix}${i}.png`,
-          type: 'mushroom',
+          type: "mushroom",
           biome: mushroomType.biome,
           variant: i,
-          rarity: 'uncommon',
+          rarity: "uncommon",
         };
         mushroomAssets.push(assetInfo);
         this.loadedAssets.set(assetInfo.key, assetInfo);
       }
     }
 
-    this.assetsByType.set('mushrooms', mushroomAssets);
+    this.assetsByType.set("mushrooms", mushroomAssets);
     return mushroomAssets;
   }
 
@@ -913,14 +917,14 @@ export class CreativeAssetLoader {
     const ruinAssets: AssetInfo[] = [];
 
     const ruinTypes = [
-      { prefix: 'blue-gray_ruins', count: 5, biome: 'ancient' },
-      { prefix: 'brown-gray_ruins', count: 5, biome: 'ancient' },
-      { prefix: 'brown_ruins', count: 5, biome: 'desert' },
-      { prefix: 'sand_ruins', count: 5, biome: 'desert' },
-      { prefix: 'snow_ruins', count: 5, biome: 'frozen' },
-      { prefix: 'water_ruins', count: 5, biome: 'wetland' },
-      { prefix: 'white_ruins', count: 5, biome: 'ethereal' },
-      { prefix: 'yellow_ruins', count: 5, biome: 'ancient' },
+      { prefix: "blue-gray_ruins", count: 5, biome: "ancient" },
+      { prefix: "brown-gray_ruins", count: 5, biome: "ancient" },
+      { prefix: "brown_ruins", count: 5, biome: "desert" },
+      { prefix: "sand_ruins", count: 5, biome: "desert" },
+      { prefix: "snow_ruins", count: 5, biome: "frozen" },
+      { prefix: "water_ruins", count: 5, biome: "wetland" },
+      { prefix: "white_ruins", count: 5, biome: "ethereal" },
+      { prefix: "yellow_ruins", count: 5, biome: "ancient" },
     ];
 
     for (const ruinType of ruinTypes) {
@@ -928,17 +932,17 @@ export class CreativeAssetLoader {
         const assetInfo: AssetInfo = {
           key: `${ruinType.prefix}${i}`,
           path: `assets/ruins/${ruinType.prefix}${i}.png`,
-          type: 'ruin',
+          type: "ruin",
           biome: ruinType.biome,
           variant: i,
-          rarity: 'rare',
+          rarity: "rare",
         };
         ruinAssets.push(assetInfo);
         this.loadedAssets.set(assetInfo.key, assetInfo);
       }
     }
 
-    this.assetsByType.set('ruins', ruinAssets);
+    this.assetsByType.set("ruins", ruinAssets);
     return ruinAssets;
   }
 
@@ -949,9 +953,9 @@ export class CreativeAssetLoader {
     const foliageAssets: AssetInfo[] = [];
 
     const shrubTypes = [
-      { prefix: 'bush_emerald_', count: 7, biome: 'forest' },
-      { prefix: 'troncos', count: 3, biome: 'forest' },
-      { prefix: 'living_gazebo', count: 2, biome: 'mystical' },
+      { prefix: "bush_emerald_", count: 7, biome: "forest" },
+      { prefix: "troncos", count: 3, biome: "forest" },
+      { prefix: "living_gazebo", count: 2, biome: "mystical" },
     ];
 
     for (const shrubType of shrubTypes) {
@@ -959,24 +963,27 @@ export class CreativeAssetLoader {
         const assetInfo: AssetInfo = {
           key: `${shrubType.prefix}${i}`,
           path: `assets/foliage/shrubs/${shrubType.prefix}${i}.png`,
-          type: 'foliage',
+          type: "foliage",
           biome: shrubType.biome,
           variant: i,
-          rarity: 'common',
+          rarity: "common",
         };
         foliageAssets.push(assetInfo);
         this.loadedAssets.set(assetInfo.key, assetInfo);
       }
     }
 
-    this.assetsByType.set('foliage', foliageAssets);
+    this.assetsByType.set("foliage", foliageAssets);
     return foliageAssets;
   }
 
   /**
    * Obtiene assets por rareza y nivel de desbloqueo
    */
-  getAssetsByRarity(rarity: 'common' | 'uncommon' | 'rare' | 'epic', unlockLevel: number = 0): AssetInfo[] {
+  getAssetsByRarity(
+    rarity: "common" | "uncommon" | "rare" | "epic",
+    unlockLevel: number = 0,
+  ): AssetInfo[] {
     const assets: AssetInfo[] = [];
 
     for (const asset of this.loadedAssets.values()) {
@@ -991,21 +998,24 @@ export class CreativeAssetLoader {
   /**
    * Genera mundo diverso basado en progreso del jugador
    */
-  generateProgressiveWorld(playerLevel: number, biomeDiversity: number): AssetInfo[] {
+  generateProgressiveWorld(
+    playerLevel: number,
+    biomeDiversity: number,
+  ): AssetInfo[] {
     const worldAssets: AssetInfo[] = [];
 
     // Assets básicos siempre disponibles
-    worldAssets.push(...this.getAssetsByRarity('common', playerLevel));
+    worldAssets.push(...this.getAssetsByRarity("common", playerLevel));
 
     // Assets desbloqueables por nivel
     if (playerLevel >= 5) {
-      worldAssets.push(...this.getAssetsByRarity('uncommon', playerLevel));
+      worldAssets.push(...this.getAssetsByRarity("uncommon", playerLevel));
     }
     if (playerLevel >= 15) {
-      worldAssets.push(...this.getAssetsByRarity('rare', playerLevel));
+      worldAssets.push(...this.getAssetsByRarity("rare", playerLevel));
     }
     if (playerLevel >= 30) {
-      worldAssets.push(...this.getAssetsByRarity('epic', playerLevel));
+      worldAssets.push(...this.getAssetsByRarity("epic", playerLevel));
     }
 
     return worldAssets;

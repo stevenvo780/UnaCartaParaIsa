@@ -3,9 +3,9 @@
  * Maneja la compra, almacenamiento y deterioro de alimentos
  */
 
-import type { FoodItem, FoodInventoryItem } from '../types/food';
-import { FoodCatalog } from '../data/FoodCatalog';
-import { logAutopoiesis } from '../utils/logger';
+import type { FoodItem, FoodInventoryItem } from "../types/food";
+import { FoodCatalog } from "../data/FoodCatalog";
+import { logAutopoiesis } from "../utils/logger";
 
 export class FoodInventorySystem {
   private inventory = new Map<string, FoodInventoryItem>();
@@ -17,15 +17,18 @@ export class FoodInventorySystem {
   addFood(foodId: string, quantity = 1): boolean {
     const food = FoodCatalog.getFoodById(foodId);
     if (!food) {
-      logAutopoiesis.warn('Intento de añadir comida inexistente', { foodId });
+      logAutopoiesis.warn("Intento de añadir comida inexistente", { foodId });
       return false;
     }
 
     // Verificar capacidad
-    const totalItems = Array.from(this.inventory.values()).reduce((sum, item) => sum + item.quantity, 0);
+    const totalItems = Array.from(this.inventory.values()).reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
 
     if (totalItems + quantity > this.maxCapacity) {
-      logAutopoiesis.warn('Inventario lleno', {
+      logAutopoiesis.warn("Inventario lleno", {
         current: totalItems,
         adding: quantity,
         capacity: this.maxCapacity,
@@ -44,7 +47,7 @@ export class FoodInventorySystem {
       });
     }
 
-    logAutopoiesis.info('Comida añadida al inventario', {
+    logAutopoiesis.info("Comida añadida al inventario", {
       foodId,
       quantity,
       total: this.inventory.get(foodId)?.quantity,
@@ -67,7 +70,7 @@ export class FoodInventorySystem {
       this.inventory.delete(foodId);
     }
 
-    logAutopoiesis.info('Comida consumida', {
+    logAutopoiesis.info("Comida consumida", {
       foodId,
       remaining: item.quantity,
     });
@@ -79,7 +82,9 @@ export class FoodInventorySystem {
    * Obtiene el inventario completo
    */
   getInventory(): FoodInventoryItem[] {
-    return Array.from(this.inventory.values()).filter(item => item.quantity > 0);
+    return Array.from(this.inventory.values()).filter(
+      (item) => item.quantity > 0,
+    );
   }
 
   /**
@@ -112,7 +117,7 @@ export class FoodInventorySystem {
           cleanedCount += item.quantity;
           this.inventory.delete(foodId);
 
-          logAutopoiesis.info('Comida echada a perder removida', {
+          logAutopoiesis.info("Comida echada a perder removida", {
             foodId,
             quantity: item.quantity,
             spoilTime: item.food.spoilTime,
@@ -123,7 +128,7 @@ export class FoodInventorySystem {
     }
 
     if (cleanedCount > 0) {
-      logAutopoiesis.info('Limpieza de comida completada', { cleanedCount });
+      logAutopoiesis.info("Limpieza de comida completada", { cleanedCount });
     }
 
     return cleanedCount;
@@ -154,7 +159,10 @@ export class FoodInventorySystem {
    * Obtiene el espacio libre en el inventario
    */
   getFreeSpace(): number {
-    const usedSpace = Array.from(this.inventory.values()).reduce((sum, item) => sum + item.quantity, 0);
+    const usedSpace = Array.from(this.inventory.values()).reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
     return this.maxCapacity - usedSpace;
   }
 
@@ -163,7 +171,10 @@ export class FoodInventorySystem {
    */
   getInventoryStats() {
     const items = this.getInventory();
-    const totalValue = items.reduce((sum, item) => sum + item.food.price * item.quantity, 0);
+    const totalValue = items.reduce(
+      (sum, item) => sum + item.food.price * item.quantity,
+      0,
+    );
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
     const nearExpiry = this.getFoodsNearExpiry().length;
 
@@ -174,10 +185,12 @@ export class FoodInventorySystem {
       capacity: this.maxCapacity,
       nearExpiry,
       categories: {
-        healthy: items.filter(item => item.food.category === 'healthy').length,
-        junk: items.filter(item => item.food.category === 'junk').length,
-        dessert: items.filter(item => item.food.category === 'dessert').length,
-        snack: items.filter(item => item.food.category === 'snack').length,
+        healthy: items.filter((item) => item.food.category === "healthy")
+          .length,
+        junk: items.filter((item) => item.food.category === "junk").length,
+        dessert: items.filter((item) => item.food.category === "dessert")
+          .length,
+        snack: items.filter((item) => item.food.category === "snack").length,
       },
     };
   }
@@ -187,6 +200,6 @@ export class FoodInventorySystem {
    */
   clearInventory(): void {
     this.inventory.clear();
-    logAutopoiesis.info('Inventario de comida limpiado');
+    logAutopoiesis.info("Inventario de comida limpiado");
   }
 }

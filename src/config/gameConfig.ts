@@ -9,8 +9,8 @@
  * Organizada por categorías lógicas para máximo mantenimiento
  */
 
-import { TIMING, SURVIVAL, PHYSICS } from '../constants';
-import { logAutopoiesis } from '../utils/logger';
+import { TIMING, SURVIVAL, PHYSICS } from "../constants";
+import { logAutopoiesis } from "../utils/logger";
 
 export interface GameConfig {
   gameSpeedMultiplier: number;
@@ -288,7 +288,7 @@ export const getGameConfig = (): GameConfig => ({
 
 export const setGameConfig = (config: Partial<GameConfig>): void => {
   activeConfig = { ...activeConfig, ...config };
-  logAutopoiesis.info('🎮 Game Config Updated', config);
+  logAutopoiesis.info("🎮 Game Config Updated", config);
 };
 
 export const loadPreset = (presetName: keyof typeof gamePresets): void => {

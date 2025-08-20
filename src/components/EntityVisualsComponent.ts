@@ -3,16 +3,20 @@
  * Separa la lógica visual del GameEntity
  */
 
-import type Phaser from 'phaser';
-import type { MoodType } from '../types';
-import { GAME_BALANCE } from '../constants/gameBalance';
+import type Phaser from "phaser";
+import type { MoodType } from "../types";
+import { GAME_BALANCE } from "../constants/gameBalance";
 
 export class EntityVisualsComponent {
   private sprite: Phaser.Physics.Arcade.Sprite;
   private currentSprite: string;
   private pulsePhase = 0;
 
-  constructor(sprite: Phaser.Physics.Arcade.Sprite, _entityId: 'isa' | 'stev', initialSprite: string) {
+  constructor(
+    sprite: Phaser.Physics.Arcade.Sprite,
+    _entityId: "isa" | "stev",
+    initialSprite: string,
+  ) {
     this.sprite = sprite;
     this.currentSprite = initialSprite;
 
@@ -29,8 +33,14 @@ export class EntityVisualsComponent {
 
     // Configuración de físicas
     if (this.sprite.body) {
-      this.sprite.body.setSize(this.sprite.width * 0.6, this.sprite.height * 0.8);
-      this.sprite.body.setOffset(this.sprite.width * 0.2, this.sprite.height * 0.1);
+      this.sprite.body.setSize(
+        this.sprite.width * 0.6,
+        this.sprite.height * 0.8,
+      );
+      this.sprite.body.setOffset(
+        this.sprite.width * 0.2,
+        this.sprite.height * 0.1,
+      );
     }
   }
 
@@ -49,15 +59,15 @@ export class EntityVisualsComponent {
    */
   updateMoodVisuals(mood: MoodType): void {
     const moodColors = {
-      '😊': 0x90ee90, // Light Green
-      '😢': 0x4682b4, // Steel Blue
-      '😡': 0xff6347, // Tomato
-      '😌': 0xdda0dd, // Plum
-      '🤩': 0xffd700, // Gold
-      '😑': 0x808080, // Gray
-      '😔': 0x483d8b, // Dark Slate Blue
-      '😰': 0xff4500, // Orange Red
-      '😴': 0x6a5acd, // Slate Blue
+      "😊": 0x90ee90, // Light Green
+      "😢": 0x4682b4, // Steel Blue
+      "😡": 0xff6347, // Tomato
+      "😌": 0xdda0dd, // Plum
+      "🤩": 0xffd700, // Gold
+      "😑": 0x808080, // Gray
+      "😔": 0x483d8b, // Dark Slate Blue
+      "😰": 0xff4500, // Orange Red
+      "😴": 0x6a5acd, // Slate Blue
     };
 
     const tint = moodColors[mood] || 0xffffff;
@@ -94,7 +104,7 @@ export class EntityVisualsComponent {
    * Establece la velocidad del sprite
    */
   setVelocity(x: number, y: number): void {
-    if (this.sprite.body && 'setVelocity' in this.sprite.body) {
+    if (this.sprite.body && "setVelocity" in this.sprite.body) {
       this.sprite.body.setVelocity(x, y);
     }
   }

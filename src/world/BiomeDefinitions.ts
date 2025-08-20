@@ -3,14 +3,14 @@
  * Cada bioma especifica rangos de IDs de tiles en lugar de nombres de archivos
  */
 
-import { BiomeType, type BiomeDefinition } from './types';
+import { BiomeType, type BiomeDefinition } from "./types";
 
 export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
   [BiomeType.GRASSLAND]: {
     id: BiomeType.GRASSLAND,
-    name: 'Pradera Verde',
-    description: 'Extensas praderas con césped y árboles dispersos',
-    color: '#7CB342',
+    name: "Pradera Verde",
+    description: "Extensas praderas con césped y árboles dispersos",
+    color: "#7CB342",
 
     conditions: {
       temperatureRange: [0.4, 0.7],
@@ -21,18 +21,18 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
     assets: {
       terrain: {
         primary: [
-          'cesped1.png',
-          'cesped2.png',
-          'cesped3.png',
-          'cesped4.png',
-          'cesped5.png',
-          'cesped6.png',
-          'cesped7.png',
-          'cesped8.png',
-          'cesped9.png',
-          'cesped10.png',
+          "cesped1.png",
+          "cesped2.png",
+          "cesped3.png",
+          "cesped4.png",
+          "cesped5.png",
+          "cesped6.png",
+          "cesped7.png",
+          "cesped8.png",
+          "cesped9.png",
+          "cesped10.png",
         ],
-        secondary: ['Grass_Middle.png', 'TexturedGrass.png'],
+        secondary: ["Grass_Middle.png", "TexturedGrass.png"],
         weight: [0.7, 0.15, 0.1, 0.05],
       },
 
@@ -44,8 +44,8 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
       },
 
       trees: {
-        primary: ['oak_tree.png'],
-        rare: ['tree_emerald_1.png', 'tree_emerald_2.png'],
+        primary: ["oak_tree.png"],
+        rare: ["tree_emerald_1.png", "tree_emerald_2.png"],
         density: 0.15,
         clustering: 0.3,
       },
@@ -54,12 +54,12 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.1,
       },
       props: {
-        common: ['flowers_white.png', 'flowers_red.png'],
+        common: ["flowers_white.png", "flowers_red.png"],
         rare: [],
         density: 0.2,
       },
       decals: {
-        assets: ['grass_patch_01.png'],
+        assets: ["grass_patch_01.png"],
         density: 0.3,
       },
     },
@@ -78,9 +78,9 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
   [BiomeType.FOREST]: {
     id: BiomeType.FOREST,
-    name: 'Bosque Frondoso',
-    description: 'Denso bosque con gran variedad de árboles y vegetación',
-    color: '#2E7D32',
+    name: "Bosque Frondoso",
+    description: "Denso bosque con gran variedad de árboles y vegetación",
+    color: "#2E7D32",
 
     conditions: {
       temperatureRange: [0.3, 0.6],
@@ -91,18 +91,18 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
     assets: {
       terrain: {
         primary: [
-          'cesped11.png',
-          'cesped12.png',
-          'cesped13.png',
-          'cesped14.png',
-          'cesped15.png',
-          'cesped16.png',
-          'cesped17.png',
-          'cesped18.png',
-          'cesped19.png',
-          'cesped20.png',
+          "cesped11.png",
+          "cesped12.png",
+          "cesped13.png",
+          "cesped14.png",
+          "cesped15.png",
+          "cesped16.png",
+          "cesped17.png",
+          "cesped18.png",
+          "cesped19.png",
+          "cesped20.png",
         ],
-        secondary: ['TexturedGrass.png'],
+        secondary: ["TexturedGrass.png"],
         weight: [0.8, 0.2],
       },
 
@@ -114,16 +114,16 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
       trees: {
         primary: [
-          'tree_emerald_1.png',
-          'tree_emerald_2.png',
-          'tree_emerald_3.png',
-          'tree_emerald_4.png',
-          'curved_tree1.png',
-          'curved_tree2.png',
-          'curved_tree3.png',
-          'oak_tree.png',
+          "tree_emerald_1.png",
+          "tree_emerald_2.png",
+          "tree_emerald_3.png",
+          "tree_emerald_4.png",
+          "curved_tree1.png",
+          "curved_tree2.png",
+          "curved_tree3.png",
+          "oak_tree.png",
         ],
-        rare: ['mega_tree1.png', 'mega_tree2.png'],
+        rare: ["mega_tree1.png", "mega_tree2.png"],
         density: 0.45,
         clustering: 0.7,
       },
@@ -132,12 +132,12 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.3,
       },
       props: {
-        common: ['mushrooms'],
+        common: ["mushrooms"],
         rare: [],
         density: 0.15,
       },
       decals: {
-        assets: ['shadow_soft_01.png', 'dirt_patch_01.png'],
+        assets: ["shadow_soft_01.png", "dirt_patch_01.png"],
         density: 0.4,
       },
     },
@@ -157,9 +157,9 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
   [BiomeType.MYSTICAL]: {
     id: BiomeType.MYSTICAL,
-    name: 'Bosque Místico',
-    description: 'Bosque encantado con árboles luminosos y elementos mágicos',
-    color: '#7B1FA2',
+    name: "Bosque Místico",
+    description: "Bosque encantado con árboles luminosos y elementos mágicos",
+    color: "#7B1FA2",
 
     conditions: {
       temperatureRange: [0.2, 0.4],
@@ -170,17 +170,17 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
     assets: {
       terrain: {
         primary: [
-          'cesped21.png',
-          'cesped22.png',
-          'cesped23.png',
-          'cesped24.png',
-          'cesped25.png',
-          'cesped26.png',
-          'cesped27.png',
-          'cesped28.png',
-          'cesped29.png',
-          'cesped30.png',
-          'cesped31.png',
+          "cesped21.png",
+          "cesped22.png",
+          "cesped23.png",
+          "cesped24.png",
+          "cesped25.png",
+          "cesped26.png",
+          "cesped27.png",
+          "cesped28.png",
+          "cesped29.png",
+          "cesped30.png",
+          "cesped31.png",
         ],
         secondary: [],
         weight: [1.0],
@@ -194,18 +194,23 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
       trees: {
         primary: [
-          'luminous_tree1.png',
-          'luminous_tree2.png',
-          'luminous_tree3.png',
-          'luminous_tree4.png',
-          'swirling_tree1.png',
-          'swirling_tree2.png',
-          'swirling_tree3.png',
-          'blue-green_balls_tree1.png',
-          'blue-green_balls_tree2.png',
-          'blue-green_balls_tree3.png',
+          "luminous_tree1.png",
+          "luminous_tree2.png",
+          "luminous_tree3.png",
+          "luminous_tree4.png",
+          "swirling_tree1.png",
+          "swirling_tree2.png",
+          "swirling_tree3.png",
+          "blue-green_balls_tree1.png",
+          "blue-green_balls_tree2.png",
+          "blue-green_balls_tree3.png",
         ],
-        rare: ['tree_idol_deer.png', 'tree_idol_dragon.png', 'tree_idol_human.png', 'tree_idol_wolf.png'],
+        rare: [
+          "tree_idol_deer.png",
+          "tree_idol_dragon.png",
+          "tree_idol_human.png",
+          "tree_idol_wolf.png",
+        ],
         density: 0.25,
         clustering: 0.4,
       },
@@ -214,12 +219,16 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.2,
       },
       props: {
-        common: ['light_balls_tree1.png', 'light_balls_tree2.png', 'light_balls_tree3.png'],
+        common: [
+          "light_balls_tree1.png",
+          "light_balls_tree2.png",
+          "light_balls_tree3.png",
+        ],
         rare: [],
         density: 0.1,
       },
       decals: {
-        assets: ['shadow_soft_01.png'],
+        assets: ["shadow_soft_01.png"],
         density: 0.2,
       },
     },
@@ -239,9 +248,9 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
   [BiomeType.WETLAND]: {
     id: BiomeType.WETLAND,
-    name: 'Humedal',
-    description: 'Zona húmeda con sauces, agua y hongos',
-    color: '#00695C',
+    name: "Humedal",
+    description: "Zona húmeda con sauces, agua y hongos",
+    color: "#00695C",
 
     conditions: {
       temperatureRange: [0.4, 0.7],
@@ -252,7 +261,12 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
     assets: {
       terrain: {
-        primary: ['cesped1.png', 'cesped2.png', 'cesped3.png', 'Water_Middle.png'],
+        primary: [
+          "cesped1.png",
+          "cesped2.png",
+          "cesped3.png",
+          "Water_Middle.png",
+        ],
         secondary: [],
         weight: [0.6, 0.4],
       },
@@ -265,8 +279,14 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
       },
 
       trees: {
-        primary: ['willow1.png', 'willow2.png', 'willow3.png', 'white_tree1.png', 'white_tree2.png'],
-        rare: ['tree_emerald_1.png'],
+        primary: [
+          "willow1.png",
+          "willow2.png",
+          "willow3.png",
+          "white_tree1.png",
+          "white_tree2.png",
+        ],
+        rare: ["tree_emerald_1.png"],
         density: 0.2,
         clustering: 0.5,
       },
@@ -275,12 +295,12 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.4,
       },
       props: {
-        common: ['mushrooms'],
+        common: ["mushrooms"],
         rare: [],
         density: 0.3,
       },
       decals: {
-        assets: ['dirt_patch_01.png'],
+        assets: ["dirt_patch_01.png"],
         density: 0.5,
       },
     },
@@ -300,9 +320,9 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
   [BiomeType.MOUNTAINOUS]: {
     id: BiomeType.MOUNTAINOUS,
-    name: 'Zona Montañosa',
-    description: 'Terreno elevado con acantilados, rocas y árboles resistentes',
-    color: '#5D4037',
+    name: "Zona Montañosa",
+    description: "Terreno elevado con acantilados, rocas y árboles resistentes",
+    color: "#5D4037",
 
     conditions: {
       temperatureRange: [0.1, 0.4],
@@ -312,8 +332,13 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
     assets: {
       terrain: {
-        primary: ['cesped15.png', 'cesped16.png', 'cesped17.png', 'cesped18.png'],
-        secondary: ['dirt_patch_01.png'],
+        primary: [
+          "cesped15.png",
+          "cesped16.png",
+          "cesped17.png",
+          "cesped18.png",
+        ],
+        secondary: ["dirt_patch_01.png"],
         weight: [0.7, 0.3],
       },
 
@@ -324,8 +349,8 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
       },
 
       trees: {
-        primary: ['mega_tree1.png', 'mega_tree2.png', 'oak_tree.png'],
-        rare: ['curved_tree1.png', 'curved_tree2.png'],
+        primary: ["mega_tree1.png", "mega_tree2.png", "oak_tree.png"],
+        rare: ["curved_tree1.png", "curved_tree2.png"],
         density: 0.1,
         clustering: 0.2,
       },
@@ -339,12 +364,17 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.4,
       },
       structures: {
-        assets: ['cliff_face_n.png', 'cliff_face_s.png', 'cliff_face_e.png', 'cliff_face_w.png'],
+        assets: [
+          "cliff_face_n.png",
+          "cliff_face_s.png",
+          "cliff_face_e.png",
+          "cliff_face_w.png",
+        ],
         density: 0.3,
         spacing: 2,
       },
       decals: {
-        assets: ['dirt_patch_01.png', 'shadow_soft_01.png'],
+        assets: ["dirt_patch_01.png", "shadow_soft_01.png"],
         density: 0.6,
       },
     },
@@ -364,9 +394,9 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
   [BiomeType.VILLAGE]: {
     id: BiomeType.VILLAGE,
-    name: 'Zona de Pueblo',
-    description: 'Área civilizada con estructuras, caminos y jardines cuidados',
-    color: '#8D6E63',
+    name: "Zona de Pueblo",
+    description: "Área civilizada con estructuras, caminos y jardines cuidados",
+    color: "#8D6E63",
 
     conditions: {
       temperatureRange: [0.4, 0.7],
@@ -376,7 +406,13 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
 
     assets: {
       terrain: {
-        primary: ['cesped1.png', 'cesped2.png', 'cesped3.png', 'cesped4.png', 'cesped5.png'],
+        primary: [
+          "cesped1.png",
+          "cesped2.png",
+          "cesped3.png",
+          "cesped4.png",
+          "cesped5.png",
+        ],
         secondary: [],
         weight: [1.0],
       },
@@ -388,7 +424,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
       },
 
       trees: {
-        primary: ['oak_tree.png', 'tree_emerald_1.png'],
+        primary: ["oak_tree.png", "tree_emerald_1.png"],
         rare: [],
         density: 0.1,
         clustering: 0.1,
@@ -398,25 +434,25 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
         density: 0.15,
       },
       props: {
-        common: ['flowers_white.png', 'flowers_red.png'],
+        common: ["flowers_white.png", "flowers_red.png"],
         rare: [],
         density: 0.2,
       },
       structures: {
         assets: [
-          'House.png',
-          'House_Hay_1.png',
-          'House_Hay_2.png',
-          'House_Hay_3.png',
-          'House_Hay_4_Purple.png',
-          'Well_Hay_1.png',
-          'Fences.png',
+          "House.png",
+          "House_Hay_1.png",
+          "House_Hay_2.png",
+          "House_Hay_3.png",
+          "House_Hay_4_Purple.png",
+          "Well_Hay_1.png",
+          "Fences.png",
         ],
         density: 0.05,
         spacing: 4,
       },
       decals: {
-        assets: ['grass_patch_01.png'],
+        assets: ["grass_patch_01.png"],
         density: 0.1,
       },
     },
@@ -507,7 +543,12 @@ export function getAllBiomes(): BiomeType[] {
 /**
  * Verifica si un bioma puede aparecer en las condiciones dadas
  */
-export function canBiomeSpawn(biome: BiomeType, temperature: number, moisture: number, elevation: number): boolean {
+export function canBiomeSpawn(
+  biome: BiomeType,
+  temperature: number,
+  moisture: number,
+  elevation: number,
+): boolean {
   const def = getBiomeDefinition(biome);
 
   return (
@@ -527,21 +568,30 @@ export function calculateBiomeFitness(
   biome: BiomeType,
   temperature: number,
   moisture: number,
-  elevation: number
+  elevation: number,
 ): number {
   const def = getBiomeDefinition(biome);
 
   // Calcular distancia normalizada a los rangos óptimos
-  const tempCenter = (def.conditions.temperatureRange[0] + def.conditions.temperatureRange[1]) / 2;
-  const moistCenter = (def.conditions.moistureRange[0] + def.conditions.moistureRange[1]) / 2;
-  const elevCenter = (def.conditions.elevationRange[0] + def.conditions.elevationRange[1]) / 2;
+  const tempCenter =
+    (def.conditions.temperatureRange[0] + def.conditions.temperatureRange[1]) /
+    2;
+  const moistCenter =
+    (def.conditions.moistureRange[0] + def.conditions.moistureRange[1]) / 2;
+  const elevCenter =
+    (def.conditions.elevationRange[0] + def.conditions.elevationRange[1]) / 2;
 
   const tempDist = Math.abs(temperature - tempCenter);
   const moistDist = Math.abs(moisture - moistCenter);
   const elevDist = Math.abs(elevation - elevCenter);
 
   // Fitness inverso a la distancia (0-1, donde 1 es perfecto)
-  const fitness = 1 - Math.sqrt(tempDist * tempDist + moistDist * moistDist + elevDist * elevDist) / Math.sqrt(3);
+  const fitness =
+    1 -
+    Math.sqrt(
+      tempDist * tempDist + moistDist * moistDist + elevDist * elevDist,
+    ) /
+      Math.sqrt(3);
 
   return Math.max(0, fitness);
 }

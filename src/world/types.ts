@@ -3,12 +3,12 @@
  */
 
 export enum BiomeType {
-  GRASSLAND = 'grassland',
-  FOREST = 'forest',
-  MYSTICAL = 'mystical',
-  WETLAND = 'wetland',
-  MOUNTAINOUS = 'mountainous',
-  VILLAGE = 'village',
+  GRASSLAND = "grassland",
+  FOREST = "forest",
+  MYSTICAL = "mystical",
+  WETLAND = "wetland",
+  MOUNTAINOUS = "mountainous",
+  VILLAGE = "village",
 }
 
 export interface BiomeDefinition {

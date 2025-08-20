@@ -11,6 +11,8 @@ export interface AssetDefinition {
   type: "image" | "audio" | "json" | "tilemap" | "spritesheet";
   fallback?: string;
   required?: boolean;
+  frameWidth?: number; // For spritesheets
+  frameHeight?: number; // For spritesheets
   spriteConfig?: {
     frameWidth: number;
     frameHeight: number;
@@ -35,8 +37,21 @@ export class AssetManager {
     // Entity sprites now handled by AnimationManager spritesheets
     // Removed duplicate static images: isa-happy, isa-sad, isa-dying, stev-happy, stev-sad, stev-dying
 
-    { key: "woman", path: "assets/entities/ent_woman.png", type: "image" },
-    { key: "man", path: "assets/entities/ent_man.png", type: "image" },
+    // Character animations converted to spritesheets
+    {
+      key: "woman_anim",
+      path: "assets/entities/animated/characters/whomen1.png",
+      type: "spritesheet",
+      frameWidth: 16,
+      frameHeight: 32,
+    },
+    {
+      key: "man_anim",
+      path: "assets/entities/animated/characters/man1.png",
+      type: "spritesheet",
+      frameWidth: 16,
+      frameHeight: 32,
+    },
 
     {
       key: "campfire",
@@ -102,46 +117,53 @@ export class AssetManager {
       type: "json",
     },
 
+    // 🎭 PERSONAJES PRINCIPALES - ISA (mujer) y STEV (hombre) con animaciones
     {
       key: "isa_happy_anim",
-      path: "assets/entities/ent_woman.png",
+      path: "assets/entities/animated/characters/whomen1.png",
       type: "spritesheet",
-      spriteConfig: { frameWidth: 128, frameHeight: 128, endFrame: 0 },
+      frameWidth: 16,
+      frameHeight: 32,
       required: true,
     },
     {
       key: "isa_sad_anim",
-      path: "assets/entities/ent_woman.png",
+      path: "assets/entities/animated/characters/whomen1.png",
       type: "spritesheet",
-      spriteConfig: { frameWidth: 128, frameHeight: 128, endFrame: 0 },
+      frameWidth: 16,
+      frameHeight: 32,
       required: true,
     },
     {
       key: "isa_dying_anim",
-      path: "assets/entities/ent_woman.png",
+      path: "assets/entities/animated/characters/whomen1.png",
       type: "spritesheet",
-      spriteConfig: { frameWidth: 128, frameHeight: 128, endFrame: 0 },
+      frameWidth: 16,
+      frameHeight: 32,
       fallback: "isa_sad_anim",
     },
     {
       key: "stev_happy_anim",
-      path: "assets/entities/ent_man.png",
+      path: "assets/entities/animated/characters/man1.png",
       type: "spritesheet",
-      spriteConfig: { frameWidth: 128, frameHeight: 128, endFrame: 0 },
+      frameWidth: 16,
+      frameHeight: 32,
       required: true,
     },
     {
       key: "stev_sad_anim",
-      path: "assets/entities/ent_man.png",
+      path: "assets/entities/animated/characters/man1.png",
       type: "spritesheet",
-      spriteConfig: { frameWidth: 128, frameHeight: 128, endFrame: 0 },
+      frameWidth: 16,
+      frameHeight: 32,
       required: true,
     },
     {
       key: "stev_dying_anim",
-      path: "assets/entities/ent_man.png",
+      path: "assets/entities/animated/characters/man1.png",
       type: "spritesheet",
-      spriteConfig: { frameWidth: 128, frameHeight: 128, endFrame: 0 },
+      frameWidth: 16,
+      frameHeight: 32,
       required: true,
     },
     {
@@ -446,6 +468,11 @@ export class AssetManager {
               asset.path,
               asset.spriteConfig,
             );
+          } else if (asset.frameWidth && asset.frameHeight) {
+            this.scene.load.spritesheet(asset.key, asset.path, {
+              frameWidth: asset.frameWidth,
+              frameHeight: asset.frameHeight,
+            });
           } else {
             logAutopoiesis.warn(`Spritesheet ${asset.key} missing config`);
           }

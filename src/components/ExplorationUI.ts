@@ -2,8 +2,8 @@
  * ExplorationUI - UI mejorada que muestra la diversidad del mundo y progreso de exploración
  */
 
-import type Phaser from 'phaser';
-import { logAutopoiesis } from '../utils/logger';
+import type Phaser from "phaser";
+import { logAutopoiesis } from "../utils/logger";
 
 export interface ExplorationStats {
   totalAssets: number;
@@ -38,12 +38,12 @@ export class ExplorationUI {
     this.container.add(background);
 
     // Título
-    const title = this.scene.add.text(0, -280, '🗺️ Atlas de Exploración', {
-      fontSize: '24px',
-      fontFamily: 'Arial',
-      color: '#ecf0f1',
-      fontStyle: 'bold',
-      align: 'center',
+    const title = this.scene.add.text(0, -280, "🗺️ Atlas de Exploración", {
+      fontSize: "24px",
+      fontFamily: "Arial",
+      color: "#ecf0f1",
+      fontStyle: "bold",
+      align: "center",
     });
     title.setOrigin(0.5);
     this.container.add(title);
@@ -54,14 +54,14 @@ export class ExplorationUI {
     this.createAssetsPanel();
 
     // Botón de cerrar
-    const closeButton = this.scene.add.text(180, -280, '✕', {
-      fontSize: '20px',
-      color: '#e74c3c',
-      fontStyle: 'bold',
+    const closeButton = this.scene.add.text(180, -280, "✕", {
+      fontSize: "20px",
+      color: "#e74c3c",
+      fontStyle: "bold",
     });
     closeButton.setOrigin(0.5);
     closeButton.setInteractive({ useHandCursor: true });
-    closeButton.on('pointerdown', () => this.hide());
+    closeButton.on("pointerdown", () => this.hide());
     this.container.add(closeButton);
 
     // Posicionar en la esquina superior derecha
@@ -79,11 +79,11 @@ export class ExplorationUI {
     panelBg.setStrokeStyle(1, 0x7fb3d3);
     this.statsPanel.add(panelBg);
 
-    const panelTitle = this.scene.add.text(0, -40, '📊 Estadísticas', {
-      fontSize: '16px',
-      color: '#3498db',
-      fontStyle: 'bold',
-      align: 'center',
+    const panelTitle = this.scene.add.text(0, -40, "📊 Estadísticas", {
+      fontSize: "16px",
+      color: "#3498db",
+      fontStyle: "bold",
+      align: "center",
     });
     panelTitle.setOrigin(0.5);
     this.statsPanel.add(panelTitle);
@@ -101,11 +101,11 @@ export class ExplorationUI {
     panelBg.setStrokeStyle(1, 0x2ecc71);
     this.biomesPanel.add(panelBg);
 
-    const panelTitle = this.scene.add.text(0, -55, '🌍 Biomas Descubiertos', {
-      fontSize: '16px',
-      color: '#2ecc71',
-      fontStyle: 'bold',
-      align: 'center',
+    const panelTitle = this.scene.add.text(0, -55, "🌍 Biomas Descubiertos", {
+      fontSize: "16px",
+      color: "#2ecc71",
+      fontStyle: "bold",
+      align: "center",
     });
     panelTitle.setOrigin(0.5);
     this.biomesPanel.add(panelTitle);
@@ -123,11 +123,11 @@ export class ExplorationUI {
     panelBg.setStrokeStyle(1, 0x9b59b6);
     this.assetsPanel.add(panelBg);
 
-    const panelTitle = this.scene.add.text(0, -65, '🎨 Assets Desbloqueados', {
-      fontSize: '16px',
-      color: '#9b59b6',
-      fontStyle: 'bold',
-      align: 'center',
+    const panelTitle = this.scene.add.text(0, -65, "🎨 Assets Desbloqueados", {
+      fontSize: "16px",
+      color: "#9b59b6",
+      fontStyle: "bold",
+      align: "center",
     });
     panelTitle.setOrigin(0.5);
     this.assetsPanel.add(panelTitle);
@@ -135,7 +135,7 @@ export class ExplorationUI {
     this.container.add(this.assetsPanel);
   }
 
-  private lastStatsHash = '';
+  private lastStatsHash = "";
 
   /**
    * Actualiza la UI con nuevas estadísticas solo si han cambiado
@@ -162,26 +162,28 @@ export class ExplorationUI {
     // Actualizar assets
     this.updateAssetsContent(stats);
 
-    logAutopoiesis.info('🗺️ UI de exploración actualizada', stats);
+    logAutopoiesis.info("🗺️ UI de exploración actualizada", stats);
   }
 
   /**
    * Actualiza contenido del panel de estadísticas
    */
   private updateStatsContent(stats: ExplorationStats): void {
-    const discoveryPercentage = Math.round((stats.discoveredAssets / stats.totalAssets) * 100);
+    const discoveryPercentage = Math.round(
+      (stats.discoveredAssets / stats.totalAssets) * 100,
+    );
 
     const lines = [
       `Assets descubiertos: ${stats.discoveredAssets}/${stats.totalAssets} (${discoveryPercentage}%)`,
       `Biomas explorados: ${stats.biomesExplored}/6`,
-      `Bioma actual: ${stats.currentBiome || 'Desconocido'}`,
+      `Bioma actual: ${stats.currentBiome || "Desconocido"}`,
     ];
 
     lines.forEach((line, index) => {
       const text = this.scene.add.text(0, -10 + index * 20, line, {
-        fontSize: '14px',
-        color: '#ecf0f1',
-        align: 'center',
+        fontSize: "14px",
+        color: "#ecf0f1",
+        align: "center",
       });
       text.setOrigin(0.5);
       this.statsPanel.add(text);
@@ -194,7 +196,7 @@ export class ExplorationUI {
       35,
       discoveryPercentage * 2,
       12,
-      0x3498db
+      0x3498db,
     );
     progressFill.setOrigin(0, 0.5);
 
@@ -207,12 +209,12 @@ export class ExplorationUI {
    */
   private updateBiomesContent(stats: ExplorationStats): void {
     const biomes = [
-      { name: 'Praderas', icon: '🌱', color: '#2ecc71' },
-      { name: 'Bosques', icon: '🌲', color: '#27ae60' },
-      { name: 'Pantanos', icon: '🌊', color: '#3498db' },
-      { name: 'Pueblos', icon: '🏘️', color: '#f39c12' },
-      { name: 'Montañas', icon: '⛰️', color: '#95a5a6' },
-      { name: 'Místico', icon: '✨', color: '#9b59b6' },
+      { name: "Praderas", icon: "🌱", color: "#2ecc71" },
+      { name: "Bosques", icon: "🌲", color: "#27ae60" },
+      { name: "Pantanos", icon: "🌊", color: "#3498db" },
+      { name: "Pueblos", icon: "🏘️", color: "#f39c12" },
+      { name: "Montañas", icon: "⛰️", color: "#95a5a6" },
+      { name: "Místico", icon: "✨", color: "#9b59b6" },
     ];
 
     const rows = [];
@@ -229,15 +231,15 @@ export class ExplorationUI {
         const alpha = isExplored ? 1.0 : 0.3;
 
         const biomeIcon = this.scene.add.text(x, y, biome.icon, {
-          fontSize: '20px',
+          fontSize: "20px",
         });
         biomeIcon.setOrigin(0.5);
         biomeIcon.setAlpha(alpha);
 
         const biomeName = this.scene.add.text(x, y + 15, biome.name, {
-          fontSize: '10px',
+          fontSize: "10px",
           color: biome.color,
-          align: 'center',
+          align: "center",
         });
         biomeName.setOrigin(0.5);
         biomeName.setAlpha(alpha);
@@ -254,23 +256,23 @@ export class ExplorationUI {
   private updateAssetsContent(stats: ExplorationStats): void {
     const rarities = [
       {
-        name: 'Común',
-        color: '#95a5a6',
+        name: "Común",
+        color: "#95a5a6",
         count: stats.rarityBreakdown.common || 0,
       },
       {
-        name: 'Poco común',
-        color: '#3498db',
+        name: "Poco común",
+        color: "#3498db",
         count: stats.rarityBreakdown.uncommon || 0,
       },
       {
-        name: 'Raro',
-        color: '#9b59b6',
+        name: "Raro",
+        color: "#9b59b6",
         count: stats.rarityBreakdown.rare || 0,
       },
       {
-        name: 'Épico',
-        color: '#f1c40f',
+        name: "Épico",
+        color: "#f1c40f",
         count: stats.rarityBreakdown.epic || 0,
       },
     ];
@@ -279,16 +281,16 @@ export class ExplorationUI {
       const y = -35 + index * 25;
 
       const rarityText = this.scene.add.text(-80, y, rarity.name, {
-        fontSize: '14px',
+        fontSize: "14px",
         color: rarity.color,
-        fontStyle: 'bold',
+        fontStyle: "bold",
       });
       rarityText.setOrigin(0, 0.5);
 
       const countText = this.scene.add.text(80, y, rarity.count.toString(), {
-        fontSize: '14px',
-        color: '#ecf0f1',
-        align: 'right',
+        fontSize: "14px",
+        color: "#ecf0f1",
+        align: "right",
       });
       countText.setOrigin(1, 0.5);
 
@@ -306,9 +308,9 @@ export class ExplorationUI {
    */
   private clearPanelContent(): void {
     // Mantener solo los elementos base (títulos y fondos)
-    [this.statsPanel, this.biomesPanel, this.assetsPanel].forEach(panel => {
+    [this.statsPanel, this.biomesPanel, this.assetsPanel].forEach((panel) => {
       const children = [...panel.list];
-      children.slice(2).forEach(child => {
+      children.slice(2).forEach((child) => {
         panel.remove(child);
         child.destroy();
       });
@@ -329,7 +331,7 @@ export class ExplorationUI {
       scaleY: { from: 0.8, to: 1 },
       alpha: { from: 0, to: 1 },
       duration: 300,
-      ease: 'Back.easeOut',
+      ease: "Back.easeOut",
     });
   }
 
@@ -345,7 +347,7 @@ export class ExplorationUI {
       scaleY: 0.8,
       alpha: 0,
       duration: 200,
-      ease: 'Back.easeIn',
+      ease: "Back.easeIn",
       onComplete: () => {
         this.container.setVisible(false);
       },

@@ -3,9 +3,9 @@
  * Extrae la lógica de inicialización del MainScene god object
  */
 
-import type { GameState } from '../types';
-import { logAutopoiesis } from '../utils/logger';
-import { createWorldMapData } from '../utils/simpleMapGeneration';
+import type { GameState } from "../types";
+import { logAutopoiesis } from "../utils/logger";
+import { createWorldMapData } from "../utils/simpleMapGeneration";
 
 export interface InitializationResult {
   gameState: GameState;
@@ -17,7 +17,7 @@ export class SceneInitializationManager {
    * Inicializa el estado del juego y genera el mapa
    */
   static initialize(): InitializationResult {
-    logAutopoiesis.info('Initializing game state and world');
+    logAutopoiesis.info("Initializing game state and world");
 
     const mapData = createWorldMapData();
 
