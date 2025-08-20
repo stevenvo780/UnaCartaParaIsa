@@ -1,5 +1,8 @@
 import Phaser from "phaser";
 import { QuestUI } from "../components/QuestUI";
+import { DialogueCardUI } from "../components/DialogueCardUI";
+import { DayNightUI } from "../components/DayNightUI";
+import { SystemStatusUI } from "../components/SystemStatusUI";
 import { AnimatedGameEntity } from "../entities/AnimatedGameEntity";
 import { EntityManager } from "../managers/EntityManager";
 import { GameLogicManager } from "../managers/GameLogicManager";
@@ -31,6 +34,9 @@ export class MainScene extends Phaser.Scene {
   private questSystem!: QuestSystem;
   private questController!: QuestController;
   private questUI!: QuestUI;
+  private dialogueCardUI!: DialogueCardUI;
+  private dayNightUI!: DayNightUI;
+  private systemStatusUI!: SystemStatusUI;
   private gameLogicManager!: GameLogicManager;
   private worldRenderer!: WorldRenderer;
   private entityManager!: EntityManager;
@@ -80,6 +86,9 @@ export class MainScene extends Phaser.Scene {
       this.dialogueSystem,
     );
     this.questUI = new QuestUI(this);
+    this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
+    this.dayNightUI = new DayNightUI(this, 20, 20);
+    this.systemStatusUI = new SystemStatusUI(this, 20, 160);
 
     await this.initializeManagers();
 
@@ -100,6 +109,9 @@ export class MainScene extends Phaser.Scene {
     this.gameLogicManager.registerEntity("isa", isaEntity);
     this.gameLogicManager.registerEntity("stev", stevEntity);
 
+    // Conectar InputManager con GameLogicManager para control dual
+    this.inputManager.setGameLogicManager(this.gameLogicManager);
+
     // Set default controlled entity to Isa for eating system
     this.inputManager.setControlledEntity("isa");
 
@@ -111,6 +123,37 @@ export class MainScene extends Phaser.Scene {
     // Setup quest system controls
     this.input.keyboard?.on("keydown-Q", () => {
       this.questUI.toggleQuestPanel();
+    });
+
+    // Setup dialogue card system controls (M key handled by DialogueCardUI)
+    // Day/Night UI controls (T key handled by DayNightUI)
+    // System Status UI controls (E key handled by SystemStatusUI)
+
+    // Controles adicionales para el control dual
+    this.input.keyboard?.on("keydown-H", () => {
+      // Ayuda rápida - mostrar qué entidad está controlada por IA
+      const aiControlled = this.inputManager.getAIControlledEntity();
+      const playerControlled = this.inputManager.getControlledEntity();
+
+      logAutopoiesis.info("🎮 Estado del Control Dual", {
+        jugador: playerControlled,
+        ia: aiControlled,
+        controles:
+          "TAB=cambiar, H=ayuda, C=seguir cámara, T=tiempo, M=cartas, E=emergencia",
+      });
+    });
+
+    // Seguir con cámara a la entidad controlada
+    this.input.keyboard?.on("keydown-C", () => {
+      const controlled = this.inputManager.getControlledEntity();
+      if (controlled !== "none") {
+        const entity = controlled === "isa" ? this.isaEntity : this.stevEntity;
+        if (entity) {
+          const position = entity.getPosition();
+          this.cameras.main.centerOn(position.x, position.y);
+          logAutopoiesis.info(`📷 Cámara siguiendo a ${controlled}`);
+        }
+      }
     });
 
     // Auto-start first quest when entities meet
@@ -143,12 +186,246 @@ export class MainScene extends Phaser.Scene {
     this.registry.set("gameLogicManager", this.gameLogicManager);
     this.registry.set("questSystem", this.questSystem);
     this.registry.set("dialogueSystem", this.dialogueSystem);
+    this.registry.set(
+      "cardDialogueSystem",
+      this.gameLogicManager.getCardDialogueSystem(),
+    );
+    this.registry.set("dialogueCardUI", this.dialogueCardUI);
+    this.registry.set(
+      "dayNightSystem",
+      this.gameLogicManager.getDayNightSystem(),
+    );
+    this.registry.set("dayNightUI", this.dayNightUI);
+    this.registry.set(
+      "emergenceSystem",
+      this.gameLogicManager.getEmergenceSystem(),
+    );
+    this.registry.set("systemStatusUI", this.systemStatusUI);
 
     this.gameLogicManager.on("gameLogicUpdate", (data: GameLogicUpdateData) => {
       this.events.emit("gameLogicUpdate", data);
     });
 
+    // Setup dialogue card event handlers
+    this.setupDialogueCardEventHandlers();
+
     logAutopoiesis.debug("All managers initialized");
+  }
+
+  /**
+   * Setup dialogue card event handlers
+   */
+  private setupDialogueCardEventHandlers(): void {
+    const cardDialogueSystem = this.gameLogicManager.getCardDialogueSystem();
+
+    // Connect card generation to UI display
+    cardDialogueSystem.onCardGenerated = (card) => {
+      this.events.emit("showDialogueCard", card);
+      logAutopoiesis.info("🃏 Dialogue card generated", {
+        cardId: card.id,
+        type: card.type,
+        priority: card.priority,
+        participants: card.participants,
+      });
+    };
+
+    // Handle card choice selections
+    this.events.on("dialogueChoiceSelected", (data: any) => {
+      cardDialogueSystem.handleChoice(data.cardId, data.choice);
+
+      // Apply choice effects immediately
+      this.applyDialogueChoiceEffects(data.choice);
+
+      logAutopoiesis.info("🎯 Dialogue choice selected", {
+        cardId: data.cardId,
+        choiceId: data.choice.id,
+        outcome: data.choice.outcome,
+      });
+    });
+
+    // Generate initial greeting cards when entities meet
+    this.time.delayedCall(3000, () => {
+      cardDialogueSystem.triggerEventCard("first_meeting", ["isa", "stev"]);
+    });
+
+    // Generate cards based on critical needs
+    this.events.on("gameLogicUpdate", (data: GameLogicUpdateData) => {
+      this.checkForCriticalNeedsCards(data);
+    });
+
+    // Generate cards when entities are close together
+    this.events.on(
+      "entitiesMeet",
+      (data: { entities: string[]; distance: number }) => {
+        if (data.distance < 100 && Math.random() < 0.3) {
+          cardDialogueSystem.triggerEventCard(
+            "close_interaction",
+            data.entities,
+          );
+        }
+      },
+    );
+
+    // Generate cards on player interactions
+    this.gameLogicManager.on("playerInteraction", (data: any) => {
+      if (Math.random() < 0.4) {
+        cardDialogueSystem.triggerEventCard("player_action", [data.entityId]);
+      }
+    });
+
+    logAutopoiesis.info("📋 Dialogue card event handlers configured");
+  }
+
+  /**
+   * Check for critical needs and generate appropriate cards
+   */
+  private checkForCriticalNeedsCards(data: GameLogicUpdateData): void {
+    const cardDialogueSystem = this.gameLogicManager.getCardDialogueSystem();
+    const needsSystem = this.gameLogicManager.getNeedsSystem();
+
+    ["isa", "stev"].forEach((entityId) => {
+      const needs = needsSystem.getEntityNeeds(entityId);
+      if (!needs) return;
+
+      // Generate urgent cards for critical needs
+      if (needs.hunger < 20 && Math.random() < 0.2) {
+        cardDialogueSystem.triggerEventCard("hunger_crisis", [entityId]);
+      }
+
+      if (needs.thirst < 20 && Math.random() < 0.2) {
+        cardDialogueSystem.triggerEventCard("thirst_crisis", [entityId]);
+      }
+
+      if (needs.energy < 15 && Math.random() < 0.15) {
+        cardDialogueSystem.triggerEventCard("exhaustion", [entityId]);
+      }
+
+      if (needs.mentalHealth < 30 && Math.random() < 0.1) {
+        cardDialogueSystem.triggerEventCard("mental_health_concern", [
+          entityId,
+        ]);
+      }
+
+      // Generate positive cards for good conditions
+      if (needs.hunger > 80 && needs.energy > 70 && Math.random() < 0.05) {
+        cardDialogueSystem.triggerEventCard("feeling_great", [entityId]);
+      }
+    });
+  }
+
+  /**
+   * Apply effects from dialogue choice to game entities
+   */
+  private applyDialogueChoiceEffects(choice: any): void {
+    if (!choice.effects) return;
+
+    const needsSystem = this.gameLogicManager.getNeedsSystem();
+
+    // Apply needs changes
+    if (choice.effects.needs) {
+      Object.entries(choice.effects.needs).forEach(([needType, value]) => {
+        // Apply to both entities or determine target entity contextually
+        ["isa", "stev"].forEach((entityId) => {
+          needsSystem.modifyEntityNeed(entityId, needType, value as number);
+        });
+      });
+    }
+
+    // Handle movement effects
+    if (choice.effects.moveTo) {
+      const controlledEntity = this.inputManager.getControlledEntity();
+      if (controlledEntity !== "none") {
+        // Find nearest resource or specific location
+        this.handleMovementCommand(controlledEntity, choice.effects.moveTo);
+      }
+    }
+
+    // Handle mission unlocks
+    if (choice.effects.unlocksMission) {
+      this.questSystem.startQuest(choice.effects.unlocksMission);
+    }
+  }
+
+  /**
+   * Handle movement commands from dialogue choices
+   */
+  private handleMovementCommand(entityId: string, destination: string): void {
+    const entity = this.entityManager.getEntity(entityId);
+    if (!entity) return;
+
+    switch (destination) {
+      case "nearest_resource":
+        // Find nearest food store or resource
+        const nearestStore = this.findNearestResourceLocation(
+          entity.getPosition(),
+        );
+        if (nearestStore) {
+          logAutopoiesis.info(
+            `🏃 ${entityId} moving to nearest resource`,
+            nearestStore,
+          );
+          // Move entity toward resource (simplified)
+          entity.setVelocity(
+            nearestStore.x > entity.getPosition().x ? 50 : -50,
+            nearestStore.y > entity.getPosition().y ? 50 : -50,
+          );
+        }
+        break;
+      case "safe_place":
+        // Move to a safe zone
+        logAutopoiesis.info(`🏠 ${entityId} seeking safety`);
+        break;
+      case "partner_location":
+        // Move toward partner
+        const partner = entityId === "isa" ? "stev" : "isa";
+        const partnerEntity = this.entityManager.getEntity(partner);
+        if (partnerEntity) {
+          const partnerPos = partnerEntity.getPosition();
+          logAutopoiesis.info(
+            `💕 ${entityId} moving toward ${partner}`,
+            partnerPos,
+          );
+        }
+        break;
+    }
+  }
+
+  /**
+   * Find nearest resource location
+   */
+  private findNearestResourceLocation(position: {
+    x: number;
+    y: number;
+  }): { x: number; y: number } | null {
+    // Simplified: return position of first food store
+    const storePositions = [
+      { x: 600, y: 300 },
+      { x: 900, y: 500 },
+      { x: 300, y: 600 },
+    ];
+
+    let nearest = storePositions[0];
+    let minDistance = Phaser.Math.Distance.Between(
+      position.x,
+      position.y,
+      nearest.x,
+      nearest.y,
+    );
+
+    storePositions.forEach((store) => {
+      const distance = Phaser.Math.Distance.Between(
+        position.x,
+        position.y,
+        store.x,
+        store.y,
+      );
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = store;
+      }
+    });
+
+    return nearest;
   }
 
   /**
@@ -479,6 +756,18 @@ export class MainScene extends Phaser.Scene {
 
     if (this.dialogueSystem) {
       this.dialogueSystem.destroy();
+    }
+
+    if (this.dialogueCardUI) {
+      this.dialogueCardUI.destroy();
+    }
+
+    if (this.dayNightUI) {
+      this.dayNightUI.destroy();
+    }
+
+    if (this.systemStatusUI) {
+      this.systemStatusUI.destroy();
     }
 
     logAutopoiesis.info("MainScene destroyed");

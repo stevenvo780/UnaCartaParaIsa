@@ -14,6 +14,12 @@ import type {
   IGameLogicManager,
 } from "../types";
 import { EntityManager } from "./EntityManager";
+import { NeedsSystem } from "../systems/NeedsSystem";
+import { AISystem } from "../systems/AISystem";
+import { MovementSystem } from "../systems/MovementSystem";
+import { CardDialogueSystem } from "../systems/CardDialogueSystem";
+import { DayNightSystem } from "../systems/DayNightSystem";
+import { EmergenceSystem } from "../systems/EmergenceSystem";
 import { logAutopoiesis } from "../utils/logger";
 
 export class GameLogicManager implements IGameLogicManager {
@@ -22,12 +28,41 @@ export class GameLogicManager implements IGameLogicManager {
   private _gameLoopTimer?: Phaser.Time.TimerEvent;
   private _entityManager: EntityManager;
   private _eventEmitter: Phaser.Events.EventEmitter;
+  private _needsSystem: NeedsSystem;
+  private _aiSystem: AISystem;
+  private _movementSystem: MovementSystem;
+  private _cardDialogueSystem: CardDialogueSystem;
+  private _dayNightSystem: DayNightSystem;
+  private _emergenceSystem: EmergenceSystem;
 
   public constructor(scene: Phaser.Scene, initialGameState: GameState) {
     this._scene = scene;
     this._gameState = initialGameState;
     this._entityManager = new EntityManager();
     this._eventEmitter = new Phaser.Events.EventEmitter();
+    this._needsSystem = new NeedsSystem(scene, initialGameState);
+    this._movementSystem = new MovementSystem(scene, initialGameState);
+    this._aiSystem = new AISystem(scene, initialGameState, this._needsSystem);
+    this._cardDialogueSystem = new CardDialogueSystem(
+      scene,
+      initialGameState,
+      this._needsSystem,
+    );
+    this._dayNightSystem = new DayNightSystem(
+      scene,
+      initialGameState,
+      this._needsSystem,
+    );
+    this._emergenceSystem = new EmergenceSystem(
+      scene,
+      initialGameState,
+      this._needsSystem,
+      this._aiSystem,
+      this._dayNightSystem,
+    );
+
+    // Conectar sistemas
+    this._aiSystem.setMovementSystem(this._movementSystem);
   }
 
   /**
@@ -35,9 +70,24 @@ export class GameLogicManager implements IGameLogicManager {
    */
   public initialize(): void {
     this._setupGameLoop();
+
+    // Inicializar sistemas para entidades existentes
+    this._entityManager.getAllEntities().forEach((_, entityId) => {
+      // Posición inicial por defecto
+      const initialPosition = {
+        x: 400 + Math.random() * 800,
+        y: 300 + Math.random() * 600,
+      };
+
+      this._needsSystem.initializeEntityNeeds(entityId);
+      this._aiSystem.initializeEntityAI(entityId);
+      this._movementSystem.initializeEntityMovement(entityId, initialPosition);
+    });
+
     logAutopoiesis.info("GameLogicManager initialized", {
       entities: this._gameState.entities.length,
       zones: this._gameState.zones.length,
+      needsSystemActive: true,
     });
   }
 
@@ -82,6 +132,24 @@ export class GameLogicManager implements IGameLogicManager {
         entity.updateEntity(gameConfig.timing.mainGameLogic);
       }
     });
+
+    // Actualizar sistema de necesidades
+    this._needsSystem.update();
+
+    // Actualizar sistema de movimiento
+    this._movementSystem.update();
+
+    // Actualizar sistema de IA
+    this._aiSystem.update();
+
+    // Actualizar sistema de cartas de diálogo
+    this._cardDialogueSystem.update();
+
+    // Actualizar sistema día/noche
+    this._dayNightSystem.update();
+
+    // Actualizar sistema de emergencia
+    this._emergenceSystem.update();
 
     this._updateResonance();
 
@@ -176,7 +244,18 @@ export class GameLogicManager implements IGameLogicManager {
    */
   public registerEntity(entityId: string, entity: any): void {
     this._entityManager.registerEntity(entityId, entity);
-    logAutopoiesis.debug(`Entity registered: ${entityId}`);
+
+    // Posición inicial por defecto
+    const initialPosition = {
+      x: 400 + Math.random() * 800,
+      y: 300 + Math.random() * 600,
+    };
+
+    this._needsSystem.initializeEntityNeeds(entityId);
+    this._aiSystem.initializeEntityAI(entityId);
+    this._movementSystem.initializeEntityMovement(entityId, initialPosition);
+
+    logAutopoiesis.info(`Entidad ${entityId} registrada en sistemas`);
   }
 
   /**
@@ -351,6 +430,55 @@ export class GameLogicManager implements IGameLogicManager {
   }
 
   /**
+   * Obtener sistema de necesidades
+   */
+  public getNeedsSystem(): NeedsSystem {
+    return this._needsSystem;
+  }
+
+  /**
+   * Obtener sistema de IA
+   */
+  public getAISystem(): AISystem {
+    return this._aiSystem;
+  }
+
+  /**
+   * Obtener sistema de movimiento
+   */
+  public getMovementSystem(): MovementSystem {
+    return this._movementSystem;
+  }
+
+  /**
+   * Obtener sistema de cartas de diálogo
+   */
+  public getCardDialogueSystem(): CardDialogueSystem {
+    return this._cardDialogueSystem;
+  }
+
+  /**
+   * Obtener sistema día/noche
+   */
+  public getDayNightSystem(): DayNightSystem {
+    return this._dayNightSystem;
+  }
+
+  /**
+   * Obtener sistema de emergencia
+   */
+  public getEmergenceSystem(): EmergenceSystem {
+    return this._emergenceSystem;
+  }
+
+  /**
+   * Establecer control manual de entidad
+   */
+  public setEntityPlayerControl(entityId: string, controlled: boolean): void {
+    this._aiSystem.setPlayerControl(entityId, controlled);
+  }
+
+  /**
    * Cleanup when destroying the manager
    */
   public destroy(): void {
@@ -359,6 +487,12 @@ export class GameLogicManager implements IGameLogicManager {
     }
 
     this._entityManager.clearAllEntities();
+    this._needsSystem.cleanup();
+    this._aiSystem.cleanup();
+    this._movementSystem.cleanup();
+    this._cardDialogueSystem.cleanup();
+    this._dayNightSystem.cleanup();
+    this._emergenceSystem.cleanup();
     this._eventEmitter.removeAllListeners();
 
     logAutopoiesis.info("GameLogicManager destroyed");

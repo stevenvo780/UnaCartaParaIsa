@@ -9,6 +9,13 @@ import { logAutopoiesis } from "../utils/logger";
 
 export type ControlledEntity = "isa" | "stev" | "none";
 
+export interface ControlState {
+  currentEntity: ControlledEntity;
+  previousEntity: ControlledEntity;
+  isPlayerOverriding: boolean;
+  lastControlChange: number;
+}
+
 export class InputManager {
   private scene: Phaser.Scene;
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -17,6 +24,17 @@ export class InputManager {
   private isDragging = false;
   private lastPointerPosition = { x: 0, y: 0 };
   private isSprinting = false;
+
+  // Estado del control dual
+  private controlState: ControlState = {
+    currentEntity: "none",
+    previousEntity: "none",
+    isPlayerOverriding: false,
+    lastControlChange: 0,
+  };
+
+  // Referencias a los sistemas para comunicación
+  private gameLogicManager?: any;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -231,26 +249,60 @@ export class InputManager {
   }
 
   /**
-   * Establece qué entidad está siendo controlada
+   * Establecer referencia al GameLogicManager
+   */
+  public setGameLogicManager(gameLogicManager: any): void {
+    this.gameLogicManager = gameLogicManager;
+  }
+
+  /**
+   * Establece qué entidad está siendo controlada - MEJORADO para control dual
    */
   setControlledEntity(entity: ControlledEntity): void {
     const prevEntity = this.controlledEntity;
+    const now = Date.now();
+
+    // Actualizar estado de control
+    this.controlState.previousEntity = this.controlState.currentEntity;
+    this.controlState.currentEntity = entity;
+    this.controlState.lastControlChange = now;
+    this.controlState.isPlayerOverriding = entity !== "none";
+
     this.controlledEntity = entity;
 
-    // Provide visual feedback when switching control
-    if (entity !== "none") {
-      logAutopoiesis.info(`🎮 Control activo: ${entity.toUpperCase()}`);
+    // Notificar al sistema de IA sobre el cambio de control
+    if (this.gameLogicManager) {
+      // Liberar control de la entidad anterior
+      if (prevEntity !== "none") {
+        this.gameLogicManager.setEntityPlayerControl(prevEntity, false);
+      }
 
-      // Emit event for UI feedback
+      // Tomar control de la nueva entidad
+      if (entity !== "none") {
+        this.gameLogicManager.setEntityPlayerControl(entity, true);
+      }
+    }
+
+    // Feedback visual mejorado
+    if (entity !== "none") {
+      logAutopoiesis.info(`🎮 Control manual: ${entity.toUpperCase()}`, {
+        previous: prevEntity,
+        aiControlled: this.getAIControlledEntity(),
+      });
+
       this.scene.events.emit("controlChanged", {
         previous: prevEntity,
         current: entity,
+        aiControlled: this.getAIControlledEntity(),
+        timestamp: now,
       });
     } else {
-      logAutopoiesis.info("🎮 Control manual desactivado - modo AUTO");
+      logAutopoiesis.info("🎮 Control manual desactivado - ambos en modo IA");
       this.scene.events.emit("controlChanged", {
         previous: prevEntity,
         current: "none",
+        aiControlled: "both",
+        timestamp: now,
       });
     }
   }
@@ -260,6 +312,62 @@ export class InputManager {
    */
   getControlledEntity(): ControlledEntity {
     return this.controlledEntity;
+  }
+
+  /**
+   * Obtiene qué entidad está siendo controlada por IA
+   */
+  getAIControlledEntity(): "isa" | "stev" | "both" | "none" {
+    if (this.controlledEntity === "none") return "both";
+    if (this.controlledEntity === "isa") return "stev";
+    if (this.controlledEntity === "stev") return "isa";
+    return "none";
+  }
+
+  /**
+   * Obtiene el estado completo del control
+   */
+  getControlState(): ControlState {
+    return { ...this.controlState };
+  }
+
+  /**
+   * Cambiar rápidamente entre entidades (TAB mejorado)
+   */
+  cycleEntityControl(): void {
+    const entities: ControlledEntity[] = ["isa", "stev", "none"];
+    const currentIndex = entities.indexOf(this.controlledEntity);
+    const nextIndex = (currentIndex + 1) % entities.length;
+    this.setControlledEntity(entities[nextIndex]);
+  }
+
+  /**
+   * Tomar control temporal de una entidad para una acción específica
+   */
+  temporaryControl(entity: ControlledEntity, duration: number = 5000): void {
+    const previousEntity = this.controlledEntity;
+    this.setControlledEntity(entity);
+
+    // Revertir control después del tiempo especificado
+    setTimeout(() => {
+      if (this.controlledEntity === entity) {
+        this.setControlledEntity(previousEntity);
+        logAutopoiesis.info(
+          `🔄 Control temporal de ${entity} finalizado, volviendo a ${previousEntity}`,
+        );
+      }
+    }, duration);
+
+    logAutopoiesis.info(
+      `⏰ Control temporal de ${entity} por ${duration / 1000}s`,
+    );
+  }
+
+  /**
+   * Verificar si una entidad específica está bajo control del jugador
+   */
+  isEntityPlayerControlled(entityId: string): boolean {
+    return this.controlledEntity === entityId;
   }
 
   /**

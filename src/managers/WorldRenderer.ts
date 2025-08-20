@@ -1,328 +1,536 @@
 /**
- * World Renderer Simplificado - Delegación a clases especializadas
+ * World Renderer Mejorado - Compatible con generación procedural
+ * Renderiza mundos generados proceduralmente con biomas, terreno y decoraciones
  */
 
-import type { GameState, Zone } from "../types";
-import type { WorldEntity } from "../types/worldEntities";
+import type { GameState, Zone, MapElement } from "../types";
 import { logAutopoiesis } from "../utils/logger";
-import { WorldPopulator } from "../world/WorldPopulator";
-import { BiomeManager } from "./BiomeManager";
-import { EntityRenderer } from "./EntityRenderer";
-import type { AnimationManager } from "./AnimationManager";
 
 export class WorldRenderer {
   private scene: Phaser.Scene;
   private gameState: GameState;
-  private renderedObjects = new Map<string, Phaser.GameObjects.GameObject>();
+
+  // Capas de renderizado
+  private terrainLayer?: Phaser.GameObjects.Group;
+  private decorationLayer?: Phaser.GameObjects.Group;
+  private zoneLayer?: Phaser.GameObjects.Group;
+  private roadLayer?: Phaser.GameObjects.Group;
+
+  // Cache para optimización
+  private renderedTiles = new Map<string, Phaser.GameObjects.Sprite>();
+  private renderedDecorations = new Map<string, Phaser.GameObjects.Sprite>();
   private zoneGraphics: Phaser.GameObjects.Graphics[] = [];
-  private entityRenderer: EntityRenderer;
-  private decorationSprites: Phaser.GameObjects.GameObject[] = [];
-  private lastCullingUpdate = 0;
-  private readonly cullingUpdateInterval = 100;
-  private worldPopulator: WorldPopulator;
+
+  // Configuración de renderizado
+  private readonly CHUNK_SIZE = 256;
+  private readonly RENDER_DISTANCE = 800;
+  private lastCameraPosition = { x: 0, y: 0 };
 
   constructor(scene: Phaser.Scene, gameState: GameState) {
     this.scene = scene;
     this.gameState = gameState;
 
-    // Initialize WorldPopulator
-    this.worldPopulator = new WorldPopulator(
-      scene,
-      gameState.worldSize.width,
-      gameState.worldSize.height,
-      {
-        maxEntitiesPerChunk: 15,
-        chunkSize: 256,
-        performanceMode: true,
-        wildlifeRespawn: false,
-        structurePersistence: true,
-      },
-    );
+    this.initializeLayers();
 
-    // Get animation manager and initialize EntityRenderer
-    const animManager = scene.registry.get(
-      "animationManager",
-    ) as AnimationManager;
-    this.entityRenderer = new EntityRenderer(scene, animManager);
-
-    logAutopoiesis.info(
-      "WorldRenderer initialized with specialized components",
-    );
-  }
-
-  /**
-   * Render the complete world
-   */
-  public renderWorld(): void {
-    this.clearPreviousRender();
-    this.renderZones();
-    this.renderMapElements();
-    this.renderEntities();
-    this.populateWorldWithDynamicEntities();
-
-    logAutopoiesis.info("World rendered completely", {
-      zones: this.gameState.zones.length,
-      mapElements: this.gameState.mapElements.length,
-      entities: this.gameState.entities.length,
+    logAutopoiesis.info("🎨 WorldRenderer procedural inicializado", {
+      worldSize: gameState.worldSize,
+      zones: gameState.zones.length,
+      elements: gameState.mapElements.length,
     });
   }
 
   /**
-   * Clear previous render
+   * Inicializar capas de renderizado
    */
-  private clearPreviousRender(): void {
-    this.renderedObjects.clear();
-    this.zoneGraphics.forEach((graphic) => graphic.destroy());
-    this.zoneGraphics = [];
-    this.decorationSprites.forEach((sprite) => sprite.destroy());
-    this.decorationSprites = [];
-  }
+  private initializeLayers(): void {
+    this.terrainLayer = this.scene.add.group({ name: "terrain" });
+    this.decorationLayer = this.scene.add.group({ name: "decorations" });
+    this.zoneLayer = this.scene.add.group({ name: "zones" });
+    this.roadLayer = this.scene.add.group({ name: "roads" });
 
-  /**
-   * Render zones
-   */
-  private renderZones(): void {
-    this.gameState.zones.forEach((zone) => {
-      this.renderZone(zone);
-    });
-  }
-
-  /**
-   * Render map elements
-   */
-  private renderMapElements(): void {
-    this.gameState.mapElements.forEach((element) => {
-      this.renderMapElement(element);
-    });
-  }
-
-  /**
-   * Render entities using EntityRenderer
-   */
-  private renderEntities(): void {
-    // Convert Entity to WorldEntity format for rendering
-    this.gameState.entities.forEach((entity) => {
-      const worldEntity: WorldEntity = {
-        id: entity.id,
-        type: "decoration" as any, // Map to appropriate EntityType
-        x: entity.position.x,
-        y: entity.position.y,
-        assetKey: entity.id, // Use entity id as asset key
-        scale: 1,
-        metadata: {},
-      };
-      this.renderWorldEntity(worldEntity);
-    });
-  }
-
-  /**
-   * Render a world entity using EntityRenderer
-   */
-  private renderWorldEntity(entity: WorldEntity): void {
-    const renderedEntity = this.entityRenderer.renderWorldEntity(
-      entity,
-      this.gameState.worldSize.width,
-      this.gameState.worldSize.height,
+    // Configurar depth de capas
+    this.terrainLayer.children.entries.forEach((child: any) =>
+      child.setDepth?.(0),
     );
-
-    if (renderedEntity) {
-      this.renderedObjects.set(entity.id, renderedEntity);
-      this.decorationSprites.push(renderedEntity);
-    } else {
-      this.createFallbackEntity(entity);
-    }
-  }
-
-  /**
-   * Create fallback entity
-   */
-  private createFallbackEntity(entity: WorldEntity): void {
-    const fallbackColor = this.getFallbackColor(entity.type);
-    const fallbackSprite = this.scene.add.rectangle(
-      entity.x,
-      entity.y,
-      24,
-      24,
-      fallbackColor,
+    this.roadLayer.children.entries.forEach((child: any) =>
+      child.setDepth?.(1),
     );
-    fallbackSprite.setDepth(2);
-    fallbackSprite.name = `${entity.type}_${entity.id}_fallback`;
-    this.decorationSprites.push(fallbackSprite);
-    this.renderedObjects.set(entity.id, fallbackSprite);
-
-    logAutopoiesis.warn("Entity rendered as fallback rectangle", {
-      entityId: entity.id,
-      type: entity.type,
-    });
-  }
-
-  /**
-   * Get fallback color based on entity type
-   */
-  private getFallbackColor(entityType: string): number {
-    const colorMap: Record<string, number> = {
-      tree: 0x228b22,
-      grass: 0x90ee90,
-      rock: 0x708090,
-      water: 0x4169e1,
-      flower: 0xff69b4,
-      food: 0xffa500,
-      building: 0x8b4513,
-      decoration: 0x9370db,
-    };
-
-    return colorMap[entityType] || 0x808080;
-  }
-
-  /**
-   * Render a zone
-   */
-  private renderZone(zone: Zone): void {
-    const graphics = this.scene.add.graphics();
-    graphics.fillStyle(this.parseColor(zone.color), 1);
-    graphics.fillRect(
-      zone.bounds.x,
-      zone.bounds.y,
-      zone.bounds.width,
-      zone.bounds.height,
+    this.decorationLayer.children.entries.forEach((child: any) =>
+      child.setDepth?.(2),
     );
-    graphics.setDepth(0);
-    this.zoneGraphics.push(graphics);
-  }
-
-  /**
-   * Render a map element
-   */
-  private renderMapElement(element: any): void {
-    const color =
-      typeof element.color === "string"
-        ? this.parseColor(element.color)
-        : element.color;
-
-    const rect = this.scene.add.rectangle(
-      element.position.x,
-      element.position.y,
-      element.size?.width || 20,
-      element.size?.height || 20,
-      color,
+    this.zoneLayer.children.entries.forEach((child: any) =>
+      child.setDepth?.(-1),
     );
-    rect.setDepth(1);
-    this.renderedObjects.set(element.id, rect);
   }
 
   /**
-   * Parse color string to number
+   * Renderizar mundo completo
    */
-  private parseColor(colorString: string): number {
-    if (colorString.startsWith("#")) {
-      return parseInt(colorString.substring(1), 16);
-    }
-    if (colorString.startsWith("rgba")) {
-      // Extract hex from rgba - simple extraction
-      return 0x888888; // Default gray for rgba
-    }
-    return 0x888888;
-  }
+  public async renderWorld(): Promise<void> {
+    logAutopoiesis.info("🌍 Iniciando renderizado del mundo procedural...");
 
-  /**
-   * Populate world with dynamic entities
-   */
-  private populateWorldWithDynamicEntities(): void {
+    const startTime = Date.now();
+
     try {
-      // Populate different regions with appropriate content
-      this.worldPopulator.populateGlobalTerrain(
-        0,
-        0,
-        this.gameState.worldSize.width,
-        this.gameState.worldSize.height,
-        BiomeManager.determineBiome(
-          this.gameState.worldSize.width / 2,
-          this.gameState.worldSize.height / 2,
-          this.gameState.worldSize.width,
-          this.gameState.worldSize.height,
-        ),
-      );
-      this.worldPopulator.populateExteriorThematic(
-        0,
-        0,
-        this.gameState.worldSize.width,
-        this.gameState.worldSize.height,
-        BiomeManager.determineBiome(
-          this.gameState.worldSize.width / 2,
-          this.gameState.worldSize.height / 2,
-          this.gameState.worldSize.width,
-          this.gameState.worldSize.height,
-        ),
-      );
-      logAutopoiesis.info("World populated with dynamic entities");
+      // FASE 1: Renderizar terreno base
+      await this.renderTerrain();
+
+      // FASE 2: Renderizar zonas
+      this.renderZones();
+
+      // FASE 3: Renderizar caminos
+      this.renderRoads();
+
+      // FASE 4: Renderizar decoraciones y recursos
+      await this.renderDecorations();
+
+      const renderTime = Date.now() - startTime;
+
+      logAutopoiesis.info("✅ Mundo renderizado exitosamente", {
+        renderTime: `${renderTime}ms`,
+        terrainTiles: this.renderedTiles.size,
+        decorations: this.renderedDecorations.size,
+        zones: this.zoneGraphics.length,
+      });
     } catch (error) {
-      logAutopoiesis.error("Error populating world", {
+      logAutopoiesis.error("❌ Error renderizando mundo", {
         error: String(error),
       });
     }
   }
 
   /**
-   * Update world rendering (for dynamic changes)
+   * Renderizar terreno usando tiles procedurales
    */
-  public updateWorld(): void {
-    // Performance optimization - only update if necessary
-    const currentTime = Date.now();
-    if (currentTime - this.lastCullingUpdate < this.cullingUpdateInterval) {
+  private async renderTerrain(): Promise<void> {
+    if (
+      !this.gameState.terrainTiles ||
+      this.gameState.terrainTiles.length === 0
+    ) {
+      logAutopoiesis.warn("No hay tiles de terreno para renderizar");
       return;
     }
 
-    this.lastCullingUpdate = currentTime;
-    // Implement culling logic here if needed
+    let tilesRendered = 0;
+    const totalTiles = this.gameState.terrainTiles.length;
+
+    // Renderizar tiles en chunks para no bloquear
+    for (let i = 0; i < totalTiles; i += 100) {
+      const chunk = this.gameState.terrainTiles.slice(i, i + 100);
+
+      chunk.forEach((tile) => {
+        const tileKey = `${tile.x}_${tile.y}`;
+
+        if (!this.renderedTiles.has(tileKey)) {
+          const sprite = this.createTerrainTile(tile);
+          if (sprite) {
+            this.terrainLayer?.add(sprite);
+            this.renderedTiles.set(tileKey, sprite);
+            tilesRendered++;
+          }
+        }
+      });
+
+      // Yield control para mantener 60 FPS
+      if (i % 500 === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+      }
+    }
+
+    logAutopoiesis.info(`🌱 Terreno renderizado: ${tilesRendered} tiles`);
   }
 
   /**
-   * Legacy method for MainScene compatibility - updateVisuals alias
+   * Crear tile de terreno individual
+   */
+  private createTerrainTile(tile: any): Phaser.GameObjects.Sprite | null {
+    const assetManager = this.scene.registry.get("unifiedAssetManager");
+
+    // Verificar si el asset existe
+    if (!assetManager?.isAssetLoaded(tile.assetKey)) {
+      // Usar fallback basado en bioma
+      const fallbackKey = this.getFallbackTerrainAsset(tile.biome);
+      if (!assetManager?.isAssetLoaded(fallbackKey)) {
+        return this.createFallbackTerrainTile(tile);
+      }
+      tile.assetKey = fallbackKey;
+    }
+
+    const sprite = this.scene.add.sprite(tile.x, tile.y, tile.assetKey);
+    sprite.setOrigin(0, 0);
+    sprite.setDisplaySize(32, 32);
+    sprite.setDepth(0);
+    sprite.name = `terrain_${tile.x}_${tile.y}`;
+
+    return sprite;
+  }
+
+  /**
+   * Crear tile de terreno fallback
+   */
+  private createFallbackTerrainTile(tile: any): Phaser.GameObjects.Rectangle {
+    const color = this.getBiomeColor(tile.biome);
+    const rect = this.scene.add.rectangle(
+      tile.x + 16,
+      tile.y + 16,
+      32,
+      32,
+      color,
+    );
+    rect.setDepth(0);
+    rect.name = `terrain_fallback_${tile.x}_${tile.y}`;
+
+    return rect as any;
+  }
+
+  /**
+   * Renderizar zonas funcionales
+   */
+  private renderZones(): void {
+    this.gameState.zones.forEach((zone) => {
+      const graphics = this.scene.add.graphics();
+
+      // Color de zona con transparencia
+      const color = this.parseColorString(zone.color);
+      graphics.fillStyle(color.hex, color.alpha);
+      graphics.fillRect(
+        zone.bounds.x,
+        zone.bounds.y,
+        zone.bounds.width,
+        zone.bounds.height,
+      );
+
+      // Borde de zona
+      graphics.lineStyle(2, color.hex, 0.8);
+      graphics.strokeRect(
+        zone.bounds.x,
+        zone.bounds.y,
+        zone.bounds.width,
+        zone.bounds.height,
+      );
+
+      graphics.setDepth(-1);
+      graphics.name = `zone_${zone.id}`;
+
+      // Texto de zona
+      const centerX = zone.bounds.x + zone.bounds.width / 2;
+      const centerY = zone.bounds.y + zone.bounds.height / 2;
+
+      const text = this.scene.add.text(centerX, centerY, zone.name, {
+        fontSize: "14px",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 2,
+        align: "center",
+      });
+      text.setOrigin(0.5);
+      text.setDepth(3);
+      text.name = `zone_text_${zone.id}`;
+
+      this.zoneGraphics.push(graphics);
+      this.zoneLayer?.add(graphics);
+      this.zoneLayer?.add(text);
+    });
+
+    logAutopoiesis.info(
+      `🏛️ Zonas renderizadas: ${this.gameState.zones.length}`,
+    );
+  }
+
+  /**
+   * Renderizar caminos
+   */
+  private renderRoads(): void {
+    const roads = this.gameState.roads || [];
+
+    roads.forEach((road) => {
+      const roadSprite = this.createRoadTile(road);
+      if (roadSprite) {
+        this.roadLayer?.add(roadSprite);
+      }
+    });
+
+    if (roads.length > 0) {
+      logAutopoiesis.info(`🛤️ Caminos renderizados: ${roads.length} segmentos`);
+    }
+  }
+
+  /**
+   * Crear tile de camino
+   */
+  private createRoadTile(road: MapElement): Phaser.GameObjects.Sprite | null {
+    const assetManager = this.scene.registry.get("unifiedAssetManager");
+
+    // Usar asset específico o fallback
+    const assetKey = road.assetKey || "road_path_straight_h";
+
+    if (!assetManager?.isAssetLoaded(assetKey)) {
+      // Crear camino procedural simple
+      const rect = this.scene.add.rectangle(
+        road.position.x + 16,
+        road.position.y + 16,
+        road.size.width,
+        road.size.height,
+        0x8d6e63,
+      );
+      rect.setDepth(1);
+      rect.name = `road_${road.id}`;
+      return rect as any;
+    }
+
+    const sprite = this.scene.add.sprite(
+      road.position.x,
+      road.position.y,
+      assetKey,
+    );
+    sprite.setOrigin(0, 0);
+    sprite.setDisplaySize(road.size.width, road.size.height);
+    sprite.setDepth(1);
+    sprite.name = `road_${road.id}`;
+
+    return sprite;
+  }
+
+  /**
+   * Renderizar decoraciones y recursos
+   */
+  private async renderDecorations(): Promise<void> {
+    const decorations = this.gameState.mapElements.filter(
+      (e) => e.type === "decoration",
+    );
+    let decorationsRendered = 0;
+
+    // Renderizar en chunks
+    for (let i = 0; i < decorations.length; i += 50) {
+      const chunk = decorations.slice(i, i + 50);
+
+      chunk.forEach((decoration) => {
+        const sprite = this.createDecorationSprite(decoration);
+        if (sprite) {
+          this.decorationLayer?.add(sprite);
+          this.renderedDecorations.set(decoration.id, sprite);
+          decorationsRendered++;
+        }
+      });
+
+      // Yield control
+      if (i % 200 === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+      }
+    }
+
+    logAutopoiesis.info(`🌳 Decoraciones renderizadas: ${decorationsRendered}`);
+  }
+
+  /**
+   * Crear sprite de decoración
+   */
+  private createDecorationSprite(
+    decoration: MapElement,
+  ): Phaser.GameObjects.Sprite | null {
+    const assetManager = this.scene.registry.get("unifiedAssetManager");
+
+    let assetKey = decoration.assetKey;
+
+    // Verificar asset o usar fallback
+    if (!assetKey || !assetManager?.isAssetLoaded(assetKey)) {
+      assetKey = this.getFallbackDecorationAsset(decoration.biome);
+
+      if (!assetManager?.isAssetLoaded(assetKey)) {
+        return this.createFallbackDecoration(decoration);
+      }
+    }
+
+    const sprite = this.scene.add.sprite(
+      decoration.position.x,
+      decoration.position.y,
+      assetKey,
+    );
+
+    sprite.setOrigin(0.5, 0.5);
+    sprite.setDisplaySize(decoration.size.width, decoration.size.height);
+    sprite.setDepth(2);
+    sprite.name = `decoration_${decoration.id}`;
+
+    // Añadir variación visual
+    const variation = Math.random();
+    if (variation < 0.1) {
+      sprite.setTint(0xcccccc); // Algo más oscuro
+    } else if (variation < 0.2) {
+      sprite.setAlpha(0.9); // Algo más transparente
+    }
+
+    return sprite;
+  }
+
+  /**
+   * Crear decoración fallback
+   */
+  private createFallbackDecoration(
+    decoration: MapElement,
+  ): Phaser.GameObjects.Sprite {
+    const color = decoration.color
+      ? this.parseColorString(decoration.color).hex
+      : 0x9370db;
+    const rect = this.scene.add.rectangle(
+      decoration.position.x,
+      decoration.position.y,
+      decoration.size.width,
+      decoration.size.height,
+      color,
+    );
+    rect.setDepth(2);
+    rect.name = `decoration_fallback_${decoration.id}`;
+
+    return rect as any;
+  }
+
+  /**
+   * Actualizar renderizado (culling, LOD)
    */
   public updateVisuals(): void {
-    this.updateWorld();
+    const camera = this.scene.cameras.main;
+    const currentPos = { x: camera.scrollX, y: camera.scrollY };
+
+    // Solo actualizar si la cámara se movió significativamente
+    const distance = Math.hypot(
+      currentPos.x - this.lastCameraPosition.x,
+      currentPos.y - this.lastCameraPosition.y,
+    );
+
+    if (distance > 50) {
+      this.performCulling(camera);
+      this.lastCameraPosition = currentPos;
+    }
   }
 
   /**
-   * Get rendered object by ID
+   * Realizar culling de objetos fuera de vista
    */
-  public getRenderedObject(
-    id: string,
-  ): Phaser.GameObjects.GameObject | undefined {
-    return this.renderedObjects.get(id);
+  private performCulling(camera: Phaser.Cameras.Scene2D.Camera): void {
+    const bounds = {
+      left: camera.scrollX - this.RENDER_DISTANCE,
+      right: camera.scrollX + camera.width + this.RENDER_DISTANCE,
+      top: camera.scrollY - this.RENDER_DISTANCE,
+      bottom: camera.scrollY + camera.height + this.RENDER_DISTANCE,
+    };
+
+    // Culling de decoraciones
+    this.renderedDecorations.forEach((sprite, key) => {
+      const inBounds =
+        sprite.x >= bounds.left &&
+        sprite.x <= bounds.right &&
+        sprite.y >= bounds.top &&
+        sprite.y <= bounds.bottom;
+
+      sprite.setVisible(inBounds);
+    });
+  }
+
+  // ==========================================
+  // UTILIDADES Y HELPERS
+  // ==========================================
+
+  /**
+   * Obtener asset fallback para terreno
+   */
+  private getFallbackTerrainAsset(biome: string): string {
+    const fallbacks: Record<string, string> = {
+      grassland: "grass_middle",
+      forest: "grass_1",
+      water: "water_middle",
+      mountain: "grass_3",
+      desert: "grass_2",
+      village: "grass_middle",
+      wetland: "water_tile_1",
+    };
+
+    return fallbacks[biome] || "grass_middle";
   }
 
   /**
-   * Cleanup all rendered objects
+   * Obtener asset fallback para decoración
+   */
+  private getFallbackDecorationAsset(biome?: string): string {
+    const fallbacks: Record<string, string> = {
+      forest: "tree_emerald_1",
+      grassland: "bush_emerald_1",
+      water: "rock1_1",
+      mountain: "rock1_1",
+      village: "house_hay_1",
+    };
+
+    return fallbacks[biome || "grassland"] || "bush_emerald_1";
+  }
+
+  /**
+   * Obtener color de bioma
+   */
+  private getBiomeColor(biome: string): number {
+    const colors: Record<string, number> = {
+      grassland: 0x4caf50,
+      forest: 0x388e3c,
+      water: 0x2196f3,
+      mountain: 0x607d8b,
+      desert: 0xff9800,
+      village: 0x8d6e63,
+      wetland: 0x4e342e,
+    };
+
+    return colors[biome] || 0x4caf50;
+  }
+
+  /**
+   * Parsear string de color
+   */
+  private parseColorString(colorStr: string): { hex: number; alpha: number } {
+    if (colorStr.startsWith("rgba")) {
+      const match = colorStr.match(
+        /rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/,
+      );
+      if (match) {
+        const [, r, g, b, a] = match;
+        const hex = (parseInt(r) << 16) | (parseInt(g) << 8) | parseInt(b);
+        return { hex, alpha: parseFloat(a) };
+      }
+    }
+
+    if (colorStr.startsWith("#")) {
+      return { hex: parseInt(colorStr.slice(1), 16), alpha: 1 };
+    }
+
+    return { hex: 0x4caf50, alpha: 0.3 };
+  }
+
+  /**
+   * Limpiar recursos de renderizado
    */
   public cleanup(): void {
-    this.renderedObjects.forEach((obj) => obj.destroy());
-    this.renderedObjects.clear();
-    this.zoneGraphics.forEach((graphic) => graphic.destroy());
+    this.renderedTiles.clear();
+    this.renderedDecorations.clear();
+    this.zoneGraphics.forEach((g) => g.destroy());
     this.zoneGraphics = [];
-    this.decorationSprites.forEach((sprite) => sprite.destroy());
-    this.decorationSprites = [];
-    this.entityRenderer.cleanup();
 
-    logAutopoiesis.info("WorldRenderer cleanup completed");
+    this.terrainLayer?.clear(true, true);
+    this.decorationLayer?.clear(true, true);
+    this.zoneLayer?.clear(true, true);
+    this.roadLayer?.clear(true, true);
   }
 
   /**
-   * Get rendering statistics
+   * Obtener estadísticas de renderizado
    */
-  public getStats() {
+  public getRenderStats() {
     return {
-      renderedObjects: this.renderedObjects.size,
-      zoneGraphics: this.zoneGraphics.length,
-      decorationSprites: this.decorationSprites.length,
-      entityRenderer: this.entityRenderer.getStats(),
+      terrainTiles: this.renderedTiles.size,
+      decorations: this.renderedDecorations.size,
+      zones: this.zoneGraphics.length,
+      layers: {
+        terrain: this.terrainLayer?.children.size || 0,
+        decorations: this.decorationLayer?.children.size || 0,
+        zones: this.zoneLayer?.children.size || 0,
+        roads: this.roadLayer?.children.size || 0,
+      },
     };
-  }
-
-  /**
-   * Destroy the WorldRenderer - Legacy method for MainScene compatibility
-   */
-  public destroy(): void {
-    this.cleanup();
   }
 }

@@ -29,6 +29,37 @@ export class AnimationManager {
   private createdSprites = new Set<Phaser.GameObjects.Sprite>();
 
   private static readonly SPRITE_SHEET_CONFIGS: SpriteSheetConfig[] = [
+    // PERSONAJES PRINCIPALES
+    {
+      key: "isa_happy",
+      path: "assets/entities/animated/characters/whomen1.png",
+      frameWidth: 32,
+      frameHeight: 32,
+      totalFrames: 4,
+    },
+    {
+      key: "isa_sad",
+      path: "assets/entities/animated/characters/whomen1.png",
+      frameWidth: 32,
+      frameHeight: 32,
+      totalFrames: 4,
+    },
+    {
+      key: "stev_happy",
+      path: "assets/entities/animated/characters/man1.png",
+      frameWidth: 32,
+      frameHeight: 32,
+      totalFrames: 4,
+    },
+    {
+      key: "stev_sad",
+      path: "assets/entities/animated/characters/man1.png",
+      frameWidth: 32,
+      frameHeight: 32,
+      totalFrames: 4,
+    },
+
+    // ANIMACIONES DE AMBIENTE
     {
       key: "campfire_anim",
       path: "assets/animated_entities/campfire.png",
@@ -88,6 +119,67 @@ export class AnimationManager {
   ];
 
   private static readonly ANIMATION_CONFIGS: AnimationConfig[] = [
+    // PERSONAJES - ISA
+    {
+      key: "isa_happy_idle",
+      spriteSheetKey: "isa_happy",
+      frames: [0, 1, 2, 1],
+      frameRate: 4,
+      repeat: -1,
+    },
+    {
+      key: "isa_happy_walk",
+      spriteSheetKey: "isa_happy",
+      frames: [0, 1, 2, 3],
+      frameRate: 6,
+      repeat: -1,
+    },
+    {
+      key: "isa_sad_idle",
+      spriteSheetKey: "isa_sad",
+      frames: [0],
+      frameRate: 2,
+      repeat: -1,
+    },
+    {
+      key: "isa_sad_walk",
+      spriteSheetKey: "isa_sad",
+      frames: [0, 1, 2, 1],
+      frameRate: 3,
+      repeat: -1,
+    },
+
+    // PERSONAJES - STEV
+    {
+      key: "stev_happy_idle",
+      spriteSheetKey: "stev_happy",
+      frames: [0, 1, 2, 1],
+      frameRate: 4,
+      repeat: -1,
+    },
+    {
+      key: "stev_happy_walk",
+      spriteSheetKey: "stev_happy",
+      frames: [0, 1, 2, 3],
+      frameRate: 6,
+      repeat: -1,
+    },
+    {
+      key: "stev_sad_idle",
+      spriteSheetKey: "stev_sad",
+      frames: [0],
+      frameRate: 2,
+      repeat: -1,
+    },
+    {
+      key: "stev_sad_walk",
+      spriteSheetKey: "stev_sad",
+      frames: [0, 1, 2, 1],
+      frameRate: 3,
+      repeat: -1,
+    },
+
+    // ANIMACIONES DE AMBIENTE
     {
       key: "campfire_anim",
       spriteSheetKey: "campfire_anim",

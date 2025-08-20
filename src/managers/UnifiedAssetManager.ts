@@ -74,35 +74,39 @@ export class UnifiedAssetManager {
     // ==========================================
     {
       key: "isa_happy",
-      path: "/assets/entities/animated/characters/whomen1.png",
-      type: "image",
+      path: "assets/entities/animated/characters/whomen1.png",
+      type: "spritesheet",
       required: true,
       priority: "critical",
       category: "character",
+      frameConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
     {
       key: "isa_sad",
-      path: "/assets/entities/animated/characters/whomen1.png",
-      type: "image",
+      path: "assets/entities/animated/characters/whomen1.png",
+      type: "spritesheet",
       required: true,
       priority: "critical",
       category: "character",
+      frameConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
     {
       key: "stev_happy",
-      path: "/assets/entities/animated/characters/man1.png",
-      type: "image",
+      path: "assets/entities/animated/characters/man1.png",
+      type: "spritesheet",
       required: true,
       priority: "critical",
       category: "character",
+      frameConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
     {
       key: "stev_sad",
-      path: "/assets/entities/animated/characters/man1.png",
-      type: "image",
+      path: "assets/entities/animated/characters/man1.png",
+      type: "spritesheet",
       required: true,
       priority: "critical",
       category: "character",
+      frameConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
 
     // ==========================================
@@ -110,7 +114,7 @@ export class UnifiedAssetManager {
     // ==========================================
     {
       key: "grass_middle",
-      path: "/assets/terrain/base/Grass_Middle.png",
+      path: "assets/terrain/base/Grass_Middle.png",
       type: "image",
       required: true,
       priority: "high",
@@ -119,7 +123,7 @@ export class UnifiedAssetManager {
     },
     {
       key: "grass_1",
-      path: "/assets/terrain/base/cesped1.png",
+      path: "assets/terrain/base/cesped1.png",
       type: "image",
       priority: "medium",
       category: "terrain",
@@ -127,7 +131,7 @@ export class UnifiedAssetManager {
     },
     {
       key: "grass_2",
-      path: "/assets/terrain/base/cesped2.png",
+      path: "assets/terrain/base/cesped2.png",
       type: "image",
       priority: "medium",
       category: "terrain",
@@ -135,11 +139,29 @@ export class UnifiedAssetManager {
     },
     {
       key: "grass_3",
-      path: "/assets/terrain/base/cesped3.png",
+      path: "assets/terrain/base/cesped3.png",
       type: "image",
       priority: "medium",
       category: "terrain",
       fallback: "grass_middle",
+    },
+
+    // AGUA Y TERRENOS ESPECIALES
+    {
+      key: "water_middle",
+      path: "assets/water/Water_Middle.png",
+      type: "image",
+      required: true,
+      priority: "high",
+      category: "terrain",
+    },
+    {
+      key: "water_tile_1",
+      path: "assets/water/tile_01_00.png",
+      type: "image",
+      priority: "medium",
+      category: "terrain",
+      fallback: "water_middle",
     },
 
     // ==========================================
@@ -158,7 +180,7 @@ export class UnifiedAssetManager {
     // ==========================================
     {
       key: "campfire_anim",
-      path: "/assets/animated_entities/campfire.png",
+      path: "assets/animated_entities/campfire.png",
       type: "spritesheet",
       priority: "medium",
       category: "animation",
@@ -166,11 +188,57 @@ export class UnifiedAssetManager {
     },
     {
       key: "flowers_red_anim",
-      path: "/assets/animated_entities/flowers_red.png",
+      path: "assets/animated_entities/flowers_red.png",
       type: "spritesheet",
       priority: "low",
       category: "animation",
       frameConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
+    },
+
+    // DECORACIONES Y RECURSOS
+    {
+      key: "tree_emerald_1",
+      path: "assets/foliage/trees/tree_emerald_1.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "tree_emerald_2",
+      path: "assets/foliage/trees/tree_emerald_2.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "bush_emerald_1",
+      path: "assets/foliage/shrubs/bush_emerald_1.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "rock1_1",
+      path: "assets/rocks/rock1_1.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+
+    // COMIDA BÁSICA
+    {
+      key: "apple_pie",
+      path: "assets/consumable_items/food/05_apple_pie.png",
+      type: "image",
+      priority: "medium",
+      category: "food",
+    },
+    {
+      key: "bread",
+      path: "assets/consumable_items/food/07_bread.png",
+      type: "image",
+      priority: "medium",
+      category: "food",
     },
   ];
 

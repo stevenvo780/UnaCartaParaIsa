@@ -30,6 +30,8 @@ export interface EntityStats {
   happiness: number;
   energy: number;
   hunger: number;
+  thirst: number; // Nueva necesidad crítica
+  mentalHealth: number; // Reemplaza happiness + stress combinados
   boredom: number;
   loneliness: number;
   sleepiness: number;

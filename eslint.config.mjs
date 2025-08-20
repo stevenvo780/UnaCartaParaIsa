@@ -13,6 +13,7 @@ export default tseslint.config(
       "vite.config.ts",
       "eslint.config.*",
       "scripts/**/*.cjs",
+      "public/sw.js",
     ],
   },
   eslint.configs.recommended,

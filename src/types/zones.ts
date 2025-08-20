@@ -13,6 +13,8 @@ export type ZoneType =
   | "social"
   | "recreation"
   | "food"
+  | "water" // Nueva zona crítica para sed
+  | "shelter" // Nueva zona para descanso/protección
   | "rest"
   | "play"
   | "comfort"
