@@ -31,16 +31,16 @@ const CONFIG = {
 
   // SISTEMAS COMPLETAMENTE BLOQUEADOS para performance
   throttledSystems: new Set([
-    "Animation played",
-    "Decoration culling",
-    "Asset placed",
-    "Game cycle",
-    "updateEntity", // NUEVO: Bloquear entity updates
-    "Diálogo mostrado", // NUEVO: Bloquear diálogos frecuentes
-    "resonance updated", // NUEVO: Bloquear resonance logs
-    "sprite updated", // NUEVO: Bloquear sprite logs
-    "changed activity", // NUEVO: Bloquear activity logs
-    "visuals created", // NUEVO: Bloquear creation logs
+    'Animation played',
+    'Decoration culling',
+    'Asset placed',
+    'Game cycle',
+    'updateEntity', // NUEVO: Bloquear entity updates
+    'Diálogo mostrado', // NUEVO: Bloquear diálogos frecuentes
+    'resonance updated', // NUEVO: Bloquear resonance logs
+    'sprite updated', // NUEVO: Bloquear sprite logs
+    'changed activity', // NUEVO: Bloquear activity logs
+    'visuals created', // NUEVO: Bloquear creation logs
   ]),
 };
 
@@ -54,14 +54,14 @@ const logThrottle = new Map<string, { count: number; lastLog: number }>();
  */
 function shouldThrottle(message: string): boolean {
   // Buscar sistemas conocidos que generan spam
-  const isThrottledSystem = Array.from(CONFIG.throttledSystems).some((system) =>
-    message.includes(system),
+  const isThrottledSystem = Array.from(CONFIG.throttledSystems).some(system =>
+    message.includes(system)
   );
 
   if (!isThrottledSystem) return false;
 
   const now = Date.now();
-  const key = message.split(" ").slice(0, 3).join(" "); // Usar las primeras 3 palabras como key
+  const key = message.split(' ').slice(0, 3).join(' '); // Usar las primeras 3 palabras como key
   const entry = logThrottle.get(key);
 
   if (!entry) {
@@ -86,7 +86,7 @@ export const logger = {
     if (shouldThrottle(message)) return;
 
     if (console.debug) {
-      console.debug(`🐛 ${message}`, data || "");
+      console.debug(`🐛 ${message}`, data || '');
     }
   },
 
@@ -94,17 +94,17 @@ export const logger = {
     if (CONFIG.level > LogLevel.INFO) return;
     if (shouldThrottle(message)) return;
 
-    console.info(`ℹ️ ${message}`, data || "");
+    console.info(`ℹ️ ${message}`, data || '');
   },
 
   warn: (message: string, data?: LogData) => {
     if (CONFIG.level > LogLevel.WARN) return;
-    console.warn(`⚠️ ${message}`, data || "");
+    console.warn(`⚠️ ${message}`, data || '');
   },
 
   error: (message: string, error?: LogData) => {
     if (CONFIG.level > LogLevel.ERROR) return;
-    console.error(`❌ ${message}`, error || "");
+    console.error(`❌ ${message}`, error || '');
   },
 };
 
@@ -137,10 +137,7 @@ export function setLogLevel(level: LogLevel): void {
 /**
  * Utilidad para debugging - muestra estadísticas de throttling
  */
-export function getLogStats(): Record<
-  string,
-  { count: number; lastLog: number }
-> {
+export function getLogStats(): Record<string, { count: number; lastLog: number }> {
   const stats: Record<string, { count: number; lastLog: number }> = {};
   logThrottle.forEach((value, key) => {
     stats[key] = value;

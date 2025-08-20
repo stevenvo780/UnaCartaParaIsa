@@ -5,7 +5,7 @@
 
 import type { GameState } from "../types";
 import { logAutopoiesis } from "../utils/logger";
-import { generateValidatedMap } from "../utils/simpleMapGeneration";
+import { createWorldMapData } from "../utils/simpleMapGeneration";
 
 export interface InitializationResult {
   gameState: GameState;
@@ -19,38 +19,18 @@ export class SceneInitializationManager {
   static initialize(): InitializationResult {
     logAutopoiesis.info("Initializing game state and world");
 
-    const mapData = generateValidatedMap();
+    const mapData = createWorldMapData();
 
+    // Crear el estado completo del juego
     const gameState: GameState = {
-      entities: [],
-      resonance: 0,
-      cycles: 0,
-      lastSave: Date.now(),
-      togetherTime: 0,
-      connectionAnimation: {
-        active: false,
-        startTime: 0,
-        type: "FEED",
-      },
-      zones: mapData.zones,
-      mapElements: mapData.mapElements,
-      currentConversation: {
-        isActive: false,
-        participants: [],
-        lastSpeaker: null,
-        lastDialogue: null,
-        startTime: 0,
-      },
-      terrainTiles: [],
-      roads: [],
-      objectLayers: [],
-      worldSize: { width: 2400, height: 1600 },
-      generatorVersion: "1.0",
+      ...mapData,
+      // Añadir entidades específicas al estado inicial
+      entities: [], // Serán creadas después por EntityManager
     };
 
     return {
       gameState,
-      generatedWorldData: mapData.generatedWorld,
+      generatedWorldData: null, // No tenemos world data específico en el nuevo sistema
     };
   }
 }

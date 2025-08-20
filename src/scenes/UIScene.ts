@@ -1,8 +1,5 @@
 import Phaser from 'phaser';
-import {
-  ExplorationUI,
-  type ExplorationStats,
-} from '../components/ExplorationUI';
+import { ExplorationUI, type ExplorationStats } from '../components/ExplorationUI';
 import { FoodUI } from '../components/FoodUI';
 import { ResonanceLabel, UIElementPool } from '../managers/UIElementPool';
 import type { Entity, GameLogicUpdateData } from '../types';
@@ -127,16 +124,7 @@ export class UIScene extends Phaser.Scene {
     topBg.fillRect(0, 0, this.cameras.main.width, 70);
 
     // Subtle gradient overlay
-    topBg.fillGradientStyle(
-      0x6c5ce7,
-      0x74b9ff,
-      0x6c5ce7,
-      0x74b9ff,
-      0.1,
-      0.1,
-      0.2,
-      0.2
-    );
+    topBg.fillGradientStyle(0x6c5ce7, 0x74b9ff, 0x6c5ce7, 0x74b9ff, 0.1, 0.1, 0.2, 0.2);
     topBg.fillRect(0, 0, this.cameras.main.width, 70);
 
     // Bottom accent line
@@ -411,24 +399,12 @@ export class UIScene extends Phaser.Scene {
 
   private createBottomBar() {
     const barHeight = 80;
-    this.bottomBar = this.add.container(
-      0,
-      this.cameras.main.height - barHeight
-    );
+    this.bottomBar = this.add.container(0, this.cameras.main.height - barHeight);
     this.bottomBar.setScrollFactor(0);
 
     // Bottom bar background
     const bottomBg = this.add.graphics();
-    bottomBg.fillGradientStyle(
-      0x34495e,
-      0x34495e,
-      0x2c3e50,
-      0x2c3e50,
-      0.9,
-      0.9,
-      1,
-      1
-    );
+    bottomBg.fillGradientStyle(0x34495e, 0x34495e, 0x2c3e50, 0x2c3e50, 0.9, 0.9, 1, 1);
     bottomBg.fillRect(0, 0, this.cameras.main.width, barHeight);
     bottomBg.lineStyle(2, 0x1abc9c, 0.8);
     bottomBg.lineBetween(0, 2, this.cameras.main.width, 2);
@@ -563,56 +539,24 @@ export class UIScene extends Phaser.Scene {
     speedContainer.add(speedLabel);
 
     // Speed buttons
-    const slowBtn = this.createModernButton(
-      10,
-      20,
-      25,
-      15,
-      '0.5x',
-      '#e74c3c',
-      () => {
-        this.setGameSpeed(0.5);
-      }
-    );
+    const slowBtn = this.createModernButton(10, 20, 25, 15, '0.5x', '#e74c3c', () => {
+      this.setGameSpeed(0.5);
+    });
     speedContainer.add(slowBtn);
 
-    const normalBtn = this.createModernButton(
-      40,
-      20,
-      25,
-      15,
-      '1x',
-      '#95a5a6',
-      () => {
-        this.setGameSpeed(1);
-      }
-    );
+    const normalBtn = this.createModernButton(40, 20, 25, 15, '1x', '#95a5a6', () => {
+      this.setGameSpeed(1);
+    });
     speedContainer.add(normalBtn);
 
-    const fastBtn = this.createModernButton(
-      70,
-      20,
-      25,
-      15,
-      '2x',
-      '#f39c12',
-      () => {
-        this.setGameSpeed(2);
-      }
-    );
+    const fastBtn = this.createModernButton(70, 20, 25, 15, '2x', '#f39c12', () => {
+      this.setGameSpeed(2);
+    });
     speedContainer.add(fastBtn);
 
-    const turboBtn = this.createModernButton(
-      100,
-      20,
-      25,
-      15,
-      '5x',
-      '#e67e22',
-      () => {
-        this.setGameSpeed(5);
-      }
-    );
+    const turboBtn = this.createModernButton(100, 20, 25, 15, '5x', '#e67e22', () => {
+      this.setGameSpeed(5);
+    });
     speedContainer.add(turboBtn);
 
     this.bottomBar.add(speedContainer);
@@ -632,16 +576,7 @@ export class UIScene extends Phaser.Scene {
     this.leftPanel.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0.96,
-      0.96,
-      0.96,
-      0.96
-    );
+    panelBg.fillGradientStyle(0x34495e, 0x2c3e50, 0x34495e, 0x2c3e50, 0.96, 0.96, 0.96, 0.96);
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
     panelBg.lineStyle(3, 0x1abc9c, 0.8);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
@@ -653,16 +588,7 @@ export class UIScene extends Phaser.Scene {
 
     // Enhanced panel header
     const headerBg = this.add.graphics();
-    headerBg.fillGradientStyle(
-      0x1abc9c,
-      0x16a085,
-      0x1abc9c,
-      0x16a085,
-      0.2,
-      0.2,
-      0.1,
-      0.1
-    );
+    headerBg.fillGradientStyle(0x1abc9c, 0x16a085, 0x1abc9c, 0x16a085, 0.2, 0.2, 0.1, 0.1);
     headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
     this.leftPanel.add(headerBg);
 
@@ -682,17 +608,9 @@ export class UIScene extends Phaser.Scene {
     this.createCharacterPanel('stev', 15, 235, '#3498db', '👨 STEV');
 
     // Enhanced toggle button
-    const toggleBtn = this.createModernButton(
-      panelWidth - 35,
-      8,
-      30,
-      20,
-      '◀',
-      '#95a5a6',
-      () => {
-        this.toggleLeftPanel();
-      }
-    );
+    const toggleBtn = this.createModernButton(panelWidth - 35, 8, 30, 20, '◀', '#95a5a6', () => {
+      this.toggleLeftPanel();
+    });
     this.leftPanel.add(toggleBtn);
   }
 
@@ -711,16 +629,7 @@ export class UIScene extends Phaser.Scene {
     this.rightPanel.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0.96,
-      0.96,
-      0.96,
-      0.96
-    );
+    panelBg.fillGradientStyle(0x34495e, 0x2c3e50, 0x34495e, 0x2c3e50, 0.96, 0.96, 0.96, 0.96);
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
     panelBg.lineStyle(3, 0x9b59b6, 0.8);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
@@ -732,16 +641,7 @@ export class UIScene extends Phaser.Scene {
 
     // Enhanced panel header
     const headerBg = this.add.graphics();
-    headerBg.fillGradientStyle(
-      0x9b59b6,
-      0x8e44ad,
-      0x9b59b6,
-      0x8e44ad,
-      0.2,
-      0.2,
-      0.1,
-      0.1
-    );
+    headerBg.fillGradientStyle(0x9b59b6, 0x8e44ad, 0x9b59b6, 0x8e44ad, 0.2, 0.2, 0.1, 0.1);
     headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
     this.rightPanel.add(headerBg);
 
@@ -815,17 +715,9 @@ export class UIScene extends Phaser.Scene {
     this.rightPanel.add(activitiesSection);
 
     // Enhanced toggle button
-    const toggleBtn = this.createModernButton(
-      8,
-      8,
-      30,
-      20,
-      '▶',
-      '#95a5a6',
-      () => {
-        this.toggleRightPanel();
-      }
-    );
+    const toggleBtn = this.createModernButton(8, 8, 30, 20, '▶', '#95a5a6', () => {
+      this.toggleRightPanel();
+    });
     this.rightPanel.add(toggleBtn);
   }
 
@@ -840,16 +732,7 @@ export class UIScene extends Phaser.Scene {
 
     // Minimap background with improved styling
     const minimapBg = this.add.graphics();
-    minimapBg.fillGradientStyle(
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0.95,
-      0.95,
-      0.95,
-      0.95
-    );
+    minimapBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.95, 0.95, 0.95, 0.95);
     minimapBg.fillRoundedRect(0, 0, minimapSize, minimapSize, 8);
     minimapBg.lineStyle(2, 0x3498db, 0.7);
     minimapBg.strokeRoundedRect(0, 0, minimapSize, minimapSize, 8);
@@ -899,17 +782,9 @@ export class UIScene extends Phaser.Scene {
     this.minimapContainer.add(mapContent);
 
     // Improved toggle button
-    const toggleBtn = this.createModernButton(
-      minimapSize - 20,
-      2,
-      16,
-      16,
-      '×',
-      '#e74c3c',
-      () => {
-        this.toggleMinimap();
-      }
-    );
+    const toggleBtn = this.createModernButton(minimapSize - 20, 2, 16, 16, '×', '#e74c3c', () => {
+      this.toggleMinimap();
+    });
     this.minimapContainer.add(toggleBtn);
   }
 
@@ -979,43 +854,22 @@ export class UIScene extends Phaser.Scene {
     // Use UIScene's update loop for camera controls to avoid conflicts
     this.events.on('update', () => {
       const mainScene = this.scene.get('MainScene');
-      if (
-        mainScene &&
-        mainScene.cameras &&
-        mainScene.cameras.main &&
-        !this.isDraggingCamera
-      ) {
+      if (mainScene && mainScene.cameras && mainScene.cameras.main && !this.isDraggingCamera) {
         const camera = mainScene.cameras.main;
         const baseSpeed = wasd?.SHIFT?.isDown ? 12 : 6; // Faster with shift
 
         // Keyboard navigation
         if (cursors?.up.isDown || wasd?.W?.isDown) {
-          camera.scrollY = Phaser.Math.Clamp(
-            camera.scrollY - baseSpeed,
-            -500,
-            2000
-          );
+          camera.scrollY = Phaser.Math.Clamp(camera.scrollY - baseSpeed, -500, 2000);
         }
         if (cursors?.down.isDown || wasd?.S?.isDown) {
-          camera.scrollY = Phaser.Math.Clamp(
-            camera.scrollY + baseSpeed,
-            -500,
-            2000
-          );
+          camera.scrollY = Phaser.Math.Clamp(camera.scrollY + baseSpeed, -500, 2000);
         }
         if (cursors?.left.isDown || wasd?.A?.isDown) {
-          camera.scrollX = Phaser.Math.Clamp(
-            camera.scrollX - baseSpeed,
-            -500,
-            2000
-          );
+          camera.scrollX = Phaser.Math.Clamp(camera.scrollX - baseSpeed, -500, 2000);
         }
         if (cursors?.right.isDown || wasd?.D?.isDown) {
-          camera.scrollX = Phaser.Math.Clamp(
-            camera.scrollX + baseSpeed,
-            -500,
-            2000
-          );
+          camera.scrollX = Phaser.Math.Clamp(camera.scrollX + baseSpeed, -500, 2000);
         }
       }
     });
@@ -1033,8 +887,7 @@ export class UIScene extends Phaser.Scene {
         if (mainScene && mainScene.cameras && mainScene.cameras.main) {
           const camera = mainScene.cameras.main;
           const zoomSpeed = 0.1;
-          const newZoom =
-            deltaY < 0 ? camera.zoom + zoomSpeed : camera.zoom - zoomSpeed;
+          const newZoom = deltaY < 0 ? camera.zoom + zoomSpeed : camera.zoom - zoomSpeed;
           camera.setZoom(Phaser.Math.Clamp(newZoom, 0.5, 2.0));
         }
       }
@@ -1266,10 +1119,7 @@ export class UIScene extends Phaser.Scene {
           const barWidth = Math.max((value / 100) * 76, 2);
 
           element.bar.clear();
-          element.bar.fillStyle(
-            Phaser.Display.Color.HexStringToColor(barColor).color,
-            0.8
-          );
+          element.bar.fillStyle(Phaser.Display.Color.HexStringToColor(barColor).color, 0.8);
 
           // For column 1 or column 2 position
           const isColumn2 = element.label.x === 140;
@@ -1346,30 +1196,13 @@ export class UIScene extends Phaser.Scene {
     panelContainer.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0.8,
-      0.8,
-      0.8,
-      0.8
-    );
+    panelBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.8, 0.8, 0.8, 0.8);
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 6);
-    panelBg.lineStyle(
-      2,
-      Phaser.Display.Color.HexStringToColor(color).color,
-      0.9
-    );
+    panelBg.lineStyle(2, Phaser.Display.Color.HexStringToColor(color).color, 0.9);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 6);
 
     // Inner highlight
-    panelBg.lineStyle(
-      1,
-      Phaser.Display.Color.HexStringToColor(color).color,
-      0.4
-    );
+    panelBg.lineStyle(1, Phaser.Display.Color.HexStringToColor(color).color, 0.4);
     panelBg.strokeRoundedRect(1, 1, panelWidth - 2, panelHeight - 2, 5);
     panelContainer.add(panelBg);
 
@@ -1452,9 +1285,7 @@ export class UIScene extends Phaser.Scene {
     }
   }
 
-  private updateCharacterPanels(
-    entities: Entity[] | { [key: string]: Entity }
-  ) {
+  private updateCharacterPanels(entities: Entity[] | { [key: string]: Entity }) {
     // Handle both array format and object format
     let isaEntity = null;
     let stevEntity = null;
@@ -1507,9 +1338,8 @@ export class UIScene extends Phaser.Scene {
 
   private updateTopBarInfo(data: GameLogicUpdateData) {
     // Update resonance indicator
-    const resonanceContainer = this.topBar.list.find(
-      (child: Phaser.GameObjects.GameObject) =>
-        (child as any).getData?.('resonanceText')
+    const resonanceContainer = this.topBar.list.find((child: Phaser.GameObjects.GameObject) =>
+      (child as any).getData?.('resonanceText')
     ) as Phaser.GameObjects.Container;
     if (resonanceContainer && data.resonance !== undefined) {
       const resonanceText = resonanceContainer.getData('resonanceText');
@@ -1519,9 +1349,8 @@ export class UIScene extends Phaser.Scene {
     }
 
     // Update cycles indicator
-    const cyclesContainer = this.topBar.list.find(
-      (child: Phaser.GameObjects.GameObject) =>
-        (child as any).getData?.('cyclesText')
+    const cyclesContainer = this.topBar.list.find((child: Phaser.GameObjects.GameObject) =>
+      (child as any).getData?.('cyclesText')
     ) as Phaser.GameObjects.Container;
     if (cyclesContainer && data.cycles !== undefined) {
       const cyclesText = cyclesContainer.getData('cyclesText');
@@ -1546,10 +1375,7 @@ export class UIScene extends Phaser.Scene {
   private setControlMode(mode: 'auto' | 'isa' | 'stev') {
     // this.currentControlMode = mode; // Comentado temporalmente
     const mainScene = this.scene.get('MainScene');
-    mainScene.events.emit(
-      'changeEntityControl',
-      mode === 'auto' ? 'none' : mode
-    );
+    mainScene.events.emit('changeEntityControl', mode === 'auto' ? 'none' : mode);
 
     logAutopoiesis.info(`Control mode changed to: ${mode}`);
   }

@@ -116,9 +116,7 @@ export class FoodAssetManager {
   private async loadFoodSystemAssets(): Promise<void> {
     return new Promise<void>((resolve, _reject) => {
       // Cargar sprites del sistema de comida
-      const systemAssets = [
-        { key: 'food_store', path: 'assets/props/Crate_Medium_Closed.png' },
-      ];
+      const systemAssets = [{ key: 'food_store', path: 'assets/props/Crate_Medium_Closed.png' }];
 
       let assetsLoaded = 0;
       const totalAssets = systemAssets.length;

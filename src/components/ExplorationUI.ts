@@ -169,9 +169,7 @@ export class ExplorationUI {
    * Actualiza contenido del panel de estadísticas
    */
   private updateStatsContent(stats: ExplorationStats): void {
-    const discoveryPercentage = Math.round(
-      (stats.discoveredAssets / stats.totalAssets) * 100
-    );
+    const discoveryPercentage = Math.round((stats.discoveredAssets / stats.totalAssets) * 100);
 
     const lines = [
       `Assets descubiertos: ${stats.discoveredAssets}/${stats.totalAssets} (${discoveryPercentage}%)`,

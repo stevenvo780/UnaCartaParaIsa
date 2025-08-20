@@ -131,9 +131,7 @@ export class MainScene extends Phaser.Scene {
     this.gameLogicManager.initialize();
 
     this.worldRenderer = new WorldRenderer(this, this.gameState);
-    await this.worldRenderer.renderWorld(
-      this.generatedWorldData?.generatedWorld,
-    );
+    await this.worldRenderer.renderWorld();
 
     // Register systems in registry for cross-component access
     this.registry.set("gameLogicManager", this.gameLogicManager);

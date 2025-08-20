@@ -98,26 +98,29 @@ export class InputManager {
             event.preventDefault();
             break;
           case "Equal":
-          case "NumpadAdd":
+          case "NumpadAdd": {
             // Zoom in con +
             const newZoomIn = Phaser.Math.Clamp(camera.zoom * 1.1, 0.3, 3);
             camera.setZoom(newZoomIn);
             event.preventDefault();
             break;
+          }
           case "Minus":
-          case "NumpadSubtract":
+          case "NumpadSubtract": {
             // Zoom out con -
             const newZoomOut = Phaser.Math.Clamp(camera.zoom * 0.9, 0.3, 3);
             camera.setZoom(newZoomOut);
             event.preventDefault();
             break;
+          }
           case "Digit0":
-          case "Numpad0":
+          case "Numpad0": {
             // Reset zoom y posición
             camera.setZoom(1);
             camera.centerOn(600, 400); // Centro del mundo
             event.preventDefault();
             break;
+          }
         }
       }
     });

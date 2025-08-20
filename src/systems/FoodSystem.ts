@@ -30,11 +30,7 @@ export class FoodSystem {
   /**
    * Inicia el proceso de comer para una entidad
    */
-  startEating(
-    entityId: string,
-    foodId: string,
-    position: { x: number; y: number }
-  ): boolean {
+  startEating(entityId: string, foodId: string, position: { x: number; y: number }): boolean {
     // Verificar si ya está comiendo
     if (this.activeEatingActions.has(entityId)) {
       logAutopoiesis.warn('La entidad ya está comiendo', { entityId });
@@ -113,22 +109,10 @@ export class FoodSystem {
     const newStats = { ...stats };
 
     // Aplicar efectos de la comida
-    newStats.hunger = Math.min(
-      100,
-      Math.max(0, newStats.hunger + food.hungerRestore)
-    );
-    newStats.happiness = Math.min(
-      100,
-      Math.max(0, newStats.happiness + food.happinessBonus)
-    );
-    newStats.energy = Math.min(
-      100,
-      Math.max(0, newStats.energy + food.energyEffect)
-    );
-    newStats.health = Math.min(
-      100,
-      Math.max(0, newStats.health + food.healthEffect)
-    );
+    newStats.hunger = Math.min(100, Math.max(0, newStats.hunger + food.hungerRestore));
+    newStats.happiness = Math.min(100, Math.max(0, newStats.happiness + food.happinessBonus));
+    newStats.energy = Math.min(100, Math.max(0, newStats.energy + food.energyEffect));
+    newStats.health = Math.min(100, Math.max(0, newStats.health + food.healthEffect));
 
     // Efectos secundarios basados en categoría
     switch (food.category) {
@@ -211,11 +195,7 @@ export class FoodSystem {
   /**
    * Crea una tienda de comida en una posición
    */
-  createFoodStore(
-    x: number,
-    y: number,
-    availableFoods: string[] = []
-  ): Phaser.GameObjects.Sprite {
+  createFoodStore(x: number, y: number, availableFoods: string[] = []): Phaser.GameObjects.Sprite {
     const store = this.scene.add.sprite(x, y, 'food_store');
     store.setScale(0.8);
     store.setInteractive();
@@ -248,9 +228,7 @@ export class FoodSystem {
   private openFoodStore(availableFoods: string[]): void {
     // Emitir evento para que la UI maneje la tienda
     this.scene.events.emit('openFoodStore', {
-      foods: availableFoods
-        .map(id => FoodCatalog.getFoodById(id))
-        .filter(Boolean),
+      foods: availableFoods.map(id => FoodCatalog.getFoodById(id)).filter(Boolean),
       inventory: this.inventory.getInventory(),
       stats: this.inventory.getInventoryStats(),
     });
@@ -259,16 +237,9 @@ export class FoodSystem {
   /**
    * Crea efectos visuales al comer
    */
-  private createFoodVisual(
-    food: FoodItem,
-    position: { x: number; y: number }
-  ): void {
+  private createFoodVisual(food: FoodItem, position: { x: number; y: number }): void {
     // Crear sprite temporal de la comida
-    const foodSprite = this.scene.add.image(
-      position.x,
-      position.y - 30,
-      food.id
-    );
+    const foodSprite = this.scene.add.image(position.x, position.y - 30, food.id);
     foodSprite.setScale(0.5);
     foodSprite.setAlpha(0.8);
 
@@ -287,11 +258,7 @@ export class FoodSystem {
 
     // Crear efecto visual simple de consumo (círculos que se desvanecen)
     const effectColor =
-      food.category === 'healthy'
-        ? 0x00ff00
-        : food.category === 'dessert'
-          ? 0xff69b4
-          : 0xffd700;
+      food.category === 'healthy' ? 0x00ff00 : food.category === 'dessert' ? 0xff69b4 : 0xffd700;
 
     // Crear múltiples círculos como efecto visual
     for (let i = 0; i < 3; i++) {

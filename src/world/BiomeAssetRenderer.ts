@@ -138,9 +138,7 @@ export class BiomeAssetRenderer {
     grasslandConfig.terrainAssets = allAssets.getAssetsByBiome('grassland');
     grasslandConfig.decorationAssets = [
       ...allAssets.getAssetsByBiome('forest').filter(a => a.type === 'foliage'),
-      ...allAssets
-        .getAssetsByBiome('forest')
-        .filter(a => a.type === 'mushroom'),
+      ...allAssets.getAssetsByBiome('forest').filter(a => a.type === 'mushroom'),
     ];
     grasslandConfig.structureAssets = allAssets
       .getAssetsByBiome('village')
@@ -160,18 +158,14 @@ export class BiomeAssetRenderer {
     forestConfig.structureAssets = allAssets
       .getAssetsByBiome('village')
       .filter(a => a.rarity !== 'epic');
-    forestConfig.propAssets = allAssets
-      .getAssetsByBiome('village')
-      .filter(a => a.type === 'prop');
+    forestConfig.propAssets = allAssets.getAssetsByBiome('village').filter(a => a.type === 'prop');
 
     // WETLAND - Pantanos y humedales
     const wetlandConfig = this.biomeConfigs.get(BiomeType.WETLAND);
     wetlandConfig.terrainAssets = allAssets.getAssetsByBiome('wetland');
     wetlandConfig.decorationAssets = [
       ...allAssets.getAssetsByBiome('wetland'),
-      ...allAssets
-        .getAssetsByBiome('forest')
-        .filter(a => a.key.includes('willow')),
+      ...allAssets.getAssetsByBiome('forest').filter(a => a.key.includes('willow')),
     ];
     wetlandConfig.structureAssets = allAssets
       .getAssetsByBiome('wetland')
@@ -187,9 +181,7 @@ export class BiomeAssetRenderer {
     villageConfig.structureAssets = allAssets
       .getAssetsByBiome('village')
       .filter(a => a.type === 'structure');
-    villageConfig.propAssets = allAssets
-      .getAssetsByBiome('village')
-      .filter(a => a.type === 'prop');
+    villageConfig.propAssets = allAssets.getAssetsByBiome('village').filter(a => a.type === 'prop');
 
     // MOUNTAINOUS - Montañas rocosas con ruinas
     const mountainConfig = this.biomeConfigs.get(BiomeType.MOUNTAINOUS);
@@ -227,10 +219,7 @@ export class BiomeAssetRenderer {
   /**
    * Carga y renderiza mundo ultra-diverso
    */
-  async renderDiverseWorld(
-    world: GeneratedWorld,
-    playerLevel: number = 1
-  ): Promise<void> {
+  async renderDiverseWorld(world: GeneratedWorld, playerLevel: number = 1): Promise<void> {
     logAutopoiesis.info('🌍 Renderizando mundo con assets creativos reales');
 
     // 1. Cargar todos los assets
@@ -245,9 +234,7 @@ export class BiomeAssetRenderer {
     await this.renderStructureLayer(world, playerLevel);
     await this.renderPropLayer(world, playerLevel);
 
-    logAutopoiesis.info(
-      '✅ Mundo renderizado exitosamente con assets creativos'
-    );
+    logAutopoiesis.info('✅ Mundo renderizado exitosamente con assets creativos');
   }
 
   /**
@@ -282,12 +269,7 @@ export class BiomeAssetRenderer {
           sprite.setDisplaySize(tileSize, tileSize);
 
           // Aplicar variaciones visuales
-          this.applyBiomeVariations(
-            sprite,
-            tile.biome,
-            tile.biomeStrength,
-            config
-          );
+          this.applyBiomeVariations(sprite, tile.biome, tile.biomeStrength, config);
 
           this.worldContainer.add(sprite);
         }
@@ -298,10 +280,7 @@ export class BiomeAssetRenderer {
   /**
    * Renderiza decoraciones naturales (árboles, rocas, hongos)
    */
-  private async renderDecorationLayer(
-    world: GeneratedWorld,
-    playerLevel: number
-  ): Promise<void> {
+  private async renderDecorationLayer(world: GeneratedWorld, playerLevel: number): Promise<void> {
     const tileSize = 32;
 
     for (let y = 0; y < world.terrain.length; y++) {
@@ -312,8 +291,7 @@ export class BiomeAssetRenderer {
         if (!config || config.decorationAssets.length === 0) continue;
 
         // Probabilidad de decoración basada en bioma y fuerza
-        const decorationChance =
-          config.probability.decoration * tile.biomeStrength;
+        const decorationChance = config.probability.decoration * tile.biomeStrength;
         const random = this.getSeededRandom(x, y, 1);
 
         if (random < decorationChance) {
@@ -331,10 +309,7 @@ export class BiomeAssetRenderer {
             );
             const selectedAsset = availableDecorations[assetIndex];
 
-            if (
-              selectedAsset &&
-              this.scene.textures.exists(selectedAsset.key)
-            ) {
+            if (selectedAsset && this.scene.textures.exists(selectedAsset.key)) {
               const sprite = this.scene.add.image(
                 x * tileSize + tileSize / 2,
                 y * tileSize + tileSize / 2,
@@ -346,11 +321,7 @@ export class BiomeAssetRenderer {
               sprite.setDisplaySize(baseSize, baseSize);
 
               // Variaciones creativas
-              this.applyDecorationVariations(
-                sprite,
-                selectedAsset,
-                tile.biomeStrength
-              );
+              this.applyDecorationVariations(sprite, selectedAsset, tile.biomeStrength);
 
               this.decorationContainer.add(sprite);
             }
@@ -363,10 +334,7 @@ export class BiomeAssetRenderer {
   /**
    * Renderiza estructuras (casas, ruinas, edificios)
    */
-  private async renderStructureLayer(
-    world: GeneratedWorld,
-    playerLevel: number
-  ): Promise<void> {
+  private async renderStructureLayer(world: GeneratedWorld, playerLevel: number): Promise<void> {
     const tileSize = 32;
 
     for (let y = 0; y < world.terrain.length; y++) {
@@ -376,8 +344,7 @@ export class BiomeAssetRenderer {
 
         if (!config || config.structureAssets.length === 0) continue;
 
-        const structureChance =
-          config.probability.structure * tile.biomeStrength;
+        const structureChance = config.probability.structure * tile.biomeStrength;
         const random = this.getSeededRandom(x, y, 2);
 
         if (random < structureChance) {
@@ -394,10 +361,7 @@ export class BiomeAssetRenderer {
             );
             const selectedAsset = availableStructures[assetIndex];
 
-            if (
-              selectedAsset &&
-              this.scene.textures.exists(selectedAsset.key)
-            ) {
+            if (selectedAsset && this.scene.textures.exists(selectedAsset.key)) {
               const sprite = this.scene.add.image(
                 x * tileSize + tileSize / 2,
                 y * tileSize + tileSize / 2 - 16, // Offset hacia arriba
@@ -407,11 +371,7 @@ export class BiomeAssetRenderer {
               const structureSize = tileSize * 2; // Estructuras más grandes
               sprite.setDisplaySize(structureSize, structureSize);
 
-              this.applyStructureVariations(
-                sprite,
-                selectedAsset,
-                tile.biomeStrength
-              );
+              this.applyStructureVariations(sprite, selectedAsset, tile.biomeStrength);
 
               this.structureContainer.add(sprite);
             }
@@ -424,10 +384,7 @@ export class BiomeAssetRenderer {
   /**
    * Renderiza props pequeños (mobiliario, objetos)
    */
-  private async renderPropLayer(
-    world: GeneratedWorld,
-    playerLevel: number
-  ): Promise<void> {
+  private async renderPropLayer(world: GeneratedWorld, playerLevel: number): Promise<void> {
     const tileSize = 32;
 
     for (let y = 0; y < world.terrain.length; y++) {
@@ -446,18 +403,10 @@ export class BiomeAssetRenderer {
           );
 
           if (availableProps.length > 0) {
-            const assetIndex = this.getVariedIndex(
-              x,
-              y,
-              tile.biomeStrength,
-              availableProps.length
-            );
+            const assetIndex = this.getVariedIndex(x, y, tile.biomeStrength, availableProps.length);
             const selectedAsset = availableProps[assetIndex];
 
-            if (
-              selectedAsset &&
-              this.scene.textures.exists(selectedAsset.key)
-            ) {
+            if (selectedAsset && this.scene.textures.exists(selectedAsset.key)) {
               const sprite = this.scene.add.image(
                 x * tileSize + tileSize / 2,
                 y * tileSize + tileSize / 2,
@@ -467,11 +416,7 @@ export class BiomeAssetRenderer {
               const propSize = tileSize * 0.75; // Props más pequeños
               sprite.setDisplaySize(propSize, propSize);
 
-              this.applyPropVariations(
-                sprite,
-                selectedAsset,
-                tile.biomeStrength
-              );
+              this.applyPropVariations(sprite, selectedAsset, tile.biomeStrength);
 
               this.propContainer.add(sprite);
             }
@@ -597,12 +542,7 @@ export class BiomeAssetRenderer {
   /**
    * Genera índice variado basado en posición y fuerza
    */
-  private getVariedIndex(
-    x: number,
-    y: number,
-    strength: number,
-    arrayLength: number
-  ): number {
+  private getVariedIndex(x: number, y: number, strength: number, arrayLength: number): number {
     const seed = (x * 73 + y * 137 + Math.floor(strength * 100)) % 1000;
     return seed % arrayLength;
   }
@@ -625,10 +565,7 @@ export class BiomeAssetRenderer {
     const propCount = this.propContainer?.list?.length || 0;
 
     const assetStats = this.creativeLoader.getAssetStats();
-    const totalAssets = Object.values(assetStats).reduce(
-      (sum, count) => sum + count,
-      0
-    );
+    const totalAssets = Object.values(assetStats).reduce((sum, count) => sum + count, 0);
 
     return {
       totalAssets,
@@ -636,8 +573,7 @@ export class BiomeAssetRenderer {
       decorationSprites: decorationCount,
       structureSprites: structureCount,
       propSprites: propCount,
-      totalRendered:
-        terrainCount + decorationCount + structureCount + propCount,
+      totalRendered: terrainCount + decorationCount + structureCount + propCount,
     };
   }
 
