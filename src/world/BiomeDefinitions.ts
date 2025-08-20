@@ -205,12 +205,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
           'blue-green_balls_tree2.png',
           'blue-green_balls_tree3.png',
         ],
-        rare: [
-          'tree_idol_deer.png',
-          'tree_idol_dragon.png',
-          'tree_idol_human.png',
-          'tree_idol_wolf.png',
-        ],
+        rare: ['tree_idol_deer.png', 'tree_idol_dragon.png', 'tree_idol_human.png', 'tree_idol_wolf.png'],
         density: 0.25,
         clustering: 0.4,
       },
@@ -270,13 +265,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
       },
 
       trees: {
-        primary: [
-          'willow1.png',
-          'willow2.png',
-          'willow3.png',
-          'white_tree1.png',
-          'white_tree2.png',
-        ],
+        primary: ['willow1.png', 'willow2.png', 'willow3.png', 'white_tree1.png', 'white_tree2.png'],
         rare: ['tree_emerald_1.png'],
         density: 0.2,
         clustering: 0.5,
@@ -518,12 +507,7 @@ export function getAllBiomes(): BiomeType[] {
 /**
  * Verifica si un bioma puede aparecer en las condiciones dadas
  */
-export function canBiomeSpawn(
-  biome: BiomeType,
-  temperature: number,
-  moisture: number,
-  elevation: number
-): boolean {
+export function canBiomeSpawn(biome: BiomeType, temperature: number, moisture: number, elevation: number): boolean {
   const def = getBiomeDefinition(biome);
 
   return (
@@ -557,8 +541,7 @@ export function calculateBiomeFitness(
   const elevDist = Math.abs(elevation - elevCenter);
 
   // Fitness inverso a la distancia (0-1, donde 1 es perfecto)
-  const fitness =
-    1 - Math.sqrt(tempDist * tempDist + moistDist * moistDist + elevDist * elevDist) / Math.sqrt(3);
+  const fitness = 1 - Math.sqrt(tempDist * tempDist + moistDist * moistDist + elevDist * elevDist) / Math.sqrt(3);
 
   return Math.max(0, fitness);
 }

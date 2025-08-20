@@ -12,12 +12,7 @@ import type { EntityStats, MoodType, Entity } from './entities';
 export type { Position, Size, Rect, Color } from './core';
 
 // Domain-specific types
-export type {
-  ActivityType,
-  EntityActivity,
-  ActivityModifiers,
-  ActivityDefinition,
-} from './activities';
+export type { ActivityType, EntityActivity, ActivityModifiers, ActivityDefinition } from './activities';
 export type { ZoneType, Zone as ZoneDefinition } from './zones';
 export type { EntityStateType, MoodType, EntityStats, Entity } from './entities';
 export type { FoodCategory, FoodItem, FoodInventoryItem, EatingAction } from './food';
@@ -53,14 +48,7 @@ export type {
 } from './events';
 
 // Game-specific types that remain centralized
-export type InteractionType =
-  | 'NOURISH'
-  | 'FEED'
-  | 'PLAY'
-  | 'COMFORT'
-  | 'DISTURB'
-  | 'WAKE_UP'
-  | 'LET_SLEEP';
+export type InteractionType = 'NOURISH' | 'FEED' | 'PLAY' | 'COMFORT' | 'DISTURB' | 'WAKE_UP' | 'LET_SLEEP';
 
 export interface MapElement {
   id: string;

@@ -13,13 +13,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private services: IEntityServices;
   private colorHue: number;
 
-  constructor(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    entityId: 'isa' | 'stev',
-    services?: IEntityServices
-  ) {
+  constructor(scene: Phaser.Scene, x: number, y: number, entityId: 'isa' | 'stev', services?: IEntityServices) {
     // Use fallback sprites since main entity sprites are now handled by AnimatedGameEntity
     const initialSprite = entityId === 'isa' ? 'woman' : 'man';
     super(scene, x, y, initialSprite);
@@ -95,10 +89,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     if (this.entityData.id === 'isa') {
       this.setCircle(GAME_BALANCE.MOVEMENT.ENTITY_COLLISION_RADIUS);
     } else {
-      this.setSize(
-        GAME_BALANCE.MOVEMENT.SQUARE_ENTITY_SIZE,
-        GAME_BALANCE.MOVEMENT.SQUARE_ENTITY_SIZE
-      );
+      this.setSize(GAME_BALANCE.MOVEMENT.SQUARE_ENTITY_SIZE, GAME_BALANCE.MOVEMENT.SQUARE_ENTITY_SIZE);
     }
   }
 
@@ -153,10 +144,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       deltaTimeMs
     );
 
-    this.entityData.stats = this.services.activityCalculator.applySurvivalCosts(
-      this.entityData.stats,
-      deltaTimeMs
-    );
+    this.entityData.stats = this.services.activityCalculator.applySurvivalCosts(this.entityData.stats, deltaTimeMs);
 
     this.entityData.stats = this.services.activityCalculator.applyActivityEffectsWithTimeModifiers(
       this.entityData.activity,
@@ -350,9 +338,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     if (this.entityData.pulsePhase !== undefined) {
       this.entityData.pulsePhase += GAME_BALANCE.VISUALS.PULSE_SPEED;
       const basePulse = GAME_BALANCE.VISUALS.BASE_PULSE_SCALE ?? 1.5;
-      const pulse =
-        basePulse +
-        Math.sin(this.entityData.pulsePhase) * (GAME_BALANCE.VISUALS.PULSE_AMPLITUDE ?? 0.1);
+      const pulse = basePulse + Math.sin(this.entityData.pulsePhase) * (GAME_BALANCE.VISUALS.PULSE_AMPLITUDE ?? 0.1);
       this.setScale(pulse);
     }
 
@@ -497,30 +483,15 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     this.entityData.stats.resonance = this.resonance;
     this.entityData.resonance = this.resonance;
 
-    const modifiers = this.services.resonanceCalculator.calculateResonanceModifiers(
-      this.resonance,
-      result.closeness
-    );
+    const modifiers = this.services.resonanceCalculator.calculateResonanceModifiers(this.resonance, result.closeness);
 
-    this.entityData.stats.happiness = Math.min(
-      100,
-      this.entityData.stats.happiness * modifiers.happinessMultiplier
-    );
+    this.entityData.stats.happiness = Math.min(100, this.entityData.stats.happiness * modifiers.happinessMultiplier);
 
-    this.entityData.stats.energy = Math.min(
-      100,
-      this.entityData.stats.energy * modifiers.energyMultiplier
-    );
+    this.entityData.stats.energy = Math.min(100, this.entityData.stats.energy * modifiers.energyMultiplier);
 
-    this.entityData.stats.health = Math.min(
-      100,
-      this.entityData.stats.health * modifiers.healthMultiplier
-    );
+    this.entityData.stats.health = Math.min(100, this.entityData.stats.health * modifiers.healthMultiplier);
 
-    this.entityData.stats.loneliness = Math.max(
-      0,
-      this.entityData.stats.loneliness * modifiers.lonelinessPenalty
-    );
+    this.entityData.stats.loneliness = Math.max(0, this.entityData.stats.loneliness * modifiers.lonelinessPenalty);
 
     if (Math.abs(result.resonanceChange) > 0.5) {
       this.services.logger.info(`${this.entityData.id} resonance updated`, {

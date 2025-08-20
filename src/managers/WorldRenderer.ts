@@ -4,6 +4,8 @@
 
 import type { GameState } from "../types";
 import { logAutopoiesis } from "../utils/logger";
+import { WorldPopulator } from "../world/WorldPopulator";
+import { BiomeType } from "../world/types";
 import type { AnimationManager } from "./AnimationManager";
 
 export class WorldRenderer {
@@ -15,10 +17,25 @@ export class WorldRenderer {
   private decorationSprites: Phaser.GameObjects.Sprite[] = [];
   private lastCullingUpdate = 0;
   private readonly cullingUpdateInterval = 100;
+  private worldPopulator: WorldPopulator;
 
   constructor(scene: Phaser.Scene, gameState: GameState) {
     this.scene = scene;
     this.gameState = gameState;
+
+    // Initialize WorldPopulator
+    this.worldPopulator = new WorldPopulator(
+      scene,
+      gameState.worldSize.width,
+      gameState.worldSize.height,
+      {
+        maxEntitiesPerChunk: 15, // Reducido para mejor performance
+        chunkSize: 256,
+        performanceMode: true,
+        wildlifeRespawn: false,
+        structurePersistence: true,
+      },
+    );
 
     // Get animation manager from scene registry with type safety
     const animManager = scene.registry.get("animationManager");
@@ -39,6 +56,7 @@ export class WorldRenderer {
   public renderWorld(): void {
     this.createWorldBackground();
     this.renderZones();
+    this.populateWorldWithDecorations();
 
     logAutopoiesis.info("World rendering completed", {
       zones: this.gameState.zones.length,
@@ -52,36 +70,58 @@ export class WorldRenderer {
   private createWorldBackground(): void {
     const worldWidth = this.gameState.worldSize.width;
     const worldHeight = this.gameState.worldSize.height;
+    const tileSize = 64; // Tamaño de cada tile de césped
 
-    // Crear un background simple y eficiente
-    const background = this.scene.add.rectangle(
-      worldWidth / 2,
-      worldHeight / 2,
-      worldWidth,
-      worldHeight,
-      0x90ee90, // Verde césped
-    );
-    background.setDepth(0);
+    // Crear fondo usando texturas de césped variadas
+    let tileCount = 0;
 
-    // Añadir textura sutil con graphics para simular césped
-    const grassPattern = this.scene.add.graphics();
-    grassPattern.fillStyle(0x7ccd7c, 0.3);
+    // Usar las texturas de césped que sí están disponibles
+    const availableGrassTextures = [
+      "grass_1",
+      "grass_2",
+      "grass_3",
+      "grass_middle",
+    ];
 
-    // Crear patrón de césped ligero
-    for (let i = 0; i < 50; i++) {
-      const x = Math.random() * worldWidth;
-      const y = Math.random() * worldHeight;
-      grassPattern.fillCircle(x, y, 8);
+    for (let x = 0; x < worldWidth; x += tileSize) {
+      for (let y = 0; y < worldHeight; y += tileSize) {
+        // Seleccionar una textura de césped aleatoria de las disponibles
+        const grassKey =
+          availableGrassTextures[
+            Math.floor(Math.random() * availableGrassTextures.length)
+          ];
+
+        // Verificar si la textura existe antes de usarla
+        if (this.scene.textures.exists(grassKey)) {
+          const grassTile = this.scene.add.image(
+            x + tileSize / 2,
+            y + tileSize / 2,
+            grassKey,
+          );
+          grassTile.setDisplaySize(tileSize, tileSize);
+          grassTile.setDepth(0);
+          this.renderedObjects.set(`grass_tile_${tileCount}`, grassTile);
+          tileCount++;
+        } else {
+          // Fallback a rectángulo verde si la textura no existe
+          const fallbackTile = this.scene.add.rectangle(
+            x + tileSize / 2,
+            y + tileSize / 2,
+            tileSize,
+            tileSize,
+            0x90ee90,
+          );
+          fallbackTile.setDepth(0);
+          this.renderedObjects.set(`grass_fallback_${tileCount}`, fallbackTile);
+          tileCount++;
+        }
+      }
     }
 
-    grassPattern.setDepth(0.1);
-
-    this.renderedObjects.set("world_background", background);
-    this.renderedObjects.set("grass_pattern", grassPattern);
-
-    logAutopoiesis.info("World background created", {
+    logAutopoiesis.info("World background created with grass textures", {
       worldSize: `${worldWidth}x${worldHeight}`,
-      elementsCreated: 2,
+      tilesCreated: tileCount,
+      availableTextures: availableGrassTextures.length,
     });
   }
 
@@ -183,6 +223,298 @@ export class WorldRenderer {
       this.renderedObjects.set(`zone_${zone.id}`, zoneRect);
       this.renderedObjects.set(`zone_label_${zone.id}`, label);
     });
+  }
+
+  /**
+   * Populate world with decorations based on zones
+   */
+  private populateWorldWithDecorations(): void {
+    try {
+      this.gameState.zones.forEach((zone) => {
+        const biome = this.determineBiomeFromZone(zone.name);
+        const seed = this.hashStringToNumber(zone.id);
+
+        // Generate decorations for this zone
+        const entities = this.worldPopulator.populateRegion(
+          zone.bounds.x,
+          zone.bounds.y,
+          zone.bounds.width,
+          zone.bounds.height,
+          biome,
+          seed,
+        );
+
+        // Render each decoration entity
+        entities.forEach((entity) => {
+          this.renderWorldEntity(entity);
+        });
+
+        logAutopoiesis.debug(
+          `Populated zone ${zone.name} with ${entities.length} decorations`,
+        );
+      });
+
+      logAutopoiesis.info(
+        `🎨 World decorated with ${this.decorationSprites.length} elements`,
+      );
+    } catch (error) {
+      logAutopoiesis.error("❌ Error populating world decorations:", error);
+    }
+  }
+
+  /**
+   * Determine biome type from zone name
+   */
+  private determineBiomeFromZone(zoneName: string): BiomeType {
+    const name = zoneName.toLowerCase();
+
+    if (name.includes("biblioteca") || name.includes("library")) {
+      return BiomeType.FOREST;
+    } else if (name.includes("santuario") || name.includes("sanctuary")) {
+      return BiomeType.MYSTICAL;
+    } else if (name.includes("cocina") || name.includes("kitchen")) {
+      return BiomeType.VILLAGE;
+    } else if (
+      name.includes("cuarto") ||
+      name.includes("room") ||
+      name.includes("bedroom")
+    ) {
+      return BiomeType.GRASSLAND;
+    } else if (name.includes("jardín") || name.includes("garden")) {
+      return BiomeType.GRASSLAND;
+    } else {
+      return BiomeType.GRASSLAND; // Default biome
+    }
+  }
+
+  /**
+   * Render a world entity (tree, structure, etc.)
+   */
+  private renderWorldEntity(entity: any): void {
+    try {
+      // 🎯 NUEVO: Mapeo directo de tipos de entidades a texturas disponibles
+      const textureKey = this.getEntityTextureKey(entity.type, entity.assetKey);
+
+      if (textureKey && this.scene.textures.exists(textureKey)) {
+        // ✅ Crear sprite estático con textura real
+        const staticSprite = this.scene.add.sprite(
+          entity.x,
+          entity.y,
+          textureKey,
+        );
+        staticSprite.setDepth(2);
+        staticSprite.setOrigin(0.5, 0.5);
+
+        // Escalar según el tipo de entidad
+        const scale = this.getEntityScale(entity.type);
+        staticSprite.setScale(scale);
+
+        staticSprite.name = `${entity.type}_${entity.id}`;
+        this.decorationSprites.push(staticSprite);
+        this.renderedObjects.set(entity.id, staticSprite);
+
+        logAutopoiesis.debug(
+          `✅ Entity ${entity.id} rendered with texture: ${textureKey}`,
+        );
+        return;
+      }
+
+      // 🎯 INTENTO: Usar AnimationManager solo si existe y funciona
+      if (
+        this.animationManager &&
+        entity.assetKey &&
+        this.animationManager.hasAnimation(entity.assetKey)
+      ) {
+        const animatedSprite = this.animationManager.createAnimatedSprite(
+          entity.x,
+          entity.y,
+          entity.assetKey,
+        );
+        if (animatedSprite) {
+          animatedSprite.setDepth(2);
+          animatedSprite.name = `${entity.type}_${entity.id}`;
+          this.decorationSprites.push(animatedSprite);
+          this.renderedObjects.set(entity.id, animatedSprite);
+          return;
+        }
+      }
+
+      // ❌ Fallback final: cuadro de color
+      const fallbackColor = this.getFallbackColor(entity.type);
+      const fallbackSprite = this.scene.add.rectangle(
+        entity.x,
+        entity.y,
+        24,
+        24,
+        fallbackColor,
+      );
+      fallbackSprite.setDepth(2);
+      fallbackSprite.name = `${entity.type}_${entity.id}_fallback`;
+      this.decorationSprites.push(fallbackSprite as any);
+      this.renderedObjects.set(entity.id, fallbackSprite);
+
+      logAutopoiesis.warn(
+        `⚠️ Entity ${entity.id} (${entity.type}) rendered as fallback rectangle`,
+      );
+    } catch (error) {
+      logAutopoiesis.warn(`Failed to render entity ${entity.id}:`, error);
+
+      // Create a simple fallback
+      const fallback = this.scene.add.circle(entity.x, entity.y, 12, 0x228b22);
+      fallback.setDepth(2);
+      fallback.name = `${entity.type}_${entity.id}_error`;
+      this.decorationSprites.push(fallback as any);
+      this.renderedObjects.set(entity.id, fallback);
+    }
+  }
+
+  /**
+   * 🎯 Mapea tipos de entidades a texturas disponibles - VERSIÓN REALISTA
+   */
+  private getEntityTextureKey(
+    entityType: string,
+    assetKey?: string,
+  ): string | null {
+    // 🏠 MAPEO REALISTA DE ESTRUCTURAS (casas reales)
+    const houseTextures = ["house_hay", "house_stone", "house_wood", "well"];
+
+    // 🌳 MAPEO REALISTA DE ÁRBOLES (variedad de árboles)
+    const treeTextures = [
+      "tree_emerald",
+      "tree_swirling",
+      "tree_white",
+      "tree_willow",
+      "tree_mega",
+    ];
+
+    // 🌿 MAPEO DE VEGETACIÓN MENOR
+    const vegetationTextures = [
+      "bush_emerald",
+      "living_gazebo",
+      "flowers-red",
+      "flowers-white",
+    ];
+
+    // Mapeo directo basado en texturas disponibles verificadas
+    const entityTextureMap: { [key: string]: string } = {
+      // Entidades principales (sin cambio)
+      campfire: "campfire",
+      woman: "woman",
+      man: "man",
+      store: "food_store",
+      food_store: "food_store",
+
+      // 🏠 ESTRUCTURAS -> Usar casas reales de forma aleatoria
+      structure: this.getRandomTexture(houseTextures),
+      house: this.getRandomTexture(houseTextures),
+      building: this.getRandomTexture(houseTextures),
+
+      // 🌳 ÁRBOLES -> Usar árboles reales de forma aleatoria
+      tree: this.getRandomTexture(treeTextures),
+      oak: this.getRandomTexture(treeTextures),
+      pine: this.getRandomTexture(treeTextures),
+
+      // 🌿 VEGETACIÓN -> Usar plantas menores
+      vegetation: this.getRandomTexture(vegetationTextures),
+      bush: this.getRandomTexture(vegetationTextures),
+      shrub: this.getRandomTexture(vegetationTextures),
+
+      // Ruinas y wildlife (sin cambio, menos frecuentes)
+      ruin: "man", // Usar 'man' como placeholder para ruins
+      wildlife: "woman", // Usar 'woman' como placeholder para animales
+
+      // 🎯 MAPEOS ESPECÍFICOS PARA ENTIDADES SPECIAL
+      special: this.getRandomTexture([...treeTextures, ...vegetationTextures]), // Mezcla naturaleza
+
+      // Mapeos por assetKey específicos
+      ruin_forest: "man",
+      structure_house: this.getRandomTexture(houseTextures),
+      wildlife_chicken: "woman",
+      tree_oak: this.getRandomTexture(treeTextures),
+
+      // 🎯 MAPEOS REALISTAS para tipos especiales por nombre
+      flower_meadows: this.getRandomTexture(vegetationTextures), // Flores variadas
+      campfire_sites: "campfire", // Solo estos son fogatas reales
+      ancient_groves: this.getRandomTexture(treeTextures), // Árboles ancianos
+      mystical_circles: this.getRandomTexture(vegetationTextures), // Vegetación mística
+      sacred_springs: "well", // Pozos en manantiales
+      crystal_formations: "man", // Cristales -> man
+      ruins_ancient: "man", // Ruinas -> man
+    };
+
+    // 🎯 LÓGICA ESPECIAL para entidades "special"
+    if (entityType === "special" && assetKey) {
+      // Extraer el nombre del feature del assetKey
+      const featureName = assetKey.split("_").slice(0, 2).join("_");
+      if (entityTextureMap[featureName]) {
+        return entityTextureMap[featureName];
+      }
+    }
+
+    // Priorizar assetKey si existe
+    if (assetKey && entityTextureMap[assetKey]) {
+      return entityTextureMap[assetKey];
+    }
+
+    // Usar entityType como fallback
+    return entityTextureMap[entityType] || null;
+  }
+
+  /**
+   * 🎯 Obtiene una textura aleatoria de un array (para variedad)
+   */
+  private getRandomTexture(textures: string[]): string {
+    const index = Math.floor(Math.random() * textures.length);
+    return textures[index];
+  } /**
+   * 🎯 Define escalas apropiadas para diferentes tipos de entidades
+   */
+  private getEntityScale(entityType: string): number {
+    const scaleMap: { [key: string]: number } = {
+      campfire: 0.8,
+      woman: 1.0,
+      man: 1.0,
+      food_store: 1.2,
+      ruin: 0.9,
+      structure: 1.1,
+      wildlife: 0.7,
+      tree: 1.3,
+      vegetation: 1.0,
+    };
+
+    return scaleMap[entityType] || 1.0;
+  }
+
+  /**
+   * Get fallback color based on entity type
+   */
+  private getFallbackColor(entityType: string): number {
+    switch (entityType) {
+      case "ruin":
+        return 0x8b7355; // Brown for ruins
+      case "structure":
+        return 0x654321; // Dark brown for structures
+      case "wildlife":
+        return 0xffb6c1; // Light pink for animals
+      case "tree":
+      case "vegetation":
+        return 0x228b22; // Forest green for trees
+      default:
+        return 0x696969; // Gray for unknown
+    }
+  }
+
+  /**
+   * Convert string to a consistent number hash
+   */
+  private hashStringToNumber(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
   }
 
   /**

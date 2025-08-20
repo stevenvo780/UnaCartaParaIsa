@@ -98,9 +98,7 @@ const EFFICIENCY_FUNCTIONS = {
 
   SHOPPING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.SHOPPING;
-    return timeSpent <= optimal
-      ? 1.0
-      : Math.max(0.2, 1.0 - ((timeSpent - optimal) / optimal) * 0.8);
+    return timeSpent <= optimal ? 1.0 : Math.max(0.2, 1.0 - ((timeSpent - optimal) / optimal) * 0.8);
   },
 
   COOKING: (timeSpent: number) => {
@@ -133,9 +131,7 @@ const EFFICIENCY_FUNCTIONS = {
 
   WANDERING: (timeSpent: number) => {
     const optimal = ACTIVITY_OPTIMAL_DURATIONS.WANDERING;
-    return timeSpent <= optimal
-      ? 1.0
-      : Math.max(0.5, 1.0 - ((timeSpent - optimal) / optimal) * 0.5);
+    return timeSpent <= optimal ? 1.0 : Math.max(0.5, 1.0 - ((timeSpent - optimal) / optimal) * 0.5);
   },
 
   EXPLORING: (timeSpent: number) => {
@@ -469,9 +465,7 @@ export const calculateActivityPriority = (
     priority -= w(100 - currentStats.energy) * 50;
   }
 
-  const efficiency = effects.efficiencyOverTime
-    ? effects.efficiencyOverTime(timeSpentInActivity)
-    : 0.5;
+  const efficiency = effects.efficiencyOverTime ? effects.efficiencyOverTime(timeSpentInActivity) : 0.5;
   priority *= efficiency;
 
   if (
@@ -528,8 +522,7 @@ export const applySurvivalCosts = (currentStats: EntityStats, deltaTimeMs: numbe
   newStats.money = Math.max(0, newStats.money - SURVIVAL_COSTS.LIVING_COST * minutesElapsed);
 
   if (newStats.money < SURVIVAL_COSTS.CRITICAL_MONEY) {
-    const desperation =
-      (SURVIVAL_COSTS.CRITICAL_MONEY - newStats.money) / SURVIVAL_COSTS.CRITICAL_MONEY;
+    const desperation = (SURVIVAL_COSTS.CRITICAL_MONEY - newStats.money) / SURVIVAL_COSTS.CRITICAL_MONEY;
     newStats.hunger = Math.max(0, newStats.hunger - desperation * 5 * minutesElapsed);
     newStats.happiness = Math.max(0, newStats.happiness - desperation * 3 * minutesElapsed);
   }
@@ -581,18 +574,13 @@ export const applyActivityEffectsWithTimeModifiers = (
     const effects = ACTIVITY_EFFECTS.RESTING;
 
     if ('energyRecoveryBonus' in activityModifier) {
-      const energyBonus =
-        (effects.perMinute.energy || 0) *
-        (activityModifier.energyRecoveryBonus - 1) *
-        minutesElapsed;
+      const energyBonus = (effects.perMinute.energy || 0) * (activityModifier.energyRecoveryBonus - 1) * minutesElapsed;
       newStats.energy = Math.min(100, Math.max(0, newStats.energy + energyBonus));
     }
 
     if ('sleepinessRecoveryBonus' in activityModifier) {
       const sleepBonus =
-        (effects.perMinute.sleepiness || 0) *
-        (activityModifier.sleepinessRecoveryBonus - 1) *
-        minutesElapsed;
+        (effects.perMinute.sleepiness || 0) * (activityModifier.sleepinessRecoveryBonus - 1) * minutesElapsed;
       newStats.sleepiness = Math.min(100, Math.max(0, newStats.sleepiness + sleepBonus));
     }
 

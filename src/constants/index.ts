@@ -229,10 +229,4 @@ export type ZoneType = 'kitchen' | 'bedroom' | 'living' | 'bathroom' | 'outdoor'
 
 export type EntityStateType = 'idle' | 'moving' | 'interacting' | 'resting' | 'seeking';
 
-export const {
-  MAIN_GAME_LOGIC,
-  DEGRADATION_UPDATE,
-  NATURAL_CYCLE_MS,
-  BREATHING_CYCLE_MS,
-  ATTENTION_SPAN_MS,
-} = TIMING;
+export const { MAIN_GAME_LOGIC, DEGRADATION_UPDATE, NATURAL_CYCLE_MS, BREATHING_CYCLE_MS, ATTENTION_SPAN_MS } = TIMING;

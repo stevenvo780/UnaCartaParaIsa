@@ -22,10 +22,7 @@ export class FoodInventorySystem {
     }
 
     // Verificar capacidad
-    const totalItems = Array.from(this.inventory.values()).reduce(
-      (sum, item) => sum + item.quantity,
-      0
-    );
+    const totalItems = Array.from(this.inventory.values()).reduce((sum, item) => sum + item.quantity, 0);
 
     if (totalItems + quantity > this.maxCapacity) {
       logAutopoiesis.warn('Inventario lleno', {
@@ -157,10 +154,7 @@ export class FoodInventorySystem {
    * Obtiene el espacio libre en el inventario
    */
   getFreeSpace(): number {
-    const usedSpace = Array.from(this.inventory.values()).reduce(
-      (sum, item) => sum + item.quantity,
-      0
-    );
+    const usedSpace = Array.from(this.inventory.values()).reduce((sum, item) => sum + item.quantity, 0);
     return this.maxCapacity - usedSpace;
   }
 

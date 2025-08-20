@@ -11,8 +11,7 @@ export class QuestCatalog {
     {
       id: 'main_awakening',
       title: 'El Despertar de la Resonancia',
-      description:
-        'Isa y Stev han despertado en un mundo extraño. Deben encontrarse y descubrir qué les ha sucedido.',
+      description: 'Isa y Stev han despertado en un mundo extraño. Deben encontrarse y descubrir qué les ha sucedido.',
       loreText:
         'En un momento de quietud, dos almas conectadas se encuentran separadas por fuerzas desconocidas. La resonancia entre ellas vibra débilmente, como un hilo invisible que los une a través de la distancia. Es hora de que se reencuentren y comprendan su nuevo destino.',
       category: 'main_story',
@@ -248,8 +247,7 @@ export class QuestCatalog {
         },
       ],
 
-      introText:
-        'Los misterios florecen cuando menos los esperamos, como jardines que aparecen en la noche.',
+      introText: 'Los misterios florecen cuando menos los esperamos, como jardines que aparecen en la noche.',
       progressTexts: [
         'Un aroma extraño flota en el aire',
         'Los susurros se vuelven más claros',
@@ -339,8 +337,7 @@ export class QuestCatalog {
         },
       ],
 
-      introText:
-        'Los recuerdos son tesoros que el tiempo no puede robar, solo esconder temporalmente.',
+      introText: 'Los recuerdos son tesoros que el tiempo no puede robar, solo esconder temporalmente.',
       progressTexts: [
         'Cada fragmento susurra una historia',
         'Las piezas del pasado se revelan lentamente',
@@ -376,8 +373,7 @@ export class QuestCatalog {
     {
       id: 'daily_resonance_meditation',
       title: 'Meditación de Resonancia Diaria',
-      description:
-        'Dedica tiempo cada día a meditar juntos para fortalecer vuestro vínculo espiritual.',
+      description: 'Dedica tiempo cada día a meditar juntos para fortalecer vuestro vínculo espiritual.',
       loreText:
         'La resonancia entre almas gemelas requiere cuidado constante, como una llama que debe ser alimentada. La meditación compartida es el combustible que mantiene viva esta conexión sagrada.',
       category: 'daily',
@@ -414,11 +410,7 @@ export class QuestCatalog {
       ],
 
       introText: 'La práctica diaria fortalece incluso los vínculos más profundos.',
-      progressTexts: [
-        'La calma los envuelve',
-        'Sus respiraciones se sincronizan',
-        'La resonancia pulsa en armonía',
-      ],
+      progressTexts: ['La calma los envuelve', 'Sus respiraciones se sincronizan', 'La resonancia pulsa en armonía'],
       completionText:
         'La meditación compartida ha fortalecido vuestro vínculo. La resonancia fluye más pura y poderosa.',
 
@@ -522,10 +514,8 @@ export class QuestCatalog {
         'Los símbolos antiguos cobran significado',
         'El poder ancestral despierta a tu presencia',
       ],
-      completionText:
-        'Los antiguos han reconocido la pureza de vuestra conexión. Su sabiduría ahora vive en vosotros.',
-      failureText:
-        'Las ruinas se sellan de nuevo, esperando a quienes sean más dignos de sus secretos.',
+      completionText: 'Los antiguos han reconocido la pureza de vuestra conexión. Su sabiduría ahora vive en vosotros.',
+      failureText: 'Las ruinas se sellan de nuevo, esperando a quienes sean más dignos de sus secretos.',
 
       rewards: [
         {
@@ -595,9 +585,7 @@ export class QuestCatalog {
    * Obtiene misiones principales en orden
    */
   public static getMainStoryQuests(): Quest[] {
-    return this.quests
-      .filter(quest => quest.category === 'main_story')
-      .sort((a, b) => a.id.localeCompare(b.id));
+    return this.quests.filter(quest => quest.category === 'main_story').sort((a, b) => a.id.localeCompare(b.id));
   }
 
   /**

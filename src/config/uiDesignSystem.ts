@@ -247,9 +247,7 @@ export class UIDesignSystem {
     dimensions: Partial<Record<keyof BreakpointConfig, number>>
   ): number {
     const breakpoint = this.getCurrentBreakpoint(width);
-    return (
-      dimensions[breakpoint] ?? dimensions.desktop ?? dimensions.tablet ?? dimensions.mobile ?? 0
-    );
+    return dimensions[breakpoint] ?? dimensions.desktop ?? dimensions.tablet ?? dimensions.mobile ?? 0;
   }
 
   /**
@@ -394,11 +392,7 @@ export class UIDesignSystem {
     height: number
   ): Phaser.GameObjects.Graphics {
     const focusIndicator = scene.add.graphics();
-    focusIndicator.lineStyle(
-      this.ACCESSIBILITY.focusOutlineWidth,
-      this.ACCESSIBILITY.focusOutlineColor,
-      1
-    );
+    focusIndicator.lineStyle(this.ACCESSIBILITY.focusOutlineWidth, this.ACCESSIBILITY.focusOutlineColor, 1);
     focusIndicator.strokeRoundedRect(
       -width / 2 - this.ACCESSIBILITY.focusOutlineWidth,
       -height / 2 - this.ACCESSIBILITY.focusOutlineWidth,
@@ -414,10 +408,7 @@ export class UIDesignSystem {
   /**
    * Verifica si un elemento cumple con el tamaño mínimo táctil
    */
-  public static ensureMinimumTouchSize(
-    width: number,
-    height: number
-  ): { width: number; height: number } {
+  public static ensureMinimumTouchSize(width: number, height: number): { width: number; height: number } {
     return {
       width: Math.max(width, this.ACCESSIBILITY.minimumTouchSize),
       height: Math.max(height, this.ACCESSIBILITY.minimumTouchSize),
@@ -443,21 +434,13 @@ export class UIDesignSystem {
   /**
    * Crea animaciones respetando las preferencias de accesibilidad
    */
-  public static createAccessibleAnimation(
-    scene: Phaser.Scene,
-    config: any
-  ): Phaser.Tweens.Tween | null {
+  public static createAccessibleAnimation(scene: Phaser.Scene, config: any): Phaser.Tweens.Tween | null {
     if (this.ACCESSIBILITY.reducedMotion) {
       // Para movimiento reducido, aplicar cambios instantáneamente
       const targets = Array.isArray(config.targets) ? config.targets : [config.targets];
       targets.forEach((target: any) => {
         Object.keys(config).forEach(key => {
-          if (
-            key !== 'targets' &&
-            key !== 'duration' &&
-            key !== 'ease' &&
-            target[key] !== undefined
-          ) {
+          if (key !== 'targets' && key !== 'duration' && key !== 'ease' && target[key] !== undefined) {
             const value = config[key];
             if (typeof value === 'object' && value.to !== undefined) {
               target[key] = value.to;

@@ -7,13 +7,7 @@ import type { EntityStats } from './entities';
 /**
  * Estado de una misión
  */
-export type QuestStatus =
-  | 'not_started'
-  | 'available'
-  | 'active'
-  | 'completed'
-  | 'failed'
-  | 'abandoned';
+export type QuestStatus = 'not_started' | 'available' | 'active' | 'completed' | 'failed' | 'abandoned';
 
 /**
  * Tipo de objetivo de misión
@@ -179,12 +173,7 @@ export interface QuestProgress {
  * Evento del sistema de misiones
  */
 export interface QuestEvent {
-  type:
-    | 'quest_started'
-    | 'quest_completed'
-    | 'quest_failed'
-    | 'objective_completed'
-    | 'quest_available';
+  type: 'quest_started' | 'quest_completed' | 'quest_failed' | 'objective_completed' | 'quest_available';
   questId: string;
   objectiveId?: string;
   timestamp: number;

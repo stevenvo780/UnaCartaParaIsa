@@ -34,10 +34,7 @@ export const areEqual = (
 
   const diff = Math.abs(a - b);
 
-  if (
-    Math.abs(a) < PRECISION_CONSTANTS.EFFECTIVE_ZERO &&
-    Math.abs(b) < PRECISION_CONSTANTS.EFFECTIVE_ZERO
-  ) {
+  if (Math.abs(a) < PRECISION_CONSTANTS.EFFECTIVE_ZERO && Math.abs(b) < PRECISION_CONSTANTS.EFFECTIVE_ZERO) {
     return diff <= epsilon;
   }
 
@@ -89,9 +86,7 @@ export const validateNumber = (
   }
 
   if (options.maxAbsValue && Math.abs(value) > options.maxAbsValue) {
-    console.warn(
-      `⚠️ ${paramName}: valor absoluto excede límite (${value} > ${options.maxAbsValue})`
-    );
+    console.warn(`⚠️ ${paramName}: valor absoluto excede límite (${value} > ${options.maxAbsValue})`);
     return false;
   }
 
@@ -171,10 +166,7 @@ export const calculateResonance = (
   const timeFactor = timeBonus > 0 ? Math.exp(-timeBonus / 5000) * 15 : 0;
 
   const resonanceRaw =
-    baseResonance +
-    proximityFactor * 25 * PRECISION_CONSTANTS.GOLDEN_RATIO_CONJUGATE +
-    harmonyFactor * 20 +
-    timeFactor;
+    baseResonance + proximityFactor * 25 * PRECISION_CONSTANTS.GOLDEN_RATIO_CONJUGATE + harmonyFactor * 20 + timeFactor;
 
   return preciseRound(safeClamp(resonanceRaw, 0, 100), 3);
 };
@@ -186,11 +178,7 @@ export const calculateResonance = (
  * @param distanceScale Escala de influencia de la distancia
  * @returns Factor de cercanía (0-1)
  */
-export const calculateCloseness = (
-  distance: number,
-  bondDistance = 150,
-  distanceScale = 50
-): number => {
+export const calculateCloseness = (distance: number, bondDistance = 150, distanceScale = 50): number => {
   if (!validateNumber(distance, 'distance', { allowNegative: false })) {
     return 0;
   }
@@ -217,9 +205,7 @@ export const calculateProximityResonanceChange = (
   effect: 'BONDING' | 'SEPARATION' | 'NEUTRAL';
   closeness: number;
 } => {
-  const distance = Math.sqrt(
-    Math.pow(isaPosition.x - stevPosition.x, 2) + Math.pow(isaPosition.y - stevPosition.y, 2)
-  );
+  const distance = Math.sqrt(Math.pow(isaPosition.x - stevPosition.x, 2) + Math.pow(isaPosition.y - stevPosition.y, 2));
 
   const closeness = calculateCloseness(distance);
 

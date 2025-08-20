@@ -256,9 +256,7 @@ export class TilesetManager {
    */
   getTilesByBiome(biome: string, category?: string): TileInfo[] {
     const allTiles = Array.from(this.tileInfoById.values());
-    return allTiles.filter(
-      tile => tile.biomes.includes(biome) && (!category || tile.category === category)
-    );
+    return allTiles.filter(tile => tile.biomes.includes(biome) && (!category || tile.category === category));
   }
 
   /**
@@ -274,11 +272,7 @@ export class TilesetManager {
   /**
    * Obtiene el tile de autotile apropiado para una transición
    */
-  getAutotileForTransition(
-    _fromBiome: string,
-    _toBiome: string,
-    direction: string
-  ): TileInfo | null {
+  getAutotileForTransition(_fromBiome: string, _toBiome: string, direction: string): TileInfo | null {
     // Lógica para determinar qué autotile usar
     const autotiles = this.getTilesByBiome('GRASSLAND', 'autotile');
 

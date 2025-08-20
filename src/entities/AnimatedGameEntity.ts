@@ -15,13 +15,7 @@ export class AnimatedGameEntity extends GameEntity {
   private animationQueue: string[] = [];
   private lastStateHash = '';
 
-  constructor(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    entityId: 'isa' | 'stev',
-    services?: IEntityServices
-  ) {
+  constructor(scene: Phaser.Scene, x: number, y: number, entityId: 'isa' | 'stev', services?: IEntityServices) {
     // Get animation manager from scene registry with proper type checking
     const animManager = scene.registry.get('animationManager');
     if (!animManager || !(animManager instanceof AnimationManager)) {
@@ -37,6 +31,17 @@ export class AnimatedGameEntity extends GameEntity {
     // Override the texture with the animated spritesheet if available
     if (scene.textures.exists(initialSpriteKey)) {
       this.setTexture(initialSpriteKey);
+
+      // Para sprites estáticos (como ent_woman.png), no intentar animaciones
+      // Solo cambiar la textura directamente
+      const texture = scene.textures.get(initialSpriteKey);
+      const isStaticSprite = !texture.frames || Object.keys(texture.frames).length <= 1;
+
+      if (isStaticSprite) {
+        logAutopoiesis.info(`Using static sprite for ${entityId}: ${initialSpriteKey}`);
+        // Desactivar el sistema de animación para sprites estáticos
+        this.animationManager = undefined;
+      }
     } else {
       // Fallback to basic texture if spritesheet not loaded
       const fallbackKey = entityId === 'isa' ? 'woman' : 'man';
@@ -66,9 +71,7 @@ export class AnimatedGameEntity extends GameEntity {
         logAutopoiesis.warn(`Animation ${initialAnimation} not found for ${entityId}`);
       }
     } else {
-      logAutopoiesis.warn(
-        `AnimationManager not available for ${entityId}, falling back to static sprites`
-      );
+      logAutopoiesis.warn(`AnimationManager not available for ${entityId}, falling back to static sprites`);
     }
   }
 
@@ -91,11 +94,7 @@ export class AnimatedGameEntity extends GameEntity {
 
     // Create state hash to detect changes
     const entityData = this.getEntityData();
-    const currentStateHash = this.createStateHash(
-      entityData.stats,
-      entityData.mood,
-      entityData.activity
-    );
+    const currentStateHash = this.createStateHash(entityData.stats, entityData.mood, entityData.activity);
 
     // Only update animation if state changed
     if (currentStateHash !== this.lastStateHash) {
@@ -118,8 +117,7 @@ export class AnimatedGameEntity extends GameEntity {
     const entityId = entityData.id;
 
     // Calculate average well-being
-    const avgStat =
-      (stats.happiness + stats.energy + (100 - stats.hunger) + (100 - stats.boredom)) / 4;
+    const avgStat = (stats.happiness + stats.energy + (100 - stats.hunger) + (100 - stats.boredom)) / 4;
 
     // Priority 1: Death/Critical state
     if (entityData.isDead || stats.health <= 10 || avgStat < 20) {
@@ -149,13 +147,33 @@ export class AnimatedGameEntity extends GameEntity {
   }
 
   /**
+   * Detecta si un sprite es estático (no tiene animaciones)
+   */
+  private isStaticSprite(textureKey: string): boolean {
+    const staticSprites = [
+      'isa_happy_anim',
+      'isa_sad_anim',
+      'isa_dying_anim',
+      'stev_happy_anim',
+      'stev_sad_anim',
+      'stev_dying_anim',
+    ];
+    return staticSprites.includes(textureKey);
+  }
+
+  /**
    * Play specific animation with comprehensive validation and fallback handling
    */
   public playAnimation(animationKey: string, force = false): boolean {
-    // Validate animation manager availability
+    // Para sprites estáticos (personajes humanos), no reproducir animaciones
+    const textureKey = this.texture?.key || '';
+    if (this.isStaticSprite(textureKey)) {
+      return true; // Retornar éxito silenciosamente para sprites estáticos
+    }
+
+    // Skip animation for static sprites (no animation manager)
     if (!this.animationManager) {
-      logAutopoiesis.warn(`Cannot play animation ${animationKey}: AnimationManager not available`);
-      return false;
+      return true; // Return true to indicate "success" (no error) for static sprites
     }
 
     // Validate animation key format
@@ -166,6 +184,10 @@ export class AnimatedGameEntity extends GameEntity {
 
     // Check if animation exists
     if (!this.animationManager.hasAnimation(animationKey)) {
+      // Para sprites estáticos, no mostrar warnings
+      if (this.isStaticSprite(textureKey)) {
+        return true;
+      }
       logAutopoiesis.warn(`Animation not found: ${animationKey}, attempting fallback`);
 
       // Try fallback animation based on entity type

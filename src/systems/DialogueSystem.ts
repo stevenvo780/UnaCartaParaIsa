@@ -194,9 +194,7 @@ export class DialogueSystem {
     if (entities.length === 0) return null;
 
     if (this.conversationState.lastSpeaker) {
-      const otherEntities = entities.filter(
-        e => getSpeakerForEntity(e.id) !== this.conversationState.lastSpeaker
-      );
+      const otherEntities = entities.filter(e => getSpeakerForEntity(e.id) !== this.conversationState.lastSpeaker);
 
       if (otherEntities.length > 0) {
         return otherEntities[Math.floor(Math.random() * otherEntities.length)];

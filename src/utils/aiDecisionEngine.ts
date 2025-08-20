@@ -200,11 +200,7 @@ const updateHabitBias = (entityId: string, activity: ActivityType, satisfaction:
 /**
  * Determina si se debe cambiar de actividad basado en urgencia y thresholds
  */
-const shouldChangeActivity = (
-  entity: Entity,
-  currentTime: number,
-  urgencyScore: number
-): boolean => {
+const shouldChangeActivity = (entity: Entity, currentTime: number, urgencyScore: number): boolean => {
   const inertia = calculateActivityInertia(entity, currentTime);
   const threshold = gameConfig.ai.decisionChangeThreshold || 5;
 
@@ -218,10 +214,7 @@ const shouldChangeActivity = (
  * Fórmula: P(i) = exp((s_i - max s)/τ) / Σ exp((s_j - max s)/τ).
  * τ (tau) controla exploración: menor τ → elecciones más “greedy”.
  */
-const softmaxPick = (
-  scores: { activity: ActivityType; score: number }[],
-  temperature = 0.7
-): ActivityType => {
+const softmaxPick = (scores: { activity: ActivityType; score: number }[], temperature = 0.7): ActivityType => {
   const tau = Math.max(0.1, temperature);
   const maxScore = Math.max(...scores.map(s => s.score));
 
@@ -244,11 +237,7 @@ const softmaxPick = (
 /**
  * Inicia una nueva sesión de actividad
  */
-const startActivitySession = (
-  entityId: string,
-  activity: ActivityType,
-  currentTime: number
-): void => {
+const startActivitySession = (entityId: string, activity: ActivityType, currentTime: number): void => {
   const personality = getPersonalityProfile(entityId);
 
   const baseDuration = 30000;
@@ -278,11 +267,7 @@ export const makeIntelligentDecision = (
   const activityScores: { activity: ActivityType; score: number }[] = [];
 
   for (const activity of ACTIVITY_TYPES) {
-    const baseScore = calculateActivityPriority(
-      activity,
-      entity.stats,
-      currentTime - (entity.lastActivityChange || 0)
-    );
+    const baseScore = calculateActivityPriority(activity, entity.stats, currentTime - (entity.lastActivityChange || 0));
 
     const moodModifiedScore = applyMoodModifiers(baseScore, activity, entity.mood);
 

@@ -323,10 +323,7 @@ export class TilemapRenderer {
   /**
    * Aplica autotiles reales para transiciones naturales
    */
-  private async applyRealAutotiles(
-    world: GeneratedWorld,
-    layer: Phaser.Tilemaps.TilemapLayer
-  ): Promise<void> {
+  private async applyRealAutotiles(world: GeneratedWorld, layer: Phaser.Tilemaps.TilemapLayer): Promise<void> {
     const width = world.terrain[0].length;
     const height = world.terrain.length;
 

@@ -161,12 +161,7 @@ export const WORLD_PRESETS: Record<string, WorldPreset> = {
       },
 
       biomes: {
-        enabled: [
-          'mystical' as BiomeType,
-          'forest' as BiomeType,
-          'grassland' as BiomeType,
-          'village' as BiomeType,
-        ],
+        enabled: ['mystical' as BiomeType, 'forest' as BiomeType, 'grassland' as BiomeType, 'village' as BiomeType],
         forceSpawn: [
           {
             biome: 'mystical' as BiomeType,
@@ -220,12 +215,7 @@ export const WORLD_PRESETS: Record<string, WorldPreset> = {
       },
 
       biomes: {
-        enabled: [
-          'mountainous' as BiomeType,
-          'grassland' as BiomeType,
-          'forest' as BiomeType,
-          'village' as BiomeType,
-        ],
+        enabled: ['mountainous' as BiomeType, 'grassland' as BiomeType, 'forest' as BiomeType, 'village' as BiomeType],
         forceSpawn: [
           {
             biome: 'village' as BiomeType,
@@ -351,10 +341,7 @@ export function getAvailablePresets(): string[] {
 /**
  * Aplica configuración de densidad a un preset
  */
-export function applyDensityConfig(
-  preset: WorldPreset,
-  densityConfig: keyof typeof DENSITY_CONFIGS
-): WorldPreset {
+export function applyDensityConfig(preset: WorldPreset, densityConfig: keyof typeof DENSITY_CONFIGS): WorldPreset {
   const density = DENSITY_CONFIGS[densityConfig];
 
   return {

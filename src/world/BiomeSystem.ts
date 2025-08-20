@@ -151,10 +151,7 @@ export class BiomeSystem {
   /**
    * Calcula efectos ambientales basados en el tipo de zona y bioma
    */
-  private calculateEnvironmentalEffects(
-    zoneType: string,
-    biome: BiomeType
-  ): Record<string, number> {
+  private calculateEnvironmentalEffects(zoneType: string, biome: BiomeType): Record<string, number> {
     const baseEffects: Record<string, number> = {};
 
     // Efectos según bioma
@@ -294,13 +291,7 @@ export class BiomeSystem {
    * Determina si un asset debería ser un elemento interactivo
    */
   private shouldBeInteractive(asset: string): boolean {
-    const interactiveAssets = [
-      'flowers_white.png',
-      'flowers_red.png',
-      'Well_Hay_1.png',
-      'House.png',
-      'tree_idol_',
-    ];
+    const interactiveAssets = ['flowers_white.png', 'flowers_red.png', 'Well_Hay_1.png', 'House.png', 'tree_idol_'];
 
     return interactiveAssets.some(pattern => asset.includes(pattern));
   }
@@ -308,9 +299,7 @@ export class BiomeSystem {
   /**
    * Obtiene el tipo de elemento basado en el asset
    */
-  private getElementTypeFromAsset(
-    asset: string
-  ): 'food_zone' | 'social_zone' | 'comfort_zone' | 'decoration' {
+  private getElementTypeFromAsset(asset: string): 'food_zone' | 'social_zone' | 'comfort_zone' | 'decoration' {
     if (asset.includes('flower')) return 'food_zone';
     if (asset.includes('Well') || asset.includes('House')) return 'social_zone';
     if (asset.includes('tree_idol')) return 'comfort_zone';

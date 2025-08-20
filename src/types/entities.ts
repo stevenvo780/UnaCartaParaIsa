@@ -5,14 +5,7 @@
 import type { ActivityType } from './activities';
 import type { Position } from './core';
 
-export type EntityStateType =
-  | 'idle'
-  | 'moving'
-  | 'interacting'
-  | 'resting'
-  | 'seeking'
-  | 'dead'
-  | 'fading';
+export type EntityStateType = 'idle' | 'moving' | 'interacting' | 'resting' | 'seeking' | 'dead' | 'fading';
 
 export type MoodType = '😊' | '😢' | '😡' | '😌' | '🤩' | '😑' | '😔' | '😰' | '😴';
 

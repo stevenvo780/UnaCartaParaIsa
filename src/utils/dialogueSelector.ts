@@ -202,16 +202,10 @@ export const getEmotionForActivity = (activity: string): string => {
 /**
  * Selecciona un diálogo basado en el tipo de interacción del jugador
  */
-export const getDialogueForInteraction = (
-  interactionType: string,
-  entityId: string
-): DialogueEntry | null => {
+export const getDialogueForInteraction = (interactionType: string, entityId: string): DialogueEntry | null => {
   const speaker = getSpeakerForEntity(entityId);
 
-  const interactionMap: Record<
-    string,
-    { emotions: string[]; activities: string[]; priority?: string[] }
-  > = {
+  const interactionMap: Record<string, { emotions: string[]; activities: string[]; priority?: string[] }> = {
     FEED: {
       emotions: ['LOVE', 'PLAYFUL', 'NEUTRAL'],
       activities: ['SOCIALIZING'],
@@ -252,13 +246,9 @@ export const getDialogueForInteraction = (
   const config = interactionMap[interactionType.toUpperCase()];
   if (!config) return null;
 
-  const emotionsToTry = config.priority
-    ? [...config.priority, ...config.emotions]
-    : config.emotions;
+  const emotionsToTry = config.priority ? [...config.priority, ...config.emotions] : config.emotions;
 
-  const interactionHash = interactionType
-    .split('')
-    .reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) & 0xffffffff, 0);
+  const interactionHash = interactionType.split('').reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) & 0xffffffff, 0);
   const activityIndex = Math.abs(interactionHash) % config.activities.length;
   const targetActivity = config.activities[activityIndex];
 

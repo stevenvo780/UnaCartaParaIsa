@@ -5,14 +5,7 @@
 
 import { gameConfig } from '../config/gameConfig';
 import { GAME_BALANCE } from '../constants/gameBalance';
-import type {
-  Entity,
-  EntityStats,
-  GameEvents,
-  GameLogicUpdateData,
-  GameState,
-  IGameLogicManager,
-} from '../types';
+import type { Entity, EntityStats, GameEvents, GameLogicUpdateData, GameState, IGameLogicManager } from '../types';
 import { logAutopoiesis } from '../utils/logger';
 
 export class GameLogicManager implements IGameLogicManager {
@@ -89,11 +82,7 @@ export class GameLogicManager implements IGameLogicManager {
     // Get entity data safely
     const getEntityData = (entity: unknown): Entity | null => {
       if (!entity) return null;
-      if (
-        typeof entity === 'object' &&
-        'getEntityData' in entity &&
-        typeof entity.getEntityData === 'function'
-      ) {
+      if (typeof entity === 'object' && 'getEntityData' in entity && typeof entity.getEntityData === 'function') {
         return entity.getEntityData();
       }
       // Assume it's already Entity data
@@ -135,11 +124,7 @@ export class GameLogicManager implements IGameLogicManager {
       // Get entity data safely
       const getEntityData = (entity: unknown): Entity | null => {
         if (!entity) return null;
-        if (
-          typeof entity === 'object' &&
-          'getEntityData' in entity &&
-          typeof entity.getEntityData === 'function'
-        ) {
+        if (typeof entity === 'object' && 'getEntityData' in entity && typeof entity.getEntityData === 'function') {
           return entity.getEntityData();
         }
         return entity as Entity;
@@ -156,9 +141,7 @@ export class GameLogicManager implements IGameLogicManager {
 
         const isaPos = isaData.position ?? { x: 0, y: 0 };
         const stevPos = stevData.position ?? { x: 0, y: 0 };
-        const distance = Math.sqrt(
-          Math.pow(isaPos.x - stevPos.x, 2) + Math.pow(isaPos.y - stevPos.y, 2)
-        );
+        const distance = Math.sqrt(Math.pow(isaPos.x - stevPos.x, 2) + Math.pow(isaPos.y - stevPos.y, 2));
 
         if (distance < 100) {
           this._gameState.togetherTime += gameConfig.timing.mainGameLogic;
@@ -243,22 +226,14 @@ export class GameLogicManager implements IGameLogicManager {
   /**
    * Subscribe to game logic events
    */
-  public on<K extends keyof GameEvents>(
-    event: K,
-    listener: (data: GameEvents[K]) => void,
-    context?: any
-  ): void {
+  public on<K extends keyof GameEvents>(event: K, listener: (data: GameEvents[K]) => void, context?: any): void {
     this._eventEmitter.on(event, listener, context);
   }
 
   /**
    * Unsubscribe from game logic events
    */
-  public off<K extends keyof GameEvents>(
-    event: K,
-    listener?: (data: GameEvents[K]) => void,
-    context?: any
-  ): void {
+  public off<K extends keyof GameEvents>(event: K, listener?: (data: GameEvents[K]) => void, context?: any): void {
     this._eventEmitter.off(event, listener, context);
   }
 

@@ -96,13 +96,7 @@ export class FoodUI {
     inventoryCloseBtn.setPosition(this.PANEL_WIDTH - 30, 30);
     inventoryCloseBtn.on('pointerdown', () => this.hide());
 
-    this._inventoryPanel.add([
-      inventoryBg,
-      headerBg,
-      inventoryIcon,
-      inventoryTitle,
-      inventoryCloseBtn,
-    ]);
+    this._inventoryPanel.add([inventoryBg, headerBg, inventoryIcon, inventoryTitle, inventoryCloseBtn]);
   }
 
   /**
@@ -206,9 +200,7 @@ export class FoodUI {
     buttonBg.lineStyle(2, 0xffffff, 0.8);
     buttonBg.strokeCircle(0, 0, 15);
 
-    const closeIcon = this._scene.add
-      .text(0, 0, '×', DS.getTextStyle('xl', DS.COLORS.text, 'bold'))
-      .setOrigin(0.5);
+    const closeIcon = this._scene.add.text(0, 0, '×', DS.getTextStyle('xl', DS.COLORS.text, 'bold')).setOrigin(0.5);
 
     button.add([buttonBg, closeIcon]);
     button.setSize(30, 30);
@@ -447,20 +439,10 @@ export class FoodUI {
       }
 
       // Nombre y precio
-      const nameText = this._scene.add.text(
-        -110,
-        y - 15,
-        food.name,
-        DS.getTextStyle('base', DS.COLORS.text)
-      );
+      const nameText = this._scene.add.text(-110, y - 15, food.name, DS.getTextStyle('base', DS.COLORS.text));
       nameText.setOrigin(0, 0.5);
 
-      const priceText = this._scene.add.text(
-        -110,
-        y + 5,
-        `$${food.price}`,
-        DS.getTextStyle('sm', DS.COLORS.warning)
-      );
+      const priceText = this._scene.add.text(-110, y + 5, `$${food.price}`, DS.getTextStyle('sm', DS.COLORS.warning));
       priceText.setOrigin(0, 0.5);
 
       // Efectos
@@ -474,12 +456,7 @@ export class FoodUI {
 
       // Botón para comprar
       const buyButton = this._scene.add.rectangle(120, y, 80, 30, 0x27ae60);
-      const buyText = this._scene.add.text(
-        120,
-        y,
-        'Comprar',
-        DS.getTextStyle('sm', DS.COLORS.text)
-      );
+      const buyText = this._scene.add.text(120, y, 'Comprar', DS.getTextStyle('sm', DS.COLORS.text));
       buyText.setOrigin(0.5);
 
       buyButton.setInteractive();

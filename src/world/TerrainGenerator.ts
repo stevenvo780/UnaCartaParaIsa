@@ -3,12 +3,7 @@
  */
 
 import { NoiseGenerator, NoiseProcessor } from './NoiseUtils';
-import {
-  getBiomeDefinition,
-  calculateBiomeFitness,
-  canBiomeSpawn,
-  DEFAULT_WORLD_CONFIG,
-} from './BiomeDefinitions';
+import { getBiomeDefinition, calculateBiomeFitness, canBiomeSpawn, DEFAULT_WORLD_CONFIG } from './BiomeDefinitions';
 import {
   BiomeType,
   type WorldGenConfig,
@@ -55,12 +50,7 @@ export class TerrainGenerator {
     const smoothedBiomeMap = this.smoothBiomeTransitions(biomeMap);
 
     // 5. Generar tiles de terreno detallado
-    const terrain = this.generateDetailedTerrain(
-      smoothedBiomeMap,
-      temperatureMap,
-      moistureMap,
-      elevationMap
-    );
+    const terrain = this.generateDetailedTerrain(smoothedBiomeMap, temperatureMap, moistureMap, elevationMap);
 
     // 6. Generar capas de assets
     const layers = this.generateAssetLayers(terrain);
@@ -121,11 +111,7 @@ export class TerrainGenerator {
   /**
    * Asigna biomas basado en condiciones ambientales
    */
-  private assignBiomes(
-    temperatureMap: number[][],
-    moistureMap: number[][],
-    elevationMap: number[][]
-  ): BiomeType[][] {
+  private assignBiomes(temperatureMap: number[][], moistureMap: number[][], elevationMap: number[][]): BiomeType[][] {
     const biomeMap: BiomeType[][] = Array(this.config.height)
       .fill(0)
       .map(() => Array(this.config.width).fill(BiomeType.GRASSLAND));
@@ -276,12 +262,7 @@ export class TerrainGenerator {
   /**
    * Calcula qué tan "puro" es un bioma en una ubicación
    */
-  private calculateBiomeStrength(
-    x: number,
-    y: number,
-    biome: BiomeType,
-    biomeMap: BiomeType[][]
-  ): number {
+  private calculateBiomeStrength(x: number, y: number, biome: BiomeType, biomeMap: BiomeType[][]): number {
     let sameCount = 0;
     let totalCount = 0;
 
@@ -306,12 +287,7 @@ export class TerrainGenerator {
   /**
    * Genera assets para un tile específico
    */
-  private generateTileAssets(
-    biome: BiomeType,
-    strength: number,
-    x: number,
-    y: number
-  ): TerrainTile['assets'] {
+  private generateTileAssets(biome: BiomeType, strength: number, x: number, y: number): TerrainTile['assets'] {
     const biomeDef = getBiomeDefinition(biome);
     const assets: TerrainTile['assets'] = {
       terrain: '',
@@ -322,10 +298,7 @@ export class TerrainGenerator {
     };
 
     // Seleccionar terreno base
-    const terrainAsset = this.selectAsset(
-      biomeDef.assets.terrain.primary,
-      biomeDef.assets.terrain.weight
-    );
+    const terrainAsset = this.selectAsset(biomeDef.assets.terrain.primary, biomeDef.assets.terrain.weight);
     assets.terrain = terrainAsset || 'cesped1.png'; // fallback
 
     // Generar vegetación basada en densidad y clustering
@@ -356,10 +329,7 @@ export class TerrainGenerator {
     }
 
     // Agregar estructuras (solo para algunos biomas)
-    if (
-      biomeDef.assets.structures &&
-      Math.random() < biomeDef.assets.structures.density * strength
-    ) {
+    if (biomeDef.assets.structures && Math.random() < biomeDef.assets.structures.density * strength) {
       const structureAsset = this.selectAsset(biomeDef.assets.structures.assets);
       if (structureAsset) {
         assets.structures.push(structureAsset);

@@ -15,11 +15,7 @@ export class QuestController {
   private _activityTimer?: Phaser.Time.TimerEvent;
   private _currentActivities = new Map<string, ActivityType>();
 
-  public constructor(
-    scene: Phaser.Scene,
-    questSystem: QuestSystem,
-    dialogueSystem: DialogueSystem
-  ) {
+  public constructor(scene: Phaser.Scene, questSystem: QuestSystem, dialogueSystem: DialogueSystem) {
     this._scene = scene;
     this._questSystem = questSystem;
     this._dialogueSystem = dialogueSystem;
@@ -134,10 +130,7 @@ export class QuestController {
     this._checkTimeObjectives();
 
     // Auto-trigger de misiones basadas en resonancia
-    if (
-      data.resonance > 70 &&
-      !this._questSystem.getActiveQuests().find(q => q.id === 'daily_resonance_meditation')
-    ) {
+    if (data.resonance > 70 && !this._questSystem.getActiveQuests().find(q => q.id === 'daily_resonance_meditation')) {
       const availableQuests = this._questSystem.getAvailableQuests();
       const meditationQuest = availableQuests.find(q => q.id === 'daily_resonance_meditation');
       if (meditationQuest) {
@@ -175,11 +168,7 @@ export class QuestController {
 
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
-        if (
-          objective.type === 'survive_time' &&
-          !objective.isCompleted &&
-          objective.requiredAmount
-        ) {
+        if (objective.type === 'survive_time' && !objective.isCompleted && objective.requiredAmount) {
           const elapsedTime = Date.now() - (quest.startedAt || Date.now());
           if (elapsedTime >= objective.requiredAmount * 1000) {
             this._questSystem.updateObjectiveProgress(quest.id, objective.id);
@@ -223,20 +212,12 @@ export class QuestController {
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
         // Actualizar objetivos de comer
-        if (
-          objective.type === 'complete_activity' &&
-          objective.target === 'eating' &&
-          !objective.isCompleted
-        ) {
+        if (objective.type === 'complete_activity' && objective.target === 'eating' && !objective.isCompleted) {
           this._questSystem.updateObjectiveProgress(quest.id, objective.id);
         }
 
         // Actualizar objetivos de recolectar comida
-        if (
-          objective.type === 'collect_resource' &&
-          objective.target === 'food' &&
-          !objective.isCompleted
-        ) {
+        if (objective.type === 'collect_resource' && objective.target === 'food' && !objective.isCompleted) {
           this._questSystem.updateObjectiveProgress(quest.id, objective.id);
         }
       });
@@ -251,11 +232,7 @@ export class QuestController {
 
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
-        if (
-          objective.type === 'talk_to_npc' &&
-          objective.target === data.speakerId &&
-          !objective.isCompleted
-        ) {
+        if (objective.type === 'talk_to_npc' && objective.target === data.speakerId && !objective.isCompleted) {
           this._questSystem.updateObjectiveProgress(quest.id, objective.id);
         }
       });
@@ -305,9 +282,7 @@ export class QuestController {
       // Si están muy cerca, activar misiones de proximidad
       if (distance < 80) {
         const availableQuests = this._questSystem.getAvailableQuests();
-        const proximityQuest = availableQuests.find(
-          q => q.tags.includes('bonding') || q.tags.includes('romance')
-        );
+        const proximityQuest = availableQuests.find(q => q.tags.includes('bonding') || q.tags.includes('romance'));
 
         if (proximityQuest) {
           this._questSystem.startQuest(proximityQuest.id);
@@ -367,11 +342,7 @@ export class QuestController {
 
     activeQuests.forEach(quest => {
       quest.objectives.forEach(objective => {
-        if (
-          objective.type === 'find_item' &&
-          objective.target === itemId &&
-          !objective.isCompleted
-        ) {
+        if (objective.type === 'find_item' && objective.target === itemId && !objective.isCompleted) {
           this._questSystem.updateObjectiveProgress(quest.id, objective.id);
 
           logAutopoiesis.info('Item found for quest', {

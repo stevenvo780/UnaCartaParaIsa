@@ -72,11 +72,7 @@ export class UIScene extends Phaser.Scene {
    * Inicializar pools de elementos UI
    */
   private initializePools(): void {
-    this.resonanceLabelPool = new UIElementPool<ResonanceLabel>(
-      () => new ResonanceLabel(this),
-      'ResonanceLabel',
-      3
-    );
+    this.resonanceLabelPool = new UIElementPool<ResonanceLabel>(() => new ResonanceLabel(this), 'ResonanceLabel', 3);
 
     logAutopoiesis.debug('UI element pools initialized');
   }
@@ -427,31 +423,15 @@ export class UIScene extends Phaser.Scene {
     const spacing = 90;
 
     // Auto control button
-    const autoBtn = this.createModernButton(
-      startX,
-      20,
-      buttonWidth,
-      buttonHeight,
-      '🤖 AUTO',
-      '#95a5a6',
-      () => {
-        this.setControlMode('auto');
-      }
-    );
+    const autoBtn = this.createModernButton(startX, 20, buttonWidth, buttonHeight, '🤖 AUTO', '#95a5a6', () => {
+      this.setControlMode('auto');
+    });
     this.bottomBar.add(autoBtn);
 
     // Isa control button
-    const isaBtn = this.createModernButton(
-      startX + spacing,
-      20,
-      buttonWidth,
-      buttonHeight,
-      '👩 ISA',
-      '#e91e63',
-      () => {
-        this.setControlMode('isa');
-      }
-    );
+    const isaBtn = this.createModernButton(startX + spacing, 20, buttonWidth, buttonHeight, '👩 ISA', '#e91e63', () => {
+      this.setControlMode('isa');
+    });
     this.bottomBar.add(isaBtn);
 
     // Stev control button
@@ -476,31 +456,15 @@ export class UIScene extends Phaser.Scene {
     const spacing = 70;
 
     // Pause/Play button
-    const pauseBtn = this.createModernButton(
-      centerX - spacing,
-      20,
-      buttonWidth,
-      buttonHeight,
-      '⏸️',
-      '#f39c12',
-      () => {
-        this.togglePause();
-      }
-    );
+    const pauseBtn = this.createModernButton(centerX - spacing, 20, buttonWidth, buttonHeight, '⏸️', '#f39c12', () => {
+      this.togglePause();
+    });
     this.bottomBar.add(pauseBtn);
 
     // Settings button
-    const settingsBtn = this.createModernButton(
-      centerX,
-      20,
-      buttonWidth,
-      buttonHeight,
-      '⚙️',
-      '#9b59b6',
-      () => {
-        this.openSettings();
-      }
-    );
+    const settingsBtn = this.createModernButton(centerX, 20, buttonWidth, buttonHeight, '⚙️', '#9b59b6', () => {
+      this.openSettings();
+    });
     this.bottomBar.add(settingsBtn);
 
     // Screenshot button
@@ -671,17 +635,12 @@ export class UIScene extends Phaser.Scene {
     });
     zoneSection.add(zoneTitle);
 
-    const zoneInfo = this.add.text(
-      15,
-      25,
-      'Zona: Ninguna\nTipo: ---\nBeneficio: ---\nDistancia: ---',
-      {
-        fontSize: '10px',
-        color: '#bdc3c7',
-        fontFamily: 'Arial, sans-serif',
-        lineSpacing: 2,
-      }
-    );
+    const zoneInfo = this.add.text(15, 25, 'Zona: Ninguna\nTipo: ---\nBeneficio: ---\nDistancia: ---', {
+      fontSize: '10px',
+      color: '#bdc3c7',
+      fontFamily: 'Arial, sans-serif',
+      lineSpacing: 2,
+    });
     zoneSection.add(zoneInfo);
     this.rightPanel.add(zoneSection);
 
@@ -700,17 +659,12 @@ export class UIScene extends Phaser.Scene {
     });
     activitiesSection.add(activitiesTitle);
 
-    const activitiesText = this.add.text(
-      15,
-      25,
-      '👩 Isa: IDLE\n👨 Stev: IDLE\n\n⏱️ Tiempo: 00:00',
-      {
-        fontSize: '10px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial, sans-serif',
-        lineSpacing: 3,
-      }
-    );
+    const activitiesText = this.add.text(15, 25, '👩 Isa: IDLE\n👨 Stev: IDLE\n\n⏱️ Tiempo: 00:00', {
+      fontSize: '10px',
+      color: '#ecf0f1',
+      fontFamily: 'Arial, sans-serif',
+      lineSpacing: 3,
+    });
     activitiesSection.add(activitiesText);
     this.rightPanel.add(activitiesSection);
 
@@ -894,11 +848,7 @@ export class UIScene extends Phaser.Scene {
     );
   }
 
-  private updateEntityStatsDisplay(
-    panel: Phaser.GameObjects.Container,
-    entityData: Entity,
-    color: string
-  ) {
+  private updateEntityStatsDisplay(panel: Phaser.GameObjects.Container, entityData: Entity, color: string) {
     if (!entityData.stats) return;
 
     const { stats } = entityData;
@@ -1167,10 +1117,7 @@ export class UIScene extends Phaser.Scene {
       .setOrigin(0.5);
     button.add(label);
 
-    button.setInteractive(
-      new Phaser.Geom.Rectangle(0, 0, width, height),
-      Phaser.Geom.Rectangle.Contains
-    );
+    button.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
     button.on('pointerdown', callback);
     button.on('pointerover', () => bg.setAlpha(1));
     button.on('pointerout', () => bg.setAlpha(0.8));
@@ -1178,13 +1125,7 @@ export class UIScene extends Phaser.Scene {
     return button;
   }
 
-  private createCharacterPanel(
-    character: string,
-    x: number,
-    y: number,
-    color: string,
-    title: string
-  ) {
+  private createCharacterPanel(character: string, x: number, y: number, color: string, title: string) {
     const panelContainer = this.add.container(x, y);
     const panelWidth = 270;
     const panelHeight = 175;
@@ -1209,16 +1150,7 @@ export class UIScene extends Phaser.Scene {
     // Character header
     const headerBg = this.add.graphics();
     const headerColor = Phaser.Display.Color.HexStringToColor(color).color;
-    headerBg.fillGradientStyle(
-      headerColor,
-      headerColor,
-      headerColor,
-      headerColor,
-      0.3,
-      0.3,
-      0.1,
-      0.1
-    );
+    headerBg.fillGradientStyle(headerColor, headerColor, headerColor, headerColor, 0.3, 0.3, 0.1, 0.1);
     headerBg.fillRoundedRect(0, 0, panelWidth, 30, 6);
     panelContainer.add(headerBg);
 
@@ -1430,9 +1362,7 @@ export class UIScene extends Phaser.Scene {
   private toggleRightPanel() {
     this.rightPanelExpanded = !this.rightPanelExpanded;
     const panelWidth = 200;
-    const targetX = this.rightPanelExpanded
-      ? this.cameras.main.width - panelWidth - 10
-      : this.cameras.main.width + 10;
+    const targetX = this.rightPanelExpanded ? this.cameras.main.width - panelWidth - 10 : this.cameras.main.width + 10;
 
     this.tweens.add({
       targets: this.rightPanel,

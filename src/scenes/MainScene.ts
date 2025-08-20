@@ -1,22 +1,18 @@
-import Phaser from "phaser";
-import { QuestUI } from "../components/QuestUI";
-import { AnimatedGameEntity } from "../entities/AnimatedGameEntity";
-import { EntityManager } from "../managers/EntityManager";
-import { FoodAssetManager } from "../managers/FoodAssetManager";
-import { GameLogicManager } from "../managers/GameLogicManager";
-import { InputManager, type ControlledEntity } from "../managers/InputManager";
-import { SceneInitializationManager } from "../managers/SceneInitializationManager";
-import { WorldRenderer } from "../managers/WorldRenderer";
-import { DialogueSystem } from "../systems/DialogueSystem";
-import { FoodSystem } from "../systems/FoodSystem";
-import { QuestController } from "../systems/QuestController";
-import { QuestSystem } from "../systems/QuestSystem";
-import type {
-  GameLogicUpdateData,
-  GameState,
-  GeneratedWorldData,
-} from "../types";
-import { logAutopoiesis } from "../utils/logger";
+import Phaser from 'phaser';
+import { QuestUI } from '../components/QuestUI';
+import { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
+import { EntityManager } from '../managers/EntityManager';
+import { FoodAssetManager } from '../managers/FoodAssetManager';
+import { GameLogicManager } from '../managers/GameLogicManager';
+import { InputManager, type ControlledEntity } from '../managers/InputManager';
+import { SceneInitializationManager } from '../managers/SceneInitializationManager';
+import { WorldRenderer } from '../managers/WorldRenderer';
+import { DialogueSystem } from '../systems/DialogueSystem';
+import { FoodSystem } from '../systems/FoodSystem';
+import { QuestController } from '../systems/QuestController';
+import { QuestSystem } from '../systems/QuestSystem';
+import type { GameLogicUpdateData, GameState, GeneratedWorldData } from '../types';
+import { logAutopoiesis } from '../utils/logger';
 
 export class MainScene extends Phaser.Scene {
   // 🚀 MEGA-OPTIMIZACIONES de rendimiento para 60 FPS
@@ -45,21 +41,21 @@ export class MainScene extends Phaser.Scene {
   private stevEntity?: AnimatedGameEntity;
 
   constructor() {
-    super({ key: "MainScene" });
+    super({ key: 'MainScene' });
   }
 
   init() {
-    logAutopoiesis.info("MainScene initialized");
+    logAutopoiesis.info('MainScene initialized');
 
     const initResult = SceneInitializationManager.initialize();
     this.gameState = initResult.gameState;
     this.generatedWorldData = initResult.generatedWorldData;
 
-    this.registry.set("gameState", this.gameState);
+    this.registry.set('gameState', this.gameState);
   }
 
   async create() {
-    logAutopoiesis.info("Creating main game world");
+    logAutopoiesis.info('Creating main game world');
 
     // Initialize managers and systems
     this.entityManager = new EntityManager(this);
@@ -68,19 +64,13 @@ export class MainScene extends Phaser.Scene {
     this.foodSystem = new FoodSystem(this);
     this.dialogueSystem = new DialogueSystem(this);
     this.questSystem = new QuestSystem(this);
-    this.questController = new QuestController(
-      this,
-      this.questSystem,
-      this.dialogueSystem,
-    );
+    this.questController = new QuestController(this, this.questSystem, this.dialogueSystem);
     this.questUI = new QuestUI(this);
 
     await this.initializeManagers();
 
     // Create entities using EntityManager
-    const { isaEntity, stevEntity } = this.entityManager.createEntities(
-      this.gameState,
-    );
+    const { isaEntity, stevEntity } = this.entityManager.createEntities(this.gameState);
 
     // Store entity references for game stats
     this.isaEntity = isaEntity;
@@ -91,32 +81,32 @@ export class MainScene extends Phaser.Scene {
     isaEntity.setPartnerEntity(stevEntity);
     stevEntity.setPartnerEntity(isaEntity);
     // Register the entity instances directly - they have updateEntity methods
-    this.gameLogicManager.registerEntity("isa", isaEntity);
-    this.gameLogicManager.registerEntity("stev", stevEntity);
+    this.gameLogicManager.registerEntity('isa', isaEntity);
+    this.gameLogicManager.registerEntity('stev', stevEntity);
 
     // Set default controlled entity to Isa for eating system
-    this.inputManager.setControlledEntity("isa");
+    this.inputManager.setControlledEntity('isa');
 
     // Setup spacebar action for current controlled entity
-    this.input.keyboard?.on("keydown-SPACE", () => {
+    this.input.keyboard?.on('keydown-SPACE', () => {
       this.handleEntityAction();
     });
 
     // Setup quest system controls
-    this.input.keyboard?.on("keydown-Q", () => {
+    this.input.keyboard?.on('keydown-Q', () => {
       this.questUI.toggleQuestPanel();
     });
 
     // Auto-start first quest when entities meet
     this.time.delayedCall(2000, () => {
-      this.questSystem.startQuest("main_awakening");
+      this.questSystem.startQuest('main_awakening');
     });
 
     this.setupCamera();
     this.setupUIEvents();
     this.setupFoodStores();
 
-    logAutopoiesis.info("MainScene created successfully", {
+    logAutopoiesis.info('MainScene created successfully', {
       entities: this.entityManager.getEntitiesGroup().children.size,
       zones: this.gameState.zones.length,
       worldSize: this.gameState.worldSize,
@@ -134,30 +124,25 @@ export class MainScene extends Phaser.Scene {
     await this.worldRenderer.renderWorld();
 
     // Register systems in registry for cross-component access
-    this.registry.set("gameLogicManager", this.gameLogicManager);
-    this.registry.set("questSystem", this.questSystem);
-    this.registry.set("dialogueSystem", this.dialogueSystem);
+    this.registry.set('gameLogicManager', this.gameLogicManager);
+    this.registry.set('questSystem', this.questSystem);
+    this.registry.set('dialogueSystem', this.dialogueSystem);
 
-    this.gameLogicManager.on("gameLogicUpdate", (data: GameLogicUpdateData) => {
-      this.events.emit("gameLogicUpdate", data);
+    this.gameLogicManager.on('gameLogicUpdate', (data: GameLogicUpdateData) => {
+      this.events.emit('gameLogicUpdate', data);
     });
 
-    logAutopoiesis.debug("All managers initialized");
+    logAutopoiesis.debug('All managers initialized');
   }
 
   /**
    * Setup camera bounds and zoom
    */
   private setupCamera(): void {
-    this.cameras.main.setBounds(
-      0,
-      0,
-      this.gameState.worldSize.width,
-      this.gameState.worldSize.height,
-    );
+    this.cameras.main.setBounds(0, 0, this.gameState.worldSize.width, this.gameState.worldSize.height);
     this.cameras.main.setZoom(1);
 
-    logAutopoiesis.debug("Camera configured", {
+    logAutopoiesis.debug('Camera configured', {
       bounds: this.gameState.worldSize,
     });
   }
@@ -172,7 +157,7 @@ export class MainScene extends Phaser.Scene {
 
     this.dialogueSystem.handlePlayerInteraction(entityId, interactionType);
 
-    logAutopoiesis.info("Player interaction handled", {
+    logAutopoiesis.info('Player interaction handled', {
       entityId,
       interactionType,
     });
@@ -208,15 +193,15 @@ export class MainScene extends Phaser.Scene {
   // Método obsoleto - ahora manejado por InputManager
 
   private setupUIEvents() {
-    this.events.on("changeEntityControl", (entity: ControlledEntity) => {
+    this.events.on('changeEntityControl', (entity: ControlledEntity) => {
       this.inputManager.setControlledEntity(entity);
       logAutopoiesis.info(`Manual control switched to: ${entity}`);
     });
   }
 
   private handleManualControl() {
-    const isaEntity = this.entityManager.getEntity("isa");
-    const stevEntity = this.entityManager.getEntity("stev");
+    const isaEntity = this.entityManager.getEntity('isa');
+    const stevEntity = this.entityManager.getEntity('stev');
 
     if (isaEntity && stevEntity) {
       this.inputManager.processMovementInput(isaEntity, stevEntity);
@@ -225,32 +210,32 @@ export class MainScene extends Phaser.Scene {
 
   private handleEntityAction() {
     const controlledEntity = this.inputManager.getControlledEntity();
-    logAutopoiesis.info("🎮 Acción de entidad solicitada", {
+    logAutopoiesis.info('🎮 Acción de entidad solicitada', {
       controlledEntity,
     });
 
-    if (controlledEntity !== "none") {
+    if (controlledEntity !== 'none') {
       const entity = this.entityManager.getEntity(controlledEntity);
       if (entity) {
         // Si está cerca de comida, intentar comer
         const nearbyFood = this.findNearbyFood(entity.getPosition());
-        logAutopoiesis.info("🔍 Buscando comida cercana", {
+        logAutopoiesis.info('🔍 Buscando comida cercana', {
           entityId: controlledEntity,
           nearbyFood,
           entityMoney: entity.getStats().money,
         });
 
         if (nearbyFood) {
-          logAutopoiesis.info("🍽️ Intentando comer", {
+          logAutopoiesis.info('🍽️ Intentando comer', {
             entityId: controlledEntity,
             foodId: nearbyFood,
           });
           this.tryToEat(controlledEntity, nearbyFood);
         } else {
-          logAutopoiesis.info("🎯 Acción manual (sin comida cercana)", {
+          logAutopoiesis.info('🎯 Acción manual (sin comida cercana)', {
             entityId: controlledEntity,
           });
-          this.handlePlayerInteraction(controlledEntity, "manual_action");
+          this.handlePlayerInteraction(controlledEntity, 'manual_action');
         }
       }
     }
@@ -269,7 +254,7 @@ export class MainScene extends Phaser.Scene {
 
     // Aplicar efectos de comida completada
     completedActions.forEach(({ entityId, food }) => {
-      const entity = this.entityManager.getEntity(entityId as "isa" | "stev");
+      const entity = this.entityManager.getEntity(entityId as 'isa' | 'stev');
       if (entity) {
         const currentStats = entity.getStats();
         const newStats = this.foodSystem.applyFoodEffects(currentStats, food);
@@ -277,7 +262,7 @@ export class MainScene extends Phaser.Scene {
         // ✅ APLICAR LOS NUEVOS STATS A LA ENTIDAD
         entity.setStats(newStats);
 
-        logAutopoiesis.info("Aplicando efectos de comida", {
+        logAutopoiesis.info('Aplicando efectos de comida', {
           entityId,
           foodId: food.id,
           statsChange: {
@@ -298,11 +283,11 @@ export class MainScene extends Phaser.Scene {
     // Por ahora, simplificar y usar comida básica si hay dinero
     // Buscar para la entidad controlada actualmente
     const controlledEntity = this.inputManager.getControlledEntity();
-    if (controlledEntity === "none") return null;
+    if (controlledEntity === 'none') return null;
 
     const entity = this.entityManager.getEntity(controlledEntity);
     if (entity && entity.getStats().money >= 5) {
-      return "bread"; // Comida básica disponible
+      return 'bread'; // Comida básica disponible
     }
     return null;
   }
@@ -311,7 +296,7 @@ export class MainScene extends Phaser.Scene {
    * Intenta hacer que una entidad coma
    */
   private tryToEat(entityId: string, foodId: string): void {
-    const entity = this.entityManager.getEntity(entityId as "isa" | "stev");
+    const entity = this.entityManager.getEntity(entityId as 'isa' | 'stev');
     if (!entity) return;
 
     const position = entity.getPosition();
@@ -322,7 +307,7 @@ export class MainScene extends Phaser.Scene {
     if (!food) {
       const purchaseResult = this.foodSystem.buyFood(foodId, 1, stats.money);
       if (!purchaseResult.success) {
-        logAutopoiesis.warn("No se pudo comprar comida", {
+        logAutopoiesis.warn('No se pudo comprar comida', {
           entityId,
           foodId,
           money: stats.money,
@@ -335,7 +320,7 @@ export class MainScene extends Phaser.Scene {
     const success = this.foodSystem.startEating(entityId, foodId, position);
     if (success) {
       // La actividad será cambiada automáticamente por el sistema de actividades
-      logAutopoiesis.info("Entidad empezó a comer", { entityId, foodId });
+      logAutopoiesis.info('Entidad empezó a comer', { entityId, foodId });
     }
   }
 
@@ -345,18 +330,18 @@ export class MainScene extends Phaser.Scene {
   private setupFoodStores(): void {
     // Crear algunas tiendas de comida en posiciones estratégicas
     const storePositions = [
-      { x: 600, y: 300, foods: ["bread", "sandwich", "apple_pie"] },
-      { x: 900, y: 500, foods: ["burger", "pizza", "hotdog", "frenchfries"] },
+      { x: 600, y: 300, foods: ['bread', 'sandwich', 'apple_pie'] },
+      { x: 900, y: 500, foods: ['burger', 'pizza', 'hotdog', 'frenchfries'] },
       {
         x: 300,
         y: 600,
-        foods: ["icecream", "chocolate_cake", "donut", "cookies"],
+        foods: ['icecream', 'chocolate_cake', 'donut', 'cookies'],
       },
     ];
 
     storePositions.forEach((store, index) => {
       this.foodSystem.createFoodStore(store.x, store.y, store.foods);
-      logAutopoiesis.info("Tienda de comida creada", {
+      logAutopoiesis.info('Tienda de comida creada', {
         index,
         position: { x: store.x, y: store.y },
         foods: store.foods,
@@ -365,8 +350,8 @@ export class MainScene extends Phaser.Scene {
   }
 
   private updateUI() {
-    const isaEntity = this.entityManager.getEntity("isa");
-    const stevEntity = this.entityManager.getEntity("stev");
+    const isaEntity = this.entityManager.getEntity('isa');
+    const stevEntity = this.entityManager.getEntity('stev');
 
     // Crear hash simple para detectar cambios y evitar actualizaciones innecesarias
     const currentStateHash = JSON.stringify({
@@ -391,10 +376,7 @@ export class MainScene extends Phaser.Scene {
     });
 
     // Solo actualizar si hay cambios reales
-    if (
-      this.cachedEntityData &&
-      this.cachedEntityData.hash === currentStateHash
-    ) {
+    if (this.cachedEntityData && this.cachedEntityData.hash === currentStateHash) {
       return; // No hay cambios, evitar actualización
     }
 
@@ -425,7 +407,7 @@ export class MainScene extends Phaser.Scene {
     };
 
     // Solo emitir evento cuando hay cambios reales
-    this.events.emit("gameLogicUpdate", {
+    this.events.emit('gameLogicUpdate', {
       cycles: this.gameState.cycles,
       resonance: this.gameState.resonance,
       entities: entityData,
@@ -475,6 +457,6 @@ export class MainScene extends Phaser.Scene {
       this.dialogueSystem.destroy();
     }
 
-    logAutopoiesis.info("MainScene destroyed");
+    logAutopoiesis.info('MainScene destroyed');
   }
 }

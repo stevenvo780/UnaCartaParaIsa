@@ -71,12 +71,7 @@ export class QuestUI {
 
     // Título elegante
     this._panelTitle = this._scene.add
-      .text(
-        -this.PANEL_WIDTH / 2 + 50,
-        0,
-        'MISIONES ACTIVAS',
-        DS.getTextStyle('lg', DS.COLORS.text, 'bold')
-      )
+      .text(-this.PANEL_WIDTH / 2 + 50, 0, 'MISIONES ACTIVAS', DS.getTextStyle('lg', DS.COLORS.text, 'bold'))
       .setOrigin(0, 0.5);
 
     // Botón de cierre moderno
@@ -305,8 +300,7 @@ export class QuestUI {
 
     // Calcular altura dinámica basada en contenido
     const questsToShow = this._activeQuests.slice(0, 4);
-    const contentHeight =
-      this.PANEL_MIN_HEIGHT + questsToShow.length * (this.CARD_HEIGHT + this.CARD_MARGIN);
+    const contentHeight = this.PANEL_MIN_HEIGHT + questsToShow.length * (this.CARD_HEIGHT + this.CARD_MARGIN);
     const panelHeight = Math.min(contentHeight, this.PANEL_MAX_HEIGHT);
 
     this._updatePanelBackground(panelHeight);
@@ -351,12 +345,7 @@ export class QuestUI {
       .setOrigin(0.5);
 
     const subText = this._scene.add
-      .text(
-        0,
-        35,
-        'Las nuevas misiones aparecerán aquí',
-        DS.getTextStyle('sm', DS.COLORS.secondary)
-      )
+      .text(0, 35, 'Las nuevas misiones aparecerán aquí', DS.getTextStyle('sm', DS.COLORS.secondary))
       .setOrigin(0.5);
 
     emptyContainer.add([emptyIcon, emptyText, subText]);
@@ -423,11 +412,7 @@ export class QuestUI {
   /**
    * Crea una tarjeta de misión moderna
    */
-  private _createModernQuestCard(
-    quest: Quest,
-    yPos: number,
-    index: number
-  ): Phaser.GameObjects.Container {
+  private _createModernQuestCard(quest: Quest, yPos: number, index: number): Phaser.GameObjects.Container {
     const cardContainer = this._scene.add.container(0, yPos);
 
     // Fondo de la tarjeta con gradiente y sombra
@@ -511,18 +496,12 @@ export class QuestUI {
     if (currentObjective) {
       const shortDescription = this._truncateText(currentObjective.description, 35);
       objectiveText = this._scene.add
-        .text(
-          -this.PANEL_WIDTH / 2 + 55,
-          12,
-          `• ${shortDescription}`,
-          DS.getTextStyle('xs', DS.COLORS.textSecondary)
-        )
+        .text(-this.PANEL_WIDTH / 2 + 55, 12, `• ${shortDescription}`, DS.getTextStyle('xs', DS.COLORS.textSecondary))
         .setOrigin(0, 0.5);
     }
 
     // Recompensa rápida (si existe)
-    const rewardIcon =
-      quest.rewards && quest.rewards.length > 0 ? this._getRewardIcon(quest.rewards[0]) : '';
+    const rewardIcon = quest.rewards && quest.rewards.length > 0 ? this._getRewardIcon(quest.rewards[0]) : '';
 
     let rewardText: Phaser.GameObjects.Text | null = null;
     if (rewardIcon) {
@@ -897,10 +876,7 @@ export class QuestUI {
     if (!quest) return;
 
     // Crear modal semi-transparente
-    const modal = this._scene.add.container(
-      this._scene.cameras.main.width / 2,
-      this._scene.cameras.main.height / 2
-    );
+    const modal = this._scene.add.container(this._scene.cameras.main.width / 2, this._scene.cameras.main.height / 2);
 
     const overlay = this._scene.add.rectangle(
       0,

@@ -12,11 +12,7 @@ export class EntityVisualsComponent {
   private currentSprite: string;
   private pulsePhase = 0;
 
-  constructor(
-    sprite: Phaser.Physics.Arcade.Sprite,
-    _entityId: 'isa' | 'stev',
-    initialSprite: string
-  ) {
+  constructor(sprite: Phaser.Physics.Arcade.Sprite, _entityId: 'isa' | 'stev', initialSprite: string) {
     this.sprite = sprite;
     this.currentSprite = initialSprite;
 

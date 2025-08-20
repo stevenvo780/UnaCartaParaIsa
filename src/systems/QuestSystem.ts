@@ -133,9 +133,7 @@ export class QuestSystem {
     }
 
     // Verificar que todos los objetivos obligatorios estén completados
-    const incompleteObjectives = quest.objectives.filter(
-      obj => !obj.isCompleted && !obj.isOptional
-    );
+    const incompleteObjectives = quest.objectives.filter(obj => !obj.isCompleted && !obj.isOptional);
 
     if (incompleteObjectives.length > 0) {
       logAutopoiesis.warn(`Cannot complete quest ${questId}, incomplete objectives`, {
@@ -233,11 +231,7 @@ export class QuestSystem {
     if (!isaEntity) return;
 
     quest.objectives.forEach(objective => {
-      if (
-        objective.type === 'reach_location' &&
-        !objective.isCompleted &&
-        objective.targetLocation
-      ) {
+      if (objective.type === 'reach_location' && !objective.isCompleted && objective.targetLocation) {
         const distance = Phaser.Math.Distance.Between(
           isaEntity.position.x,
           isaEntity.position.y,
@@ -438,8 +432,7 @@ export class QuestSystem {
     // Si hay hints para el siguiente objetivo, mostrarlas
     const nextObjective = quest.objectives.find(obj => !obj.isCompleted);
     if (nextObjective && nextObjective.hints && nextObjective.hints.length > 0) {
-      const randomHint =
-        nextObjective.hints[Math.floor(Math.random() * nextObjective.hints.length)];
+      const randomHint = nextObjective.hints[Math.floor(Math.random() * nextObjective.hints.length)];
       this._scene.time.delayedCall(2000, () => {
         this._showNotification(`💡 ${randomHint}`, 'info');
       });
@@ -505,9 +498,7 @@ export class QuestSystem {
     const quest = this._questProgress.activeQuests.get(questId);
     if (!quest) return;
 
-    const incompleteObjectives = quest.objectives.filter(
-      obj => !obj.isCompleted && !obj.isOptional
-    );
+    const incompleteObjectives = quest.objectives.filter(obj => !obj.isCompleted && !obj.isOptional);
 
     if (incompleteObjectives.length === 0) {
       this.completeQuest(questId);
@@ -564,10 +555,7 @@ export class QuestSystem {
     // Activar misiones especiales cuando la resonancia es alta
     if (!this._questProgress.activeQuests.has('daily_resonance_meditation')) {
       const meditationQuest = QuestCatalog.getQuestById('daily_resonance_meditation');
-      if (
-        meditationQuest &&
-        this._questProgress.availableQuests.has('daily_resonance_meditation')
-      ) {
+      if (meditationQuest && this._questProgress.availableQuests.has('daily_resonance_meditation')) {
         this.startQuest('daily_resonance_meditation');
       }
     }

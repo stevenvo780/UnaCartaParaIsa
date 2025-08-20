@@ -1,15 +1,7 @@
 /**
  * Tipos de datos válidos para logging
  */
-export type LogData =
-  | Record<string, unknown>
-  | unknown[]
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-  | Error;
+export type LogData = Record<string, unknown> | unknown[] | string | number | boolean | null | undefined | Error;
 
 /**
  * Niveles de logging y configuración
@@ -54,9 +46,7 @@ const logThrottle = new Map<string, { count: number; lastLog: number }>();
  */
 function shouldThrottle(message: string): boolean {
   // Buscar sistemas conocidos que generan spam
-  const isThrottledSystem = Array.from(CONFIG.throttledSystems).some(system =>
-    message.includes(system)
-  );
+  const isThrottledSystem = Array.from(CONFIG.throttledSystems).some(system => message.includes(system));
 
   if (!isThrottledSystem) return false;
 

@@ -153,11 +153,7 @@ export class FoodSystem {
   /**
    * Compra comida de una tienda
    */
-  buyFood(
-    foodId: string,
-    quantity = 1,
-    playerMoney: number
-  ): { success: boolean; cost: number; newMoney: number } {
+  buyFood(foodId: string, quantity = 1, playerMoney: number): { success: boolean; cost: number; newMoney: number } {
     const food = FoodCatalog.getFoodById(foodId);
     if (!food) {
       return { success: false, cost: 0, newMoney: playerMoney };
@@ -257,8 +253,7 @@ export class FoodSystem {
     });
 
     // Crear efecto visual simple de consumo (círculos que se desvanecen)
-    const effectColor =
-      food.category === 'healthy' ? 0x00ff00 : food.category === 'dessert' ? 0xff69b4 : 0xffd700;
+    const effectColor = food.category === 'healthy' ? 0x00ff00 : food.category === 'dessert' ? 0xff69b4 : 0xffd700;
 
     // Crear múltiples círculos como efecto visual
     for (let i = 0; i < 3; i++) {
@@ -340,11 +335,7 @@ export class FoodSystem {
    * Obtiene comida recomendada para una entidad
    */
   getRecommendedFood(stats: EntityStats): FoodItem[] {
-    return FoodCatalog.getRecommendedFood(
-      stats.hunger || 50,
-      stats.happiness || 50,
-      stats.money || 0
-    );
+    return FoodCatalog.getRecommendedFood(stats.hunger || 50, stats.happiness || 50, stats.money || 0);
   }
 
   /**

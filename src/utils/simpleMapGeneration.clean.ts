@@ -13,6 +13,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 80, y: 100, width: 350, height: 300 },
       type: "food",
       color: "rgba(46, 204, 113, 0.3)",
+      attractiveness: 5,
     },
     {
       id: "wisdom",
@@ -20,6 +21,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 480, y: 120, width: 320, height: 280 },
       type: "comfort",
       color: "rgba(78, 52, 46, 0.3)",
+      attractiveness: 4,
     },
     {
       id: "healing",
@@ -27,6 +29,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 850, y: 100, width: 300, height: 250 },
       type: "rest",
       color: "rgba(231, 76, 60, 0.25)",
+      attractiveness: 6,
     },
     {
       id: "workshop",
@@ -34,6 +37,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 1200, y: 140, width: 380, height: 340 },
       type: "work",
       color: "rgba(189, 195, 199, 0.25)",
+      attractiveness: 3,
     },
     {
       id: "spa",
@@ -41,6 +45,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 1650, y: 100, width: 280, height: 300 },
       type: "comfort",
       color: "rgba(142, 68, 173, 0.25)",
+      attractiveness: 7,
     },
     {
       id: "entertainment",
@@ -48,6 +53,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 100, y: 500, width: 400, height: 320 },
       type: "recreation",
       color: "rgba(244, 208, 63, 0.3)",
+      attractiveness: 6,
     },
     {
       id: "celebration",
@@ -55,6 +61,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 580, y: 480, width: 350, height: 340 },
       type: "social",
       color: "rgba(26, 188, 156, 0.3)",
+      attractiveness: 5,
     },
     {
       id: "meditation",
@@ -62,6 +69,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 1000, y: 520, width: 320, height: 280 },
       type: "rest",
       color: "rgba(155, 89, 182, 0.25)",
+      attractiveness: 5,
     },
     {
       id: "exploration",
@@ -69,6 +77,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 1400, y: 500, width: 380, height: 300 },
       type: "recreation",
       color: "rgba(230, 126, 34, 0.3)",
+      attractiveness: 4,
     },
     {
       id: "social_hub",
@@ -76,6 +85,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 1850, y: 480, width: 300, height: 320 },
       type: "social",
       color: "rgba(52, 152, 219, 0.3)",
+      attractiveness: 6,
     },
     {
       id: "creative",
@@ -83,6 +93,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 200, y: 950, width: 400, height: 280 },
       type: "recreation",
       color: "rgba(241, 196, 15, 0.3)",
+      attractiveness: 5,
     },
     {
       id: "reflection",
@@ -90,6 +101,7 @@ export function createDefaultZones(): Zone[] {
       bounds: { x: 700, y: 920, width: 350, height: 300 },
       type: "rest",
       color: "rgba(52, 73, 94, 0.25)",
+      attractiveness: 4,
     },
   ];
 }

@@ -323,10 +323,7 @@ export class DialogueChunkLoader {
       return false;
     }
 
-    if (
-      criteria.textContains &&
-      !dialogue.text.toLowerCase().includes(criteria.textContains.toLowerCase())
-    ) {
+    if (criteria.textContains && !dialogue.text.toLowerCase().includes(criteria.textContains.toLowerCase())) {
       return false;
     }
 
@@ -357,9 +354,7 @@ export class DialogueChunkLoader {
     if (currentIndex === -1) return;
 
     // Precargar anterior y siguiente
-    const toPreload = [currentIndex - 1, currentIndex + 1].filter(
-      idx => idx >= 0 && idx < this.metadata.chunks.length
-    );
+    const toPreload = [currentIndex - 1, currentIndex + 1].filter(idx => idx >= 0 && idx < this.metadata.chunks.length);
 
     for (const idx of toPreload) {
       const adjacentChunk = this.metadata.chunks[idx];
