@@ -209,10 +209,10 @@ export const getEmotionForActivity = (activity: string): string => {
 /**
  * Selecciona un diálogo basado en el tipo de interacción del jugador
  */
-export const getDialogueForInteraction = (
+export const getDialogueForInteraction = async (
   interactionType: string,
   entityId: string,
-): DialogueEntry | null => {
+): Promise<DialogueEntry | null> => {
   const speaker = getSpeakerForEntity(entityId);
 
   const interactionMap: Record<
@@ -270,11 +270,11 @@ export const getDialogueForInteraction = (
   const targetActivity = config.activities[activityIndex];
 
   for (const emotion of emotionsToTry) {
-    const dialogue = getNextDialogue(speaker, emotion, targetActivity);
+    const dialogue = await getNextDialogue(speaker, emotion, targetActivity);
     if (dialogue) return dialogue;
   }
 
-  return getNextDialogue(speaker, undefined, targetActivity);
+  return await getNextDialogue(speaker, undefined, targetActivity);
 };
 
 /**

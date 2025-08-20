@@ -396,15 +396,15 @@ export class UIDesignSystem {
       return;
     }
 
-    scene.tweens.add({
+    const { AnimationHelpers } = require("../utils/animationHelpers");
+    AnimationHelpers.createInfiniteAnimation(scene, {
       targets: target,
-      alpha: { from: 1 - intensity, to: 1 + intensity },
-      scaleX: { from: 1 - intensity * 0.5, to: 1 + intensity * 0.5 },
-      scaleY: { from: 1 - intensity * 0.5, to: 1 + intensity * 0.5 },
       duration,
       yoyo: true,
-      repeat: -1,
       ease: "Sine.easeInOut",
+      alpha: 1 + intensity,
+      scaleX: 1 + intensity * 0.5,
+      scaleY: 1 + intensity * 0.5,
     });
   }
 

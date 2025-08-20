@@ -67,145 +67,54 @@ const DECAY_CONFIG = {
   GENERAL_MULTIPLIER: 1.0,
 };
 
-const EFFICIENCY_FUNCTIONS = {
-  WORKING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.WORKING;
-    if (timeSpent < optimal * 0.5)
-      return 0.5 + (timeSpent / (optimal * 0.5)) * 0.3;
-    if (timeSpent <= optimal)
-      return 0.8 + ((timeSpent - optimal * 0.5) / (optimal * 0.5)) * 0.2;
-    return Math.max(0.2, 1.0 - ((timeSpent - optimal) / optimal) * 0.8);
-  },
+interface EfficiencyParams {
+  rampUpFactor: number;
+  baseEfficiency: number;
+  peakEfficiency: number;
+  degradationRate: number;
+  minEfficiency: number;
+}
 
-  RESTING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.RESTING;
-    if (timeSpent < optimal * 0.3)
-      return 0.4 + (timeSpent / (optimal * 0.3)) * 0.4;
-    if (timeSpent <= optimal)
-      return 0.8 + ((timeSpent - optimal * 0.3) / (optimal * 0.7)) * 0.2;
-    return Math.max(0.3, 1.0 - ((timeSpent - optimal) / optimal) * 0.7);
-  },
-
-  SOCIALIZING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.SOCIALIZING;
-    if (timeSpent < optimal * 0.2)
-      return 0.6 + (timeSpent / (optimal * 0.2)) * 0.3;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.2) / (optimal * 0.8)) * 0.1;
-    return Math.max(0.4, 1.0 - ((timeSpent - optimal) / optimal) * 0.6);
-  },
-
-  DANCING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.DANCING;
-    if (timeSpent < optimal * 0.4)
-      return 0.7 + (timeSpent / (optimal * 0.4)) * 0.2;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.4) / (optimal * 0.6)) * 0.1;
-    return Math.max(0.3, 1.0 - ((timeSpent - optimal) / optimal) * 0.7);
-  },
-
-  SHOPPING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.SHOPPING;
-    return timeSpent <= optimal
-      ? 1.0
-      : Math.max(0.2, 1.0 - ((timeSpent - optimal) / optimal) * 0.8);
-  },
-
-  COOKING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.COOKING;
-    if (timeSpent < optimal * 0.3)
-      return 0.5 + (timeSpent / (optimal * 0.3)) * 0.4;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.3) / (optimal * 0.7)) * 0.1;
-    return Math.max(0.4, 1.0 - ((timeSpent - optimal) / optimal) * 0.6);
-  },
-
-  EXERCISING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.EXERCISING;
-    if (timeSpent < optimal * 0.5)
-      return 0.6 + (timeSpent / (optimal * 0.5)) * 0.3;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.5) / (optimal * 0.5)) * 0.1;
-    return Math.max(0.2, 1.0 - ((timeSpent - optimal) / optimal) * 0.8);
-  },
-
-  MEDITATING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.MEDITATING;
-    if (timeSpent < optimal * 0.6)
-      return 0.4 + (timeSpent / (optimal * 0.6)) * 0.4;
-    if (timeSpent <= optimal)
-      return 0.8 + ((timeSpent - optimal * 0.6) / (optimal * 0.4)) * 0.2;
-    return Math.max(0.5, 1.0 - ((timeSpent - optimal) / optimal) * 0.5);
-  },
-
-  WRITING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.WRITING;
-    if (timeSpent < optimal * 0.4)
-      return 0.5 + (timeSpent / (optimal * 0.4)) * 0.3;
-    if (timeSpent <= optimal)
-      return 0.8 + ((timeSpent - optimal * 0.4) / (optimal * 0.6)) * 0.2;
-    return Math.max(0.4, 1.0 - ((timeSpent - optimal) / optimal) * 0.6);
-  },
-
-  WANDERING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.WANDERING;
-    return timeSpent <= optimal
-      ? 1.0
-      : Math.max(0.5, 1.0 - ((timeSpent - optimal) / optimal) * 0.5);
-  },
-
-  EXPLORING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.EXPLORING;
-    if (timeSpent < optimal * 0.3)
-      return 0.6 + (timeSpent / (optimal * 0.3)) * 0.3;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.3) / (optimal * 0.7)) * 0.1;
-    return Math.max(0.3, 1.0 - ((timeSpent - optimal) / optimal) * 0.7);
-  },
-
-  CONTEMPLATING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.CONTEMPLATING;
-    if (timeSpent < optimal * 0.7)
-      return 0.3 + (timeSpent / (optimal * 0.7)) * 0.5;
-    if (timeSpent <= optimal)
-      return 0.8 + ((timeSpent - optimal * 0.7) / (optimal * 0.3)) * 0.2;
-    return Math.max(0.4, 1.0 - ((timeSpent - optimal) / optimal) * 0.6);
-  },
-
-  HIDING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.HIDING;
-    if (timeSpent < optimal * 0.5) return 0.7;
-    if (timeSpent <= optimal)
-      return 0.7 + ((timeSpent - optimal * 0.5) / (optimal * 0.5)) * 0.2;
-    return Math.max(0.3, 0.9 - ((timeSpent - optimal) / optimal) * 0.6);
-  },
-
-  EATING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.EATING;
-    if (timeSpent < optimal * 0.4)
-      return 0.8 + (timeSpent / (optimal * 0.4)) * 0.2;
-    if (timeSpent <= optimal) return 1.0;
-    return Math.max(0.5, 1.0 - ((timeSpent - optimal) / optimal) * 0.5);
-  },
-
-  SLEEPING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.SLEEPING;
-    if (timeSpent < optimal * 0.6)
-      return 0.4 + (timeSpent / (optimal * 0.6)) * 0.5;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.6) / (optimal * 0.4)) * 0.1;
-    return Math.max(0.7, 1.0 - ((timeSpent - optimal) / optimal) * 0.3);
-  },
-
-  PLAYING: (timeSpent: number) => {
-    const optimal = ACTIVITY_OPTIMAL_DURATIONS.PLAYING;
-    if (timeSpent < optimal * 0.3)
-      return 0.7 + (timeSpent / (optimal * 0.3)) * 0.2;
-    if (timeSpent <= optimal)
-      return 0.9 + ((timeSpent - optimal * 0.3) / (optimal * 0.7)) * 0.1;
-    return Math.max(0.4, 1.0 - ((timeSpent - optimal) / optimal) * 0.6);
-  },
+const ACTIVITY_EFFICIENCY_PARAMS: Record<ActivityType, EfficiencyParams> = {
+  WORKING: { rampUpFactor: 0.5, baseEfficiency: 0.5, peakEfficiency: 1.0, degradationRate: 0.8, minEfficiency: 0.2 },
+  RESTING: { rampUpFactor: 0.3, baseEfficiency: 0.4, peakEfficiency: 1.0, degradationRate: 0.7, minEfficiency: 0.3 },
+  SOCIALIZING: { rampUpFactor: 0.2, baseEfficiency: 0.6, peakEfficiency: 1.0, degradationRate: 0.6, minEfficiency: 0.4 },
+  DANCING: { rampUpFactor: 0.4, baseEfficiency: 0.7, peakEfficiency: 1.0, degradationRate: 0.7, minEfficiency: 0.3 },
+  SHOPPING: { rampUpFactor: 0.0, baseEfficiency: 1.0, peakEfficiency: 1.0, degradationRate: 0.8, minEfficiency: 0.2 },
+  COOKING: { rampUpFactor: 0.3, baseEfficiency: 0.5, peakEfficiency: 1.0, degradationRate: 0.6, minEfficiency: 0.4 },
+  EXERCISING: { rampUpFactor: 0.5, baseEfficiency: 0.6, peakEfficiency: 1.0, degradationRate: 0.8, minEfficiency: 0.2 },
+  MEDITATING: { rampUpFactor: 0.6, baseEfficiency: 0.4, peakEfficiency: 1.0, degradationRate: 0.5, minEfficiency: 0.5 },
+  WRITING: { rampUpFactor: 0.4, baseEfficiency: 0.5, peakEfficiency: 1.0, degradationRate: 0.6, minEfficiency: 0.4 },
+  WANDERING: { rampUpFactor: 0.0, baseEfficiency: 1.0, peakEfficiency: 1.0, degradationRate: 0.5, minEfficiency: 0.5 },
+  EXPLORING: { rampUpFactor: 0.3, baseEfficiency: 0.6, peakEfficiency: 1.0, degradationRate: 0.7, minEfficiency: 0.3 },
+  CONTEMPLATING: { rampUpFactor: 0.7, baseEfficiency: 0.3, peakEfficiency: 1.0, degradationRate: 0.6, minEfficiency: 0.4 },
+  HIDING: { rampUpFactor: 0.5, baseEfficiency: 0.7, peakEfficiency: 0.9, degradationRate: 0.6, minEfficiency: 0.3 },
+  EATING: { rampUpFactor: 0.4, baseEfficiency: 0.8, peakEfficiency: 1.0, degradationRate: 0.5, minEfficiency: 0.5 },
+  SLEEPING: { rampUpFactor: 0.6, baseEfficiency: 0.4, peakEfficiency: 1.0, degradationRate: 0.3, minEfficiency: 0.7 },
+  PLAYING: { rampUpFactor: 0.3, baseEfficiency: 0.7, peakEfficiency: 1.0, degradationRate: 0.6, minEfficiency: 0.4 },
 };
+
+const createEfficiencyFunction = (params: EfficiencyParams, optimal: number) => 
+  (timeSpent: number): number => {
+    const { rampUpFactor, baseEfficiency, peakEfficiency, degradationRate, minEfficiency } = params;
+    
+    if (timeSpent < optimal * rampUpFactor) {
+      return baseEfficiency + (timeSpent / (optimal * rampUpFactor)) * (peakEfficiency - baseEfficiency);
+    }
+    if (timeSpent <= optimal) {
+      const rampDownStart = optimal * rampUpFactor;
+      const rampDownRange = optimal - rampDownStart;
+      return peakEfficiency - ((timeSpent - rampDownStart) / rampDownRange) * (peakEfficiency - baseEfficiency) * 0.2;
+    }
+    return Math.max(minEfficiency, peakEfficiency - ((timeSpent - optimal) / optimal) * degradationRate);
+  };
+
+const EFFICIENCY_FUNCTIONS = Object.fromEntries(
+  Object.entries(ACTIVITY_EFFICIENCY_PARAMS).map(([activity, params]) => [
+    activity,
+    createEfficiencyFunction(params, ACTIVITY_OPTIMAL_DURATIONS[activity as ActivityType])
+  ])
+) as Record<ActivityType, (timeSpent: number) => number>;
 
 export const getActivityDynamics = () => ({
   WANDERING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WANDERING },

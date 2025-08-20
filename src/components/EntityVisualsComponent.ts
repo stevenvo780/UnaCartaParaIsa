@@ -5,7 +5,7 @@
 
 import type Phaser from "phaser";
 import type { MoodType } from "../types";
-import { GAME_BALANCE } from "../constants/gameBalance";
+import { GAME_BALANCE } from "../config/gameConfig";
 
 export class EntityVisualsComponent {
   private sprite: Phaser.Physics.Arcade.Sprite;

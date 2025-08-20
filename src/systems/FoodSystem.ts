@@ -5,6 +5,7 @@
 
 import Phaser from "phaser";
 import { FoodCatalog } from "../data/FoodCatalog";
+import { GAME_BALANCE } from "../config/gameConfig";
 import type { EntityStats } from "../types";
 import type { EatingAction, FoodItem } from "../types/food";
 import { logAutopoiesis } from "../utils/logger";

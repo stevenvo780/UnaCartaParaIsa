@@ -6,10 +6,11 @@
 import type { FoodItem, FoodInventoryItem } from "../types/food";
 import { FoodCatalog } from "../data/FoodCatalog";
 import { logAutopoiesis } from "../utils/logger";
+import { GAME_BALANCE } from "../config/gameConfig";
 
 export class FoodInventorySystem {
   private inventory = new Map<string, FoodInventoryItem>();
-  private maxCapacity = 20;
+  private maxCapacity = GAME_BALANCE.FOOD.MAX_INVENTORY_CAPACITY;
 
   /**
    * Añade comida al inventario
@@ -137,7 +138,7 @@ export class FoodInventorySystem {
   /**
    * Obtiene comidas próximas a echarse a perder
    */
-  getFoodsNearExpiry(warningThreshold = 0.8): FoodInventoryItem[] {
+  getFoodsNearExpiry(warningThreshold = GAME_BALANCE.FOOD.EXPIRY_WARNING_THRESHOLD): FoodInventoryItem[] {
     const currentTime = Date.now();
     const nearExpiry: FoodInventoryItem[] = [];
 

@@ -170,77 +170,37 @@ export class ProductionOptimizer {
    * Optimizaciones de rendimiento
    */
   private setupPerformanceOptimizations(): void {
-    // Configurar requestIdleCallback si está disponible
-    if ("requestIdleCallback" in window) {
-      this.scheduleNonCriticalTasks();
-    }
-
-    // Configurar observer para carga lazy de imágenes
-    this.setupIntersectionObserver();
+    // Configurar tareas no críticas
+    this.scheduleNonCriticalTasks();
   }
 
   /**
-   * Programar tareas no críticas
+   * Programar tareas no críticas usando requestIdleCallback si está disponible
    */
   private scheduleNonCriticalTasks(): void {
-    (window as any).requestIdleCallback(() => {
-      // Tareas que se pueden ejecutar cuando el navegador esté idle
-      this.cleanupUnusedAssets();
-      this.compactDialogueCache();
-    });
-  }
-
-  /**
-   * Configurar observer para carga lazy
-   */
-  private setupIntersectionObserver(): void {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          // Trigger lazy loading
-          const element = entry.target as HTMLElement;
-          if (element.dataset.src) {
-            element.setAttribute("src", element.dataset.src);
-            observer.unobserve(element);
-          }
-        }
+    if ("requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(() => {
+        this.triggerMemoryOptimization();
       });
-    });
-
-    // Observer se configuraría para elementos específicos
-    logAutopoiesis.debug("Intersection Observer configured");
+    }
   }
 
   /**
-   * Trigger optimización de memoria
+   * Trigger optimización de memoria - simplificado
    */
   private triggerMemoryOptimization(): void {
-    // Limpiar caches no esenciales
     this.cleanupUnusedAssets();
-    this.compactDialogueCache();
-
-    // Forzar garbage collection si es posible
-    if ((window as any).gc) {
-      (window as any).gc();
-    }
-
     logAutopoiesis.info("Memory optimization triggered");
   }
 
   /**
-   * Limpiar assets no utilizados
+   * Limpiar assets no utilizados - simplificado
    */
   private cleanupUnusedAssets(): void {
-    // Esta función se integraría con AssetLazyLoader
-    logAutopoiesis.debug("Unused assets cleanup completed");
-  }
-
-  /**
-   * Compactar cache de diálogos
-   */
-  private compactDialogueCache(): void {
-    // Esta función se integraría con DialogueChunkLoader
-    logAutopoiesis.debug("Dialogue cache compaction completed");
+    if ((window as any).gc) {
+      (window as any).gc();
+    }
+    logAutopoiesis.debug("Assets cleanup completed");
   }
 
   /**
@@ -305,42 +265,6 @@ export class ProductionOptimizer {
     };
   }
 
-  /**
-   * Crear configuración de webpack optimizada (para build time)
-   */
-  public getWebpackOptimizations(): Record<string, any> {
-    if (!this.isProduction) {
-      return {};
-    }
-
-    return {
-      optimization: {
-        splitChunks: {
-          chunks: "all",
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: "vendors",
-              chunks: "all",
-            },
-            dialogues: {
-              test: /dialogos.*\.json$/,
-              name: "dialogues",
-              chunks: "all",
-            },
-          },
-        },
-        minimize: true,
-        usedExports: true,
-      },
-      resolve: {
-        alias: {
-          // Usar versiones minificadas en producción
-          phaser: "phaser/dist/phaser.min.js",
-        },
-      },
-    };
-  }
 }
 
 // Crear instancia global

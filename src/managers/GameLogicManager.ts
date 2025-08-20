@@ -4,7 +4,7 @@
  */
 
 import { gameConfig } from "../config/gameConfig";
-import { GAME_BALANCE } from "../constants/gameBalance";
+import { GAME_BALANCE } from "../config/gameConfig";
 import type {
   Entity,
   EntityStats,
@@ -19,7 +19,7 @@ export class GameLogicManager implements IGameLogicManager {
   private _scene: Phaser.Scene;
   private _gameState: GameState;
   private _gameLoopTimer?: Phaser.Time.TimerEvent;
-  private _entities = new Map<string, unknown>(); // Support both Entity and AnimatedGameEntity
+  private _entities = new Map<string, Entity>(); // Support both Entity and AnimatedGameEntity
   private _eventEmitter: Phaser.Events.EventEmitter;
 
   public constructor(scene: Phaser.Scene, initialGameState: GameState) {
@@ -321,9 +321,9 @@ export class GameLogicManager implements IGameLogicManager {
     const entityStates = Array.from(this._entities.entries()).map(
       ([id, entity]) => ({
         id,
-        activity: entity.activity ?? "unknown",
+        activity: (entity as any).activity ?? "unknown",
         mood: entity.mood ?? "unknown",
-        alive: !entity.isDead,
+        alive: !(entity as any).isDead,
       }),
     );
 

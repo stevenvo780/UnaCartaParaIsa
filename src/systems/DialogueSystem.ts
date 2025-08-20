@@ -425,16 +425,16 @@ export class DialogueSystem {
   /**
    * Manejar interacción del jugador con entidad
    */
-  public handlePlayerInteraction(
+  public async handlePlayerInteraction(
     entityId: string,
     interactionType: string,
-  ): void {
+  ): Promise<void> {
     if (!this.isInitialized) {
       logAutopoiesis.warn("⚠️ Sistema de diálogos no inicializado");
       return;
     }
 
-    const dialogue = getDialogueForInteraction(interactionType, entityId);
+    const dialogue = await getDialogueForInteraction(interactionType, entityId);
     if (dialogue) {
       this.showDialogue(entityId, dialogue);
 

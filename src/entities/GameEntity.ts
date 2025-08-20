@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { GAME_BALANCE } from "../constants/gameBalance";
+import { GAME_BALANCE } from "../config/gameConfig";
 import {
   EntityServicesFactory,
   type IEntityServices,

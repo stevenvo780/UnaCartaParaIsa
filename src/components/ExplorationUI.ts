@@ -4,6 +4,7 @@
 
 import type Phaser from "phaser";
 import { logAutopoiesis } from "../utils/logger";
+import { BaseUIComponent, UIComponentConfig } from "./BaseUIComponent";
 
 export interface ExplorationStats {
   totalAssets: number;
@@ -13,60 +14,34 @@ export interface ExplorationStats {
   currentBiome?: string;
 }
 
-export class ExplorationUI {
-  private scene: Phaser.Scene;
-  private container: Phaser.GameObjects.Container;
+export class ExplorationUI extends BaseUIComponent {
   private statsPanel: Phaser.GameObjects.Container;
   private biomesPanel: Phaser.GameObjects.Container;
   private assetsPanel: Phaser.GameObjects.Container;
-  private isVisible = false;
+  private lastStatsHash = "";
 
   constructor(scene: Phaser.Scene) {
-    this.scene = scene;
-    this.container = scene.add.container(0, 0);
-    this.container.setDepth(1000); // Top layer
-    this.createUI();
+    const config: UIComponentConfig = {
+      width: 400,
+      height: 600,
+      title: "Atlas de Exploración",
+      icon: "🗺️",
+      position: { x: scene.scale.width - 220, y: 320 },
+      closable: true,
+      modal: false,
+    };
+
+    super(scene, config);
+    this.createPanels();
   }
 
   /**
-   * Crea la interfaz de exploración
+   * Crea los paneles específicos de exploración
    */
-  private createUI(): void {
-    // Panel principal
-    const background = this.scene.add.rectangle(0, 0, 400, 600, 0x2c3e50, 0.95);
-    background.setStrokeStyle(2, 0x3498db);
-    this.container.add(background);
-
-    // Título
-    const title = this.scene.add.text(0, -280, "🗺️ Atlas de Exploración", {
-      fontSize: "24px",
-      fontFamily: "Arial",
-      color: "#ecf0f1",
-      fontStyle: "bold",
-      align: "center",
-    });
-    title.setOrigin(0.5);
-    this.container.add(title);
-
-    // Crear paneles
+  private createPanels(): void {
     this.createStatsPanel();
     this.createBiomesPanel();
     this.createAssetsPanel();
-
-    // Botón de cerrar
-    const closeButton = this.scene.add.text(180, -280, "✕", {
-      fontSize: "20px",
-      color: "#e74c3c",
-      fontStyle: "bold",
-    });
-    closeButton.setOrigin(0.5);
-    closeButton.setInteractive({ useHandCursor: true });
-    closeButton.on("pointerdown", () => this.hide());
-    this.container.add(closeButton);
-
-    // Posicionar en la esquina superior derecha
-    this.container.setPosition(this.scene.scale.width - 220, 320);
-    this.container.setVisible(false);
   }
 
   /**
@@ -135,7 +110,20 @@ export class ExplorationUI {
     this.container.add(this.assetsPanel);
   }
 
-  private lastStatsHash = "";
+  /**
+   * Implementación requerida por BaseUIComponent
+   */
+  protected onShow(): void {
+    // Lógica específica al mostrar
+  }
+
+  protected onHide(): void {
+    // Lógica específica al ocultar
+  }
+
+  public updateContent(stats: ExplorationStats): void {
+    this.updateStats(stats);
+  }
 
   /**
    * Actualiza la UI con nuevas estadísticas solo si han cambiado
@@ -162,7 +150,13 @@ export class ExplorationUI {
     // Actualizar assets
     this.updateAssetsContent(stats);
 
-    logAutopoiesis.info("🗺️ UI de exploración actualizada", stats);
+    logAutopoiesis.info("🗺️ UI de exploración actualizada", {
+      totalAssets: stats.totalAssets,
+      discoveredAssets: stats.discoveredAssets,
+      biomesExplored: stats.biomesExplored,
+      currentBiome: stats.currentBiome,
+      rarityBreakdown: stats.rarityBreakdown,
+    });
   }
 
   /**
@@ -317,65 +311,4 @@ export class ExplorationUI {
     });
   }
 
-  /**
-   * Muestra la UI
-   */
-  show(): void {
-    this.isVisible = true;
-    this.container.setVisible(true);
-
-    // Animación de entrada
-    this.scene.tweens.add({
-      targets: this.container,
-      scaleX: { from: 0.8, to: 1 },
-      scaleY: { from: 0.8, to: 1 },
-      alpha: { from: 0, to: 1 },
-      duration: 300,
-      ease: "Back.easeOut",
-    });
-  }
-
-  /**
-   * Oculta la UI
-   */
-  hide(): void {
-    this.isVisible = false;
-
-    this.scene.tweens.add({
-      targets: this.container,
-      scaleX: 0.8,
-      scaleY: 0.8,
-      alpha: 0,
-      duration: 200,
-      ease: "Back.easeIn",
-      onComplete: () => {
-        this.container.setVisible(false);
-      },
-    });
-  }
-
-  /**
-   * Alterna la visibilidad
-   */
-  toggle(): void {
-    if (this.isVisible) {
-      this.hide();
-    } else {
-      this.show();
-    }
-  }
-
-  /**
-   * Actualiza la posición según el tamaño de pantalla
-   */
-  updatePosition(): void {
-    this.container.setPosition(this.scene.scale.width - 220, 320);
-  }
-
-  /**
-   * Limpia recursos
-   */
-  cleanup(): void {
-    this.container.destroy();
-  }
 }

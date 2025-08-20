@@ -1645,10 +1645,9 @@ export class UIScene extends Phaser.Scene {
       this.bottomBar.setPosition(width / 2, height - 50);
     }
 
-    // TODO: Fix foodUIContainer reference
-    // if (this.foodUIContainer) {
-    //   this.foodUIContainer.setPosition(width / 2, height - 120);
-    // }
+    if (this.foodUI) {
+      this.foodUI.updatePosition();
+    }
   }
 
   /**

@@ -7,6 +7,18 @@ import type { FoodItem } from "./food";
 import type { Zone } from "./zones";
 import type { GeneratedWorld } from "../world/types";
 
+export interface MapElement {
+  id: string;
+  type: "terrain" | "decoration" | "structure" | "vegetation";
+  position: { x: number; y: number };
+  assetKey: string;
+  biome?: string;
+  scale?: number;
+  rotation?: number;
+  depth?: number;
+  properties?: Record<string, any>;
+}
+
 /**
  * Datos de actualización de game logic
  */
@@ -43,6 +55,10 @@ export interface FoodStoreData {
  * Datos de criterios de diálogo
  */
 export interface DialogueCriteria {
+  speaker?: "ISA" | "STEV";
+  emotion?: string;
+  textContains?: string;
+  limit?: number;
   mood?: string;
   activity?: string;
   timeOfDay?: "dawn" | "day" | "dusk" | "night";
@@ -56,7 +72,7 @@ export interface DialogueCriteria {
  */
 export interface GeneratedWorldData {
   zones: Zone[];
-  mapElements: any[]; // TODO: Tipar mejor cuando se defina MapElement
+  mapElements: MapElement[];
   generatedWorld?: GeneratedWorld;
   terrainTiles: any[];
   roads: any[];
