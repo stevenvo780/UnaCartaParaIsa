@@ -69,6 +69,59 @@ export class InputManager {
       this.scene.events.emit("sprintEnd");
     });
 
+    // MEJORA: Controles adicionales para navegación del mapa
+    // CTRL + WASD para mover la cámara directamente
+    this.scene.input.keyboard.on("keydown", (event: KeyboardEvent) => {
+      if (event.ctrlKey && this.scene.cameras?.main) {
+        const camera = this.scene.cameras.main;
+        const panSpeed = 20;
+
+        switch (event.code) {
+          case "KeyW":
+          case "ArrowUp":
+            camera.scrollY -= panSpeed;
+            event.preventDefault();
+            break;
+          case "KeyS":
+          case "ArrowDown":
+            camera.scrollY += panSpeed;
+            event.preventDefault();
+            break;
+          case "KeyA":
+          case "ArrowLeft":
+            camera.scrollX -= panSpeed;
+            event.preventDefault();
+            break;
+          case "KeyD":
+          case "ArrowRight":
+            camera.scrollX += panSpeed;
+            event.preventDefault();
+            break;
+          case "Equal":
+          case "NumpadAdd":
+            // Zoom in con +
+            const newZoomIn = Phaser.Math.Clamp(camera.zoom * 1.1, 0.3, 3);
+            camera.setZoom(newZoomIn);
+            event.preventDefault();
+            break;
+          case "Minus":
+          case "NumpadSubtract":
+            // Zoom out con -
+            const newZoomOut = Phaser.Math.Clamp(camera.zoom * 0.9, 0.3, 3);
+            camera.setZoom(newZoomOut);
+            event.preventDefault();
+            break;
+          case "Digit0":
+          case "Numpad0":
+            // Reset zoom y posición
+            camera.setZoom(1);
+            camera.centerOn(600, 400); // Centro del mundo
+            event.preventDefault();
+            break;
+        }
+      }
+    });
+
     // Setup mouse controls
     this.setupMouseControls();
 
@@ -76,15 +129,27 @@ export class InputManager {
   }
 
   /**
-   * Configura los controles del mouse
+   * Configura los controles del mouse - MEJORADO para navegación fluida
    */
   private setupMouseControls(): void {
     if (!this.scene.input) return;
 
-    // Mouse drag for camera movement
+    // MEJORA 1: Mouse drag para movimiento de cámara más suave + click derecho
     this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-      this.isDragging = true;
-      this.lastPointerPosition = { x: pointer.x, y: pointer.y };
+      if (pointer.rightButtonDown && pointer.rightButtonDown()) {
+        // Cycle through entities con click derecho
+        const entities: ControlledEntity[] = ["isa", "stev", "none"];
+        const currentIndex = entities.indexOf(this.controlledEntity);
+        const nextIndex = (currentIndex + 1) % entities.length;
+        this.setControlledEntity(entities[nextIndex]);
+      } else {
+        // Normal left-click drag behavior
+        this.isDragging = true;
+        this.lastPointerPosition = { x: pointer.x, y: pointer.y };
+
+        // Cambiar cursor durante drag
+        this.scene.input.setDefaultCursor("grabbing");
+      }
     });
 
     this.scene.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
@@ -92,19 +157,24 @@ export class InputManager {
         const deltaX = pointer.x - this.lastPointerPosition.x;
         const deltaY = pointer.y - this.lastPointerPosition.y;
 
-        // Invert the movement for natural camera panning
-        this.scene.cameras.main.scrollX -= deltaX * 0.5;
-        this.scene.cameras.main.scrollY -= deltaY * 0.5;
+        // MEJORA 2: Movimiento más sensible y natural (era 0.5, ahora 1.2)
+        this.scene.cameras.main.scrollX -= deltaX * 1.2;
+        this.scene.cameras.main.scrollY -= deltaY * 1.2;
 
         this.lastPointerPosition = { x: pointer.x, y: pointer.y };
+      } else {
+        // MEJORA 3: Cursor grab cuando no está dragging
+        this.scene.input.setDefaultCursor("grab");
       }
     });
 
     this.scene.input.on("pointerup", () => {
       this.isDragging = false;
+      // Restaurar cursor normal
+      this.scene.input.setDefaultCursor("default");
     });
 
-    // Mouse wheel for zoom
+    // MEJORA 4: Mouse wheel para zoom más suave
     this.scene.input.on(
       "wheel",
       (
@@ -115,12 +185,46 @@ export class InputManager {
       ) => {
         if (this.scene.cameras?.main) {
           const camera = this.scene.cameras.main;
-          const zoomFactor = deltaY > 0 ? 0.9 : 1.1;
-          const newZoom = Phaser.Math.Clamp(camera.zoom * zoomFactor, 0.5, 2);
+
+          // Zoom más suave y con más rango
+          const zoomFactor = deltaY > 0 ? 0.95 : 1.05; // Más sutil que 0.9/1.1
+          const newZoom = Phaser.Math.Clamp(camera.zoom * zoomFactor, 0.3, 3); // Más rango
+
+          // MEJORA 5: Zoom hacia el cursor del mouse
+          const worldPoint = camera.getWorldPoint(pointer.x, pointer.y);
           camera.setZoom(newZoom);
+
+          // Ajustar scroll para que el zoom sea hacia donde está el mouse
+          const newWorldPoint = camera.getWorldPoint(pointer.x, pointer.y);
+          camera.scrollX -= newWorldPoint.x - worldPoint.x;
+          camera.scrollY -= newWorldPoint.y - worldPoint.y;
         }
       },
     );
+
+    // MEJORA 6: Doble click para centrar en entidad controlada
+    this.scene.input.on("pointerdblclick", () => {
+      if (this.controlledEntity !== "none" && this.scene.cameras?.main) {
+        // Buscar la entidad actualmente controlada
+        const scene = this.scene as any;
+        const entityManager = scene.entityManager;
+
+        if (entityManager) {
+          const entity = entityManager.getEntity(this.controlledEntity);
+          if (entity) {
+            const pos = entity.getPosition();
+
+            // Centrar cámara suavemente en la entidad
+            this.scene.cameras.main.pan(pos.x, pos.y, 500, "Power2");
+
+            logAutopoiesis.info(
+              `🎯 Cámara centrada en ${this.controlledEntity}`,
+              pos,
+            );
+          }
+        }
+      }
+    });
   }
 
   /**

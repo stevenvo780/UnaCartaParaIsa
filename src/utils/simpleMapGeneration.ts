@@ -10,20 +10,21 @@ import { BiomeSystem, createCustomWorldConfig, getWorldPreset } from "../world";
 import type { GeneratedWorld, WorldGenConfig } from "../world/types";
 import { logAutopoiesis } from "./logger";
 
-export const createDefaultZones = (): Zone[] => {
+const createNorthZones = (): Zone[] => {
   return [
+    // ZONA NOROESTE - Nutrición y Alimentación
     {
       id: "nourishment_garden",
       name: "Jardín de Nutrición",
-      bounds: { x: 80, y: 60, width: 280, height: 140 },
+      bounds: { x: 160, y: 120, width: 320, height: 200 },
       type: "food",
       color: "rgba(46, 204, 113, 0.3)",
       attractiveness: 1.2,
       effects: {
-        hunger: 35,
-        happiness: 15,
-        energy: 8,
-        health: 5,
+        hunger: 40,
+        happiness: 18,
+        energy: 10,
+        health: 8,
       },
       metadata: {
         priority: 1,
@@ -31,122 +32,253 @@ export const createDefaultZones = (): Zone[] => {
       },
     },
 
+    // ZONA NORTE CENTRAL - Biblioteca y Conocimiento
     {
-      id: "quantum_rest_chamber",
-      name: "Cámara de Descanso Cuántico",
-      bounds: { x: 420, y: 70, width: 220, height: 130 },
-      type: "rest",
-      color: "rgba(52, 152, 219, 0.3)",
-      attractiveness: 1.1,
+      id: "wisdom_library",
+      name: "Biblioteca de Sabiduría",
+      bounds: { x: 600, y: 80, width: 280, height: 180 },
+      type: "comfort",
+      color: "rgba(78, 52, 46, 0.3)",
+      attractiveness: 1.0,
       effects: {
-        sleepiness: 40,
-        energy: 35,
-        happiness: 18,
-        health: 10,
-      },
-      metadata: {
-        priority: 2,
-        furnitureTypes: ["bed", "cushions", "ambient_lights"],
-      },
-    },
-
-    {
-      id: "cosmic_playground",
-      name: "Patio de Juegos Cósmico",
-      bounds: { x: 380, y: 240, width: 280, height: 200 },
-      type: "play",
-      color: "rgba(241, 196, 15, 0.35)",
-      attractiveness: 1.3,
-      effects: {
-        boredom: 50,
-        happiness: 30,
-        loneliness: 25,
-        energy: -8,
-      },
-      metadata: {
-        priority: 1,
-        furnitureTypes: ["swings", "slides", "interactive_objects"],
-      },
-    },
-
-    {
-      id: "resonance_social_plaza",
-      name: "Plaza de Resonancia Social",
-      bounds: { x: 60, y: 350, width: 250, height: 160 },
-      type: "social",
-      color: "rgba(155, 89, 182, 0.3)",
-      attractiveness: 1.15,
-      effects: {
-        loneliness: 45,
+        boredom: 35,
         happiness: 25,
-        boredom: 20,
+        loneliness: 15,
         energy: 5,
       },
       metadata: {
         priority: 2,
-        furnitureTypes: ["benches", "meeting_table", "campfire"],
+        furnitureTypes: ["books", "reading_chair", "study_desk"],
       },
     },
 
+    // ZONA NORESTE - Hospital y Salud
     {
-      id: "meditation_sanctuary",
-      name: "Santuario de Meditación",
-      bounds: { x: 320, y: 480, width: 200, height: 120 },
-      type: "comfort",
-      color: "rgba(102, 51, 153, 0.25)",
-      attractiveness: 0.9,
+      id: "healing_sanctuary",
+      name: "Santuario de Sanación",
+      bounds: { x: 1000, y: 100, width: 300, height: 200 },
+      type: "rest",
+      color: "rgba(231, 76, 60, 0.25)",
+      attractiveness: 1.1,
       effects: {
-        happiness: 22,
-        boredom: 25,
-        loneliness: 18,
-        sleepiness: 12,
-        energy: 15,
-        health: 8,
+        health: 50,
+        sleepiness: 25,
+        happiness: 15,
+        energy: 20,
       },
       metadata: {
-        priority: 3,
-        furnitureTypes: ["meditation_cushions", "incense", "zen_garden"],
+        priority: 1,
+        furnitureTypes: ["medical_bed", "healing_crystals", "herbs"],
       },
     },
 
+    // ZONA NORESTE FAR - Taller de Productividad
     {
       id: "productivity_workshop",
       name: "Taller de Productividad",
-      bounds: { x: 700, y: 80, width: 180, height: 140 },
+      bounds: { x: 1400, y: 120, width: 280, height: 180 },
       type: "work",
       color: "rgba(189, 195, 199, 0.25)",
       attractiveness: 0.7,
       effects: {
-        money: 90,
-        boredom: -15,
-        energy: -20,
-        happiness: -5,
+        money: 100,
+        boredom: -10,
+        energy: -25,
+        happiness: -8,
       },
       metadata: {
         priority: 4,
         furnitureTypes: ["desk", "computer", "tools"],
       },
     },
+  ];
+};
 
+const createCentralZones = (): Zone[] => {
+  return [
+    // ZONA OESTE - Spa y Relajación
     {
-      id: "energy_nexus",
-      name: "Nexo Energético",
-      bounds: { x: 720, y: 280, width: 160, height: 140 },
+      id: "tranquil_spa",
+      name: "Spa de Tranquilidad",
+      bounds: { x: 120, y: 400, width: 280, height: 220 },
+      type: "comfort",
+      color: "rgba(142, 68, 173, 0.25)",
+      attractiveness: 1.0,
+      effects: {
+        happiness: 30,
+        sleepiness: 20,
+        loneliness: 10,
+        health: 15,
+        energy: 25,
+      },
+      metadata: {
+        priority: 2,
+        furnitureTypes: ["hot_springs", "massage_table", "aromatherapy"],
+      },
+    },
+
+    // ZONA CENTRO - Cámara de Descanso Principal
+    {
+      id: "quantum_rest_chamber",
+      name: "Cámara de Descanso Cuántico",
+      bounds: { x: 800, y: 450, width: 320, height: 200 },
+      type: "rest",
+      color: "rgba(52, 152, 219, 0.3)",
+      attractiveness: 1.3,
+      effects: {
+        sleepiness: 50,
+        energy: 40,
+        happiness: 22,
+        health: 12,
+      },
+      metadata: {
+        priority: 1,
+        furnitureTypes: ["quantum_bed", "sleep_pods", "dream_crystals"],
+      },
+    },
+
+    // ZONA CENTRO-SUR - Plaza Social Principal
+    {
+      id: "resonance_social_plaza",
+      name: "Plaza de Resonancia Social",
+      bounds: { x: 600, y: 800, width: 400, height: 250 },
+      type: "social",
+      color: "rgba(155, 89, 182, 0.3)",
+      attractiveness: 1.4,
+      effects: {
+        loneliness: 55,
+        happiness: 30,
+        boredom: 25,
+        energy: 8,
+      },
+      metadata: {
+        priority: 1,
+        furnitureTypes: ["amphitheater", "social_benches", "gathering_circle"],
+      },
+    },
+
+    // ZONA ESTE - Centro Creativo
+    {
+      id: "creative_atelier",
+      name: "Atelier Creativo",
+      bounds: { x: 1500, y: 600, width: 300, height: 200 },
+      type: "play",
+      color: "rgba(243, 156, 18, 0.35)",
+      attractiveness: 1.2,
+      effects: {
+        happiness: 40,
+        boredom: 45,
+        loneliness: 20,
+        energy: -5,
+      },
+      metadata: {
+        priority: 2,
+        furnitureTypes: ["art_supplies", "musical_instruments", "craft_table"],
+      },
+    },
+  ];
+};
+
+const createSouthZones = (): Zone[] => {
+  return [
+    // ZONA SURESTE - Patio de Juegos
+    {
+      id: "cosmic_playground",
+      name: "Patio de Juegos Cósmico",
+      bounds: { x: 1400, y: 1000, width: 380, height: 280 },
+      type: "play",
+      color: "rgba(241, 196, 15, 0.35)",
+      attractiveness: 1.3,
+      effects: {
+        boredom: 60,
+        happiness: 35,
+        loneliness: 30,
+        energy: -10,
+      },
+      metadata: {
+        priority: 1,
+        furnitureTypes: ["cosmic_swings", "stellar_slides", "quantum_sandbox"],
+      },
+    },
+
+    // ZONA SUR - Mercado y Comercio
+    {
+      id: "prosperity_market",
+      name: "Mercado de Prosperidad",
+      bounds: { x: 400, y: 1200, width: 350, height: 200 },
+      type: "work",
+      color: "rgba(211, 84, 0, 0.3)",
+      attractiveness: 0.8,
+      effects: {
+        money: 80,
+        loneliness: 15,
+        boredom: -5,
+        energy: -15,
+      },
+      metadata: {
+        priority: 3,
+        furnitureTypes: ["trading_stalls", "coin_fountain", "merchant_booth"],
+      },
+    },
+
+    // ZONA SUROESTE - Gimnasio Energético
+    {
+      id: "vitality_gymnasium",
+      name: "Gimnasio de Vitalidad",
+      bounds: { x: 160, y: 1000, width: 300, height: 250 },
       type: "energy",
       color: "rgba(230, 126, 34, 0.3)",
       attractiveness: 1.0,
       effects: {
-        energy: 55,
-        sleepiness: 30,
-        happiness: 12,
-        money: -15,
-        health: 5,
+        energy: 65,
+        health: 25,
+        sleepiness: 35,
+        happiness: 15,
+        money: -20,
       },
       metadata: {
         priority: 2,
-        furnitureTypes: ["energy_crystal", "charging_pod", "power_core"],
+        furnitureTypes: [
+          "exercise_equipment",
+          "energy_crystals",
+          "vitality_pool",
+        ],
       },
     },
+
+    // ZONA OESTE FAR - Santuario de Meditación
+    {
+      id: "meditation_sanctuary",
+      name: "Santuario de Meditación Profunda",
+      bounds: { x: 120, y: 700, width: 280, height: 200 },
+      type: "comfort",
+      color: "rgba(102, 51, 153, 0.25)",
+      attractiveness: 0.9,
+      effects: {
+        happiness: 28,
+        boredom: 30,
+        loneliness: 22,
+        sleepiness: 15,
+        energy: 18,
+        health: 12,
+      },
+      metadata: {
+        priority: 3,
+        furnitureTypes: [
+          "meditation_circle",
+          "zen_garden",
+          "tranquil_fountain",
+        ],
+      },
+    },
+  ];
+};
+
+export const createDefaultZones = (): Zone[] => {
+  return [
+    ...createNorthZones(),
+    ...createCentralZones(),
+    ...createSouthZones(),
   ];
 };
 
@@ -537,8 +669,8 @@ const generateBiomeBasedMap = (
  */
 const generateLegacyMap = (): { zones: Zone[]; mapElements: MapElement[] } => {
   const zones = createDefaultZones();
-  // ⚡ ULTRA-OPTIMIZADO: Solo 3 elementos esenciales para máximo FPS
-  const mapElements = createUltraMinimalElements();
+  // ⚡ AMPLIADO: 18 elementos para el mapa expandido manteniendo optimización FPS
+  const mapElements = createExpandedMapElements();
 
   logAutopoiesis.info("🚀 ULTRA-OPTIMIZED Legacy map system", {
     zonesCount: zones.length,
@@ -548,6 +680,184 @@ const generateLegacyMap = (): { zones: Zone[]; mapElements: MapElement[] } => {
   });
 
   return { zones, mapElements };
+};
+
+/**
+ * Elementos ampliados para el mapa expandido (12 zonas + elementos)
+ */
+const createExpandedMapElements = (): MapElement[] => {
+  return [
+    // Elementos centrales de referencia
+    {
+      id: "central_wisdom_stone",
+      type: "obstacle",
+      position: { x: 1200, y: 800 },
+      size: { width: 50, height: 45 },
+      color: "#7f8c8d",
+      metadata: { assetId: "wisdom_stone", interactive: false },
+    },
+
+    // Árboles antiguos distribuidos
+    {
+      id: "ancient_tree_north",
+      type: "obstacle",
+      position: { x: 800, y: 300 },
+      size: { width: 40, height: 60 },
+      color: "#27ae60",
+      metadata: { assetId: "ancient_tree", interactive: false },
+    },
+
+    {
+      id: "harmony_tree_south",
+      type: "obstacle",
+      position: { x: 1000, y: 1200 },
+      size: { width: 40, height: 60 },
+      color: "#27ae60",
+      metadata: { assetId: "harmony_tree", interactive: false },
+    },
+
+    // Elementos de comida distribuidos por el mapa
+    {
+      id: "golden_fruit_bush_west",
+      type: "food_zone",
+      position: { x: 300, y: 250 },
+      size: { width: 15, height: 15 },
+      color: "#f39c12",
+      metadata: { assetId: "golden_fruit", nutrition: 12 },
+    },
+
+    {
+      id: "azure_bloom_patch_east",
+      type: "food_zone",
+      position: { x: 1600, y: 800 },
+      size: { width: 10, height: 10 },
+      color: "#3498db",
+      metadata: { assetId: "azure_bloom", nutrition: 6 },
+    },
+
+    {
+      id: "mystical_berries_center",
+      type: "food_zone",
+      position: { x: 1200, y: 600 },
+      size: { width: 12, height: 12 },
+      color: "#9b59b6",
+      metadata: { assetId: "mystical_berries", nutrition: 8 },
+    },
+
+    // Elementos de descanso
+    {
+      id: "quantum_bed_primary",
+      type: "rest_zone",
+      position: { x: 950, y: 500 },
+      size: { width: 30, height: 15 },
+      color: "#8e44ad",
+      metadata: { assetId: "quantum_bed", comfort: 25 },
+    },
+
+    {
+      id: "levitating_cushion_spa",
+      type: "rest_zone",
+      position: { x: 250, y: 500 },
+      size: { width: 20, height: 20 },
+      color: "#9b59b6",
+      metadata: { assetId: "levitating_cushion", comfort: 15 },
+    },
+
+    // Elementos sociales
+    {
+      id: "resonance_fountain",
+      type: "social_zone",
+      position: { x: 750, y: 900 },
+      size: { width: 40, height: 40 },
+      color: "#16a085",
+      metadata: { assetId: "resonance_fountain", social_boost: 20 },
+    },
+
+    {
+      id: "connection_bench_plaza",
+      type: "social_zone",
+      position: { x: 650, y: 950 },
+      size: { width: 30, height: 15 },
+      color: "#1abc9c",
+      metadata: { assetId: "connection_bench", social_boost: 10 },
+    },
+
+    // Elementos de juego
+    {
+      id: "cosmic_light_pole_creative",
+      type: "play_zone",
+      position: { x: 1550, y: 700 },
+      size: { width: 18, height: 30 },
+      color: "#f1c40f",
+      metadata: { assetId: "cosmic_light", fun_factor: 8 },
+    },
+
+    {
+      id: "dimensional_swing",
+      type: "play_zone",
+      position: { x: 1500, y: 1100 },
+      size: { width: 25, height: 35 },
+      color: "#e67e22",
+      metadata: { assetId: "dimensional_swing", fun_factor: 15 },
+    },
+
+    // Elementos de trabajo
+    {
+      id: "productivity_beacon",
+      type: "work_zone",
+      position: { x: 1500, y: 200 },
+      size: { width: 18, height: 30 },
+      color: "#34495e",
+      metadata: { assetId: "productivity_beacon", efficiency: 12 },
+    },
+
+    {
+      id: "trade_crystal",
+      type: "work_zone",
+      position: { x: 550, y: 1300 },
+      size: { width: 20, height: 25 },
+      color: "#d35400",
+      metadata: { assetId: "trade_crystal", commerce: 10 },
+    },
+
+    // Elementos de comodidad
+    {
+      id: "serenity_flower_spa",
+      type: "comfort_zone",
+      position: { x: 200, y: 550 },
+      size: { width: 10, height: 10 },
+      color: "#9b59b6",
+      metadata: { assetId: "serenity_flower", tranquility: 8 },
+    },
+
+    {
+      id: "harmony_crystal_meditation",
+      type: "comfort_zone",
+      position: { x: 250, y: 800 },
+      size: { width: 15, height: 20 },
+      color: "#663399",
+      metadata: { assetId: "harmony_crystal", peace: 12 },
+    },
+
+    // Puntos de spawn para entidades
+    {
+      id: "spawn_point_circle",
+      type: "decoration",
+      position: { x: 400, y: 600 },
+      size: { width: 20, height: 20 },
+      color: "#3498db",
+      metadata: { entityType: "circle", spawnable: true },
+    },
+
+    {
+      id: "spawn_point_square",
+      type: "decoration",
+      position: { x: 1800, y: 1000 },
+      size: { width: 20, height: 20 },
+      color: "#e74c3c",
+      metadata: { entityType: "square", spawnable: true },
+    },
+  ];
 };
 
 /**

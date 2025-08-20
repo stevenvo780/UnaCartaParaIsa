@@ -3,9 +3,9 @@
  * Extrae la lógica de inicialización del MainScene god object
  */
 
-import type { GameState } from '../types';
-import { generateValidatedMap } from '../utils/simpleMapGeneration';
-import { logAutopoiesis } from '../utils/logger';
+import type { GameState } from "../types";
+import { logAutopoiesis } from "../utils/logger";
+import { generateValidatedMap } from "../utils/simpleMapGeneration";
 
 export interface InitializationResult {
   gameState: GameState;
@@ -17,7 +17,7 @@ export class SceneInitializationManager {
    * Inicializa el estado del juego y genera el mapa
    */
   static initialize(): InitializationResult {
-    logAutopoiesis.info('Initializing game state and world');
+    logAutopoiesis.info("Initializing game state and world");
 
     const mapData = generateValidatedMap();
 
@@ -30,7 +30,7 @@ export class SceneInitializationManager {
       connectionAnimation: {
         active: false,
         startTime: 0,
-        type: 'FEED',
+        type: "FEED",
       },
       zones: mapData.zones,
       mapElements: mapData.mapElements,
@@ -44,8 +44,8 @@ export class SceneInitializationManager {
       terrainTiles: [],
       roads: [],
       objectLayers: [],
-      worldSize: { width: 1200, height: 800 },
-      generatorVersion: '1.0',
+      worldSize: { width: 2400, height: 1600 },
+      generatorVersion: "1.0",
     };
 
     return {
