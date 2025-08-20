@@ -156,6 +156,24 @@ export class AssetManager {
       type: "spritesheet",
       spriteConfig: { frameWidth: 32, frameHeight: 32, endFrame: 6 },
     },
+    {
+      key: "chicken_anim",
+      path: "assets/animated_entities/chicken.png",
+      type: "spritesheet",
+      spriteConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
+    },
+    {
+      key: "flowers_red_anim",
+      path: "assets/animated_entities/flowers_red.png",
+      type: "spritesheet",
+      spriteConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
+    },
+    {
+      key: "flowers_white_anim",
+      path: "assets/animated_entities/flowers_white.png",
+      type: "spritesheet",
+      spriteConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
+    },
 
     // 🏠 CASAS Y ESTRUCTURAS REALES
     {

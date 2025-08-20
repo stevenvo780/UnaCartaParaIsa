@@ -270,42 +270,36 @@ export class WorldRenderer {
   }
 
   /**
-   * Render a world entity (tree, structure, etc.)
+   * Render a world entity (tree, structure, etc.) - CON DETECCIÓN DE ANIMACIONES
    */
   private renderWorldEntity(entity: any, zoneName?: string): void {
     try {
       // 🎯 NUEVO: Mapeo directo de tipos de entidades a texturas disponibles
-      const textureKey = this.getEntityTextureKey(
+      let textureKey = this.getEntityTextureKey(
         entity.type,
         entity.assetKey,
         zoneName,
       );
 
-      if (textureKey && this.scene.textures.exists(textureKey)) {
-        // ✅ Crear sprite estático con textura real
-        const staticSprite = this.scene.add.sprite(
-          entity.x,
-          entity.y,
-          textureKey,
-        );
-        staticSprite.setDepth(2);
-        staticSprite.setOrigin(0.5, 0.5);
-
-        // Escalar según el tipo de entidad
-        const scale = this.getEntityScale(entity.type);
-        staticSprite.setScale(scale);
-
-        staticSprite.name = `${entity.type}_${entity.id}`;
-        this.decorationSprites.push(staticSprite);
-        this.renderedObjects.set(entity.id, staticSprite);
-
-        logAutopoiesis.debug(
-          `✅ Entity ${entity.id} rendered with texture: ${textureKey}`,
-        );
+      if (!textureKey) {
+        this.createFallbackEntity(entity);
         return;
       }
 
-      // 🎯 INTENTO: Usar AnimationManager solo si existe y funciona
+      // 🎬 NUEVO: Detectar si debe usar versión animada
+      textureKey = this.getAnimatedVersionIfExists(textureKey);
+
+      if (this.scene.textures.exists(textureKey)) {
+        // 🎭 Verificar si es una animación
+        if (this.isAnimatedTexture(textureKey)) {
+          this.createAnimatedEntity(entity, textureKey);
+        } else {
+          this.createStaticEntity(entity, textureKey);
+        }
+        return;
+      }
+
+      // 🎯 INTENTO: Usar AnimationManager como fallback
       if (
         this.animationManager &&
         entity.assetKey &&
@@ -325,33 +319,106 @@ export class WorldRenderer {
         }
       }
 
-      // ❌ Fallback final: cuadro de color
-      const fallbackColor = this.getFallbackColor(entity.type);
-      const fallbackSprite = this.scene.add.rectangle(
-        entity.x,
-        entity.y,
-        24,
-        24,
-        fallbackColor,
-      );
-      fallbackSprite.setDepth(2);
-      fallbackSprite.name = `${entity.type}_${entity.id}_fallback`;
-      this.decorationSprites.push(fallbackSprite as any);
-      this.renderedObjects.set(entity.id, fallbackSprite);
-
-      logAutopoiesis.warn(
-        `⚠️ Entity ${entity.id} (${entity.type}) rendered as fallback rectangle`,
-      );
+      // ❌ Fallback final
+      this.createFallbackEntity(entity);
     } catch (error) {
       logAutopoiesis.warn(`Failed to render entity ${entity.id}:`, error);
-
-      // Create a simple fallback
-      const fallback = this.scene.add.circle(entity.x, entity.y, 12, 0x228b22);
-      fallback.setDepth(2);
-      fallback.name = `${entity.type}_${entity.id}_error`;
-      this.decorationSprites.push(fallback as any);
-      this.renderedObjects.set(entity.id, fallback);
+      this.createFallbackEntity(entity);
     }
+  }
+
+  /**
+   * 🎬 Crear entidad animada (spritesheet con animación)
+   */
+  private createAnimatedEntity(entity: any, textureKey: string): void {
+    const animatedSprite = this.scene.add.sprite(
+      entity.x,
+      entity.y,
+      textureKey,
+    );
+    animatedSprite.setDepth(2);
+    animatedSprite.setOrigin(0.5, 0.5);
+
+    // Configurar escala
+    const scale = this.getEntityScale(entity.type);
+    animatedSprite.setScale(scale);
+
+    // Intentar reproducir animación si existe
+    try {
+      // Crear animación básica si no existe
+      const animKey = `${textureKey}_play`;
+      if (!this.scene.anims.exists(animKey)) {
+        this.scene.anims.create({
+          key: animKey,
+          frames: this.scene.anims.generateFrameNumbers(textureKey, {
+            start: 0,
+            end: -1,
+          }),
+          frameRate: 8, // 8 FPS para animaciones suaves
+          repeat: -1, // Repetir infinitamente
+        });
+      }
+
+      // Reproducir animación
+      animatedSprite.play(animKey);
+
+      logAutopoiesis.debug(
+        `🎬 Animated entity ${entity.id} created with ${textureKey}`,
+      );
+    } catch (animError) {
+      logAutopoiesis.warn(
+        `Animation failed for ${textureKey}, using static:`,
+        animError,
+      );
+      // Si falla la animación, usar como sprite estático
+    }
+
+    animatedSprite.name = `${entity.type}_${entity.id}_animated`;
+    this.decorationSprites.push(animatedSprite);
+    this.renderedObjects.set(entity.id, animatedSprite);
+  }
+
+  /**
+   * 🖼️ Crear entidad estática (sprite normal)
+   */
+  private createStaticEntity(entity: any, textureKey: string): void {
+    const staticSprite = this.scene.add.sprite(entity.x, entity.y, textureKey);
+    staticSprite.setDepth(2);
+    staticSprite.setOrigin(0.5, 0.5);
+
+    // Escalar según el tipo de entidad
+    const scale = this.getEntityScale(entity.type);
+    staticSprite.setScale(scale);
+
+    staticSprite.name = `${entity.type}_${entity.id}`;
+    this.decorationSprites.push(staticSprite);
+    this.renderedObjects.set(entity.id, staticSprite);
+
+    logAutopoiesis.debug(
+      `✅ Static entity ${entity.id} rendered with texture: ${textureKey}`,
+    );
+  }
+
+  /**
+   * ❌ Crear entidad de fallback
+   */
+  private createFallbackEntity(entity: any): void {
+    const fallbackColor = this.getFallbackColor(entity.type);
+    const fallbackSprite = this.scene.add.rectangle(
+      entity.x,
+      entity.y,
+      24,
+      24,
+      fallbackColor,
+    );
+    fallbackSprite.setDepth(2);
+    fallbackSprite.name = `${entity.type}_${entity.id}_fallback`;
+    this.decorationSprites.push(fallbackSprite as any);
+    this.renderedObjects.set(entity.id, fallbackSprite);
+
+    logAutopoiesis.warn(
+      `⚠️ Entity ${entity.id} (${entity.type}) rendered as fallback rectangle`,
+    );
   }
 
   /**
@@ -855,5 +922,63 @@ export class WorldRenderer {
         }
       }
     }
+  }
+
+  /**
+   * 🎬 Detecta y mapea texturas estáticas a sus versiones animadas
+   */
+  private getAnimatedVersionIfExists(textureKey: string): string {
+    // Mapeo de texturas estáticas a sus versiones animadas
+    const animationMappings: { [key: string]: string } = {
+      campfire: "campfire_anim",
+      "checkpoint-flag": "flag_idle_anim",
+      checkpoint_flag: "flag_idle_anim",
+      fire: "campfire_anim",
+      fire1: "campfire_anim",
+      "flowers-red": "flowers_red_anim",
+      "flowers-white": "flowers_white_anim",
+      flowers_red: "flowers_red_anim",
+      flowers_white: "flowers_white_anim",
+      chicken: "chicken_anim",
+      wildlife: "chicken_anim", // Usar pollo animado para wildlife
+    };
+
+    // Si existe una versión animada, verificar que esté cargada
+    const animatedKey = animationMappings[textureKey];
+    if (animatedKey && this.scene.textures.exists(animatedKey)) {
+      logAutopoiesis.debug(
+        `🎬 Using animated version: ${textureKey} -> ${animatedKey}`,
+      );
+      return animatedKey;
+    }
+
+    // Si no hay versión animada, usar la estática
+    return textureKey;
+  }
+
+  /**
+   * 🎭 Verifica si una textura es una animación (spritesheet)
+   */
+  private isAnimatedTexture(textureKey: string): boolean {
+    // Patrones que indican que es una animación
+    const animationPatterns = ["_anim", "_animation", "anim_", "animation_"];
+
+    // Verificar si el nombre contiene patrones de animación
+    const hasAnimPattern = animationPatterns.some((pattern) =>
+      textureKey.includes(pattern),
+    );
+
+    // Verificar si proviene de carpeta animated_entities
+    const isFromAnimatedFolder = textureKey.includes("animated");
+
+    // Verificar si la textura existe y tiene frames múltiples
+    if (this.scene.textures.exists(textureKey)) {
+      const texture = this.scene.textures.get(textureKey);
+      const hasMultipleFrames = texture.frameTotal > 1;
+
+      return hasAnimPattern || isFromAnimatedFolder || hasMultipleFrames;
+    }
+
+    return hasAnimPattern || isFromAnimatedFolder;
   }
 }
