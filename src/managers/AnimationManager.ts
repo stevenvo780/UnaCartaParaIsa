@@ -31,7 +31,7 @@
     },ndo spritesheets de Phaser
  */
 
-import { logAutopoiesis } from "../utils/logger";
+import { logAutopoiesis } from '../utils/logger';
 
 export interface SpriteSheetConfig {
   key: string;
@@ -59,72 +59,72 @@ export class AnimationManager {
   private static readonly SPRITE_SHEET_CONFIGS: SpriteSheetConfig[] = [
     // Solo animaciones reales - NO sprites estáticos
     {
-      key: "campfire_anim",
-      path: "assets/animated_entities/campfire.png",
+      key: 'campfire_anim',
+      path: 'assets/animated_entities/campfire.png',
       frameWidth: 32,
       frameHeight: 32,
       totalFrames: 8,
     },
     {
-      key: "flowers_red_anim",
-      path: "assets/animated_entities/flowers_red.png",
+      key: 'flowers_red_anim',
+      path: 'assets/animated_entities/flowers_red.png',
       frameWidth: 16,
       frameHeight: 16,
       totalFrames: 4,
     },
     {
-      key: "flowers_white_anim",
-      path: "assets/animated_entities/flowers_white.png",
+      key: 'flowers_white_anim',
+      path: 'assets/animated_entities/flowers_white.png',
       frameWidth: 16,
       frameHeight: 16,
       totalFrames: 4,
     },
     {
-      key: "flag_idle_anim",
-      path: "assets/animated_entities/checkpoint_flag_idle1.png",
+      key: 'flag_idle_anim',
+      path: 'assets/animated_entities/checkpoint_flag_idle1.png',
       frameWidth: 32,
       frameHeight: 32,
       totalFrames: 7,
     },
     {
-      key: "flag_out_anim",
-      path: "assets/animated_entities/checkpoint_flag_out1.png",
+      key: 'flag_out_anim',
+      path: 'assets/animated_entities/checkpoint_flag_out1.png',
       frameWidth: 32,
       frameHeight: 32,
       totalFrames: 7,
     },
     {
-      key: "pointer_idle_anim",
-      path: "assets/animated_entities/pointer_idle.png",
+      key: 'pointer_idle_anim',
+      path: 'assets/animated_entities/pointer_idle.png',
       frameWidth: 24,
       frameHeight: 24,
       totalFrames: 6,
     },
     // Nuevos animales para poblar el mundo - solo los que tienen múltiples frames
     {
-      key: "chicken_anim",
-      path: "assets/animated_entities/chicken.png",
+      key: 'chicken_anim',
+      path: 'assets/animated_entities/chicken.png',
       frameWidth: 32,
       frameHeight: 32,
       totalFrames: 8,
     },
     {
-      key: "pig_anim",
-      path: "assets/animated_entities/pig.png",
+      key: 'pig_anim',
+      path: 'assets/animated_entities/pig.png',
       frameWidth: 32,
       frameHeight: 32,
       totalFrames: 6,
     },
     {
-      key: "sheep_anim",
-      path: "assets/animated_entities/sheep.png",
+      key: 'sheep_anim',
+      path: 'assets/animated_entities/sheep.png',
       frameWidth: 32,
       frameHeight: 32,
       totalFrames: 1, // Estático
     },
     {
-      key: "horse_anim",
-      path: "assets/animated_entities/horse32x32.png",
+      key: 'horse_anim',
+      path: 'assets/animated_entities/horse32x32.png',
       frameWidth: 32,
       frameHeight: 32,
       totalFrames: 1, // Estático
@@ -135,61 +135,61 @@ export class AnimationManager {
   private static readonly ANIMATION_CONFIGS: AnimationConfig[] = [
     // Entorno animado
     {
-      key: "campfire_anim",
-      spriteSheetKey: "campfire_anim",
+      key: 'campfire_anim',
+      spriteSheetKey: 'campfire_anim',
       frames: Array.from({ length: 8 }, (_, i) => i),
       frameRate: 10,
       repeat: -1,
     },
     {
-      key: "flowers_red_anim",
-      spriteSheetKey: "flowers_red_anim",
+      key: 'flowers_red_anim',
+      spriteSheetKey: 'flowers_red_anim',
       frames: Array.from({ length: 4 }, (_, i) => i),
       frameRate: 7,
       repeat: -1,
       yoyo: true,
     },
     {
-      key: "flowers_white_anim",
-      spriteSheetKey: "flowers_white_anim",
+      key: 'flowers_white_anim',
+      spriteSheetKey: 'flowers_white_anim',
       frames: Array.from({ length: 4 }, (_, i) => i),
       frameRate: 7,
       repeat: -1,
       yoyo: true,
     },
     {
-      key: "flag_idle_anim",
-      spriteSheetKey: "flag_idle_anim",
+      key: 'flag_idle_anim',
+      spriteSheetKey: 'flag_idle_anim',
       frames: Array.from({ length: 7 }, (_, i) => i),
       frameRate: 10,
       repeat: -1,
     },
     {
-      key: "flag_out_anim",
-      spriteSheetKey: "flag_out_anim",
+      key: 'flag_out_anim',
+      spriteSheetKey: 'flag_out_anim',
       frames: Array.from({ length: 7 }, (_, i) => i),
       frameRate: 10,
       repeat: 0,
     },
     // UI
     {
-      key: "pointer_idle_anim",
-      spriteSheetKey: "pointer_idle_anim",
+      key: 'pointer_idle_anim',
+      spriteSheetKey: 'pointer_idle_anim',
       frames: Array.from({ length: 6 }, (_, i) => i),
       frameRate: 10,
       repeat: -1,
     },
     // Animales
     {
-      key: "chicken_anim",
-      spriteSheetKey: "chicken_anim",
+      key: 'chicken_anim',
+      spriteSheetKey: 'chicken_anim',
       frames: Array.from({ length: 8 }, (_, i) => i),
       frameRate: 8,
       repeat: -1,
     },
     {
-      key: "pig_anim",
-      spriteSheetKey: "pig_anim",
+      key: 'pig_anim',
+      spriteSheetKey: 'pig_anim',
       frames: Array.from({ length: 6 }, (_, i) => i),
       frameRate: 6,
       repeat: -1,
@@ -205,7 +205,7 @@ export class AnimationManager {
    * Load all sprite sheets for animations
    */
   public loadAllSpriteSheets(): void {
-    AnimationManager.SPRITE_SHEET_CONFIGS.forEach((config) => {
+    AnimationManager.SPRITE_SHEET_CONFIGS.forEach(config => {
       try {
         this.scene.load.spritesheet(config.key, config.path, {
           frameWidth: config.frameWidth,
@@ -226,7 +226,7 @@ export class AnimationManager {
       }
     });
 
-    logAutopoiesis.info("All spritesheets queued for loading", {
+    logAutopoiesis.info('All spritesheets queued for loading', {
       total: AnimationManager.SPRITE_SHEET_CONFIGS.length,
     });
   }
@@ -236,19 +236,16 @@ export class AnimationManager {
    */
   public createAllAnimations(): void {
     if (!this.scene.anims) {
-      logAutopoiesis.error("Animation manager not available in scene");
+      logAutopoiesis.error('Animation manager not available in scene');
       return;
     }
 
-    AnimationManager.ANIMATION_CONFIGS.forEach((config) => {
+    AnimationManager.ANIMATION_CONFIGS.forEach(config => {
       try {
         if (!this.scene.textures.exists(config.spriteSheetKey)) {
-          logAutopoiesis.warn(
-            `Spritesheet not found: ${config.spriteSheetKey}`,
-            {
-              animationKey: config.key,
-            },
-          );
+          logAutopoiesis.warn(`Spritesheet not found: ${config.spriteSheetKey}`, {
+            animationKey: config.key,
+          });
           return;
         }
 
@@ -282,7 +279,7 @@ export class AnimationManager {
       }
     });
 
-    logAutopoiesis.info("Animation creation completed", {
+    logAutopoiesis.info('Animation creation completed', {
       created: this.createdAnimations.size,
       total: AnimationManager.ANIMATION_CONFIGS.length,
     });
@@ -291,11 +288,7 @@ export class AnimationManager {
   /**
    * Play animation on a sprite
    */
-  public playAnimation(
-    sprite: Phaser.GameObjects.Sprite,
-    animationKey: string,
-    ignoreIfPlaying = true,
-  ): boolean {
+  public playAnimation(sprite: Phaser.GameObjects.Sprite, animationKey: string, ignoreIfPlaying = true): boolean {
     if (!this.createdAnimations.has(animationKey)) {
       logAutopoiesis.warn(`Animation not found: ${animationKey}`);
       return false;
@@ -328,11 +321,9 @@ export class AnimationManager {
     x: number,
     y: number,
     animationKey: string,
-    autoPlay = true,
+    autoPlay = true
   ): Phaser.GameObjects.Sprite | null {
-    const config = AnimationManager.ANIMATION_CONFIGS.find(
-      (c) => c.key === animationKey,
-    );
+    const config = AnimationManager.ANIMATION_CONFIGS.find(c => c.key === animationKey);
     if (!config) {
       logAutopoiesis.warn(`Animation config not found: ${animationKey}`);
       return null;
@@ -345,7 +336,7 @@ export class AnimationManager {
       this.createdSprites.add(sprite);
 
       // Add cleanup handler when sprite is destroyed
-      sprite.once("destroy", () => {
+      sprite.once('destroy', () => {
         this.createdSprites.delete(sprite);
       });
 
@@ -355,12 +346,9 @@ export class AnimationManager {
 
       return sprite;
     } catch (error) {
-      logAutopoiesis.error(
-        `Failed to create animated sprite: ${animationKey}`,
-        {
-          error: String(error),
-        },
-      );
+      logAutopoiesis.error(`Failed to create animated sprite: ${animationKey}`, {
+        error: String(error),
+      });
       return null;
     }
   }
@@ -369,9 +357,7 @@ export class AnimationManager {
    * Get animation duration in milliseconds
    */
   public getAnimationDuration(animationKey: string): number {
-    const config = AnimationManager.ANIMATION_CONFIGS.find(
-      (c) => c.key === animationKey,
-    );
+    const config = AnimationManager.ANIMATION_CONFIGS.find(c => c.key === animationKey);
     if (!config) return 0;
 
     return (config.frames.length / config.frameRate) * 1000;
@@ -393,24 +379,15 @@ export class AnimationManager {
     ui: string[];
     animals: string[];
   } {
-    const entities = Array.from(this.createdAnimations).filter(
-      (key) => key.includes("isa_") || key.includes("stev_"),
-    );
+    const entities = Array.from(this.createdAnimations).filter(key => key.includes('isa_') || key.includes('stev_'));
 
     const environment = Array.from(this.createdAnimations).filter(
-      (key) =>
-        key.includes("campfire") ||
-        key.includes("flowers") ||
-        key.includes("flag"),
+      key => key.includes('campfire') || key.includes('flowers') || key.includes('flag')
     );
 
-    const ui = Array.from(this.createdAnimations).filter((key) =>
-      key.includes("pointer"),
-    );
+    const ui = Array.from(this.createdAnimations).filter(key => key.includes('pointer'));
 
-    const animals = Array.from(this.createdAnimations).filter(
-      (key) => key.includes("chicken") || key.includes("pig"),
-    );
+    const animals = Array.from(this.createdAnimations).filter(key => key.includes('chicken') || key.includes('pig'));
 
     return { entities, environment, ui, animals };
   }
@@ -437,7 +414,7 @@ export class AnimationManager {
    */
   public destroy(): void {
     // Destroy all sprites created by this manager
-    this.createdSprites.forEach((sprite) => {
+    this.createdSprites.forEach(sprite => {
       if (sprite && sprite.scene) {
         // Stop animations before destroying
         if (sprite.anims && sprite.anims.isPlaying) {
@@ -452,7 +429,7 @@ export class AnimationManager {
     this.loadedSpriteSheets.clear();
     this.createdAnimations.clear();
 
-    logAutopoiesis.info("AnimationManager destroyed", {
+    logAutopoiesis.info('AnimationManager destroyed', {
       spritesDestroyed: this.createdSprites.size,
       animationsCleared: this.createdAnimations.size,
     });

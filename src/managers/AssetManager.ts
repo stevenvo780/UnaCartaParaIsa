@@ -228,6 +228,70 @@ export class AssetManager {
       type: "image",
       fallback: "flowers-white",
     },
+
+    // 🏠 INTERIORES Y MUEBLES
+    {
+      key: "wooden_floor",
+      path: "assets/structures/interiores/wooden.png",
+      type: "image",
+      fallback: "food_store",
+    },
+    {
+      key: "wall_brick",
+      path: "assets/structures/interiores/muros1.png",
+      type: "image",
+      fallback: "food_store",
+    },
+    {
+      key: "wall_stone",
+      path: "assets/structures/interiores/muros3.png",
+      type: "image",
+      fallback: "food_store",
+    },
+    {
+      key: "roof_tile",
+      path: "assets/structures/interiores/tile_0542_tejado.png",
+      type: "image",
+      fallback: "food_store",
+    },
+
+    // 📚 PROPS Y MOBILIARIO
+    {
+      key: "lamp_interior",
+      path: "assets/props/lamparas1.png",
+      type: "image",
+      fallback: "campfire",
+    },
+    {
+      key: "chair_interior",
+      path: "assets/props/sillas2.png",
+      type: "image",
+      fallback: "woman",
+    },
+    {
+      key: "chest_treasure",
+      path: "assets/props/Chests_002.png",
+      type: "image",
+      fallback: "food_store",
+    },
+    {
+      key: "bookshelf",
+      path: "assets/props/cajas3.png",
+      type: "image",
+      fallback: "food_store",
+    },
+    {
+      key: "window_interior",
+      path: "assets/props/ventana1.png",
+      type: "image",
+      fallback: "food_store",
+    },
+    {
+      key: "sign_interior",
+      path: "assets/props/Sign_1.png",
+      type: "image",
+      fallback: "food_store",
+    },
   ];
 
   private static readonly FALLBACK_ASSETS: Record<

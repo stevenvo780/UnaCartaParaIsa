@@ -3,13 +3,13 @@
  * Carga assets bajo demanda para optimizar rendimiento inicial
  */
 
-import { logAutopoiesis } from "../utils/logger";
+import { logAutopoiesis } from '../utils/logger';
 
 export interface AssetLoadRequest {
   key: string;
   path: string;
-  type: "image" | "spritesheet" | "audio";
-  priority: "high" | "medium" | "low";
+  type: 'image' | 'spritesheet' | 'audio';
+  priority: 'high' | 'medium' | 'low';
   frameConfig?: { frameWidth: number; frameHeight: number };
 }
 
@@ -43,51 +43,51 @@ export class AssetLazyLoader {
   private setupAssetGroups(): void {
     // Assets críticos - cargar inmediatamente
     this.defineAssetGroup(
-      "critical",
+      'critical',
       [
         {
-          key: "isa_happy_anim",
-          path: "/assets/entities/ent_woman.png",
-          type: "image",
-          priority: "high",
+          key: 'isa_happy_anim',
+          path: '/assets/entities/ent_woman.png',
+          type: 'image',
+          priority: 'high',
         },
         {
-          key: "stev_happy_anim",
-          path: "/assets/entities/ent_man.png",
-          type: "image",
-          priority: "high",
+          key: 'stev_happy_anim',
+          path: '/assets/entities/ent_man.png',
+          type: 'image',
+          priority: 'high',
         },
         {
-          key: "isa_sad_anim",
-          path: "/assets/animated_entities/entidad_circulo_sad_anim.png",
-          type: "spritesheet",
-          priority: "high",
+          key: 'isa_sad_anim',
+          path: '/assets/animated_entities/entidad_circulo_sad_anim.png',
+          type: 'spritesheet',
+          priority: 'high',
           frameConfig: { frameWidth: 32, frameHeight: 32 },
         },
         {
-          key: "stev_sad_anim",
-          path: "/assets/animated_entities/entidad_square_sad_anim.png",
-          type: "spritesheet",
-          priority: "high",
+          key: 'stev_sad_anim',
+          path: '/assets/animated_entities/entidad_square_sad_anim.png',
+          type: 'spritesheet',
+          priority: 'high',
           frameConfig: { frameWidth: 32, frameHeight: 32 },
         },
       ],
-      true,
+      true
     );
 
     // Terreno básico - prioridad media
-    this.defineAssetGroup("terrain_basic", [
+    this.defineAssetGroup('terrain_basic', [
       {
-        key: "grass_1",
-        path: "assets/terrain/autotiles/grass_edge_n.png",
-        type: "image",
-        priority: "medium",
+        key: 'grass_1',
+        path: 'assets/terrain/autotiles/grass_edge_n.png',
+        type: 'image',
+        priority: 'medium',
       },
       {
-        key: "grass_2",
-        path: "/assets/terrain/grass_2.png",
-        type: "image",
-        priority: "medium",
+        key: 'grass_2',
+        path: '/assets/terrain/grass_2.png',
+        type: 'image',
+        priority: 'medium',
       },
       // Temporalmente comentado por timeout
       // {
@@ -99,21 +99,21 @@ export class AssetLazyLoader {
     ]);
 
     // Props y decoraciones - temporalmente deshabilitado
-    this.defineAssetGroup("decorations", [
+    this.defineAssetGroup('decorations', [
       // Temporalmente vacío para evitar timeouts
     ]);
 
     // Efectos visuales - temporalmente deshabilitado
-    this.defineAssetGroup("effects", [
+    this.defineAssetGroup('effects', [
       // Temporalmente vacío para evitar timeouts
     ]);
 
     // Estructuras y buildings - temporalmente deshabilitado
-    this.defineAssetGroup("structures", [
+    this.defineAssetGroup('structures', [
       // Temporalmente vacío para evitar timeouts
     ]);
 
-    logAutopoiesis.info("Asset groups configured", {
+    logAutopoiesis.info('Asset groups configured', {
       totalGroups: this.assetGroups.size,
       groupNames: Array.from(this.assetGroups.keys()),
     });
@@ -122,15 +122,11 @@ export class AssetLazyLoader {
   /**
    * Definir un grupo de assets
    */
-  private defineAssetGroup(
-    name: string,
-    assets: AssetLoadRequest[],
-    preload = false,
-  ): void {
+  private defineAssetGroup(name: string, assets: AssetLoadRequest[], preload = false): void {
     this.assetGroups.set(name, { name, assets, preload });
 
     // Añadir assets al queue
-    assets.forEach((asset) => {
+    assets.forEach(asset => {
       this.loadQueue.set(asset.key, asset);
     });
   }
@@ -139,14 +135,14 @@ export class AssetLazyLoader {
    * Cargar assets críticos al inicio
    */
   public async loadCriticalAssets(): Promise<void> {
-    logAutopoiesis.info("Cargando assets críticos...");
+    logAutopoiesis.info('Cargando assets críticos...');
 
-    const criticalGroup = this.assetGroups.get("critical");
+    const criticalGroup = this.assetGroups.get('critical');
     if (!criticalGroup) return;
 
-    await this.loadAssetGroup("critical");
+    await this.loadAssetGroup('critical');
 
-    logAutopoiesis.info("Assets críticos cargados", {
+    logAutopoiesis.info('Assets críticos cargados', {
       loaded: criticalGroup.assets.length,
     });
   }
@@ -162,8 +158,8 @@ export class AssetLazyLoader {
     }
 
     const loadPromises = group.assets
-      .filter((asset) => !this.isAssetLoaded(asset.key))
-      .map((asset) => this.loadAsset(asset.key));
+      .filter(asset => !this.isAssetLoaded(asset.key))
+      .map(asset => this.loadAsset(asset.key));
 
     try {
       await Promise.all(loadPromises);
@@ -215,7 +211,7 @@ export class AssetLazyLoader {
   private async doLoadAsset(config: AssetLoadRequest): Promise<void> {
     // Control de concurrencia
     while (this.currentLoads >= this.MAX_CONCURRENT_LOADS) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     this.currentLoads++;
@@ -256,23 +252,19 @@ export class AssetLazyLoader {
 
         // Cargar según tipo de asset
         switch (config.type) {
-          case "image":
+          case 'image':
             this.scene.load.image(config.key, config.path);
             break;
 
-          case "spritesheet":
+          case 'spritesheet':
             if (config.frameConfig) {
-              this.scene.load.spritesheet(
-                config.key,
-                config.path,
-                config.frameConfig,
-              );
+              this.scene.load.spritesheet(config.key, config.path, config.frameConfig);
             } else {
               this.scene.load.image(config.key, config.path);
             }
             break;
 
-          case "audio":
+          case 'audio':
             this.scene.load.audio(config.key, config.path);
             break;
 
@@ -282,8 +274,8 @@ export class AssetLazyLoader {
         }
 
         // Configurar eventos de carga
-        this.scene.load.once("complete", onComplete);
-        this.scene.load.once("loaderror", onError);
+        this.scene.load.once('complete', onComplete);
+        this.scene.load.once('loaderror', onError);
 
         // Iniciar carga
         this.scene.load.start();
@@ -312,36 +304,28 @@ export class AssetLazyLoader {
   /**
    * Precargar assets por proximidad (para mundo abierto)
    */
-  public async preloadAssetsNear(
-    _x: number,
-    _y: number,
-    _radius = 200,
-  ): Promise<void> {
+  public async preloadAssetsNear(_x: number, _y: number, _radius = 200): Promise<void> {
     // Lógica simplificada - en un juego real, mapearía coordenadas a assets
-    const nearbyGroups = ["terrain_basic"];
+    const nearbyGroups = ['terrain_basic'];
 
     if (Math.random() > 0.7) {
       // 30% chance de necesitar decoraciones
-      nearbyGroups.push("decorations");
+      nearbyGroups.push('decorations');
     }
 
-    const loadPromises = nearbyGroups.map((group) =>
-      this.loadAssetGroup(group),
-    );
+    const loadPromises = nearbyGroups.map(group => this.loadAssetGroup(group));
     await Promise.all(loadPromises);
   }
 
   /**
    * Cargar assets por prioridad
    */
-  public async loadAssetsByPriority(
-    priority: "high" | "medium" | "low",
-  ): Promise<void> {
+  public async loadAssetsByPriority(priority: 'high' | 'medium' | 'low'): Promise<void> {
     const assetsToLoad = Array.from(this.loadQueue.values()).filter(
-      (asset) => asset.priority === priority && !this.isAssetLoaded(asset.key),
+      asset => asset.priority === priority && !this.isAssetLoaded(asset.key)
     );
 
-    const loadPromises = assetsToLoad.map((asset) => this.loadAsset(asset.key));
+    const loadPromises = assetsToLoad.map(asset => this.loadAsset(asset.key));
 
     try {
       await Promise.all(loadPromises);
@@ -388,13 +372,13 @@ export class AssetLazyLoader {
     // Mantener assets críticos y especificados
     const keepSet = new Set([
       ...keepKeys,
-      "isa_happy_anim",
-      "stev_happy_anim",
-      "isa_sad_anim",
-      "stev_sad_anim", // críticos
+      'isa_happy_anim',
+      'stev_happy_anim',
+      'isa_sad_anim',
+      'stev_sad_anim', // críticos
     ]);
 
-    this.loadedAssets.forEach((key) => {
+    this.loadedAssets.forEach(key => {
       if (!keepSet.has(key)) {
         if (this.scene.textures.exists(key)) {
           this.scene.textures.remove(key);
@@ -405,7 +389,7 @@ export class AssetLazyLoader {
     });
 
     if (cleanedCount > 0) {
-      logAutopoiesis.info("Assets no utilizados limpiados", {
+      logAutopoiesis.info('Assets no utilizados limpiados', {
         cleaned: cleanedCount,
         remaining: this.loadedAssets.size,
       });
@@ -425,6 +409,6 @@ export class AssetLazyLoader {
     this.loadingAssets.clear();
     this.assetGroups.clear();
 
-    logAutopoiesis.info("AssetLazyLoader destroyed");
+    logAutopoiesis.info('AssetLazyLoader destroyed');
   }
 }

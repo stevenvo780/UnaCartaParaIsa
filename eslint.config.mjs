@@ -49,7 +49,7 @@ export default tseslint.config(
       // ==========================================
       // TYPESCRIPT RULES (AI-Agent friendly but strict on quality)
       // ==========================================
-      '@typescript-eslint/no-explicit-any': 'off', // Allow any for AI convenience
+      '@typescript-eslint/no-explicit-any': 'warn', // Discourage any but don't fail build
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
       '@typescript-eslint/prefer-optional-chain': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
@@ -63,11 +63,29 @@ export default tseslint.config(
       '@typescript-eslint/explicit-member-accessibility': 'off',
       '@typescript-eslint/member-ordering': 'off',
 
-      // Variable and parameter rules (very relaxed)
-      '@typescript-eslint/no-unused-vars': 'off',
+      // Variable and parameter rules (balanced)
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { 
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
 
-      // No naming conventions - allow any style
-      '@typescript-eslint/naming-convention': 'off',
+      // Basic naming conventions (flexible)
+      '@typescript-eslint/naming-convention': [
+        'warn',
+        {
+          selector: 'typeLike',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'enumMember',
+          format: ['UPPER_CASE', 'PascalCase'],
+        },
+      ],
 
       // ==========================================
       // BASIC PRACTICES (AI-Agent friendly)
@@ -90,7 +108,7 @@ export default tseslint.config(
       'no-unused-expressions': 'warn',
       'no-useless-return': 'warn',
       'no-useless-concat': 'warn',
-      'consistent-return': 'off',
+      'consistent-return': 'warn',
 
       // ==========================================
       // COMPLEXITY CONTROL (Very Relaxed)

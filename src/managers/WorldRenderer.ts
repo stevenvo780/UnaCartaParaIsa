@@ -2,7 +2,7 @@
  * World Renderer - Maneja todo el rendering visual del mundo
  */
 
-import type { GameState } from "../types";
+import type { GameState, Zone } from "../types";
 import { logAutopoiesis } from "../utils/logger";
 import { WorldPopulator } from "../world/WorldPopulator";
 import { BiomeType } from "../world/types";
@@ -226,36 +226,18 @@ export class WorldRenderer {
   }
 
   /**
-   * Populate world with decorations based on zones
+   * Populate world with decorations - SISTEMA DUAL: Base + Zonas
    */
   private populateWorldWithDecorations(): void {
     try {
-      this.gameState.zones.forEach((zone) => {
-        const biome = this.determineBiomeFromZone(zone.name);
-        const seed = this.hashStringToNumber(zone.id);
+      // 🌍 FASE 1: Poblar TODA la base del mapa con vegetación distribuida
+      this.populateBaseWorldLayer();
 
-        // Generate decorations for this zone
-        const entities = this.worldPopulator.populateRegion(
-          zone.bounds.x,
-          zone.bounds.y,
-          zone.bounds.width,
-          zone.bounds.height,
-          biome,
-          seed,
-        );
-
-        // Render each decoration entity
-        entities.forEach((entity) => {
-          this.renderWorldEntity(entity);
-        });
-
-        logAutopoiesis.debug(
-          `Populated zone ${zone.name} with ${entities.length} decorations`,
-        );
-      });
+      // 🏠 FASE 2: Poblar zonas específicas con contenido temático
+      this.populateZoneSpecificContent();
 
       logAutopoiesis.info(
-        `🎨 World decorated with ${this.decorationSprites.length} elements`,
+        `🎨 World decorated with ${this.decorationSprites.length} elements (base + zones)`,
       );
     } catch (error) {
       logAutopoiesis.error("❌ Error populating world decorations:", error);
@@ -290,10 +272,14 @@ export class WorldRenderer {
   /**
    * Render a world entity (tree, structure, etc.)
    */
-  private renderWorldEntity(entity: any): void {
+  private renderWorldEntity(entity: any, zoneName?: string): void {
     try {
       // 🎯 NUEVO: Mapeo directo de tipos de entidades a texturas disponibles
-      const textureKey = this.getEntityTextureKey(entity.type, entity.assetKey);
+      const textureKey = this.getEntityTextureKey(
+        entity.type,
+        entity.assetKey,
+        zoneName,
+      );
 
       if (textureKey && this.scene.textures.exists(textureKey)) {
         // ✅ Crear sprite estático con textura real
@@ -369,12 +355,94 @@ export class WorldRenderer {
   }
 
   /**
-   * 🎯 Mapea tipos de entidades a texturas disponibles - VERSIÓN REALISTA
+   * 🎯 Mapea tipos de entidades a texturas disponibles - VERSIÓN CON ZONIFICACIÓN
    */
   private getEntityTextureKey(
     entityType: string,
     assetKey?: string,
+    zoneName?: string,
   ): string | null {
+    // 🏠 DETECTAR SI ES ZONA INTERIOR O EXTERIOR
+    const isInteriorZone = this.isInteriorZone(zoneName || "");
+
+    if (isInteriorZone) {
+      return this.getInteriorAssets(entityType);
+    } else {
+      return this.getExteriorAssets(entityType, assetKey);
+    }
+  }
+
+  /**
+   * 🏠 Determina si una zona es interior basada en su nombre
+   */
+  private isInteriorZone(zoneName: string): boolean {
+    const interiorKeywords = [
+      "biblioteca",
+      "library",
+      "santuario",
+      "sanctuary",
+      "cocina",
+      "kitchen",
+      "cuarto",
+      "room",
+      "bedroom",
+      "comedor",
+      "dining",
+      "sala",
+      "living",
+      "oficina",
+      "office",
+      "estudio",
+      "study",
+    ];
+
+    const lowerZoneName = zoneName.toLowerCase();
+    return interiorKeywords.some((keyword) => lowerZoneName.includes(keyword));
+  }
+
+  /**
+   * 🏠 Assets para zonas INTERIORES (mobiliario, lámparas, etc.)
+   */
+  private getInteriorAssets(entityType: string): string {
+    const interiorTextures: { [key: string]: string } = {
+      // Mobiliario y decoración interior
+      structure: this.getRandomTexture([
+        "chair_interior",
+        "chest_treasure",
+        "bookshelf",
+      ]),
+      decoration: this.getRandomTexture([
+        "lamp_interior",
+        "window_interior",
+        "sign_interior",
+      ]),
+      special: this.getRandomTexture([
+        "wooden_floor",
+        "wall_brick",
+        "wall_stone",
+      ]),
+
+      // Elementos de biblioteca específicos
+      ruin: "bookshelf", // Libros y estanterías
+      tree: "lamp_interior", // Lámparas como "árboles" de luz
+      vegetation: "chair_interior", // Sillas como "vegetación" del interior
+
+      // Fallbacks
+      campfire: "lamp_interior", // Lámparas en lugar de fogatas
+      wildlife: "chest_treasure", // Cofres como "vida" del interior
+    };
+
+    return (
+      interiorTextures[entityType] ||
+      interiorTextures.decoration ||
+      "lamp_interior"
+    );
+  }
+
+  /**
+   * 🌳 Assets para zonas EXTERIORES (árboles, casas, etc.)
+   */
+  private getExteriorAssets(entityType: string, assetKey?: string): string {
     // 🏠 MAPEO REALISTA DE ESTRUCTURAS (casas reales)
     const houseTextures = ["house_hay", "house_stone", "house_wood", "well"];
 
@@ -395,8 +463,7 @@ export class WorldRenderer {
       "flowers-white",
     ];
 
-    // Mapeo directo basado en texturas disponibles verificadas
-    const entityTextureMap: { [key: string]: string } = {
+    const exteriorTextures: { [key: string]: string } = {
       // Entidades principales (sin cambio)
       campfire: "campfire",
       woman: "woman",
@@ -426,38 +493,32 @@ export class WorldRenderer {
       // 🎯 MAPEOS ESPECÍFICOS PARA ENTIDADES SPECIAL
       special: this.getRandomTexture([...treeTextures, ...vegetationTextures]), // Mezcla naturaleza
 
-      // Mapeos por assetKey específicos
-      ruin_forest: "man",
-      structure_house: this.getRandomTexture(houseTextures),
-      wildlife_chicken: "woman",
-      tree_oak: this.getRandomTexture(treeTextures),
-
-      // 🎯 MAPEOS REALISTAS para tipos especiales por nombre
-      flower_meadows: this.getRandomTexture(vegetationTextures), // Flores variadas
-      campfire_sites: "campfire", // Solo estos son fogatas reales
-      ancient_groves: this.getRandomTexture(treeTextures), // Árboles ancianos
-      mystical_circles: this.getRandomTexture(vegetationTextures), // Vegetación mística
-      sacred_springs: "well", // Pozos en manantiales
-      crystal_formations: "man", // Cristales -> man
-      ruins_ancient: "man", // Ruinas -> man
+      // Mapeos específicos
+      flower_meadows: this.getRandomTexture(vegetationTextures),
+      campfire_sites: "campfire",
+      ancient_groves: this.getRandomTexture(treeTextures),
+      mystical_circles: this.getRandomTexture(vegetationTextures),
+      sacred_springs: "well",
+      crystal_formations: "man",
+      ruins_ancient: "man",
     };
 
     // 🎯 LÓGICA ESPECIAL para entidades "special"
     if (entityType === "special" && assetKey) {
-      // Extraer el nombre del feature del assetKey
       const featureName = assetKey.split("_").slice(0, 2).join("_");
-      if (entityTextureMap[featureName]) {
-        return entityTextureMap[featureName];
+      if (exteriorTextures[featureName]) {
+        return exteriorTextures[featureName];
       }
     }
 
     // Priorizar assetKey si existe
-    if (assetKey && entityTextureMap[assetKey]) {
-      return entityTextureMap[assetKey];
+    if (assetKey && exteriorTextures[assetKey]) {
+      return exteriorTextures[assetKey];
     }
 
-    // Usar entityType como fallback
-    return entityTextureMap[entityType] || null;
+    return (
+      exteriorTextures[entityType] || exteriorTextures.structure || "food_store"
+    );
   }
 
   /**
@@ -663,5 +724,136 @@ export class WorldRenderer {
       zones: this.gameState.zones.length,
       elements: this.gameState.mapElements.length,
     };
+  }
+
+  /**
+   * 🌍 FASE 1: Poblar toda la base del mapa con vegetación natural distribuida
+   */
+  private populateBaseWorldLayer(): void {
+    try {
+      const worldSize = this.gameState.worldSize;
+      const baseEntities = this.worldPopulator.populateGlobalTerrain(
+        0,
+        0,
+        worldSize.width,
+        worldSize.height,
+        BiomeType.GRASSLAND, // bioma base para todo el mapa
+      );
+
+      // Renderizar entidades base (sin zona específica)
+      baseEntities.forEach((entity) => {
+        this.renderWorldEntity(entity); // Sin zoneName = contexto exterior
+      });
+
+      logAutopoiesis.info(
+        `🌍 Base world layer populated with ${baseEntities.length} natural elements`,
+      );
+    } catch (error) {
+      logAutopoiesis.error("❌ Error populating base world layer:", error);
+    }
+  }
+
+  /**
+   * 🏠 FASE 2: Poblar zonas específicas con contenido temático
+   */
+  private populateZoneSpecificContent(): void {
+    try {
+      this.gameState.zones.forEach((zone) => {
+        // Determinar si es zona interior o exterior
+        const isInterior = this.isInteriorZone(zone.name);
+
+        if (isInterior) {
+          this.populateInteriorZone(zone);
+        } else {
+          this.populateExteriorZone(zone);
+        }
+      });
+    } catch (error) {
+      logAutopoiesis.error("❌ Error populating zone content:", error);
+    }
+  }
+
+  /**
+   * 🏠 Poblar zona interior con fondos + muebles organizados
+   */
+  private populateInteriorZone(zone: Zone): void {
+    // Colocar fondos (pisos/paredes) primero
+    this.placeInteriorBackground(zone);
+
+    // Luego muebles específicos
+    const biome = this.determineBiomeFromZone(zone.name);
+    const seed = this.hashStringToNumber(zone.id);
+
+    const furnitureEntities = this.worldPopulator.populateInteriorFurniture(
+      zone.bounds.x,
+      zone.bounds.y,
+      zone.bounds.width,
+      zone.bounds.height,
+      biome,
+      seed,
+    );
+
+    furnitureEntities.forEach((entity) => {
+      this.renderWorldEntity(entity, zone.name);
+    });
+
+    logAutopoiesis.debug(
+      `🏠 Interior zone ${zone.name} populated with ${furnitureEntities.length} furniture`,
+    );
+  }
+
+  /**
+   * 🌳 Poblar zona exterior con elementos temáticos específicos (densidad baja)
+   */
+  private populateExteriorZone(zone: Zone): void {
+    const biome = this.determineBiomeFromZone(zone.name);
+    const seed = this.hashStringToNumber(zone.id);
+
+    const thematicEntities = this.worldPopulator.populateExteriorThematic(
+      zone.bounds.x,
+      zone.bounds.y,
+      zone.bounds.width,
+      zone.bounds.height,
+      biome,
+      seed,
+    );
+
+    thematicEntities.forEach((entity) => {
+      this.renderWorldEntity(entity, zone.name);
+    });
+
+    logAutopoiesis.debug(
+      `🌳 Exterior zone ${zone.name} populated with ${thematicEntities.length} thematic elements`,
+    );
+  }
+
+  /**
+   * 🎨 Colocar fondos interiores (pisos, paredes)
+   */
+  private placeInteriorBackground(zone: Zone): void {
+    // Colocar tiles de piso
+    const floorTileSize = 32;
+    const tilesX = Math.ceil(zone.bounds.width / floorTileSize);
+    const tilesY = Math.ceil(zone.bounds.height / floorTileSize);
+
+    for (let x = 0; x < tilesX; x++) {
+      for (let y = 0; y < tilesY; y++) {
+        const tileX = zone.bounds.x + x * floorTileSize;
+        const tileY = zone.bounds.y + y * floorTileSize;
+
+        // Alternar entre diferentes tiles de piso
+        const floorTexture = this.getRandomTexture([
+          "wooden_floor",
+          "wall_brick",
+        ]);
+
+        if (this.scene.textures.exists(floorTexture)) {
+          const floorTile = this.scene.add.sprite(tileX, tileY, floorTexture);
+          floorTile.setDepth(0.5); // Debajo de muebles pero encima de terreno
+          floorTile.setOrigin(0, 0);
+          floorTile.setScale(floorTileSize / 64); // Escalar al tamaño del tile
+        }
+      }
+    }
   }
 }

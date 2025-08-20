@@ -5,7 +5,7 @@
 
 import { logAutopoiesis } from "../utils/logger";
 import { getFullBiomeDefinition } from "./EnhancedBiomeDefinitions";
-import type { BiomeType } from "./types";
+import { BiomeType } from "./types";
 
 export interface WorldEntity {
   id: string;
@@ -446,6 +446,287 @@ export class WorldPopulator {
     }
 
     return entities;
+  }
+
+  /**
+   * 🌍 Poblar toda la base del mapa con distribución natural REDUCIDA
+   */
+  public populateGlobalTerrain(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    biome: BiomeType,
+    seed?: number,
+  ): WorldEntity[] {
+    const entities: WorldEntity[] = [];
+    const rng = this.createSeededRNG(seed || 12345);
+
+    // 🌳 DENSIDADES REDUCIDAS (60% menos que normal)
+    const globalDensity = {
+      trees: 0.15, // 1 cada ~6.7 tiles (era 0.4)
+      houses: 0.08, // 1 cada ~12.5 tiles (era 0.2)
+      vegetation: 0.25, // 1 cada ~4 tiles (era 0.6)
+      campfires: 0.02, // 1 cada ~50 tiles (era 0.05)
+    };
+
+    const tileSize = 64;
+    const tilesX = Math.floor(width / tileSize);
+    const tilesY = Math.floor(height / tileSize);
+
+    // Distribuir elementos por todo el mapa con baja densidad
+    for (let tx = 0; tx < tilesX; tx++) {
+      for (let ty = 0; ty < tilesY; ty++) {
+        const tileX = x + tx * tileSize + tileSize / 2;
+        const tileY = y + ty * tileSize + tileSize / 2;
+
+        // 🌳 Árboles distribuidos
+        if (rng() < globalDensity.trees) {
+          entities.push(this.createTreeEntity(tileX, tileY, biome, rng));
+        }
+
+        // 🏠 Casas distribuidas
+        if (rng() < globalDensity.houses) {
+          entities.push(this.createHouseEntity(tileX, tileY, biome, rng));
+        }
+
+        // 🌿 Vegetación menor
+        if (rng() < globalDensity.vegetation) {
+          entities.push(this.createVegetationEntity(tileX, tileY, biome, rng));
+        }
+
+        // 🔥 Fogatas ocasionales
+        if (rng() < globalDensity.campfires) {
+          entities.push(this.createCampfireEntity(tileX, tileY, biome, rng));
+        }
+      }
+    }
+
+    logAutopoiesis.info(
+      `🌍 Global terrain populated: ${entities.length} base elements across ${width}x${height}px`,
+    );
+    return entities;
+  }
+
+  /**
+   * 🏠 Poblar zona interior con muebles organizados
+   */
+  public populateInteriorFurniture(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    biome: BiomeType,
+    seed?: number,
+  ): WorldEntity[] {
+    const entities: WorldEntity[] = [];
+    const rng = this.createSeededRNG(seed || 67890);
+
+    // Determinar tipo de interior por bioma/zona
+    const furnitureTypes = this.getInteriorFurnitureTypes(biome);
+    const furnitureCount = Math.min(12, Math.floor((width * height) / 2000)); // Max 12 muebles
+
+    // Distribuir muebles de forma organizada (no aleatoria)
+    const margin = 20;
+    const gridX = Math.max(2, Math.floor(width / 80));
+    const gridY = Math.max(2, Math.floor(height / 80));
+
+    for (let i = 0; i < furnitureCount; i++) {
+      const gx = i % gridX;
+      const gy = Math.floor(i / gridX);
+
+      const furnitureX = x + margin + (gx * (width - margin * 2)) / gridX;
+      const furnitureY = y + margin + (gy * (height - margin * 2)) / gridY;
+
+      const furnitureType = furnitureTypes[i % furnitureTypes.length];
+
+      entities.push({
+        id: `furniture_${x}_${y}_${i}`,
+        type: "decoration",
+        assetKey: furnitureType,
+        x: furnitureX,
+        y: furnitureY,
+        biome,
+        scale: 0.8 + rng() * 0.4, // Escala entre 0.8 y 1.2
+      });
+    }
+
+    return entities;
+  }
+
+  /**
+   * 🌳 Poblar zona exterior con elementos temáticos específicos (baja densidad)
+   */
+  public populateExteriorThematic(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    biome: BiomeType,
+    seed?: number,
+  ): WorldEntity[] {
+    const entities: WorldEntity[] = [];
+    const rng = this.createSeededRNG(seed || 54321);
+
+    // Solo 2-4 elementos temáticos por zona exterior
+    const thematicCount = 2 + Math.floor(rng() * 3);
+    const thematicTypes = this.getExteriorThematicTypes(biome);
+
+    for (let i = 0; i < thematicCount; i++) {
+      const thematicX = x + rng() * width;
+      const thematicY = y + rng() * height;
+      const thematicType =
+        thematicTypes[Math.floor(rng() * thematicTypes.length)];
+
+      entities.push({
+        id: `thematic_${x}_${y}_${i}`,
+        type: "special",
+        assetKey: thematicType,
+        x: thematicX,
+        y: thematicY,
+        biome,
+        scale: 1.0 + rng() * 0.5,
+      });
+    }
+
+    return entities;
+  }
+
+  /**
+   * 🌳 Crear entidad de árbol para distribución global
+   */
+  private createTreeEntity(
+    x: number,
+    y: number,
+    biome: BiomeType,
+    rng: () => number,
+  ): WorldEntity {
+    const treeTypes = [
+      "tree_emerald",
+      "tree_swirling",
+      "tree_white",
+      "tree_willow",
+      "tree_mega",
+    ];
+    const selectedTree = treeTypes[Math.floor(rng() * treeTypes.length)];
+
+    return {
+      id: `tree_${x}_${y}_${Math.floor(rng() * 1000)}`,
+      type: "tree",
+      assetKey: selectedTree,
+      x: x + (rng() - 0.5) * 30, // Variación de posición
+      y: y + (rng() - 0.5) * 30,
+      biome,
+      scale: 0.8 + rng() * 0.6, // Escala 0.8-1.4
+    };
+  }
+
+  /**
+   * 🏠 Crear entidad de casa para distribución global
+   */
+  private createHouseEntity(
+    x: number,
+    y: number,
+    biome: BiomeType,
+    rng: () => number,
+  ): WorldEntity {
+    const houseTypes = ["house_hay", "house_stone", "house_wood", "well"];
+    const selectedHouse = houseTypes[Math.floor(rng() * houseTypes.length)];
+
+    return {
+      id: `house_${x}_${y}_${Math.floor(rng() * 1000)}`,
+      type: "structure",
+      assetKey: selectedHouse,
+      x: x + (rng() - 0.5) * 20,
+      y: y + (rng() - 0.5) * 20,
+      biome,
+      scale: 0.9 + rng() * 0.3,
+    };
+  }
+
+  /**
+   * 🌿 Crear entidad de vegetación para distribución global
+   */
+  private createVegetationEntity(
+    x: number,
+    y: number,
+    biome: BiomeType,
+    rng: () => number,
+  ): WorldEntity {
+    const vegTypes = [
+      "bush_emerald",
+      "living_gazebo",
+      "flowers-red",
+      "flowers-white",
+    ];
+    const selectedVeg = vegTypes[Math.floor(rng() * vegTypes.length)];
+
+    return {
+      id: `veg_${x}_${y}_${Math.floor(rng() * 1000)}`,
+      type: "vegetation",
+      assetKey: selectedVeg,
+      x: x + (rng() - 0.5) * 25,
+      y: y + (rng() - 0.5) * 25,
+      biome,
+      scale: 0.7 + rng() * 0.4,
+    };
+  }
+
+  /**
+   * 🔥 Crear entidad de fogata para distribución global
+   */
+  private createCampfireEntity(
+    x: number,
+    y: number,
+    biome: BiomeType,
+    rng: () => number,
+  ): WorldEntity {
+    return {
+      id: `campfire_${x}_${y}_${Math.floor(rng() * 1000)}`,
+      type: "decoration",
+      assetKey: "campfire",
+      x: x + (rng() - 0.5) * 15,
+      y: y + (rng() - 0.5) * 15,
+      biome,
+      scale: 1.0 + rng() * 0.2,
+    };
+  }
+
+  /**
+   * 🪑 Obtener tipos de muebles para interiores según bioma
+   */
+  private getInteriorFurnitureTypes(biome: BiomeType): string[] {
+    const baseFurniture = [
+      "chair_interior",
+      "lamp_interior",
+      "chest_treasure",
+      "bookshelf",
+    ];
+
+    switch (biome) {
+      case BiomeType.MYSTICAL:
+        return [...baseFurniture, "wall_stone", "wooden_floor"];
+      case BiomeType.VILLAGE:
+        return [...baseFurniture, "wall_brick", "window_interior"];
+      default:
+        return [...baseFurniture, "sign_interior"];
+    }
+  }
+
+  /**
+   * 🌟 Obtener tipos temáticos para zonas exteriores
+   */
+  private getExteriorThematicTypes(biome: BiomeType): string[] {
+    switch (biome) {
+      case BiomeType.MYSTICAL:
+        return ["mystical_circles", "crystal_formations", "sacred_springs"];
+      case BiomeType.VILLAGE:
+        return ["flower_meadows", "ancient_groves"];
+      case BiomeType.FOREST:
+        return ["ancient_groves", "sacred_springs"];
+      default:
+        return ["flower_meadows", "campfire_sites"];
+    }
   }
 
   /**
