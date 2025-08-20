@@ -31,8 +31,7 @@ export class AnimatedGameEntity extends GameEntity {
     }
 
     // Initialize with base spritesheet instead of static sprite
-    const initialSpriteKey =
-      entityId === "isa" ? "isa_happy_anim" : "stev_happy_anim";
+    const initialSpriteKey = entityId === "isa" ? "isa_happy" : "stev_happy";
 
     // Call parent constructor with a fallback texture
     super(scene, x, y, entityId, services);
@@ -191,12 +190,12 @@ export class AnimatedGameEntity extends GameEntity {
    */
   private isStaticSprite(textureKey: string): boolean {
     const staticSprites = [
-      "isa_happy_anim",
-      "isa_sad_anim",
-      "isa_dying_anim",
-      "stev_happy_anim",
-      "stev_sad_anim",
-      "stev_dying_anim",
+      "isa_happy",
+      "isa_sad",
+      "isa_dying",
+      "stev_happy",
+      "stev_sad",
+      "stev_dying",
     ];
     return staticSprites.includes(textureKey);
   }
@@ -205,7 +204,32 @@ export class AnimatedGameEntity extends GameEntity {
    * Play specific animation with comprehensive validation and fallback handling
    */
   public playAnimation(animationKey: string, force = false): boolean {
-    // Para sprites estáticos (personajes humanos), no reproducir animaciones
+    // Para personajes principales (isa/stev), cambiar textura en lugar de animación
+    const isMainCharacter =
+      animationKey.startsWith("isa_") || animationKey.startsWith("stev_");
+
+    if (isMainCharacter) {
+      // Cambiar la textura directamente para personajes principales
+      if (this.scene.textures.exists(animationKey)) {
+        this.setTexture(animationKey);
+        this.currentAnimationKey = animationKey;
+
+        logAutopoiesis.debug(
+          `Texture changed for main character: ${animationKey}`,
+          {
+            entityId: this.getEntityData().id,
+          },
+        );
+        return true;
+      } else {
+        logAutopoiesis.warn(
+          `Texture not found for main character: ${animationKey}`,
+        );
+        return false;
+      }
+    }
+
+    // Para sprites estáticos (otros entidades), no reproducir animaciones
     const textureKey = this.texture?.key || "";
     if (this.isStaticSprite(textureKey)) {
       return true; // Retornar éxito silenciosamente para sprites estáticos

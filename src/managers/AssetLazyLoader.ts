@@ -46,30 +46,28 @@ export class AssetLazyLoader {
       "critical",
       [
         {
-          key: "isa_happy_anim",
+          key: "isa_happy",
           path: "/assets/entities/ent_woman.png",
           type: "image",
           priority: "high",
         },
         {
-          key: "stev_happy_anim",
+          key: "stev_happy",
           path: "/assets/entities/ent_man.png",
           type: "image",
           priority: "high",
         },
         {
-          key: "isa_sad_anim",
-          path: "/assets/animated_entities/entidad_circulo_sad_anim.png",
-          type: "spritesheet",
+          key: "isa_sad",
+          path: "/assets/entities/ent_woman.png",
+          type: "image",
           priority: "high",
-          frameConfig: { frameWidth: 32, frameHeight: 32 },
         },
         {
-          key: "stev_sad_anim",
-          path: "/assets/animated_entities/entidad_square_sad_anim.png",
-          type: "spritesheet",
+          key: "stev_sad",
+          path: "/assets/entities/ent_man.png",
+          type: "image",
           priority: "high",
-          frameConfig: { frameWidth: 32, frameHeight: 32 },
         },
       ],
       true,
@@ -388,10 +386,10 @@ export class AssetLazyLoader {
     // Mantener assets críticos y especificados
     const keepSet = new Set([
       ...keepKeys,
-      "isa_happy_anim",
-      "stev_happy_anim",
-      "isa_sad_anim",
-      "stev_sad_anim", // críticos
+      "isa_happy",
+      "stev_happy",
+      "isa_sad",
+      "stev_sad", // críticos
     ]);
 
     this.loadedAssets.forEach((key) => {

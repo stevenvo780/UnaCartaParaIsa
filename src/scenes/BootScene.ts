@@ -145,20 +145,14 @@ export class BootScene extends Phaser.Scene {
       }
 
       // Cargar spritesheets para animaciones DESPUÉS de la carga básica
-      this.animationManager.loadAllSpriteSheets();
+      // No cargar spritesheets duplicados - AssetManager ya los cargó
+      // this.animationManager.loadAllSpriteSheets();
 
       // Iniciar la carga y esperar completion
       this.load.start();
 
-      // Esperar a que se complete la carga de spritesheets
-      if (this.load.isLoading()) {
-        await new Promise<void>((resolve) => {
-          this.load.once("complete", () => {
-            logAutopoiesis.info("Spritesheets loaded successfully");
-            resolve();
-          });
-        });
-      }
+      // No necesitamos esperar spritesheets adicionales ya que AssetManager los carga
+      logAutopoiesis.info("Assets loaded successfully");
 
       // Crear todas las animaciones DESPUÉS de cargar spritesheets
       this.animationManager.createAllAnimations();

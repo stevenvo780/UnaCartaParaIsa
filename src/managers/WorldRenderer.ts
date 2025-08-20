@@ -511,7 +511,13 @@ export class WorldRenderer {
    */
   private getExteriorAssets(entityType: string, assetKey?: string): string {
     // 🏠 MAPEO REALISTA DE ESTRUCTURAS (casas reales)
-    const houseTextures = ["house_hay", "house_stone", "house_wood", "well"];
+    const houseTextures = [
+      "house_hay",
+      "house_stone",
+      "house_wood",
+      "well",
+      "food_store",
+    ];
 
     // 🌳 MAPEO REALISTA DE ÁRBOLES (variedad de árboles)
     const treeTextures = [
@@ -520,6 +526,7 @@ export class WorldRenderer {
       "tree_white",
       "tree_willow",
       "tree_mega",
+      "campfire", // fallback
     ];
 
     // 🌿 MAPEO DE VEGETACIÓN MENOR
@@ -528,6 +535,7 @@ export class WorldRenderer {
       "living_gazebo",
       "flowers-red",
       "flowers-white",
+      "campfire", // fallback
     ];
 
     const exteriorTextures: { [key: string]: string } = {

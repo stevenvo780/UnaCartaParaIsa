@@ -40,40 +40,40 @@ export class AssetManager {
     // Character animations converted to spritesheets
     {
       key: "woman_anim",
-      path: "assets/entities/animated/characters/whomen1.png",
+      path: "/assets/entities/animated/characters/whomen1.png",
       type: "spritesheet",
       frameWidth: 16,
-      frameHeight: 32,
+      frameHeight: 72,
     },
     {
       key: "man_anim",
-      path: "assets/entities/animated/characters/man1.png",
+      path: "/assets/entities/animated/characters/man1.png",
       type: "spritesheet",
       frameWidth: 16,
-      frameHeight: 32,
+      frameHeight: 96,
     },
 
     {
       key: "campfire",
-      path: "assets/animated_entities/campfire.png",
+      path: "/assets/animated_entities/campfire.png",
       type: "image",
       fallback: "default-decoration",
     },
     {
       key: "flowers-red",
-      path: "assets/animated_entities/flowers_red.png",
+      path: "/assets/animated_entities/flowers_red.png",
       type: "image",
       fallback: "default-decoration",
     },
     {
       key: "flowers-white",
-      path: "assets/animated_entities/flowers_white.png",
+      path: "/assets/animated_entities/flowers_white.png",
       type: "image",
       fallback: "default-decoration",
     },
     {
       key: "checkpoint-flag",
-      path: "assets/animated_entities/checkpoint_flag_idle1.png",
+      path: "/assets/animated_entities/checkpoint_flag_idle1.png",
       type: "image",
       fallback: "default-decoration",
     },
@@ -81,32 +81,32 @@ export class AssetManager {
     // Terrain base assets
     {
       key: "grass_1",
-      path: "assets/terrain/base/cesped1.png",
+      path: "/assets/terrain/base/cesped1.png",
       type: "image",
       fallback: "grass_middle",
     },
     {
       key: "grass_2",
-      path: "assets/terrain/base/cesped2.png",
+      path: "/assets/terrain/base/cesped2.png",
       type: "image",
       fallback: "grass_middle",
     },
     {
       key: "grass_3",
-      path: "assets/terrain/base/cesped3.png",
+      path: "/assets/terrain/base/cesped3.png",
       type: "image",
       fallback: "grass_middle",
     },
     {
       key: "grass_middle",
-      path: "assets/terrain/base/Grass_Middle.png",
+      path: "/assets/terrain/base/Grass_Middle.png",
       type: "image",
       required: true,
       fallback: "default-terrain",
     },
     {
       key: "textured_grass",
-      path: "assets/terrain/base/TexturedGrass.png",
+      path: "/assets/terrain/base/TexturedGrass.png",
       type: "image",
       fallback: "grass_middle",
     },
@@ -117,82 +117,70 @@ export class AssetManager {
       type: "json",
     },
 
-    // 🎭 PERSONAJES PRINCIPALES - ISA (mujer) y STEV (hombre) con animaciones
+    // 🎭 PERSONAJES PRINCIPALES - ISA (mujer) y STEV (hombre) - SPRITES HUMANOS REALES
     {
-      key: "isa_happy_anim",
-      path: "assets/entities/animated/characters/whomen1.png",
-      type: "spritesheet",
-      frameWidth: 16,
-      frameHeight: 32,
+      key: "isa_happy",
+      path: "/assets/entities/animated/characters/whomen1.png",
+      type: "image",
       required: true,
     },
     {
-      key: "isa_sad_anim",
-      path: "assets/entities/animated/characters/whomen1.png",
-      type: "spritesheet",
-      frameWidth: 16,
-      frameHeight: 32,
+      key: "isa_sad",
+      path: "/assets/entities/animated/characters/whomen1.png",
+      type: "image",
       required: true,
     },
     {
-      key: "isa_dying_anim",
-      path: "assets/entities/animated/characters/whomen1.png",
-      type: "spritesheet",
-      frameWidth: 16,
-      frameHeight: 32,
-      fallback: "isa_sad_anim",
+      key: "isa_dying",
+      path: "/assets/entities/animated/characters/whomen1.png",
+      type: "image",
+      fallback: "isa_sad",
     },
     {
-      key: "stev_happy_anim",
-      path: "assets/entities/animated/characters/man1.png",
-      type: "spritesheet",
-      frameWidth: 16,
-      frameHeight: 32,
+      key: "stev_happy",
+      path: "/assets/entities/animated/characters/man1.png",
+      type: "image",
       required: true,
     },
     {
-      key: "stev_sad_anim",
-      path: "assets/entities/animated/characters/man1.png",
-      type: "spritesheet",
-      frameWidth: 16,
-      frameHeight: 32,
+      key: "stev_sad",
+      path: "/assets/entities/animated/characters/man1.png",
+      type: "image",
       required: true,
     },
     {
-      key: "stev_dying_anim",
-      path: "assets/entities/animated/characters/man1.png",
-      type: "spritesheet",
-      frameWidth: 16,
-      frameHeight: 32,
+      key: "stev_dying",
+      path: "/assets/entities/animated/characters/man1.png",
+      type: "image",
       required: true,
     },
     {
       key: "campfire_anim",
-      path: "assets/animated_entities/campfire.png",
+      path: "/assets/animated_entities/campfire.png",
       type: "spritesheet",
       spriteConfig: { frameWidth: 32, frameHeight: 32, endFrame: 7 },
     },
     {
       key: "flag_idle_anim",
-      path: "assets/animated_entities/checkpoint_flag_idle1.png",
+      path: "/assets/animated_entities/checkpoint_flag_idle1.png",
       type: "spritesheet",
       spriteConfig: { frameWidth: 32, frameHeight: 32, endFrame: 6 },
     },
     {
       key: "chicken_anim",
-      path: "assets/animated_entities/chicken.png",
+      path: "/assets/animated_entities/chicken.png",
       type: "spritesheet",
       spriteConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
     {
       key: "flowers_red_anim",
-      path: "assets/animated_entities/flowers_red.png",
+      path: "/assets/animated_entities/flowers_red.png",
       type: "spritesheet",
       spriteConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
     {
       key: "flowers_white_anim",
-      path: "assets/animated_entities/flowers_white.png",
+      path: "/assets/animated_entities/flowers_white.png",
       type: "spritesheet",
       spriteConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
@@ -200,25 +188,25 @@ export class AssetManager {
     // 🏠 CASAS Y ESTRUCTURAS REALES
     {
       key: "house_hay",
-      path: "assets/structures/estructuras_completas/House_Hay_1.png",
+      path: "/assets/structures/estructuras_completas/House_Hay_1.png",
       type: "image",
       fallback: "food_store",
     },
     {
       key: "house_stone",
-      path: "assets/structures/estructuras_completas/Assets_source_002_007.png",
+      path: "/assets/structures/estructuras_completas/Assets_source_002_007.png",
       type: "image",
       fallback: "food_store",
     },
     {
       key: "house_wood",
-      path: "assets/structures/estructuras_completas/Assets_source_002_009.png",
+      path: "/assets/structures/estructuras_completas/Assets_source_002_009.png",
       type: "image",
       fallback: "food_store",
     },
     {
       key: "well",
-      path: "assets/structures/estructuras_completas/Well_Hay_1.png",
+      path: "/assets/structures/estructuras_completas/Well_Hay_1.png",
       type: "image",
       fallback: "food_store",
     },
@@ -226,31 +214,31 @@ export class AssetManager {
     // 🌳 ÁRBOLES REALES
     {
       key: "tree_emerald",
-      path: "assets/foliage/trees/tree_emerald_1.png",
+      path: "/assets/foliage/trees/tree_emerald_1.png",
       type: "image",
       fallback: "campfire",
     },
     {
       key: "tree_swirling",
-      path: "assets/foliage/trees/swirling_tree1.png",
+      path: "/assets/foliage/trees/swirling_tree1.png",
       type: "image",
       fallback: "campfire",
     },
     {
       key: "tree_white",
-      path: "assets/foliage/trees/white_tree2.png",
+      path: "/assets/foliage/trees/white_tree2.png",
       type: "image",
       fallback: "campfire",
     },
     {
       key: "tree_willow",
-      path: "assets/foliage/trees/willow3.png",
+      path: "/assets/foliage/trees/willow3.png",
       type: "image",
       fallback: "campfire",
     },
     {
       key: "tree_mega",
-      path: "assets/foliage/trees/mega_tree2.png",
+      path: "/assets/foliage/trees/mega_tree2.png",
       type: "image",
       fallback: "campfire",
     },
@@ -258,13 +246,13 @@ export class AssetManager {
     // 🌿 VEGETACIÓN Y ARBUSTOS
     {
       key: "bush_emerald",
-      path: "assets/foliage/shrubs/bush_emerald_3.png",
+      path: "/assets/foliage/shrubs/bush_emerald_3.png",
       type: "image",
       fallback: "flowers-red",
     },
     {
       key: "living_gazebo",
-      path: "assets/foliage/shrubs/living_gazebo1.png",
+      path: "/assets/foliage/shrubs/living_gazebo1.png",
       type: "image",
       fallback: "flowers-white",
     },
@@ -272,25 +260,25 @@ export class AssetManager {
     // 🏠 INTERIORES Y MUEBLES
     {
       key: "wooden_floor",
-      path: "assets/structures/interiores/wooden.png",
+      path: "/assets/structures/interiores/wooden.png",
       type: "image",
       fallback: "food_store",
     },
     {
       key: "wall_brick",
-      path: "assets/structures/interiores/muros1.png",
+      path: "/assets/structures/interiores/muros1.png",
       type: "image",
       fallback: "food_store",
     },
     {
       key: "wall_stone",
-      path: "assets/structures/interiores/muros3.png",
+      path: "/assets/structures/interiores/muros3.png",
       type: "image",
       fallback: "food_store",
     },
     {
       key: "roof_tile",
-      path: "assets/structures/interiores/tile_0542_tejado.png",
+      path: "/assets/structures/interiores/tile_0542_tejado.png",
       type: "image",
       fallback: "food_store",
     },
@@ -298,37 +286,37 @@ export class AssetManager {
     // 📚 PROPS Y MOBILIARIO
     {
       key: "lamp_interior",
-      path: "assets/props/lamparas1.png",
+      path: "/assets/props/lamparas1.png",
       type: "image",
       fallback: "campfire",
     },
     {
       key: "chair_interior",
-      path: "assets/props/sillas2.png",
+      path: "/assets/props/sillas2.png",
       type: "image",
       fallback: "woman",
     },
     {
       key: "chest_treasure",
-      path: "assets/props/Chests_002.png",
+      path: "/assets/props/Chests_002.png",
       type: "image",
       fallback: "food_store",
     },
     {
       key: "bookshelf",
-      path: "assets/props/cajas3.png",
+      path: "/assets/props/cajas3.png",
       type: "image",
       fallback: "food_store",
     },
     {
       key: "window_interior",
-      path: "assets/props/ventana1.png",
+      path: "/assets/props/ventana1.png",
       type: "image",
       fallback: "food_store",
     },
     {
       key: "sign_interior",
-      path: "assets/props/Sign_1.png",
+      path: "/assets/props/Sign_1.png",
       type: "image",
       fallback: "food_store",
     },
@@ -409,6 +397,34 @@ export class AssetManager {
       const asset = AssetManager.ASSET_DEFINITIONS.find(
         (a) => a.key === file.key,
       );
+
+      // Debug específico para personajes principales
+      if (file.key === "isa_happy" || file.key === "stev_happy") {
+        logAutopoiesis.warn(
+          `Failed to load main character: ${file.key} from ${file.src}`,
+          {
+            fileKey: file.key,
+            fileSrc: file.src,
+            responseStatus: file.responseStatus,
+            responseText: file.responseText,
+          },
+        );
+
+        // Reintentar con timestamp para evitar cache
+        const timestamp = Date.now();
+        const retryPath = asset.path + `?retry=${timestamp}`;
+
+        logAutopoiesis.info(
+          `Retrying ${file.key} with cache-busting: ${retryPath}`,
+        );
+
+        if (file.key === "isa_happy") {
+          this.scene.load.image("isa_happy_retry", retryPath);
+        } else if (file.key === "stev_happy") {
+          this.scene.load.image("stev_happy_retry", retryPath);
+        }
+      }
+
       this.handleAssetError(asset, result);
     });
 
@@ -536,6 +552,15 @@ export class AssetManager {
    * Crea un fallback programático para un asset específico
    */
   private createProgrammaticFallback(assetKey: string): void {
+    // Para personajes principales, usar las imágenes reales directamente
+    if (assetKey === "isa_happy" || assetKey === "stev_happy") {
+      logAutopoiesis.warn(
+        `Creating direct load for main character: ${assetKey}`,
+      );
+      this.createDirectImageLoad(assetKey);
+      return;
+    }
+
     const canvas = document.createElement("canvas");
     canvas.width = 32;
     canvas.height = 32;
@@ -560,6 +585,55 @@ export class AssetManager {
     }
 
     this.scene.textures.addCanvas(assetKey, canvas);
+  }
+
+  /**
+   * Carga directa de imagen para personajes principales
+   */
+  private createDirectImageLoad(assetKey: string): void {
+    const asset = AssetManager.ASSET_DEFINITIONS.find(
+      (a) => a.key === assetKey,
+    );
+    if (!asset) return;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+      logAutopoiesis.info(`Direct load successful: ${assetKey}`);
+      this.scene.textures.addImage(assetKey, img);
+    };
+
+    img.onerror = () => {
+      logAutopoiesis.error(
+        `Direct load failed: ${assetKey}, using canvas fallback`,
+      );
+
+      // Si falla la carga directa, crear el canvas fallback original
+      const canvas = document.createElement("canvas");
+      canvas.width = 32;
+      canvas.height = 32;
+      const ctx = canvas.getContext("2d");
+
+      if (assetKey.includes("isa")) {
+        this.drawCircleEntity(
+          ctx,
+          "#e91e63",
+          assetKey.includes("happy") ? "😊" : "😢",
+        );
+      } else if (assetKey.includes("stev")) {
+        this.drawSquareEntity(
+          ctx,
+          "#2196f3",
+          assetKey.includes("happy") ? "😊" : "😢",
+        );
+      }
+
+      this.scene.textures.addCanvas(assetKey, canvas);
+    };
+
+    // URL absoluta completa
+    img.src = `${window.location.origin}${asset.path}`;
   }
 
   /**

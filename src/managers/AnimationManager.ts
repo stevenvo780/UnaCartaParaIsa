@@ -100,13 +100,13 @@ export class AnimationManager {
       frameHeight: 24,
       totalFrames: 6,
     },
-    // Nuevos animales para poblar el mundo - solo los que tienen múltiples frames
+    // Animales con animaciones verificadas
     {
       key: "chicken_anim",
       path: "assets/animated_entities/chicken.png",
       frameWidth: 32,
       frameHeight: 32,
-      totalFrames: 8,
+      totalFrames: 4, // Corregido según los errores
     },
     {
       key: "pig_anim",
@@ -115,77 +115,20 @@ export class AnimationManager {
       frameHeight: 32,
       totalFrames: 6,
     },
-    {
-      key: "sheep_anim",
-      path: "assets/animated_entities/sheep.png",
-      frameWidth: 32,
-      frameHeight: 32,
-      totalFrames: 1, // Estático
-    },
-    {
-      key: "horse_anim",
-      path: "assets/animated_entities/horse32x32.png",
-      frameWidth: 32,
-      frameHeight: 32,
-      totalFrames: 1, // Estático
-    },
-    // Personajes animados
+    // Personajes animados - CORREGIDOS con dimensiones reales
     {
       key: "woman_anim",
       path: "assets/entities/animated/characters/whomen1.png",
       frameWidth: 16,
-      frameHeight: 32,
-      totalFrames: 4,
+      frameHeight: 72,
+      totalFrames: 12,
     },
     {
       key: "man_anim",
       path: "assets/entities/animated/characters/man1.png",
       frameWidth: 16,
-      frameHeight: 32,
-      totalFrames: 4,
-    },
-    // 🎭 PERSONAJES PRINCIPALES - Isa y Stev (spritesheets)
-    {
-      key: "isa_happy_anim",
-      path: "assets/entities/animated/characters/whomen1.png",
-      frameWidth: 16,
-      frameHeight: 32,
-      totalFrames: 4,
-    },
-    {
-      key: "isa_sad_anim",
-      path: "assets/entities/animated/characters/whomen1.png",
-      frameWidth: 16,
-      frameHeight: 32,
-      totalFrames: 4,
-    },
-    {
-      key: "isa_dying_anim",
-      path: "assets/entities/animated/characters/whomen1.png",
-      frameWidth: 16,
-      frameHeight: 32,
-      totalFrames: 4,
-    },
-    {
-      key: "stev_happy_anim",
-      path: "assets/entities/animated/characters/man1.png",
-      frameWidth: 16,
-      frameHeight: 32,
-      totalFrames: 4,
-    },
-    {
-      key: "stev_sad_anim",
-      path: "assets/entities/animated/characters/man1.png",
-      frameWidth: 16,
-      frameHeight: 32,
-      totalFrames: 4,
-    },
-    {
-      key: "stev_dying_anim",
-      path: "assets/entities/animated/characters/man1.png",
-      frameWidth: 16,
-      frameHeight: 32,
-      totalFrames: 4,
+      frameHeight: 96,
+      totalFrames: 8,
     },
   ];
 
@@ -241,7 +184,7 @@ export class AnimationManager {
     {
       key: "chicken_anim",
       spriteSheetKey: "chicken_anim",
-      frames: Array.from({ length: 8 }, (_, i) => i),
+      frames: Array.from({ length: 4 }, (_, i) => i), // Corregido a 4 frames
       frameRate: 8,
       repeat: -1,
     },
@@ -256,58 +199,15 @@ export class AnimationManager {
     {
       key: "woman_anim",
       spriteSheetKey: "woman_anim",
-      frames: Array.from({ length: 4 }, (_, i) => i),
+      frames: Array.from({ length: 12 }, (_, i) => i),
       frameRate: 5,
       repeat: -1,
     },
     {
       key: "man_anim",
       spriteSheetKey: "man_anim",
-      frames: Array.from({ length: 4 }, (_, i) => i),
+      frames: Array.from({ length: 8 }, (_, i) => i),
       frameRate: 5,
-      repeat: -1,
-    },
-    // 🎭 PERSONAJES PRINCIPALES - Animaciones específicas
-    {
-      key: "isa_happy_anim",
-      spriteSheetKey: "isa_happy_anim",
-      frames: Array.from({ length: 4 }, (_, i) => i),
-      frameRate: 6,
-      repeat: -1,
-    },
-    {
-      key: "isa_sad_anim",
-      spriteSheetKey: "isa_sad_anim",
-      frames: Array.from({ length: 4 }, (_, i) => i),
-      frameRate: 4,
-      repeat: -1,
-    },
-    {
-      key: "isa_dying_anim",
-      spriteSheetKey: "isa_dying_anim",
-      frames: Array.from({ length: 4 }, (_, i) => i),
-      frameRate: 3,
-      repeat: -1,
-    },
-    {
-      key: "stev_happy_anim",
-      spriteSheetKey: "stev_happy_anim",
-      frames: Array.from({ length: 4 }, (_, i) => i),
-      frameRate: 6,
-      repeat: -1,
-    },
-    {
-      key: "stev_sad_anim",
-      spriteSheetKey: "stev_sad_anim",
-      frames: Array.from({ length: 4 }, (_, i) => i),
-      frameRate: 4,
-      repeat: -1,
-    },
-    {
-      key: "stev_dying_anim",
-      spriteSheetKey: "stev_dying_anim",
-      frames: Array.from({ length: 4 }, (_, i) => i),
-      frameRate: 3,
       repeat: -1,
     },
   ];
