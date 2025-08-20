@@ -55,9 +55,7 @@ export class WorldRenderer {
       );
     }
 
-    logAutopoiesis.info(
-      'WorldRenderer inicializado con sistema de assets creativos'
-    );
+    logAutopoiesis.info('WorldRenderer inicializado con sistema de assets creativos');
   }
 
   /**
@@ -85,9 +83,7 @@ export class WorldRenderer {
   /**
    * Renderiza el mundo usando assets creativos ultra-diversos
    */
-  private async renderWorldWithCreativeAssets(
-    world: GeneratedWorld
-  ): Promise<void> {
+  private async renderWorldWithCreativeAssets(world: GeneratedWorld): Promise<void> {
     logAutopoiesis.info('🎨 Renderizando mundo con assets creativos reales');
 
     try {
@@ -100,9 +96,7 @@ export class WorldRenderer {
       // Verificar si algo se renderizó
       const stats = this.biomeAssetRenderer.getWorldStats();
       if (stats.totalRendered === 0) {
-        logAutopoiesis.warn(
-          '⚠️ Sistema creativo no renderizó nada, usando fallback'
-        );
+        logAutopoiesis.warn('⚠️ Sistema creativo no renderizó nada, usando fallback');
         throw new Error('No creative assets rendered');
       }
 
@@ -137,82 +131,62 @@ export class WorldRenderer {
   }
 
   /**
-   * Renderiza el mundo usando el sistema anterior (fallback)
+   * Renderiza el mundo usando el sistema ULTRA-OPTIMIZADO para 60 FPS
    */
   private renderWorldLegacy(): void {
     this.createWorldBackground();
     this.renderZones();
-    this.renderMapElements();
-    this.renderDecorations();
-    this.renderStructuresAndProps();
+    // DESHABILITADO para 60 FPS: this.renderMapElements();
+    // DESHABILITADO para 60 FPS: this.renderDecorations();
+    // DESHABILITADO para 60 FPS: this.renderStructuresAndProps();
 
-    logAutopoiesis.info('World rendering completed', {
+    logAutopoiesis.info('✅ ULTRA-OPTIMIZED World rendering completed', {
       zones: this.gameState.zones.length,
-      elements: this.gameState.mapElements.length,
       objects: this.renderedObjects.size,
+      optimizationLevel: 'MAXIMUM_FPS_MODE',
     });
   }
 
   /**
-   * Create world background using real grass assets
+   * Create world background using optimized tilemap system
    */
   private createWorldBackground(): void {
-    const tileSize = GAME_BALANCE.VISUALS.TILE_SIZE;
+    // OPTIMIZACIÓN CRÍTICA: Usar un solo rectángulo con textura repetida
+    // en lugar de miles de sprites individuales
     const worldWidth = this.gameState.worldSize.width;
     const worldHeight = this.gameState.worldSize.height;
 
-    // Usar assets reales de césped disponibles según AssetManager
-    const realGrassAssets = ['grass_1', 'grass_2', 'grass_3', 'grass_middle'];
+    // Crear un background simple y eficiente
+    const background = this.scene.add.rectangle(
+      worldWidth / 2,
+      worldHeight / 2,
+      worldWidth,
+      worldHeight,
+      0x90ee90 // Verde césped
+    );
+    background.setDepth(0);
 
-    // Cargar assets si no existen
-    this.preloadGrassAssets(realGrassAssets);
+    // Añadir textura sutil con graphics para simular césped
+    const grassPattern = this.scene.add.graphics();
+    grassPattern.fillStyle(0x7ccd7c, 0.3);
 
-    for (let x = 0; x < worldWidth; x += tileSize) {
-      for (let y = 0; y < worldHeight; y += tileSize) {
-        // Selección inteligente basada en posición para crear patrones naturales
-        const seed = (x * 73 + y * 137) % 1000;
-        const assetIndex = seed % realGrassAssets.length;
-        const selectedGrass = realGrassAssets[assetIndex];
-
-        // Crear sprite con fallback
-        let grassTile;
-        if (this.scene.textures.exists(selectedGrass)) {
-          grassTile = this.scene.add.image(
-            x + tileSize / 2,
-            y + tileSize / 2,
-            selectedGrass
-          );
-        } else {
-          // Fallback: crear texture simple si el asset no existe
-          this.createFallbackGrassTexture(selectedGrass);
-          grassTile = this.scene.add.image(
-            x + tileSize / 2,
-            y + tileSize / 2,
-            selectedGrass
-          );
-        }
-
-        grassTile.setDisplaySize(tileSize, tileSize);
-        grassTile.setDepth(0);
-
-        // Añadir variación visual sutil
-        const variation = (seed % 100) / 100;
-        grassTile.setTint(
-          Phaser.Display.Color.GetColor(
-            200 + Math.floor(variation * 55), // R: 200-255
-            220 + Math.floor(variation * 35), // G: 220-255
-            180 + Math.floor(variation * 35) // B: 180-215 (más verde)
-          )
-        );
-
-        this.renderedObjects.set(`grass_${x}_${y}`, grassTile);
-      }
+    // Crear patrón de césped ligero (solo algunas marcas)
+    for (let i = 0; i < 50; i++) {
+      // Solo 50 elementos en lugar de miles
+      const x = Math.random() * worldWidth;
+      const y = Math.random() * worldHeight;
+      grassPattern.fillCircle(x, y, 8);
     }
 
-    logAutopoiesis.info('✅ World background created with real grass assets', {
-      tileCount:
-        Math.ceil(worldWidth / tileSize) * Math.ceil(worldHeight / tileSize),
-      assetsUsed: realGrassAssets.length,
+    grassPattern.setDepth(0.1);
+
+    this.renderedObjects.set('world_background', background);
+    this.renderedObjects.set('grass_pattern', grassPattern);
+
+    logAutopoiesis.info('✅ World background created with optimized system', {
+      worldSize: `${worldWidth}x${worldHeight}`,
+      elementsCreated: 2, // Solo 2 elementos en lugar de miles
+      optimizationSavings: 'Reducido de ~1000 sprites a 2 elementos',
     });
   }
 
@@ -222,9 +196,7 @@ export class WorldRenderer {
   private preloadGrassAssets(grassAssets: string[]): void {
     // Los assets ya deberían estar cargados por AssetManager
     // Solo verificamos que existan
-    const missingAssets = grassAssets.filter(
-      assetKey => !this.scene.textures.exists(assetKey)
-    );
+    const missingAssets = grassAssets.filter(assetKey => !this.scene.textures.exists(assetKey));
 
     if (missingAssets.length > 0) {
       logAutopoiesis.warn('Assets de césped faltantes:', missingAssets);
@@ -278,12 +250,12 @@ export class WorldRenderer {
   }
 
   /**
-   * Render all zones visually with dynamic asset placement
+   * Render all zones visually - ULTRA SIMPLIFICADO para 60 FPS
    */
   private renderZones(): void {
+    // Solo renderizar zonas SIN assets adicionales para máximo rendimiento
     this.gameState.zones.forEach((zone, index) => {
       this.renderSingleZone(zone, index);
-      this.placeAssetsInZone(zone, index);
     });
   }
 
@@ -302,17 +274,9 @@ export class WorldRenderer {
       const assetsForCategory = selectedAssets[category] || [];
       const placementCount = this.getPlacementCountForCategory(category, zone);
 
-      for (
-        let i = 0;
-        i < Math.min(placementCount, assetsForCategory.length);
-        i++
-      ) {
+      for (let i = 0; i < Math.min(placementCount, assetsForCategory.length); i++) {
         const assetKey = assetsForCategory[i];
-        const position = this.getValidPlacementPosition(
-          zone,
-          i,
-          placementCount
-        );
+        const position = this.getValidPlacementPosition(zone, i, placementCount);
 
         if (position) {
           this.placeAsset(assetKey, position, category);
@@ -391,8 +355,7 @@ export class WorldRenderer {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       // Use grid-based placement with some randomness
       const gridX =
-        (assetIndex % Math.ceil(Math.sqrt(totalAssets))) /
-        Math.ceil(Math.sqrt(totalAssets));
+        (assetIndex % Math.ceil(Math.sqrt(totalAssets))) / Math.ceil(Math.sqrt(totalAssets));
       const gridY =
         Math.floor(assetIndex / Math.ceil(Math.sqrt(totalAssets))) /
         Math.ceil(Math.sqrt(totalAssets));
@@ -401,14 +364,9 @@ export class WorldRenderer {
       const randomOffsetX = (Math.random() - 0.5) * 0.3;
       const randomOffsetY = (Math.random() - 0.5) * 0.3;
 
-      const x =
-        zone.bounds.x +
-        margin +
-        (zone.bounds.width - 2 * margin) * (gridX + randomOffsetX);
+      const x = zone.bounds.x + margin + (zone.bounds.width - 2 * margin) * (gridX + randomOffsetX);
       const y =
-        zone.bounds.y +
-        margin +
-        (zone.bounds.height - 2 * margin) * (gridY + randomOffsetY);
+        zone.bounds.y + margin + (zone.bounds.height - 2 * margin) * (gridY + randomOffsetY);
 
       // Ensure position is within zone bounds
       if (
@@ -427,11 +385,7 @@ export class WorldRenderer {
   /**
    * Places an asset at the specified position
    */
-  private placeAsset(
-    assetKey: string,
-    position: { x: number; y: number },
-    category: string
-  ): void {
+  private placeAsset(assetKey: string, position: { x: number; y: number }, category: string): void {
     try {
       // Determine asset path based on category
       const assetPath = this.getAssetPath(assetKey, category);
@@ -455,9 +409,7 @@ export class WorldRenderer {
         sprite: asset,
       });
 
-      logAutopoiesis.debug(
-        `Asset placed: ${assetKey} at (${position.x}, ${position.y})`
-      );
+      logAutopoiesis.debug(`Asset placed: ${assetKey} at (${position.x}, ${position.y})`);
     } catch (error) {
       logAutopoiesis.warn(`Failed to place asset: ${assetKey}`, error);
     }
@@ -604,59 +556,30 @@ export class WorldRenderer {
   }
 
   /**
-   * Renderiza estructuras de pueblo cerca de zonas - SIMPLIFICADO
+   * Renderiza estructuras MÍNIMAS para mejor rendimiento
    */
   private renderVillageStructures(): void {
-    // Solo renderizar una estructura por zona para mejorar rendimiento
-    this.gameState.zones.slice(0, 3).forEach((zone, index) => {
+    // SOLO UNA estructura para mejorar FPS drásticamente
+    const zone = this.gameState.zones[0];
+    if (zone) {
       const centerX = zone.bounds.x + zone.bounds.width / 2;
       const centerY = zone.bounds.y + zone.bounds.height / 2;
-
-      // Solo añadir una estructura principal por zona
-      switch (index % 3) {
-        case 0:
-          this.addStructureNearZone(centerX + 80, centerY - 60, 'House', 1.0);
-          break;
-        case 1:
-          this.addStructureNearZone(
-            centerX - 80,
-            centerY + 60,
-            'House_Hay_1',
-            1.0
-          );
-          break;
-        case 2:
-          this.addStructureNearZone(centerX, centerY + 80, 'House_Hay_2', 1.0);
-          break;
-      }
-    });
+      this.addStructureNearZone(centerX + 50, centerY - 30, 'House', 0.8);
+    }
   }
 
   /**
-   * Renderiza props ambientales REDUCIDOS para mejor rendimiento
+   * Renderiza props MÍNIMOS para mejor rendimiento
    */
   private renderEnvironmentalProps(): void {
-    // Solo añadir algunos props básicos
-    const basicProps = [
-      { x: 200, y: 150, asset: 'LampPost_3', scale: 1.0 },
-      { x: 600, y: 200, asset: 'Bench_1', scale: 1.0 },
-      { x: 400, y: 450, asset: 'Sign_1', scale: 1.0 },
-    ];
-
-    basicProps.forEach((prop, index) => {
-      this.addEnvironmentalProp(prop.x, prop.y, prop.asset, prop.scale, index);
-    });
+    // SOLO UN prop para mejorar FPS
+    this.addEnvironmentalProp(400, 300, 'Bench_1', 0.8, 0);
   }
 
   /**
    * Añade una estructura cerca de una zona
    */
-  private addStructureNearZone(
-    x: number,
-    y: number,
-    assetKey: string,
-    scale: number
-  ): void {
+  private addStructureNearZone(x: number, y: number, assetKey: string, scale: number): void {
     if (this.scene.textures.exists(assetKey)) {
       const structure = this.scene.add.image(x, y, assetKey);
       structure.setScale(scale);
@@ -673,12 +596,7 @@ export class WorldRenderer {
   /**
    * Añade un prop cerca de una zona
    */
-  private addPropNearZone(
-    x: number,
-    y: number,
-    assetKey: string,
-    scale: number
-  ): void {
+  private addPropNearZone(x: number, y: number, assetKey: string, scale: number): void {
     if (this.scene.textures.exists(assetKey)) {
       const prop = this.scene.add.image(x, y, assetKey);
       prop.setScale(scale);
@@ -717,20 +635,8 @@ export class WorldRenderer {
   /**
    * Crea placeholder para estructura no encontrada
    */
-  private createStructurePlaceholder(
-    x: number,
-    y: number,
-    name: string,
-    scale: number
-  ): void {
-    const placeholder = this.scene.add.rectangle(
-      x,
-      y,
-      60 * scale,
-      80 * scale,
-      0x8b4513,
-      0.8
-    );
+  private createStructurePlaceholder(x: number, y: number, name: string, scale: number): void {
+    const placeholder = this.scene.add.rectangle(x, y, 60 * scale, 80 * scale, 0x8b4513, 0.8);
     placeholder.setStrokeStyle(2, 0xdeb887);
     placeholder.setDepth(4);
 
@@ -749,12 +655,7 @@ export class WorldRenderer {
   /**
    * Crea placeholder para prop no encontrado
    */
-  private createPropPlaceholder(
-    x: number,
-    y: number,
-    name: string,
-    scale: number
-  ): void {
+  private createPropPlaceholder(x: number, y: number, name: string, scale: number): void {
     const placeholder = this.scene.add.circle(x, y, 15 * scale, 0x654321, 0.7);
     placeholder.setStrokeStyle(1, 0xdeb887);
     placeholder.setDepth(3);
@@ -763,59 +664,41 @@ export class WorldRenderer {
   }
 
   /**
-   * Renderiza decoraciones animadas mejoradas
+   * Renderiza decoraciones ULTRA-SIMPLIFICADAS para máximo rendimiento
    */
   private renderAnimatedDecorations(): void {
     if (!this.animationManager) {
-      logAutopoiesis.warn(
-        'AnimationManager no disponible, usando decoraciones estáticas'
-      );
+      logAutopoiesis.warn('AnimationManager no disponible, usando decoraciones estáticas');
       this.renderDecorations();
       return;
     }
 
-    const enhancedDecorations = [
+    // REDUCIDO A SOLO 2 DECORACIONES para mejorar FPS
+    const minimalDecorations = [
       {
-        x: 150,
-        y: 120,
+        x: 300,
+        y: 200,
         animation: 'flowers_red_sway',
         fallbackSprite: 'flowers-red',
-        scale: 1.2,
+        scale: 1.0,
         tint: 0xff6b6b,
       },
       {
-        x: 300,
-        y: 180,
-        animation: 'flowers_white_sway',
-        fallbackSprite: 'flowers-white',
-        scale: 1.1,
-        tint: 0xf7f7f7,
-      },
-      {
-        x: 500,
-        y: 250,
+        x: 600,
+        y: 400,
         animation: 'campfire_burning',
         fallbackSprite: 'campfire',
-        scale: 1.5,
+        scale: 1.0,
         tint: 0xff7700,
-        glow: true,
-      },
-      {
-        x: 800,
-        y: 400,
-        animation: 'flag_wave',
-        fallbackSprite: 'checkpoint-flag',
-        scale: 1.3,
-        tint: 0x4169e1,
       },
     ];
 
-    enhancedDecorations.forEach((decoration, index) => {
+    minimalDecorations.forEach((decoration, index) => {
       this.createEnhancedDecoration(decoration, index);
     });
 
     logAutopoiesis.info(
-      `Animated decorations rendered {count: ${enhancedDecorations.length}, animated: true}`
+      `Animated decorations rendered {count: ${minimalDecorations.length}, animated: true, optimized: true}`
     );
   }
 
@@ -837,13 +720,7 @@ export class WorldRenderer {
 
       // Añadir efecto de brillo para decoraciones especiales
       if (decoration.glow) {
-        const glow = this.scene.add.circle(
-          decoration.x,
-          decoration.y,
-          30,
-          0xffffff,
-          0.2
-        );
+        const glow = this.scene.add.circle(decoration.x, decoration.y, 30, 0xffffff, 0.2);
         glow.setBlendMode(Phaser.BlendModes.ADD);
         glow.setDepth(2);
       }
@@ -921,13 +798,10 @@ export class WorldRenderer {
 
         if (animatedSprite) {
           decoration = animatedSprite;
-          logAutopoiesis.debug(
-            `Created animated decoration: ${deco.animation}`,
-            {
-              x: deco.x,
-              y: deco.y,
-            }
-          );
+          logAutopoiesis.debug(`Created animated decoration: ${deco.animation}`, {
+            x: deco.x,
+            y: deco.y,
+          });
         } else {
           // Fallback to static sprite if animation creation failed
           decoration = this.createFallbackDecoration(deco);
@@ -944,9 +818,7 @@ export class WorldRenderer {
       // Add random slight variations
       decoration.setRotation((Math.random() - 0.5) * 0.2);
       const scaleVariation = 0.8 + Math.random() * 0.4;
-      decoration.setScale(
-        GAME_BALANCE.DECORATIONS.CAMPFIRE_SCALE * scaleVariation
-      );
+      decoration.setScale(GAME_BALANCE.DECORATIONS.CAMPFIRE_SCALE * scaleVariation);
 
       // Store decoration in both maps for tracking
       this.renderedObjects.set(`decoration_${index}`, decoration);
@@ -970,25 +842,16 @@ export class WorldRenderer {
   }): Phaser.GameObjects.Sprite {
     // Check if fallback sprite exists
     if (this.scene.textures.exists(deco.fallbackSprite)) {
-      const decoration = this.scene.add.sprite(
-        deco.x,
-        deco.y,
-        deco.fallbackSprite
-      );
-      logAutopoiesis.debug(
-        `Created fallback decoration: ${deco.fallbackSprite}`,
-        {
-          x: deco.x,
-          y: deco.y,
-          originalAnimation: deco.animation,
-        }
-      );
+      const decoration = this.scene.add.sprite(deco.x, deco.y, deco.fallbackSprite);
+      logAutopoiesis.debug(`Created fallback decoration: ${deco.fallbackSprite}`, {
+        x: deco.x,
+        y: deco.y,
+        originalAnimation: deco.animation,
+      });
       return decoration;
     } else {
       // Ultimate fallback - create a simple colored rectangle
-      logAutopoiesis.warn(
-        `Fallback sprite ${deco.fallbackSprite} not found, creating placeholder`
-      );
+      logAutopoiesis.warn(`Fallback sprite ${deco.fallbackSprite} not found, creating placeholder`);
       const placeholder = this.scene.add.sprite(deco.x, deco.y, '__DEFAULT');
 
       // Create a default texture if it doesn't exist
@@ -1145,8 +1008,7 @@ export class WorldRenderer {
         visible: visibleCount,
         paused: pausedCount,
         cullingEfficiency: `${(
-          ((this.decorationSprites.length - visibleCount) /
-            this.decorationSprites.length) *
+          ((this.decorationSprites.length - visibleCount) / this.decorationSprites.length) *
           100
         ).toFixed(1)}%`,
       });
@@ -1225,17 +1087,21 @@ export class WorldRenderer {
   }
 
   /**
-   * Initialize dynamic asset selection system
+   * Initialize ULTRA-SIMPLIFIED asset system para 60 FPS
    */
   private initializeDynamicAssets(): void {
-    const availableAssets = this.getAvailableAssets();
-    this.selectedAssets = this.selectAssetsByCategory(availableAssets);
-    this.preloadSelectedAssets();
+    // SISTEMA COMPLETAMENTE SIMPLIFICADO - Solo seleccionamos 3 assets que SABEMOS que existen
+    this.selectedAssets = {
+      essential: [
+        'Bench_1', // Existe en assets/props/Bench_1.png
+        'Chest', // Existe en assets/props/Chest.png
+        'campfire', // Existe en assets/animated_entities/campfire.png
+      ],
+    };
 
-    logAutopoiesis.info('🎨 Dynamic assets initialized', {
-      categories: Object.keys(this.selectedAssets),
-      totalSelected: Object.values(this.selectedAssets).flat().length,
-      seed: this.worldSeed,
+    logAutopoiesis.info('🎨 ULTRA-SIMPLIFIED assets initialized', {
+      totalSelected: 3,
+      optimizationLevel: 'MAXIMUM_FPS',
     });
   }
 
@@ -1361,44 +1227,17 @@ export class WorldRenderer {
   /**
    * Selecciona assets por categoría usando seed determinístico
    */
-  private selectAssetsByCategory(
-    availableAssets: any
-  ): Record<string, string[]> {
+  private selectAssetsByCategory(availableAssets: any): Record<string, string[]> {
     const selected: Record<string, string[]> = {};
 
     // Use deterministic selection based on seed
     const rng = this.createSeededRandom(this.worldSeed);
 
-    selected.structures = this.selectFromCategory(
-      availableAssets.structures,
-      2,
-      4,
-      rng
-    );
-    selected.furniture = this.selectFromCategory(
-      availableAssets.furniture,
-      3,
-      6,
-      rng
-    );
-    selected.streetItems = this.selectFromCategory(
-      availableAssets.streetItems,
-      2,
-      4,
-      rng
-    );
-    selected.containers = this.selectFromCategory(
-      availableAssets.containers,
-      1,
-      3,
-      rng
-    );
-    selected.decorative = this.selectFromCategory(
-      availableAssets.decorative,
-      2,
-      4,
-      rng
-    );
+    selected.structures = this.selectFromCategory(availableAssets.structures, 2, 4, rng);
+    selected.furniture = this.selectFromCategory(availableAssets.furniture, 3, 6, rng);
+    selected.streetItems = this.selectFromCategory(availableAssets.streetItems, 2, 4, rng);
+    selected.containers = this.selectFromCategory(availableAssets.containers, 1, 3, rng);
+    selected.decorative = this.selectFromCategory(availableAssets.decorative, 2, 4, rng);
     selected.urban = this.selectFromCategory(availableAssets.urban, 1, 2, rng);
 
     return selected;

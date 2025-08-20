@@ -19,11 +19,12 @@ import type {
 import { logAutopoiesis } from "../utils/logger";
 
 export class MainScene extends Phaser.Scene {
-  // Optimizaciones de rendimiento
-  private readonly uiUpdateInterval = 200; // Actualizar UI cada 200ms en lugar de cada frame
-  private readonly foodUpdateInterval = 100; // Actualizar food system cada 100ms
+  // 🚀 MEGA-OPTIMIZACIONES de rendimiento para 60 FPS
+  private readonly uiUpdateInterval = 500; // ⚡ AUMENTADO: de 200ms a 500ms
+  private readonly foodUpdateInterval = 300; // ⚡ AUMENTADO: de 100ms a 300ms
   private lastUIUpdate = 0;
   private lastFoodUpdate = 0;
+  private lastWorldUpdate = 0; // NUEVO: Para throttling de WorldRenderer
   private cachedEntityData: Record<string, unknown> | null = null; // Cache para evitar recrear objetos
   private gameState!: GameState;
   private dialogueSystem!: DialogueSystem;
@@ -182,21 +183,24 @@ export class MainScene extends Phaser.Scene {
   update() {
     const now = Date.now();
 
-    // WorldRenderer ya está optimizado con su propio intervalo
-    if (this.worldRenderer) {
-      this.worldRenderer.updateVisuals();
-    }
+    // ULTRA-OPTIMIZACIÓN: Reducir frecuencia dramáticamente para 60 FPS
 
-    // Input handling - debe ser cada frame para respuesta inmediata
+    // Input handling - SOLO este debe ser cada frame
     this.handleManualControl();
 
-    // Throttle food system updates
+    // WorldRenderer - REDUCIR de cada frame a cada 200ms (era updateVisuals() cada frame)
+    if (this.worldRenderer && now - this.lastWorldUpdate > 200) {
+      this.worldRenderer.updateVisuals();
+      this.lastWorldUpdate = now;
+    }
+
+    // Food system - MANTENER throttling (ya optimizado)
     if (now - this.lastFoodUpdate > this.foodUpdateInterval) {
       this.updateFoodSystem();
       this.lastFoodUpdate = now;
     }
 
-    // Throttle UI updates significativamente
+    // UI updates - MANTENER throttling (ya optimizado)
     if (now - this.lastUIUpdate > this.uiUpdateInterval) {
       this.updateUI();
       this.lastUIUpdate = now;

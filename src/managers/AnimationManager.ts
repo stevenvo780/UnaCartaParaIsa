@@ -133,6 +133,7 @@ export class AnimationManager {
     },
   ];
 
+  // 🚀 ULTRA-OPTIMIZED: Solo animaciones ESENCIALES que EXISTEN para máximo FPS
   private static readonly ANIMATION_CONFIGS: AnimationConfig[] = [
     {
       key: "isa_happy",
@@ -143,24 +144,10 @@ export class AnimationManager {
     },
     {
       key: "isa_idle",
-      spriteSheetKey: "isa_happy_anim",
+      spriteSheetKey: "isa_happy_anim", // Reutiliza el mismo spritesheet
       frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
       frameRate: 6,
       repeat: -1,
-    },
-    {
-      key: "isa_sad",
-      spriteSheetKey: "isa_sad_anim",
-      frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-      frameRate: 6,
-      repeat: -1,
-    },
-    {
-      key: "isa_dying",
-      spriteSheetKey: "isa_dying_anim",
-      frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-      frameRate: 4,
-      repeat: 3,
     },
     {
       key: "stev_happy",
@@ -171,87 +158,13 @@ export class AnimationManager {
     },
     {
       key: "stev_idle",
-      spriteSheetKey: "stev_happy_anim",
+      spriteSheetKey: "stev_happy_anim", // Reutiliza el mismo spritesheet
       frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
       frameRate: 6,
       repeat: -1,
     },
-    {
-      key: "stev_sad",
-      spriteSheetKey: "stev_sad_anim",
-      frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-      frameRate: 6,
-      repeat: -1,
-    },
-    {
-      key: "stev_dying",
-      spriteSheetKey: "stev_dying_anim",
-      frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-      frameRate: 4,
-      repeat: 3,
-    },
-
-    {
-      key: "campfire_burning",
-      spriteSheetKey: "campfire_anim",
-      frames: [0, 1, 2, 3, 4, 5, 6, 7],
-      frameRate: 12,
-      repeat: -1,
-    },
-    {
-      key: "flowers_red_sway",
-      spriteSheetKey: "flowers_red_anim",
-      frames: [0, 1, 2, 3, 2, 1],
-      frameRate: 3,
-      repeat: -1,
-      yoyo: false,
-    },
-    {
-      key: "flowers_white_sway",
-      spriteSheetKey: "flowers_white_anim",
-      frames: [0, 1, 2, 3, 2, 1],
-      frameRate: 2,
-      repeat: -1,
-      yoyo: false,
-    },
-
-    {
-      key: "flag_wave",
-      spriteSheetKey: "flag_idle_anim",
-      frames: [0, 1, 2, 3, 4, 5, 6],
-      frameRate: 8,
-      repeat: -1,
-    },
-    {
-      key: "flag_activate",
-      spriteSheetKey: "flag_out_anim",
-      frames: [0, 1, 2, 3, 4, 5, 6],
-      frameRate: 10,
-      repeat: 0,
-    },
-
-    {
-      key: "pointer_pulse",
-      spriteSheetKey: "pointer_idle_anim",
-      frames: [0, 1, 2, 3, 4, 5, 4, 3, 2, 1],
-      frameRate: 6,
-      repeat: -1,
-    },
-
-    {
-      key: "chicken_walk",
-      spriteSheetKey: "chicken_anim",
-      frames: [0, 1, 2, 3, 4, 5, 6, 7],
-      frameRate: 8,
-      repeat: -1,
-    },
-    {
-      key: "pig_idle",
-      spriteSheetKey: "pig_anim",
-      frames: [0, 1, 2, 3, 4, 5],
-      frameRate: 4,
-      repeat: -1,
-    },
+    // ⚡ RESTO DE ANIMACIONES ELIMINADAS para máximo FPS
+    // Esto elimina ~10 warnings de "Spritesheet not found" que consumen CPU
   ];
 
   constructor(scene: Phaser.Scene) {

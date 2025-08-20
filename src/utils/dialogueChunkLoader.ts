@@ -3,8 +3,8 @@
  * Divide el archivo masivo de 5.3MB en chunks manejables
  */
 
-import { logAutopoiesis } from './logger';
-import type { DialogueEntry, DialogueCriteria } from '../types';
+import type { DialogueCriteria, DialogueEntry } from "../types";
+import { logAutopoiesis } from "./logger";
 
 interface DialogueChunk {
   id: string;
@@ -26,10 +26,10 @@ export class DialogueChunkLoader {
   private cache = new Map<string, DialogueEntry[]>();
   private loadingPromises = new Map<string, Promise<DialogueEntry[]>>();
 
-  // Configuración optimizada
-  private readonly CHUNK_SIZE = 1000; // 1000 diálogos por chunk
-  private readonly MAX_CACHE_CHUNKS = 5; // Mantener máximo 5 chunks en memoria
-  private readonly PRELOAD_ADJACENT = true; // Precargar chunks adyacentes
+  // 🚀 MEGA-OPTIMIZED: Configuración para máximo rendimiento con menos chunks
+  private readonly CHUNK_SIZE = 5000; // ⚡ AUMENTADO: más diálogos por chunk = menos chunks
+  private readonly MAX_CACHE_CHUNKS = 1; // ⚡ MÍNIMO: solo 1 chunk en memoria
+  private readonly PRELOAD_ADJACENT = false; // ⚡ DESACTIVADO: no precargar chunks
 
   private constructor() {}
 
@@ -46,17 +46,19 @@ export class DialogueChunkLoader {
   public async initialize(): Promise<void> {
     try {
       // Intentar cargar metadata de chunks
-      const metadataResponse = await fetch('/dialogs/dialogues-metadata.json');
+      const metadataResponse = await fetch("/dialogs/dialogues-metadata.json");
       if (metadataResponse.ok) {
         this.metadata = await metadataResponse.json();
-        logAutopoiesis.info('Dialogue chunks metadata loaded', {
+        logAutopoiesis.info("Dialogue chunks metadata loaded", {
           totalEntries: this.metadata.totalEntries,
           chunks: this.metadata.chunks.length,
         });
         return;
       }
     } catch (error) {
-      logAutopoiesis.warn('No chunked dialogues found, creating chunks from main file');
+      logAutopoiesis.warn(
+        "No chunked dialogues found, creating chunks from main file",
+      );
     }
 
     // Fallback: crear chunks desde archivo principal
@@ -68,7 +70,9 @@ export class DialogueChunkLoader {
    */
   private async createChunksFromMainFile(): Promise<void> {
     try {
-      const response = await fetch('/dialogs/dialogos_chat_isa.lite.censored_plus.json');
+      const response = await fetch(
+        "/dialogs/dialogos_chat_isa.lite.censored_plus.json",
+      );
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -103,13 +107,13 @@ export class DialogueChunkLoader {
         }
       }
 
-      logAutopoiesis.info('Created dialogue chunks from main file', {
+      logAutopoiesis.info("Created dialogue chunks from main file", {
         totalEntries: dialogues.length,
         chunks: this.metadata.chunks.length,
         chunkSize: this.CHUNK_SIZE,
       });
     } catch (error) {
-      logAutopoiesis.error('Failed to create dialogue chunks', {
+      logAutopoiesis.error("Failed to create dialogue chunks", {
         error: String(error),
       });
       throw error;
@@ -147,7 +151,10 @@ export class DialogueChunkLoader {
   /**
    * Obtener múltiples diálogos por rango
    */
-  public async getDialogueRange(startIndex: number, count: number): Promise<DialogueEntry[]> {
+  public async getDialogueRange(
+    startIndex: number,
+    count: number,
+  ): Promise<DialogueEntry[]> {
     const dialogues: DialogueEntry[] = [];
 
     for (let i = 0; i < count; i++) {
@@ -164,7 +171,7 @@ export class DialogueChunkLoader {
    * Buscar diálogos por criterios (carga chunks según necesidad)
    */
   public async searchDialogues(criteria: {
-    speaker?: 'ISA' | 'STEV';
+    speaker?: "ISA" | "STEV";
     emotion?: string;
     textContains?: string;
     limit?: number;
@@ -284,17 +291,21 @@ export class DialogueChunkLoader {
   /**
    * Cargar chunk desde archivo principal (fallback)
    */
-  private async loadChunkFromMainFile(chunkId: string): Promise<DialogueEntry[]> {
+  private async loadChunkFromMainFile(
+    chunkId: string,
+  ): Promise<DialogueEntry[]> {
     if (!this.metadata) {
-      throw new Error('Metadata not initialized');
+      throw new Error("Metadata not initialized");
     }
 
-    const chunk = this.metadata.chunks.find(c => c.id === chunkId);
+    const chunk = this.metadata.chunks.find((c) => c.id === chunkId);
     if (!chunk) {
       throw new Error(`Chunk not found: ${chunkId}`);
     }
 
-    const response = await fetch('/dialogs/dialogos_chat_isa.lite.censored_plus.json');
+    const response = await fetch(
+      "/dialogs/dialogos_chat_isa.lite.censored_plus.json",
+    );
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
@@ -314,7 +325,10 @@ export class DialogueChunkLoader {
   /**
    * Verificar si diálogo coincide con criterios
    */
-  private matchesCriteria(dialogue: DialogueEntry, criteria: DialogueCriteria): boolean {
+  private matchesCriteria(
+    dialogue: DialogueEntry,
+    criteria: DialogueCriteria,
+  ): boolean {
     if (criteria.speaker && dialogue.speaker !== criteria.speaker) {
       return false;
     }
@@ -353,19 +367,24 @@ export class DialogueChunkLoader {
   private preloadAdjacentChunks(chunkId: string): void {
     if (!this.metadata) return;
 
-    const currentIndex = this.metadata.chunks.findIndex(c => c.id === chunkId);
+    const currentIndex = this.metadata.chunks.findIndex(
+      (c) => c.id === chunkId,
+    );
     if (currentIndex === -1) return;
 
     // Precargar anterior y siguiente
     const toPreload = [currentIndex - 1, currentIndex + 1].filter(
-      idx => idx >= 0 && idx < this.metadata.chunks.length
+      (idx) => idx >= 0 && idx < this.metadata.chunks.length,
     );
 
     for (const idx of toPreload) {
       const adjacentChunk = this.metadata.chunks[idx];
-      if (!this.cache.has(adjacentChunk.id) && !this.loadingPromises.has(adjacentChunk.id)) {
+      if (
+        !this.cache.has(adjacentChunk.id) &&
+        !this.loadingPromises.has(adjacentChunk.id)
+      ) {
         // Precargar en background sin bloquear
-        this.loadChunk(adjacentChunk.id).catch(error => {
+        this.loadChunk(adjacentChunk.id).catch((error) => {
           logAutopoiesis.debug(`Failed to preload chunk: ${adjacentChunk.id}`, {
             error: String(error),
           });
@@ -397,7 +416,7 @@ export class DialogueChunkLoader {
   public clearCache(): void {
     this.cache.clear();
     this.loadingPromises.clear();
-    logAutopoiesis.info('Dialogue cache cleared');
+    logAutopoiesis.info("Dialogue cache cleared");
   }
 }
 

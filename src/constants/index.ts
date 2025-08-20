@@ -31,18 +31,18 @@ export const TIMING = {
   BREATHING_CYCLE_MS: 4000,
   ATTENTION_SPAN_MS: 90000,
 
-  MAIN_GAME_LOGIC: 800,
-  DEGRADATION_UPDATE: 2000,
-  MOVEMENT_UPDATE: 16,
-  UI_UPDATE: 100,
-  BATCH_FLUSH: 100,
-  CLEANUP: 60000,
+  MAIN_GAME_LOGIC: 3000, // ⚡ ULTRA-OPTIMIZADO: de 800ms a 3000ms para 60 FPS
+  DEGRADATION_UPDATE: 5000, // ⚡ ULTRA-OPTIMIZADO: de 2000ms a 5000ms
+  MOVEMENT_UPDATE: 32, // ⚡ ULTRA-OPTIMIZADO: de 16ms a 32ms
+  UI_UPDATE: 200, // ⚡ ULTRA-OPTIMIZADO: de 100ms a 200ms
+  BATCH_FLUSH: 200, // ⚡ ULTRA-OPTIMIZADO: de 100ms a 200ms
+  CLEANUP: 120000, // ⚡ ULTRA-OPTIMIZADO: de 60000ms a 120000ms
 
-  main: 800,
-  degradation: 2000,
-  movement: 16,
-  ui: 100,
-  entityMovementSpeed: 16,
+  main: 3000, // ⚡ ULTRA-OPTIMIZADO
+  degradation: 5000, // ⚡ ULTRA-OPTIMIZADO
+  movement: 32, // ⚡ ULTRA-OPTIMIZADO
+  ui: 200, // ⚡ ULTRA-OPTIMIZADO
+  entityMovementSpeed: 32, // ⚡ ULTRA-OPTIMIZADO
 
   SPEED_MULTIPLIERS: {
     PAUSED: 0,
@@ -132,19 +132,19 @@ export const PHYSICS = {
 
 export const ACTIVITIES = {
   TYPES: [
-    'RESTING',
-    'MEDITATING',
-    'SOCIALIZING',
-    'WORKING',
-    'EXERCISING',
-    'WANDERING',
-    'WRITING',
-    'EXPLORING',
-    'CONTEMPLATING',
-    'DANCING',
-    'HIDING',
-    'SHOPPING',
-    'COOKING',
+    "RESTING",
+    "MEDITATING",
+    "SOCIALIZING",
+    "WORKING",
+    "EXERCISING",
+    "WANDERING",
+    "WRITING",
+    "EXPLORING",
+    "CONTEMPLATING",
+    "DANCING",
+    "HIDING",
+    "SHOPPING",
+    "COOKING",
   ] as const,
 
   OPTIMAL_DURATION: {
@@ -180,19 +180,19 @@ export const ACTIVITIES = {
   },
 
   PREFERRED_ZONES: {
-    RESTING: 'rest',
-    MEDITATING: 'comfort',
-    SOCIALIZING: 'social',
-    WORKING: 'work',
-    EXERCISING: 'play',
-    WANDERING: 'play',
-    WRITING: 'comfort',
-    EXPLORING: 'play',
-    CONTEMPLATING: 'comfort',
-    DANCING: 'social',
-    HIDING: 'comfort',
-    SHOPPING: 'work',
-    COOKING: 'food',
+    RESTING: "rest",
+    MEDITATING: "comfort",
+    SOCIALIZING: "social",
+    WORKING: "work",
+    EXERCISING: "play",
+    WANDERING: "play",
+    WRITING: "comfort",
+    EXPLORING: "play",
+    CONTEMPLATING: "comfort",
+    DANCING: "social",
+    HIDING: "comfort",
+    SHOPPING: "work",
+    COOKING: "food",
   },
 } as const;
 
@@ -206,17 +206,17 @@ export const MOVEMENT_CONFIG = {
 } as const;
 
 export const NEED_TO_ZONE_MAPPING = {
-  hunger: 'kitchen',
-  thirst: 'kitchen',
-  energy: 'bedroom',
-  sleepiness: 'bedroom',
-  social: 'living',
-  entertainment: 'living',
-  loneliness: 'social',
-  happiness: 'play',
-  boredom: 'recreation',
-  money: 'work',
-  health: 'bedroom',
+  hunger: "kitchen",
+  thirst: "kitchen",
+  energy: "bedroom",
+  sleepiness: "bedroom",
+  social: "living",
+  entertainment: "living",
+  loneliness: "social",
+  happiness: "play",
+  boredom: "recreation",
+  money: "work",
+  health: "bedroom",
 } as const;
 
 export const RESONANCE_THRESHOLDS = {
@@ -225,9 +225,19 @@ export const RESONANCE_THRESHOLDS = {
   HIGH: 0.8,
 } as const;
 
-export type ZoneType = 'kitchen' | 'bedroom' | 'living' | 'bathroom' | 'outdoor';
+export type ZoneType =
+  | "kitchen"
+  | "bedroom"
+  | "living"
+  | "bathroom"
+  | "outdoor";
 
-export type EntityStateType = 'idle' | 'moving' | 'interacting' | 'resting' | 'seeking';
+export type EntityStateType =
+  | "idle"
+  | "moving"
+  | "interacting"
+  | "resting"
+  | "seeking";
 
 export const {
   MAIN_GAME_LOGIC,

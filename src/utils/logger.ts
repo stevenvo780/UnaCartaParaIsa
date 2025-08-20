@@ -23,18 +23,24 @@ export enum LogLevel {
 }
 
 /**
- * Configuración global de logging
+ * Configuración global de logging - ULTRA-OPTIMIZADO PARA 60 FPS
  */
 const CONFIG = {
-  // En desarrollo muestra INFO+, en producción solo WARN+
-  level: import.meta.env.DEV ? LogLevel.INFO : LogLevel.WARN,
+  // CAMBIO CRÍTICO: Solo errores en producción y desarrollo
+  level: LogLevel.ERROR, // Era INFO en dev - CAMBIO A ERROR para 60 FPS
 
-  // Sistemas que pueden generar spam - limitados a INFO+ incluso en dev
+  // SISTEMAS COMPLETAMENTE BLOQUEADOS para performance
   throttledSystems: new Set([
     "Animation played",
     "Decoration culling",
     "Asset placed",
     "Game cycle",
+    "updateEntity", // NUEVO: Bloquear entity updates
+    "Diálogo mostrado", // NUEVO: Bloquear diálogos frecuentes
+    "resonance updated", // NUEVO: Bloquear resonance logs
+    "sprite updated", // NUEVO: Bloquear sprite logs
+    "changed activity", // NUEVO: Bloquear activity logs
+    "visuals created", // NUEVO: Bloquear creation logs
   ]),
 };
 
