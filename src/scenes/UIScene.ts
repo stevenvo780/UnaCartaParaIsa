@@ -1,8 +1,12 @@
 import Phaser from 'phaser';
-import { UIElementPool, ResonanceLabel } from '../managers/UIElementPool';
+import {
+  ExplorationUI,
+  type ExplorationStats,
+} from '../components/ExplorationUI';
 import { FoodUI } from '../components/FoodUI';
+import { ResonanceLabel, UIElementPool } from '../managers/UIElementPool';
+import type { Entity, GameLogicUpdateData } from '../types';
 import { logAutopoiesis } from '../utils/logger';
-import type { GameLogicUpdateData, Entity, EntityStats } from '../types';
 
 export class UIScene extends Phaser.Scene {
   private resonanceLabelPool!: UIElementPool<ResonanceLabel>;
@@ -14,6 +18,7 @@ export class UIScene extends Phaser.Scene {
   private rightPanel!: Phaser.GameObjects.Container;
   private minimapContainer!: Phaser.GameObjects.Container;
   private foodUI!: FoodUI;
+  private explorationUI!: ExplorationUI;
 
   // Navigation and control
   private isDraggingCamera = false;
@@ -41,6 +46,7 @@ export class UIScene extends Phaser.Scene {
     this.createRightPanel();
     this.createMinimap();
     this.createFoodUI();
+    this.createExplorationUI();
 
     // Setup modern navigation
     this.setupModernNavigation();
@@ -73,15 +79,28 @@ export class UIScene extends Phaser.Scene {
    * Actualizar label de resonancia usando pool
    */
 
-  private updateUI(data: GameLogicUpdateData) {
-    this.updateTopBarInfo(data);
-    this.updateBottomBarInfo(data);
+  private lastUIUpdate = 0;
+  private readonly UI_UPDATE_INTERVAL = 1000; // Actualizar UI solo cada segundo
 
+  private updateUI(data: GameLogicUpdateData) {
+    const now = Date.now();
+
+    // Actualizar datos críticos siempre
+    this.updateTopBarInfo(data);
     if (data.entities) {
       this.updateCharacterPanels(data.entities);
     }
 
-    this.updateMinimap(data);
+    // Actualizar UI pesada solo cada segundo
+    if (now - this.lastUIUpdate > this.UI_UPDATE_INTERVAL) {
+      this.updateBottomBarInfo(data);
+      this.updateMinimap(data);
+      // Solo actualizar exploración UI cada 5 segundos
+      if (now - this.lastUIUpdate > 5000) {
+        this.updateExplorationUI(data);
+      }
+      this.lastUIUpdate = now;
+    }
   }
 
   // =================== MODERN UI CREATION METHODS ===================
@@ -99,7 +118,16 @@ export class UIScene extends Phaser.Scene {
     topBg.fillRect(0, 0, this.cameras.main.width, 70);
 
     // Subtle gradient overlay
-    topBg.fillGradientStyle(0x6c5ce7, 0x74b9ff, 0x6c5ce7, 0x74b9ff, 0.1, 0.1, 0.2, 0.2);
+    topBg.fillGradientStyle(
+      0x6c5ce7,
+      0x74b9ff,
+      0x6c5ce7,
+      0x74b9ff,
+      0.1,
+      0.1,
+      0.2,
+      0.2
+    );
     topBg.fillRect(0, 0, this.cameras.main.width, 70);
 
     // Bottom accent line
@@ -374,12 +402,24 @@ export class UIScene extends Phaser.Scene {
 
   private createBottomBar() {
     const barHeight = 80;
-    this.bottomBar = this.add.container(0, this.cameras.main.height - barHeight);
+    this.bottomBar = this.add.container(
+      0,
+      this.cameras.main.height - barHeight
+    );
     this.bottomBar.setScrollFactor(0);
 
     // Bottom bar background
     const bottomBg = this.add.graphics();
-    bottomBg.fillGradientStyle(0x34495e, 0x34495e, 0x2c3e50, 0x2c3e50, 0.9, 0.9, 1, 1);
+    bottomBg.fillGradientStyle(
+      0x34495e,
+      0x34495e,
+      0x2c3e50,
+      0x2c3e50,
+      0.9,
+      0.9,
+      1,
+      1
+    );
     bottomBg.fillRect(0, 0, this.cameras.main.width, barHeight);
     bottomBg.lineStyle(2, 0x1abc9c, 0.8);
     bottomBg.lineBetween(0, 2, this.cameras.main.width, 2);
@@ -514,24 +554,56 @@ export class UIScene extends Phaser.Scene {
     speedContainer.add(speedLabel);
 
     // Speed buttons
-    const slowBtn = this.createModernButton(10, 20, 25, 15, '0.5x', '#e74c3c', () => {
-      this.setGameSpeed(0.5);
-    });
+    const slowBtn = this.createModernButton(
+      10,
+      20,
+      25,
+      15,
+      '0.5x',
+      '#e74c3c',
+      () => {
+        this.setGameSpeed(0.5);
+      }
+    );
     speedContainer.add(slowBtn);
 
-    const normalBtn = this.createModernButton(40, 20, 25, 15, '1x', '#95a5a6', () => {
-      this.setGameSpeed(1);
-    });
+    const normalBtn = this.createModernButton(
+      40,
+      20,
+      25,
+      15,
+      '1x',
+      '#95a5a6',
+      () => {
+        this.setGameSpeed(1);
+      }
+    );
     speedContainer.add(normalBtn);
 
-    const fastBtn = this.createModernButton(70, 20, 25, 15, '2x', '#f39c12', () => {
-      this.setGameSpeed(2);
-    });
+    const fastBtn = this.createModernButton(
+      70,
+      20,
+      25,
+      15,
+      '2x',
+      '#f39c12',
+      () => {
+        this.setGameSpeed(2);
+      }
+    );
     speedContainer.add(fastBtn);
 
-    const turboBtn = this.createModernButton(100, 20, 25, 15, '5x', '#e67e22', () => {
-      this.setGameSpeed(5);
-    });
+    const turboBtn = this.createModernButton(
+      100,
+      20,
+      25,
+      15,
+      '5x',
+      '#e67e22',
+      () => {
+        this.setGameSpeed(5);
+      }
+    );
     speedContainer.add(turboBtn);
 
     this.bottomBar.add(speedContainer);
@@ -551,7 +623,16 @@ export class UIScene extends Phaser.Scene {
     this.leftPanel.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(0x34495e, 0x2c3e50, 0x34495e, 0x2c3e50, 0.96, 0.96, 0.96, 0.96);
+    panelBg.fillGradientStyle(
+      0x34495e,
+      0x2c3e50,
+      0x34495e,
+      0x2c3e50,
+      0.96,
+      0.96,
+      0.96,
+      0.96
+    );
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
     panelBg.lineStyle(3, 0x1abc9c, 0.8);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
@@ -563,7 +644,16 @@ export class UIScene extends Phaser.Scene {
 
     // Enhanced panel header
     const headerBg = this.add.graphics();
-    headerBg.fillGradientStyle(0x1abc9c, 0x16a085, 0x1abc9c, 0x16a085, 0.2, 0.2, 0.1, 0.1);
+    headerBg.fillGradientStyle(
+      0x1abc9c,
+      0x16a085,
+      0x1abc9c,
+      0x16a085,
+      0.2,
+      0.2,
+      0.1,
+      0.1
+    );
     headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
     this.leftPanel.add(headerBg);
 
@@ -583,9 +673,17 @@ export class UIScene extends Phaser.Scene {
     this.createCharacterPanel('stev', 15, 235, '#3498db', '👨 STEV');
 
     // Enhanced toggle button
-    const toggleBtn = this.createModernButton(panelWidth - 35, 8, 30, 20, '◀', '#95a5a6', () => {
-      this.toggleLeftPanel();
-    });
+    const toggleBtn = this.createModernButton(
+      panelWidth - 35,
+      8,
+      30,
+      20,
+      '◀',
+      '#95a5a6',
+      () => {
+        this.toggleLeftPanel();
+      }
+    );
     this.leftPanel.add(toggleBtn);
   }
 
@@ -604,7 +702,16 @@ export class UIScene extends Phaser.Scene {
     this.rightPanel.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(0x34495e, 0x2c3e50, 0x34495e, 0x2c3e50, 0.96, 0.96, 0.96, 0.96);
+    panelBg.fillGradientStyle(
+      0x34495e,
+      0x2c3e50,
+      0x34495e,
+      0x2c3e50,
+      0.96,
+      0.96,
+      0.96,
+      0.96
+    );
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
     panelBg.lineStyle(3, 0x9b59b6, 0.8);
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
@@ -616,7 +723,16 @@ export class UIScene extends Phaser.Scene {
 
     // Enhanced panel header
     const headerBg = this.add.graphics();
-    headerBg.fillGradientStyle(0x9b59b6, 0x8e44ad, 0x9b59b6, 0x8e44ad, 0.2, 0.2, 0.1, 0.1);
+    headerBg.fillGradientStyle(
+      0x9b59b6,
+      0x8e44ad,
+      0x9b59b6,
+      0x8e44ad,
+      0.2,
+      0.2,
+      0.1,
+      0.1
+    );
     headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
     this.rightPanel.add(headerBg);
 
@@ -690,9 +806,17 @@ export class UIScene extends Phaser.Scene {
     this.rightPanel.add(activitiesSection);
 
     // Enhanced toggle button
-    const toggleBtn = this.createModernButton(8, 8, 30, 20, '▶', '#95a5a6', () => {
-      this.toggleRightPanel();
-    });
+    const toggleBtn = this.createModernButton(
+      8,
+      8,
+      30,
+      20,
+      '▶',
+      '#95a5a6',
+      () => {
+        this.toggleRightPanel();
+      }
+    );
     this.rightPanel.add(toggleBtn);
   }
 
@@ -707,7 +831,16 @@ export class UIScene extends Phaser.Scene {
 
     // Minimap background with improved styling
     const minimapBg = this.add.graphics();
-    minimapBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.95, 0.95, 0.95, 0.95);
+    minimapBg.fillGradientStyle(
+      0x2c3e50,
+      0x34495e,
+      0x2c3e50,
+      0x34495e,
+      0.95,
+      0.95,
+      0.95,
+      0.95
+    );
     minimapBg.fillRoundedRect(0, 0, minimapSize, minimapSize, 8);
     minimapBg.lineStyle(2, 0x3498db, 0.7);
     minimapBg.strokeRoundedRect(0, 0, minimapSize, minimapSize, 8);
@@ -757,9 +890,17 @@ export class UIScene extends Phaser.Scene {
     this.minimapContainer.add(mapContent);
 
     // Improved toggle button
-    const toggleBtn = this.createModernButton(minimapSize - 20, 2, 16, 16, '×', '#e74c3c', () => {
-      this.toggleMinimap();
-    });
+    const toggleBtn = this.createModernButton(
+      minimapSize - 20,
+      2,
+      16,
+      16,
+      '×',
+      '#e74c3c',
+      () => {
+        this.toggleMinimap();
+      }
+    );
     this.minimapContainer.add(toggleBtn);
   }
 
@@ -829,22 +970,43 @@ export class UIScene extends Phaser.Scene {
     // Use UIScene's update loop for camera controls to avoid conflicts
     this.events.on('update', () => {
       const mainScene = this.scene.get('MainScene');
-      if (mainScene && mainScene.cameras && mainScene.cameras.main && !this.isDraggingCamera) {
+      if (
+        mainScene &&
+        mainScene.cameras &&
+        mainScene.cameras.main &&
+        !this.isDraggingCamera
+      ) {
         const camera = mainScene.cameras.main;
         const baseSpeed = wasd?.SHIFT?.isDown ? 12 : 6; // Faster with shift
 
         // Keyboard navigation
         if (cursors?.up.isDown || wasd?.W?.isDown) {
-          camera.scrollY = Phaser.Math.Clamp(camera.scrollY - baseSpeed, -500, 2000);
+          camera.scrollY = Phaser.Math.Clamp(
+            camera.scrollY - baseSpeed,
+            -500,
+            2000
+          );
         }
         if (cursors?.down.isDown || wasd?.S?.isDown) {
-          camera.scrollY = Phaser.Math.Clamp(camera.scrollY + baseSpeed, -500, 2000);
+          camera.scrollY = Phaser.Math.Clamp(
+            camera.scrollY + baseSpeed,
+            -500,
+            2000
+          );
         }
         if (cursors?.left.isDown || wasd?.A?.isDown) {
-          camera.scrollX = Phaser.Math.Clamp(camera.scrollX - baseSpeed, -500, 2000);
+          camera.scrollX = Phaser.Math.Clamp(
+            camera.scrollX - baseSpeed,
+            -500,
+            2000
+          );
         }
         if (cursors?.right.isDown || wasd?.D?.isDown) {
-          camera.scrollX = Phaser.Math.Clamp(camera.scrollX + baseSpeed, -500, 2000);
+          camera.scrollX = Phaser.Math.Clamp(
+            camera.scrollX + baseSpeed,
+            -500,
+            2000
+          );
         }
       }
     });
@@ -862,7 +1024,8 @@ export class UIScene extends Phaser.Scene {
         if (mainScene && mainScene.cameras && mainScene.cameras.main) {
           const camera = mainScene.cameras.main;
           const zoomSpeed = 0.1;
-          const newZoom = deltaY < 0 ? camera.zoom + zoomSpeed : camera.zoom - zoomSpeed;
+          const newZoom =
+            deltaY < 0 ? camera.zoom + zoomSpeed : camera.zoom - zoomSpeed;
           camera.setZoom(Phaser.Math.Clamp(newZoom, 0.5, 2.0));
         }
       }
@@ -941,15 +1104,21 @@ export class UIScene extends Phaser.Scene {
     // First column
     statsColumn1.forEach((stat, index) => {
       const { value } = stat;
-      const barColor = value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
+      const barColor =
+        value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
 
       // Stat label
-      const statText = this.add.text(10, 80 + index * 25, `${stat.icon} ${stat.label}`, {
-        fontSize: '10px',
-        color: stat.color,
-        fontFamily: 'Arial, sans-serif',
-        fontStyle: 'bold',
-      });
+      const statText = this.add.text(
+        10,
+        80 + index * 25,
+        `${stat.icon} ${stat.label}`,
+        {
+          fontSize: '10px',
+          color: stat.color,
+          fontFamily: 'Arial, sans-serif',
+          fontStyle: 'bold',
+        }
+      );
       panel.add(statText);
 
       // Stat value
@@ -977,15 +1146,21 @@ export class UIScene extends Phaser.Scene {
     // Second column
     statsColumn2.forEach((stat, index) => {
       const { value } = stat;
-      const barColor = value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
+      const barColor =
+        value > 70 ? '#27ae60' : value > 30 ? '#f39c12' : '#e74c3c';
 
       // Stat label
-      const statText = this.add.text(140, 80 + index * 25, `${stat.icon} ${stat.label}`, {
-        fontSize: '10px',
-        color: stat.color,
-        fontFamily: 'Arial, sans-serif',
-        fontStyle: 'bold',
-      });
+      const statText = this.add.text(
+        140,
+        80 + index * 25,
+        `${stat.icon} ${stat.label}`,
+        {
+          fontSize: '10px',
+          color: stat.color,
+          fontFamily: 'Arial, sans-serif',
+          fontStyle: 'bold',
+        }
+      );
       panel.add(statText);
 
       // Stat value
@@ -1087,13 +1262,30 @@ export class UIScene extends Phaser.Scene {
     panelContainer.add(shadow);
 
     const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(0x2c3e50, 0x34495e, 0x2c3e50, 0x34495e, 0.8, 0.8, 0.8, 0.8);
+    panelBg.fillGradientStyle(
+      0x2c3e50,
+      0x34495e,
+      0x2c3e50,
+      0x34495e,
+      0.8,
+      0.8,
+      0.8,
+      0.8
+    );
     panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 6);
-    panelBg.lineStyle(2, Phaser.Display.Color.HexStringToColor(color).color, 0.9);
+    panelBg.lineStyle(
+      2,
+      Phaser.Display.Color.HexStringToColor(color).color,
+      0.9
+    );
     panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 6);
 
     // Inner highlight
-    panelBg.lineStyle(1, Phaser.Display.Color.HexStringToColor(color).color, 0.4);
+    panelBg.lineStyle(
+      1,
+      Phaser.Display.Color.HexStringToColor(color).color,
+      0.4
+    );
     panelBg.strokeRoundedRect(1, 1, panelWidth - 2, panelHeight - 2, 5);
     panelContainer.add(panelBg);
 
@@ -1176,31 +1368,62 @@ export class UIScene extends Phaser.Scene {
     }
   }
 
-  private updateCharacterPanels(entities: Entity[]) {
-    if (!Array.isArray(entities)) {
-      return;
+  private updateCharacterPanels(entities: any) {
+    // Handle both array format and object format
+    let isaEntity = null;
+    let stevEntity = null;
+
+    if (Array.isArray(entities)) {
+      isaEntity = entities.find(entity => entity.id === 'isa');
+      stevEntity = entities.find(entity => entity.id === 'stev');
+    } else if (entities && typeof entities === 'object') {
+      // Handle object format: { isa: {...}, stev: {...} }
+      isaEntity = entities.isa;
+      stevEntity = entities.stev;
     }
-    const isaEntity = entities.find(entity => entity.id === 'isa');
+
     if (isaEntity) {
       const isaPanel = this.leftPanel.getData('isaStatsPanel');
-      if (isaPanel) {
-        this.updateEntityStatsDisplay(isaPanel, isaEntity, '#e91e63');
+      if (isaPanel && isaEntity.stats) {
+        // Create Entity-like object from the data
+        const entityData = {
+          id: 'isa',
+          stats: isaEntity.stats,
+          activity: isaEntity.activity,
+          mood: isaEntity.mood,
+          position: isaEntity.position,
+          state: 'idle' as const,
+          isDead: false,
+          resonance: isaEntity.resonance || 0,
+        };
+        this.updateEntityStatsDisplay(isaPanel, entityData, '#e91e63');
       }
     }
 
-    const stevEntity = entities.find(entity => entity.id === 'stev');
     if (stevEntity) {
       const stevPanel = this.leftPanel.getData('stevStatsPanel');
-      if (stevPanel) {
-        this.updateEntityStatsDisplay(stevPanel, stevEntity, '#3498db');
+      if (stevPanel && stevEntity.stats) {
+        // Create Entity-like object from the data
+        const entityData = {
+          id: 'stev',
+          stats: stevEntity.stats,
+          activity: stevEntity.activity,
+          mood: stevEntity.mood,
+          position: stevEntity.position,
+          state: 'idle' as const,
+          isDead: false,
+          resonance: stevEntity.resonance || 0,
+        };
+        this.updateEntityStatsDisplay(stevPanel, entityData, '#3498db');
       }
     }
   }
 
   private updateTopBarInfo(data: GameLogicUpdateData) {
     // Update resonance indicator
-    const resonanceContainer = this.topBar.list.find((child: Phaser.GameObjects.GameObject) =>
-      (child as any).getData?.('resonanceText')
+    const resonanceContainer = this.topBar.list.find(
+      (child: Phaser.GameObjects.GameObject) =>
+        (child as any).getData?.('resonanceText')
     ) as Phaser.GameObjects.Container;
     if (resonanceContainer && data.resonance !== undefined) {
       const resonanceText = resonanceContainer.getData('resonanceText');
@@ -1210,8 +1433,9 @@ export class UIScene extends Phaser.Scene {
     }
 
     // Update cycles indicator
-    const cyclesContainer = this.topBar.list.find((child: Phaser.GameObjects.GameObject) =>
-      (child as any).getData?.('cyclesText')
+    const cyclesContainer = this.topBar.list.find(
+      (child: Phaser.GameObjects.GameObject) =>
+        (child as any).getData?.('cyclesText')
     ) as Phaser.GameObjects.Container;
     if (cyclesContainer && data.cycles !== undefined) {
       const cyclesText = cyclesContainer.getData('cyclesText');
@@ -1236,7 +1460,10 @@ export class UIScene extends Phaser.Scene {
   private setControlMode(mode: 'auto' | 'isa' | 'stev') {
     // this.currentControlMode = mode; // Comentado temporalmente
     const mainScene = this.scene.get('MainScene');
-    mainScene.events.emit('changeEntityControl', mode === 'auto' ? 'none' : mode);
+    mainScene.events.emit(
+      'changeEntityControl',
+      mode === 'auto' ? 'none' : mode
+    );
 
     logAutopoiesis.info(`Control mode changed to: ${mode}`);
   }
@@ -1313,27 +1540,28 @@ export class UIScene extends Phaser.Scene {
    */
   private handleResize(gameSize: Phaser.Structs.Size) {
     const { width, height } = gameSize;
-    
+
     // Reposition panels based on new screen size
     if (this.leftPanel) {
       this.leftPanel.setPosition(20, 20);
     }
-    
+
     if (this.rightPanel) {
       this.rightPanel.setPosition(width - 300, 20);
     }
-    
+
     if (this.minimapContainer) {
       this.minimapContainer.setPosition(width - 200, height - 200);
     }
-    
+
     if (this.bottomBar) {
       this.bottomBar.setPosition(width / 2, height - 50);
     }
-    
-    if (this.foodUIContainer) {
-      this.foodUIContainer.setPosition(width / 2, height - 120);
-    }
+
+    // TODO: Fix foodUIContainer reference
+    // if (this.foodUIContainer) {
+    //   this.foodUIContainer.setPosition(width / 2, height - 120);
+    // }
   }
 
   /**
@@ -1353,5 +1581,104 @@ export class UIScene extends Phaser.Scene {
   private createFoodUI(): void {
     this.foodUI = new FoodUI(this);
     logAutopoiesis.info('Food UI creada');
+  }
+
+  /**
+   * Crea la UI de exploración
+   */
+  private createExplorationUI(): void {
+    this.explorationUI = new ExplorationUI(this);
+
+    // Añadir botón para abrir el atlas en el top bar
+    this.addExplorationButton();
+
+    logAutopoiesis.info('🗺️ Exploration UI creada');
+  }
+
+  /**
+   * Añade botón de exploración al top bar
+   */
+  private addExplorationButton(): void {
+    const button = this.add.text(this.cameras.main.width - 80, 20, '🗺️', {
+      fontSize: '24px',
+      fontStyle: 'bold',
+    });
+    button.setOrigin(0.5);
+    button.setInteractive({ useHandCursor: true });
+    button.setScrollFactor(0);
+    button.setDepth(1001);
+
+    // Efectos de hover
+    button.on('pointerover', () => {
+      button.setScale(1.1);
+      button.setTint(0x3498db);
+    });
+
+    button.on('pointerout', () => {
+      button.setScale(1.0);
+      button.clearTint();
+    });
+
+    // Abrir UI de exploración
+    button.on('pointerdown', () => {
+      this.explorationUI.toggle();
+
+      // Actualizar con estadísticas simuladas
+      const stats: ExplorationStats = {
+        totalAssets: 714,
+        discoveredAssets: Math.floor(Math.random() * 200) + 50,
+        biomesExplored: Math.floor(Math.random() * 6) + 1,
+        rarityBreakdown: {
+          common: Math.floor(Math.random() * 50) + 20,
+          uncommon: Math.floor(Math.random() * 30) + 10,
+          rare: Math.floor(Math.random() * 15) + 5,
+          epic: Math.floor(Math.random() * 5) + 1,
+        },
+        currentBiome: 'Praderas Místicas',
+      };
+
+      this.explorationUI.updateStats(stats);
+    });
+
+    this.topBar.add(button);
+  }
+
+  /**
+   * Actualiza la UI de exploración con datos reales del juego
+   */
+  updateExplorationUI(gameData: GameLogicUpdateData): void {
+    if (!this.explorationUI) return;
+
+    // Calcular estadísticas reales basadas en el estado del juego
+    const stats: ExplorationStats = {
+      totalAssets: 714,
+      discoveredAssets: gameData.cycles * 2 + 50, // Simular descubrimiento progresivo
+      biomesExplored: Math.min(Math.floor(gameData.cycles / 10) + 1, 6),
+      rarityBreakdown: {
+        common: Math.floor(gameData.cycles * 0.8) + 10,
+        uncommon: Math.floor(gameData.cycles * 0.4) + 5,
+        rare: Math.floor(gameData.cycles * 0.2) + 2,
+        epic: Math.floor(gameData.cycles * 0.1) + 1,
+      },
+      currentBiome: this.getCurrentBiomeName(gameData),
+    };
+
+    this.explorationUI.updateStats(stats);
+  }
+
+  /**
+   * Obtiene el nombre del bioma actual
+   */
+  private getCurrentBiomeName(gameData: GameLogicUpdateData): string {
+    // Determinar bioma basado en resonancia y ciclos
+    const resonance = gameData.resonance || 0;
+    const cycles = gameData.cycles || 0;
+
+    if (resonance > 50) return 'Reino Místico';
+    if (cycles > 50) return 'Bosques Ancestrales';
+    if (resonance > 25) return 'Pantanos Serenos';
+    if (cycles > 25) return 'Montañas Rocosas';
+    if (resonance > 10) return 'Pueblos Acogedores';
+    return 'Praderas Verdes';
   }
 }

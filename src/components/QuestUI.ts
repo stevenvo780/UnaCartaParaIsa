@@ -4,9 +4,9 @@
  */
 
 import type Phaser from 'phaser';
+import { UIDesignSystem as DS } from '../config/uiDesignSystem';
 import type { Quest } from '../types';
 import { logAutopoiesis } from '../utils/logger';
-import { UIDesignSystem as DS } from '../config/uiDesignSystem';
 
 export class QuestUI {
   private _scene: Phaser.Scene;
@@ -60,7 +60,10 @@ export class QuestUI {
     this._updatePanelBackground(this.PANEL_MIN_HEIGHT);
 
     // Header con título moderno
-    const headerContainer = this._scene.add.container(0, -this.PANEL_MIN_HEIGHT / 2 + 25);
+    const headerContainer = this._scene.add.container(
+      0,
+      -this.PANEL_MIN_HEIGHT / 2 + 25
+    );
 
     // Icono de misiones con animación sutil
     const questIcon = this._scene.add
@@ -192,7 +195,11 @@ export class QuestUI {
     // Escuchar eventos del sistema de misiones
     this._scene.events.on('quest_started', this._onQuestStarted, this);
     this._scene.events.on('quest_completed', this._onQuestCompleted, this);
-    this._scene.events.on('objective_completed', this._onObjectiveCompleted, this);
+    this._scene.events.on(
+      'objective_completed',
+      this._onObjectiveCompleted,
+      this
+    );
 
     // Actualizar cada cierto tiempo
     this._scene.time.addEvent({
@@ -306,7 +313,8 @@ export class QuestUI {
     // Calcular altura dinámica basada en contenido
     const questsToShow = this._activeQuests.slice(0, 4);
     const contentHeight =
-      this.PANEL_MIN_HEIGHT + questsToShow.length * (this.CARD_HEIGHT + this.CARD_MARGIN);
+      this.PANEL_MIN_HEIGHT +
+      questsToShow.length * (this.CARD_HEIGHT + this.CARD_MARGIN);
     const panelHeight = Math.min(contentHeight, this.PANEL_MAX_HEIGHT);
 
     this._updatePanelBackground(panelHeight);
@@ -324,12 +332,16 @@ export class QuestUI {
 
     // Indicador de más misiones si es necesario
     if (this._activeQuests.length > 4) {
-      const moreIndicator = this._createMoreIndicator(this._activeQuests.length - 4);
+      const moreIndicator = this._createMoreIndicator(
+        this._activeQuests.length - 4
+      );
       moreIndicator.setY(panelHeight / 2 - 30);
       this._questPanel.add(moreIndicator);
     }
 
-    logAutopoiesis.debug(`Quest display updated: ${questsToShow.length} quests shown`);
+    logAutopoiesis.debug(
+      `Quest display updated: ${questsToShow.length} quests shown`
+    );
   }
 
   /**
@@ -347,7 +359,12 @@ export class QuestUI {
 
     // Texto explicativo
     const emptyText = this._scene.add
-      .text(0, 15, 'No hay misiones activas', DS.getTextStyle('base', DS.COLORS.textSecondary))
+      .text(
+        0,
+        15,
+        'No hay misiones activas',
+        DS.getTextStyle('base', DS.COLORS.textSecondary)
+      )
       .setOrigin(0.5);
 
     const subText = this._scene.add
@@ -376,7 +393,9 @@ export class QuestUI {
   /**
    * Crea el indicador de misiones adicionales
    */
-  private _createMoreIndicator(additionalCount: number): Phaser.GameObjects.Container {
+  private _createMoreIndicator(
+    additionalCount: number
+  ): Phaser.GameObjects.Container {
     const container = this._scene.add.container(0, 0);
 
     const bg = this._scene.add.graphics();
@@ -505,11 +524,16 @@ export class QuestUI {
     progressContainer.setPosition(-this.PANEL_WIDTH / 2 + 55, -5);
 
     // Descripción del objetivo actual
-    const currentObjective = quest.objectives.find(obj => !obj.isCompleted && !obj.isOptional);
+    const currentObjective = quest.objectives.find(
+      obj => !obj.isCompleted && !obj.isOptional
+    );
     let objectiveText: Phaser.GameObjects.Text | null = null;
 
     if (currentObjective) {
-      const shortDescription = this._truncateText(currentObjective.description, 35);
+      const shortDescription = this._truncateText(
+        currentObjective.description,
+        35
+      );
       objectiveText = this._scene.add
         .text(
           -this.PANEL_WIDTH / 2 + 55,
@@ -522,7 +546,9 @@ export class QuestUI {
 
     // Recompensa rápida (si existe)
     const rewardIcon =
-      quest.rewards && quest.rewards.length > 0 ? this._getRewardIcon(quest.rewards[0]) : '';
+      quest.rewards && quest.rewards.length > 0
+        ? this._getRewardIcon(quest.rewards[0])
+        : '';
 
     let rewardText: Phaser.GameObjects.Text | null = null;
     if (rewardIcon) {
@@ -667,9 +693,14 @@ export class QuestUI {
   private _createProgressBar(quest: Quest): Phaser.GameObjects.Container {
     const container = this._scene.add.container(0, 0);
 
-    const completedObjectives = quest.objectives.filter(obj => obj.isCompleted).length;
-    const totalObjectives = quest.objectives.filter(obj => !obj.isOptional).length;
-    const progress = totalObjectives > 0 ? completedObjectives / totalObjectives : 0;
+    const completedObjectives = quest.objectives.filter(
+      obj => obj.isCompleted
+    ).length;
+    const totalObjectives = quest.objectives.filter(
+      obj => !obj.isOptional
+    ).length;
+    const progress =
+      totalObjectives > 0 ? completedObjectives / totalObjectives : 0;
 
     const barWidth = 180;
     const barHeight = 6;
@@ -681,7 +712,8 @@ export class QuestUI {
 
     // Barra de progreso
     const progressBar = this._scene.add.graphics();
-    const progressColor = progress === 1 ? this.COLORS.success : this.COLORS.secondary;
+    const progressColor =
+      progress === 1 ? this.COLORS.success : this.COLORS.secondary;
     progressBar.fillStyle(progressColor, 0.9);
     progressBar.fillRoundedRect(0, 0, barWidth * progress, barHeight, 3);
 
@@ -691,7 +723,11 @@ export class QuestUI {
         barWidth + 10,
         barHeight / 2,
         `${completedObjectives}/${totalObjectives}`,
-        DS.getTextStyle('xs', progress === 1 ? DS.COLORS.success : DS.COLORS.secondary, 'bold')
+        DS.getTextStyle(
+          'xs',
+          progress === 1 ? DS.COLORS.success : DS.COLORS.secondary,
+          'bold'
+        )
       )
       .setOrigin(0, 0.5);
 
@@ -747,9 +783,14 @@ export class QuestUI {
    * Obtiene el color de estado de la misión
    */
   private _getQuestStatusColor(quest: Quest): number {
-    const completedObjectives = quest.objectives.filter(obj => obj.isCompleted).length;
-    const totalObjectives = quest.objectives.filter(obj => !obj.isOptional).length;
-    const progress = totalObjectives > 0 ? completedObjectives / totalObjectives : 0;
+    const completedObjectives = quest.objectives.filter(
+      obj => obj.isCompleted
+    ).length;
+    const totalObjectives = quest.objectives.filter(
+      obj => !obj.isOptional
+    ).length;
+    const progress =
+      totalObjectives > 0 ? completedObjectives / totalObjectives : 0;
 
     if (progress === 1) return this.COLORS.success;
     if (progress > 0.5) return this.COLORS.secondary;
@@ -784,7 +825,7 @@ export class QuestUI {
     if (quest.rewards && quest.rewards.length > 0) {
       console.log('🎁 Recompensas:');
       quest.rewards.forEach(reward => {
-        console.log(`  - ${reward.type}: ${reward.amount || reward.value || 'N/A'}`);
+        console.log(`  - ${reward.type}: ${reward.amount || 'N/A'}`);
       });
     }
     console.groupEnd();
@@ -851,9 +892,19 @@ export class QuestUI {
    * Muestra notificación de misión
    */
   private _showQuestNotification(text: string, color: string): void {
-    const notification = this._scene.add.container(this._scene.cameras.main.width / 2, 100);
+    const notification = this._scene.add.container(
+      this._scene.cameras.main.width / 2,
+      100
+    );
 
-    const bg = this._scene.add.rectangle(0, 0, text.length * 8 + 40, 40, 0x1a1a2e, 0.9);
+    const bg = this._scene.add.rectangle(
+      0,
+      0,
+      text.length * 8 + 40,
+      40,
+      0x1a1a2e,
+      0.9
+    );
     bg.setStrokeStyle(2, parseInt(color.replace('#', '0x'), 16));
 
     const textObj = this._scene.add.text(0, 0, text, {
@@ -939,11 +990,16 @@ export class QuestUI {
       const status = objective.isCompleted ? '✅' : '⭕';
       const color = objective.isCompleted ? '#2ecc71' : '#ecf0f1';
 
-      const objText = this._scene.add.text(-220, objY, `${status} ${objective.description}`, {
-        fontSize: '12px',
-        color: color,
-        wordWrap: { width: 440 },
-      });
+      const objText = this._scene.add.text(
+        -220,
+        objY,
+        `${status} ${objective.description}`,
+        {
+          fontSize: '12px',
+          color: color,
+          wordWrap: { width: 440 },
+        }
+      );
       objText.setOrigin(0, 0.5);
 
       modal.add(objText);
@@ -951,7 +1007,14 @@ export class QuestUI {
     });
 
     // Botón cerrar
-    const closeButton = this._scene.add.rectangle(0, 150, 100, 40, 0xe74c3c, 0.8);
+    const closeButton = this._scene.add.rectangle(
+      0,
+      150,
+      100,
+      40,
+      0xe74c3c,
+      0.8
+    );
     const closeText = this._scene.add.text(0, 150, 'Cerrar', {
       fontSize: '14px',
       color: '#ffffff',
@@ -991,7 +1054,9 @@ export class QuestUI {
     const availableQuests = questSystem.getAvailableQuests();
 
     // Crear UI similar al modal pero para misiones disponibles
-    logAutopoiesis.info('Showing available quests', { count: availableQuests.length });
+    logAutopoiesis.info('Showing available quests', {
+      count: availableQuests.length,
+    });
   }
 
   /**
@@ -1000,7 +1065,11 @@ export class QuestUI {
   public cleanup(): void {
     this._scene.events.off('quest_started', this._onQuestStarted, this);
     this._scene.events.off('quest_completed', this._onQuestCompleted, this);
-    this._scene.events.off('objective_completed', this._onObjectiveCompleted, this);
+    this._scene.events.off(
+      'objective_completed',
+      this._onObjectiveCompleted,
+      this
+    );
 
     this._container.destroy();
   }

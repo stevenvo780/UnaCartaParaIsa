@@ -169,4 +169,7 @@ export interface GameState {
   objectLayers: ObjectLayer[];
   worldSize: Size;
   generatorVersion: string;
+  playerLevel?: number; // Nivel del jugador para desbloquear assets
+  exploredBiomes?: string[]; // Biomas descubiertos
+  unlockedAssets?: string[]; // Assets desbloqueados
 }

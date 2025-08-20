@@ -23,6 +23,7 @@ export class EntityStatsComponent {
       comfort: initialStats.comfort || 50,
       creativity: initialStats.creativity || 50,
       resonance: initialStats.resonance || 0,
+      courage: initialStats.courage || 50,
     };
 
     this.stats = { ...this.initialStats };
@@ -71,7 +72,11 @@ export class EntityStatsComponent {
    * Verifica si alguna estadística está en estado crítico
    */
   hasStatInCriticalState(): boolean {
-    return this.stats.health <= 20 || this.stats.energy <= 10 || this.stats.hunger <= 10;
+    return (
+      this.stats.health <= 20 ||
+      this.stats.energy <= 10 ||
+      this.stats.hunger <= 10
+    );
   }
 
   /**
@@ -79,7 +84,11 @@ export class EntityStatsComponent {
    */
   getOverallWellbeing(): 'critical' | 'poor' | 'good' | 'excellent' {
     const average =
-      (this.stats.happiness + this.stats.energy + this.stats.health + this.stats.comfort) / 4;
+      (this.stats.happiness +
+        this.stats.energy +
+        this.stats.health +
+        this.stats.comfort) /
+      4;
 
     if (average <= 25) return 'critical';
     if (average <= 50) return 'poor';

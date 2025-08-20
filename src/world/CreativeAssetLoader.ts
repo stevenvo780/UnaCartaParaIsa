@@ -8,9 +8,11 @@ import { logAutopoiesis } from '../utils/logger';
 export interface AssetInfo {
   key: string;
   path: string;
-  type: 'terrain' | 'water' | 'road' | 'autotile' | 'decoration';
+  type: 'terrain' | 'water' | 'road' | 'autotile' | 'decoration' | 'tree' | 'rock' | 'structure' | 'prop' | 'mushroom' | 'ruin' | 'foliage';
   biome?: string;
   variant?: number;
+  rarity?: 'common' | 'uncommon' | 'rare' | 'epic';
+  unlockLevel?: number;
 }
 
 /**
@@ -35,6 +37,13 @@ export class CreativeAssetLoader {
     this.assetsByType.set('roads', []);
     this.assetsByType.set('autotiles', []);
     this.assetsByType.set('decorations', []);
+    this.assetsByType.set('trees', []);
+    this.assetsByType.set('rocks', []);
+    this.assetsByType.set('structures', []);
+    this.assetsByType.set('props', []);
+    this.assetsByType.set('mushrooms', []);
+    this.assetsByType.set('ruins', []);
+    this.assetsByType.set('foliage', []);
   }
 
   /**
@@ -46,7 +55,7 @@ export class CreativeAssetLoader {
     // Cargar todas las variaciones de césped (31 disponibles)
     for (let i = 1; i <= 31; i++) {
       const assetInfo: AssetInfo = {
-        key: `cesped_${i}`,
+        key: `cesped${i}`,
         path: `assets/terrain/base/cesped${i}.png`,
         type: 'terrain',
         biome: 'grassland',
@@ -432,6 +441,13 @@ export class CreativeAssetLoader {
       this.loadWaterAssets(),
       this.loadRoadAssets(),
       this.loadAutotileAssets(),
+      this.loadTreeAssets(),
+      this.loadRockAssets(),
+      this.loadStructureAssets(),
+      this.loadPropAssets(),
+      this.loadMushroomAssets(),
+      this.loadRuinAssets(),
+      this.loadFoliageAssets(),
     ]);
 
     // Cargar en Phaser
@@ -498,7 +514,7 @@ export class CreativeAssetLoader {
    * Obtiene variación específica de césped
    */
   getGrassVariant(variant: number): AssetInfo | null {
-    return this.loadedAssets.get(`cesped_${variant}`) || null;
+    return this.loadedAssets.get(`cesped${variant}`) || null;
   }
 
   /**
@@ -552,6 +568,372 @@ export class CreativeAssetLoader {
     }
 
     return selected;
+  }
+
+  /**
+   * Carga creativamente todos los assets de árboles
+   */
+  async loadTreeAssets(): Promise<AssetInfo[]> {
+    const treeAssets: AssetInfo[] = [];
+
+    const treeDefinitions = [
+      // Árboles mágicos
+      { name: 'blue_green_balls_tree', count: 3, biome: 'magical', rarity: 'uncommon' },
+      { name: 'curved_tree', count: 3, biome: 'mystical', rarity: 'rare' },
+      { name: 'light_balls_tree', count: 3, biome: 'luminous', rarity: 'epic' },
+      { name: 'luminous_tree', count: 4, biome: 'luminous', rarity: 'epic' },
+      { name: 'mega_tree', count: 2, biome: 'ancient', rarity: 'rare' },
+      { name: 'swirling_tree', count: 3, biome: 'mystical', rarity: 'rare' },
+      { name: 'white_tree', count: 2, biome: 'ethereal', rarity: 'uncommon' },
+      
+      // Árboles naturales
+      { name: 'tree_emerald', count: 4, biome: 'forest', rarity: 'common' },
+      { name: 'willow', count: 3, biome: 'wetland', rarity: 'common' },
+      { name: 'oak_tree', count: 1, biome: 'forest', rarity: 'common' },
+      
+      // Árboles tótem
+      { name: 'tree_idol_deer', count: 1, biome: 'sacred', rarity: 'epic' },
+      { name: 'tree_idol_dragon', count: 1, biome: 'sacred', rarity: 'epic' },
+      { name: 'tree_idol_human', count: 1, biome: 'sacred', rarity: 'epic' },
+      { name: 'tree_idol_wolf', count: 1, biome: 'sacred', rarity: 'epic' },
+    ];
+
+    for (const treeDef of treeDefinitions) {
+      for (let i = 1; i <= treeDef.count; i++) {
+        const assetInfo: AssetInfo = {
+          key: `${treeDef.name}${i}`,
+          path: `assets/foliage/trees/${treeDef.name}${i}.png`,
+          type: 'tree',
+          biome: treeDef.biome,
+          variant: i,
+          rarity: treeDef.rarity as any,
+        };
+        treeAssets.push(assetInfo);
+        this.loadedAssets.set(assetInfo.key, assetInfo);
+      }
+    }
+
+    this.assetsByType.set('trees', treeAssets);
+    return treeAssets;
+  }
+
+  /**
+   * Carga creativamente todos los assets de rocas
+   */
+  async loadRockAssets(): Promise<AssetInfo[]> {
+    const rockAssets: AssetInfo[] = [];
+
+    // Rocas con diferentes sombras y estilos
+    for (let rockType = 1; rockType <= 8; rockType++) {
+      for (let variant = 1; variant <= 5; variant++) {
+        // Rocas normales
+        const rockInfo: AssetInfo = {
+          key: `rock${rockType}_${variant}`,
+          path: `assets/rocks/rock${rockType}_${variant}.png`,
+          type: 'rock',
+          biome: 'mountain',
+          variant,
+          rarity: 'common',
+        };
+        rockAssets.push(rockInfo);
+        this.loadedAssets.set(rockInfo.key, rockInfo);
+
+        // Rocas sin sombra
+        const rockNoShadow: AssetInfo = {
+          key: `rock${rockType}_${variant}_no_shadow`,
+          path: `assets/rocks/rock${rockType}_${variant}_no_shadow.png`,
+          type: 'rock',
+          biome: 'mountain',
+          variant,
+          rarity: 'common',
+        };
+        rockAssets.push(rockNoShadow);
+        this.loadedAssets.set(rockNoShadow.key, rockNoShadow);
+      }
+    }
+
+    // Rocas especiales
+    const specialRocks = [
+      { name: 'rock_brown_1', biome: 'desert' },
+      { name: 'rock_brown_2', biome: 'desert' },
+      { name: 'rock_brown_4', biome: 'desert' },
+      { name: 'rock_brown_6', biome: 'desert' },
+      { name: 'rock_brown_9', biome: 'desert' },
+    ];
+
+    for (const rock of specialRocks) {
+      const assetInfo: AssetInfo = {
+        key: rock.name,
+        path: `assets/rocks/${rock.name}.png`,
+        type: 'rock',
+        biome: rock.biome,
+        rarity: 'uncommon',
+      };
+      rockAssets.push(assetInfo);
+      this.loadedAssets.set(assetInfo.key, assetInfo);
+    }
+
+    this.assetsByType.set('rocks', rockAssets);
+    return rockAssets;
+  }
+
+  /**
+   * Carga creativamente todos los assets de estructuras
+   */
+  async loadStructureAssets(): Promise<AssetInfo[]> {
+    const structureAssets: AssetInfo[] = [];
+
+    const structures = [
+      // Casas y edificios
+      { key: 'house', path: 'assets/structures/estructuras_completas/House.png', biome: 'village', rarity: 'uncommon' },
+      { key: 'house_hay_1', path: 'assets/structures/estructuras_completas/House_Hay_1.png', biome: 'village', rarity: 'common' },
+      { key: 'house_hay_2', path: 'assets/structures/estructuras_completas/House_Hay_2.png', biome: 'village', rarity: 'common' },
+      { key: 'house_hay_3', path: 'assets/structures/estructuras_completas/House_Hay_3.png', biome: 'village', rarity: 'common' },
+      { key: 'house_hay_4_purple', path: 'assets/structures/estructuras_completas/House_Hay_4_Purple.png', biome: 'village', rarity: 'rare' },
+      
+      // Otras estructuras
+      { key: 'well_hay_1', path: 'assets/structures/estructuras_completas/Well_Hay_1.png', biome: 'village', rarity: 'uncommon' },
+      { key: 'city_wall_gate_1', path: 'assets/structures/estructuras_completas/CityWall_Gate_1.png', biome: 'city', rarity: 'rare' },
+      { key: 'fences', path: 'assets/structures/estructuras_completas/Fences.png', biome: 'village', rarity: 'common' },
+    ];
+
+    // Assets numerados
+    for (let i = 1; i <= 11; i++) {
+      const assetInfo: AssetInfo = {
+        key: `structure_${i.toString().padStart(3, '0')}`,
+        path: `assets/structures/estructuras_completas/Assets_source_002_${i.toString().padStart(3, '0')}.png`,
+        type: 'structure',
+        biome: 'village',
+        variant: i,
+        rarity: 'common',
+      };
+      structureAssets.push(assetInfo);
+      this.loadedAssets.set(assetInfo.key, assetInfo);
+    }
+
+    for (const structure of structures) {
+      const assetInfo: AssetInfo = {
+        key: structure.key,
+        path: structure.path,
+        type: 'structure',
+        biome: structure.biome,
+        rarity: structure.rarity as any,
+      };
+      structureAssets.push(assetInfo);
+      this.loadedAssets.set(assetInfo.key, assetInfo);
+    }
+
+    this.assetsByType.set('structures', structureAssets);
+    return structureAssets;
+  }
+
+  /**
+   * Carga creativamente todos los assets de props
+   */
+  async loadPropAssets(): Promise<AssetInfo[]> {
+    const propAssets: AssetInfo[] = [];
+
+    const propCategories = [
+      // Sillas y mobiliario
+      { prefix: 'silla', count: 6, biome: 'village' },
+      { prefix: 'sillas', count: 6, biome: 'village' },
+      { prefix: 'sillas_de_calle', count: 4, biome: 'city' },
+      
+      // Ventanas
+      { prefix: 'ventana', count: 13, biome: 'city' },
+      
+      // Iluminación
+      { prefix: 'lamparas', count: 3, biome: 'city' },
+      { prefix: 'poste', count: 4, biome: 'city' },
+      
+      // Basura y objetos urbanos
+      { prefix: 'basuras', count: 4, biome: 'city' },
+      { prefix: 'basuras_calle', count: 6, biome: 'city' },
+      { prefix: 'botellas', count: 3, biome: 'city' },
+      { prefix: 'cajas', count: 3, biome: 'village' },
+      
+      // Decoraciones
+      { prefix: 'sombrilla', count: 3, biome: 'village' },
+      { prefix: 'ropas_tendidas', count: 3, biome: 'village' },
+    ];
+
+    for (const category of propCategories) {
+      for (let i = 1; i <= category.count; i++) {
+        const assetInfo: AssetInfo = {
+          key: `${category.prefix}${i}`,
+          path: `assets/props/${category.prefix}${i}.png`,
+          type: 'prop',
+          biome: category.biome,
+          variant: i,
+          rarity: 'common',
+        };
+        propAssets.push(assetInfo);
+        this.loadedAssets.set(assetInfo.key, assetInfo);
+      }
+    }
+
+    // Props especiales de Phaser
+    const specialProps = [
+      { key: 'barrel_small_empty', path: 'assets/props/Barrel_Small_Empty.png', biome: 'village' },
+      { key: 'basket_empty', path: 'assets/props/Basket_Empty.png', biome: 'village' },
+      { key: 'bench_1', path: 'assets/props/Bench_1.png', biome: 'village' },
+      { key: 'bench_3', path: 'assets/props/Bench_3.png', biome: 'village' },
+      { key: 'chest', path: 'assets/props/Chest.png', biome: 'village' },
+      { key: 'fireplace_1', path: 'assets/props/Fireplace_1.png', biome: 'village' },
+      { key: 'lamp_post_3', path: 'assets/props/LampPost_3.png', biome: 'city' },
+      { key: 'table_medium_1', path: 'assets/props/Table_Medium_1.png', biome: 'village' },
+    ];
+
+    for (const prop of specialProps) {
+      const assetInfo: AssetInfo = {
+        key: prop.key,
+        path: prop.path,
+        type: 'prop',
+        biome: prop.biome,
+        rarity: 'uncommon',
+      };
+      propAssets.push(assetInfo);
+      this.loadedAssets.set(assetInfo.key, assetInfo);
+    }
+
+    this.assetsByType.set('props', propAssets);
+    return propAssets;
+  }
+
+  /**
+   * Carga creativamente todos los assets de hongos
+   */
+  async loadMushroomAssets(): Promise<AssetInfo[]> {
+    const mushroomAssets: AssetInfo[] = [];
+
+    const mushroomTypes = [
+      { prefix: 'beige_green_mushroom', count: 3, biome: 'forest' },
+      { prefix: 'chanterelles', count: 3, biome: 'forest' },
+      { prefix: 'white-red_mushroom', count: 3, biome: 'mystical' },
+    ];
+
+    for (const mushroomType of mushroomTypes) {
+      for (let i = 1; i <= mushroomType.count; i++) {
+        const assetInfo: AssetInfo = {
+          key: `${mushroomType.prefix}${i}`,
+          path: `assets/mushrooms/${mushroomType.prefix}${i}.png`,
+          type: 'mushroom',
+          biome: mushroomType.biome,
+          variant: i,
+          rarity: 'uncommon',
+        };
+        mushroomAssets.push(assetInfo);
+        this.loadedAssets.set(assetInfo.key, assetInfo);
+      }
+    }
+
+    this.assetsByType.set('mushrooms', mushroomAssets);
+    return mushroomAssets;
+  }
+
+  /**
+   * Carga creativamente todos los assets de ruinas
+   */
+  async loadRuinAssets(): Promise<AssetInfo[]> {
+    const ruinAssets: AssetInfo[] = [];
+
+    const ruinTypes = [
+      { prefix: 'blue-gray_ruins', count: 5, biome: 'ancient' },
+      { prefix: 'brown-gray_ruins', count: 5, biome: 'ancient' },
+      { prefix: 'brown_ruins', count: 5, biome: 'desert' },
+      { prefix: 'sand_ruins', count: 5, biome: 'desert' },
+      { prefix: 'snow_ruins', count: 5, biome: 'frozen' },
+      { prefix: 'water_ruins', count: 5, biome: 'wetland' },
+      { prefix: 'white_ruins', count: 5, biome: 'ethereal' },
+      { prefix: 'yellow_ruins', count: 5, biome: 'ancient' },
+    ];
+
+    for (const ruinType of ruinTypes) {
+      for (let i = 1; i <= ruinType.count; i++) {
+        const assetInfo: AssetInfo = {
+          key: `${ruinType.prefix}${i}`,
+          path: `assets/ruins/${ruinType.prefix}${i}.png`,
+          type: 'ruin',
+          biome: ruinType.biome,
+          variant: i,
+          rarity: 'rare',
+        };
+        ruinAssets.push(assetInfo);
+        this.loadedAssets.set(assetInfo.key, assetInfo);
+      }
+    }
+
+    this.assetsByType.set('ruins', ruinAssets);
+    return ruinAssets;
+  }
+
+  /**
+   * Carga creativamente todos los assets de follaje
+   */
+  async loadFoliageAssets(): Promise<AssetInfo[]> {
+    const foliageAssets: AssetInfo[] = [];
+
+    const shrubTypes = [
+      { prefix: 'bush_emerald_', count: 7, biome: 'forest' },
+      { prefix: 'troncos', count: 3, biome: 'forest' },
+      { prefix: 'living_gazebo', count: 2, biome: 'mystical' },
+    ];
+
+    for (const shrubType of shrubTypes) {
+      for (let i = 1; i <= shrubType.count; i++) {
+        const assetInfo: AssetInfo = {
+          key: `${shrubType.prefix}${i}`,
+          path: `assets/foliage/shrubs/${shrubType.prefix}${i}.png`,
+          type: 'foliage',
+          biome: shrubType.biome,
+          variant: i,
+          rarity: 'common',
+        };
+        foliageAssets.push(assetInfo);
+        this.loadedAssets.set(assetInfo.key, assetInfo);
+      }
+    }
+
+    this.assetsByType.set('foliage', foliageAssets);
+    return foliageAssets;
+  }
+
+  /**
+   * Obtiene assets por rareza y nivel de desbloqueo
+   */
+  getAssetsByRarity(rarity: 'common' | 'uncommon' | 'rare' | 'epic', unlockLevel: number = 0): AssetInfo[] {
+    const assets: AssetInfo[] = [];
+
+    for (const asset of this.loadedAssets.values()) {
+      if (asset.rarity === rarity && (asset.unlockLevel ?? 0) <= unlockLevel) {
+        assets.push(asset);
+      }
+    }
+
+    return assets;
+  }
+
+  /**
+   * Genera mundo diverso basado en progreso del jugador
+   */
+  generateProgressiveWorld(playerLevel: number, biomeDiversity: number): AssetInfo[] {
+    const worldAssets: AssetInfo[] = [];
+
+    // Assets básicos siempre disponibles
+    worldAssets.push(...this.getAssetsByRarity('common', playerLevel));
+
+    // Assets desbloqueables por nivel
+    if (playerLevel >= 5) {
+      worldAssets.push(...this.getAssetsByRarity('uncommon', playerLevel));
+    }
+    if (playerLevel >= 15) {
+      worldAssets.push(...this.getAssetsByRarity('rare', playerLevel));
+    }
+    if (playerLevel >= 30) {
+      worldAssets.push(...this.getAssetsByRarity('epic', playerLevel));
+    }
+
+    return worldAssets;
   }
 
   /**

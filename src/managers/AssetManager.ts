@@ -42,41 +42,58 @@ export class AssetManager {
       key: 'campfire',
       path: 'assets/animated_entities/campfire.png',
       type: 'image',
+      fallback: 'default-decoration',
     },
     {
       key: 'flowers-red',
       path: 'assets/animated_entities/flowers_red.png',
       type: 'image',
+      fallback: 'default-decoration',
     },
     {
       key: 'flowers-white',
       path: 'assets/animated_entities/flowers_white.png',
       type: 'image',
+      fallback: 'default-decoration',
+    },
+    {
+      key: 'checkpoint-flag',
+      path: 'assets/animated_entities/checkpoint_flag_idle1.png',
+      type: 'image',
+      fallback: 'default-decoration',
     },
 
+    // Terrain base assets
     {
-      key: 'grass-1',
+      key: 'grass_1',
       path: 'assets/terrain/base/cesped1.png',
       type: 'image',
-      fallback: 'grass-base',
+      fallback: 'grass_middle',
     },
     {
-      key: 'grass-2',
+      key: 'grass_2',
       path: 'assets/terrain/base/cesped2.png',
       type: 'image',
-      fallback: 'grass-base',
+      fallback: 'grass_middle',
     },
     {
-      key: 'grass-3',
+      key: 'grass_3',
       path: 'assets/terrain/base/cesped3.png',
       type: 'image',
-      fallback: 'grass-base',
+      fallback: 'grass_middle',
     },
     {
-      key: 'grass-base',
+      key: 'grass_middle',
       path: 'assets/terrain/base/Grass_Middle.png',
       type: 'image',
       required: true,
+      fallback: 'default-terrain',
+    },
+    {
+      key: 'textured_grass',
+      path: 'assets/terrain/base/TexturedGrass.png',
+      type: 'image',
+      fallback: 'grass_middle',
     },
 
     {
@@ -104,7 +121,7 @@ export class AssetManager {
       path: 'assets/animated_entities/entidad_circulo_dying_anim.png',
       type: 'spritesheet',
       spriteConfig: { frameWidth: 32, frameHeight: 32, endFrame: 11 },
-      required: true,
+      fallback: 'isa_sad_anim',
     },
     {
       key: 'stev_happy_anim',

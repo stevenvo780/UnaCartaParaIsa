@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import { gameConfig } from './config/gameConfig';
-import { productionOptimizer } from './utils/productionOptimizer';
 import { BootScene } from './scenes/BootScene';
 import { MainScene } from './scenes/MainScene';
 import { UIScene } from './scenes/UIScene';
+import { productionOptimizer } from './utils/productionOptimizer';
 
 // Obtener optimizaciones de producción
 const phaserOptimizations = productionOptimizer.getPhaserOptimizations();
@@ -44,9 +44,18 @@ const config: Phaser.Types.Core.GameConfig = {
       game.registry.set('gameConfig', gameConfig);
 
       if (gameConfig.debugMode) {
-        (window as Window & { game: Phaser.Game; scenes: Record<string, Phaser.Scene> }).game =
-          game;
-        (window as Window & { game: Phaser.Game; scenes: Record<string, Phaser.Scene> }).scenes = {
+        (
+          window as unknown as Window & {
+            game: Phaser.Game;
+            scenes: Record<string, Phaser.Scene>;
+          }
+        ).game = game;
+        (
+          window as unknown as Window & {
+            game: Phaser.Game;
+            scenes: Record<string, Phaser.Scene>;
+          }
+        ).scenes = {
           boot: game.scene.getScene('BootScene'),
           main: game.scene.getScene('MainScene'),
           ui: game.scene.getScene('UIScene'),

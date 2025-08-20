@@ -1,7 +1,10 @@
 import Phaser from 'phaser';
-import type { Entity, EntityStats, ActivityType, MoodType } from '../types';
 import { GAME_BALANCE } from '../constants/gameBalance';
-import { EntityServicesFactory, type IEntityServices } from '../interfaces/EntityServices';
+import {
+  EntityServicesFactory,
+  type IEntityServices,
+} from '../interfaces/EntityServices';
+import type { ActivityType, Entity, EntityStats, MoodType } from '../types';
 
 export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private entityData: Entity;
@@ -50,6 +53,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
         comfort: this.services.config.entityInitialStats,
         creativity: this.services.config.entityInitialStats,
         resonance: this.services.config.initialResonance,
+        courage: this.services.config.entityInitialStats,
       },
       lastActivityChange: Date.now(),
       pulsePhase: 0,
@@ -148,12 +152,13 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       deltaTimeMs
     );
 
-    this.entityData.stats = this.services.activityCalculator.applyActivityEffectsWithTimeModifiers(
-      this.entityData.activity,
-      this.entityData.stats,
-      deltaTimeMs,
-      timeOfDay
-    );
+    this.entityData.stats =
+      this.services.activityCalculator.applyActivityEffectsWithTimeModifiers(
+        this.entityData.activity,
+        this.entityData.stats,
+        deltaTimeMs,
+        timeOfDay
+      );
 
     this.updateMood();
 
@@ -165,13 +170,16 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
     const checkInterval = 3000 + Math.random() * 2000;
     if (timeInCurrentActivity > checkInterval) {
-      const companion = this.partnerEntity ? this.partnerEntity.getEntityData() : null;
+      const companion = this.partnerEntity
+        ? this.partnerEntity.getEntityData()
+        : null;
 
-      const suggestedActivity = this.services.aiDecisionEngine.makeIntelligentDecision(
-        this.entityData,
-        companion,
-        Date.now()
-      );
+      const suggestedActivity =
+        this.services.aiDecisionEngine.makeIntelligentDecision(
+          this.entityData,
+          companion,
+          Date.now()
+        );
 
       if (suggestedActivity !== this.entityData.activity) {
         this.changeActivity(suggestedActivity);
@@ -198,7 +206,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     if (gameState?.zones) {
       // Find best zone target based on needs
       const target = this.findBestZoneTarget(gameState.zones);
-      
+
       if (target) {
         // Navigate towards target zone
         this.navigateToTarget(target);
@@ -235,14 +243,14 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
   private findBestZoneTarget(zones: any[]): { x: number; y: number } | null {
     const { stats } = this.entityData;
-    
+
     // Determine current highest need
     let highestNeed = 0;
     let targetZone = null;
-    
+
     for (const zone of zones) {
       let needScore = 0;
-      
+
       // Calculate need score based on zone type and entity stats
       switch (zone.type) {
         case 'food':
@@ -267,60 +275,60 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
           needScore = (stats.boredom + stats.loneliness) / 2;
           break;
       }
-      
+
       // Add some randomness to prevent deterministic behavior
       needScore += Math.random() * 10;
-      
+
       if (needScore > highestNeed && needScore > 30) {
         highestNeed = needScore;
         targetZone = zone;
       }
     }
-    
+
     if (targetZone) {
       // Return center of target zone with some variation
       const centerX = targetZone.bounds.x + targetZone.bounds.width / 2;
       const centerY = targetZone.bounds.y + targetZone.bounds.height / 2;
-      
+
       // Add variation to avoid clustering
       const variationX = (Math.random() - 0.5) * targetZone.bounds.width * 0.3;
       const variationY = (Math.random() - 0.5) * targetZone.bounds.height * 0.3;
-      
+
       return {
         x: centerX + variationX,
-        y: centerY + variationY
+        y: centerY + variationY,
       };
     }
-    
+
     return null;
   }
 
   private navigateToTarget(target: { x: number; y: number }) {
     const currentX = this.x;
     const currentY = this.y;
-    
+
     const deltaX = target.x - currentX;
     const deltaY = target.y - currentY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
+
     // Only move if we're not too close to target
     if (distance > 20) {
       const speed = this.services.config.movement.baseSpeed;
       const normalizedX = deltaX / distance;
       const normalizedY = deltaY / distance;
-      
+
       // Add some smoothing to movement
       const currentVelX = this.body ? this.body.velocity.x : 0;
       const currentVelY = this.body ? this.body.velocity.y : 0;
-      
+
       const targetVelX = normalizedX * speed;
       const targetVelY = normalizedY * speed;
-      
+
       // Smooth interpolation towards target velocity
       const lerpFactor = 0.1;
       const newVelX = currentVelX + (targetVelX - currentVelX) * lerpFactor;
       const newVelY = currentVelY + (targetVelY - currentVelY) * lerpFactor;
-      
+
       this.setVelocity(newVelX, newVelY);
     } else {
       // Slow down when near target
@@ -345,7 +353,8 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       const basePulse = GAME_BALANCE.VISUALS.BASE_PULSE_SCALE ?? 1.5;
       const pulse =
         basePulse +
-        Math.sin(this.entityData.pulsePhase) * (GAME_BALANCE.VISUALS.PULSE_AMPLITUDE ?? 0.1);
+        Math.sin(this.entityData.pulsePhase) *
+          (GAME_BALANCE.VISUALS.PULSE_AMPLITUDE ?? 0.1);
       this.setScale(pulse);
     }
 
@@ -439,6 +448,14 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     return { ...this.entityData.stats };
   }
 
+  public updateStats(newStats: Partial<EntityStats>): void {
+    this.entityData.stats = { ...this.entityData.stats, ...newStats };
+  }
+
+  public setStats(newStats: EntityStats): void {
+    this.entityData.stats = { ...newStats };
+  }
+
   public getCurrentActivity(): ActivityType {
     return this.entityData.activity;
   }
@@ -467,21 +484,26 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     const myStats = this.getStats();
     const partnerStats = this.partnerEntity.getStats();
 
-    const result = this.services.resonanceCalculator.calculateProximityResonanceChange(
-      myPosition,
-      partnerPosition,
-      myStats,
-      partnerStats,
-      this.resonance,
-      deltaTime
+    const result =
+      this.services.resonanceCalculator.calculateProximityResonanceChange(
+        myPosition,
+        partnerPosition,
+        myStats,
+        partnerStats,
+        this.resonance,
+        deltaTime
+      );
+
+    this.resonance = Math.max(
+      0,
+      Math.min(100, this.resonance + result.resonanceChange)
     );
 
-    this.resonance = Math.max(0, Math.min(100, this.resonance + result.resonanceChange));
-
-    const modifiers = this.services.resonanceCalculator.calculateResonanceModifiers(
-      this.resonance,
-      result.closeness
-    );
+    const modifiers =
+      this.services.resonanceCalculator.calculateResonanceModifiers(
+        this.resonance,
+        result.closeness
+      );
 
     this.entityData.stats.happiness = Math.min(
       100,

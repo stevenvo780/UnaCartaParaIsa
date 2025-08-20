@@ -3,7 +3,7 @@
  * Extrae la lógica de input del MainScene
  */
 
-import type Phaser from 'phaser';
+import Phaser from 'phaser';
 import type { AnimatedGameEntity } from '../entities/AnimatedGameEntity';
 import { logAutopoiesis } from '../utils/logger';
 
@@ -91,11 +91,11 @@ export class InputManager {
       if (this.isDragging && this.scene.cameras?.main) {
         const deltaX = pointer.x - this.lastPointerPosition.x;
         const deltaY = pointer.y - this.lastPointerPosition.y;
-        
+
         // Invert the movement for natural camera panning
         this.scene.cameras.main.scrollX -= deltaX * 0.5;
         this.scene.cameras.main.scrollY -= deltaY * 0.5;
-        
+
         this.lastPointerPosition = { x: pointer.x, y: pointer.y };
       }
     });
@@ -105,14 +105,22 @@ export class InputManager {
     });
 
     // Mouse wheel for zoom
-    this.scene.input.on('wheel', (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[], deltaX: number, deltaY: number) => {
-      if (this.scene.cameras?.main) {
-        const camera = this.scene.cameras.main;
-        const zoomFactor = deltaY > 0 ? 0.9 : 1.1;
-        const newZoom = Phaser.Math.Clamp(camera.zoom * zoomFactor, 0.5, 2);
-        camera.setZoom(newZoom);
+    this.scene.input.on(
+      'wheel',
+      (
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[],
+        deltaX: number,
+        deltaY: number
+      ) => {
+        if (this.scene.cameras?.main) {
+          const camera = this.scene.cameras.main;
+          const zoomFactor = deltaY > 0 ? 0.9 : 1.1;
+          const newZoom = Phaser.Math.Clamp(camera.zoom * zoomFactor, 0.5, 2);
+          camera.setZoom(newZoom);
+        }
       }
-    });
+    );
   }
 
   /**
@@ -121,21 +129,21 @@ export class InputManager {
   setControlledEntity(entity: ControlledEntity): void {
     const prevEntity = this.controlledEntity;
     this.controlledEntity = entity;
-    
+
     // Provide visual feedback when switching control
     if (entity !== 'none') {
       logAutopoiesis.info(`🎮 Control activo: ${entity.toUpperCase()}`);
-      
+
       // Emit event for UI feedback
       this.scene.events.emit('controlChanged', {
         previous: prevEntity,
-        current: entity
+        current: entity,
       });
     } else {
       logAutopoiesis.info('🎮 Control manual desactivado - modo AUTO');
       this.scene.events.emit('controlChanged', {
         previous: prevEntity,
-        current: 'none'
+        current: 'none',
       });
     }
   }
@@ -150,7 +158,10 @@ export class InputManager {
   /**
    * Procesa los inputs de movimiento
    */
-  processMovementInput(isaEntity: AnimatedGameEntity, stevEntity: AnimatedGameEntity): void {
+  processMovementInput(
+    isaEntity: AnimatedGameEntity,
+    stevEntity: AnimatedGameEntity
+  ): void {
     if (!this.cursors || !this.wasdKeys) return;
 
     const currentEntity =
