@@ -1,5 +1,8 @@
+import { EntityManager } from "../managers/EntityManager";
 import { GameLogicManager } from "../managers/GameLogicManager";
+import { InputManager } from "../managers/InputManager";
 import { SceneInitializationManager } from "../managers/SceneInitializationManager";
+import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
 import { logAutopoiesis } from "../utils/logger";
 import { DiverseWorldComposer } from "../world/DiverseWorldComposer";
 import { LayeredWorldRenderer } from "../world/LayeredWorldRenderer";
@@ -10,20 +13,17 @@ import {
   WorldGenConfig,
 } from "../world/types";
 
-interface UnifiedAssetManager {
-  isLoaded: boolean;
-  assets: Map<string, unknown>;
-}
-
 export default class MainScene extends Phaser.Scene {
   // Propiedades básicas de escena
-  public unifiedAssetManager: UnifiedAssetManager | null = null;
+  public unifiedAssetManager!: UnifiedAssetManager;
   public entities!: Phaser.GameObjects.Group;
-  public gameLogicManager?: GameLogicManager;
+  public gameLogicManager!: GameLogicManager;
+  public entityManager!: EntityManager;
+  public inputManager!: InputManager;
 
   // Sistema de mundo diverso
-  private worldComposer?: DiverseWorldComposer;
-  private worldRenderer?: LayeredWorldRenderer;
+  private worldComposer!: DiverseWorldComposer;
+  private worldRenderer!: LayeredWorldRenderer;
   private performanceMode = true;
 
   constructor() {
@@ -42,62 +42,78 @@ export default class MainScene extends Phaser.Scene {
   }
 
   async create() {
-    logAutopoiesis.info("🌍 Creating diverse game world...");
+    logAutopoiesis.info("🌍 Creating complete game world with entities...");
 
-    // Verificar asset manager
-    const assetManager = this.registry.get(
-      "unifiedAssetManager",
-    ) as UnifiedAssetManager;
-    if (!assetManager) {
+    // 1. Verificar asset manager
+    this.unifiedAssetManager = this.registry.get("unifiedAssetManager");
+    if (!this.unifiedAssetManager) {
       logAutopoiesis.error("❌ UnifiedAssetManager no encontrado");
-
-      // Crear un mock básico
-      this.unifiedAssetManager = {
-        isLoaded: true,
-        assets: new Map(),
-      };
-      this.registry.set("unifiedAssetManager", this.unifiedAssetManager);
-    } else {
-      this.unifiedAssetManager = assetManager;
+      return;
     }
 
-    // Solo crear un grupo básico de entidades
+    // 2. Inicializar managers principales
+    this.entityManager = new EntityManager(this);
+    this.inputManager = new InputManager(this);
     this.entities = this.add.group();
 
     try {
-      // 1. Generar mundo base
+      // 3. Generar mundo base
       const baseWorld = this.generateBasicWorld();
 
-      // 1.b Inicializar GameState lógico
+      // 4. Inicializar GameState completo
       const init = await SceneInitializationManager.initialize();
       const gameState = init.gameState;
 
-      // 2. Componer mundo diverso
+      // 5. Crear entidades Isa y Stev
+      // 4. Crear entidades
+    const { isaEntity, stevEntity } = this.entityManager.createEntities({
+      scene: this,
+    });
+
+      // Configurar relaciones entre entidades
+      isaEntity.setPartnerEntity(stevEntity);
+      stevEntity.setPartnerEntity(isaEntity);
+
+      // 6. Inicializar GameLogicManager con entidades
+      this.gameLogicManager = new GameLogicManager(this, gameState);
+      this.gameLogicManager.initialize();
+      
+      // Registrar entidades en el manager
+      this.gameLogicManager.registerEntity("isa", isaEntity);
+      this.gameLogicManager.registerEntity("stev", stevEntity);
+
+      // 7. Configurar InputManager
+      this.inputManager.setGameLogicManager(this.gameLogicManager);
+      this.inputManager.setControlledEntity("none"); // IA controla inicialmente
+
+      // 8. Componer mundo diverso
       this.worldComposer = new DiverseWorldComposer(this, `seed_${Date.now()}`);
       const composedWorld = await this.worldComposer.composeWorld(baseWorld);
 
-      // 3. Renderizar mundo en capas
+      // 9. Renderizar mundo en capas
       this.worldRenderer = new LayeredWorldRenderer(this);
       await this.worldRenderer.renderComposedWorld(composedWorld);
       // Activar modo performance por defecto (oculta efectos/detalles)
       this.worldRenderer.setPerformanceMode(true);
       this.performanceMode = true;
 
-      // 4. Guardar stats para UI y estado de juego
+      // 10. Guardar stats para UI y estado de juego
       this.registry.set("worldStats", composedWorld.stats);
       this.registry.set("gameState", gameState);
+      this.registry.set("gameLogicManager", this.gameLogicManager);
+      this.registry.set("entityManager", this.entityManager);
 
-      // 4.b Iniciar lógica de juego
-      this.gameLogicManager = new GameLogicManager(this, gameState);
-      this.gameLogicManager.initialize();
-      // Reenviar eventos a UIScene
+      // 11. Reenviar eventos a UIScene
       this.gameLogicManager.on(
         "gameLogicUpdate",
         (data) => this.events.emit("gameLogicUpdate", data),
         this,
       );
 
-      // 5. Iniciar UI Scene
+      // 12. Configurar controles
+      this.setupControls();
+
+      // 13. Iniciar UI Scene
       this.scene.launch("UIScene");
 
       // 6. Configurar cámara
@@ -308,6 +324,66 @@ export default class MainScene extends Phaser.Scene {
     if (this.worldRenderer) {
       this.worldRenderer.setPerformanceMode(enabled);
     }
+  }
+
+  /**
+   * Configura los controles del juego
+   */
+  private setupControls(): void {
+    // TAB para cambiar control entre entidades
+    this.input.keyboard?.on("keydown-TAB", () => {
+      const current = this.inputManager.getControlledEntity();
+      const next = 
+        current === "none" ? "isa" : current === "isa" ? "stev" : "none";
+      this.inputManager.setControlledEntity(next);
+      
+      logAutopoiesis.info(`🎮 Control cambiado a: ${next}`);
+      
+      // Centrar cámara en entidad controlada
+      if (next !== "none") {
+        const entity = this.entityManager.getEntity(next);
+        if (entity) {
+          const pos = entity.getPosition();
+          this.cameras.main.centerOn(pos.x, pos.y);
+        }
+      }
+    });
+
+    // SPACE para acción manual
+    this.input.keyboard?.on("keydown-SPACE", () => {
+      const controlled = this.inputManager.getControlledEntity();
+      if (controlled !== "none") {
+        logAutopoiesis.info(`🎯 Acción manual de ${controlled}`);
+        this.gameLogicManager.handlePlayerInteraction(
+          controlled,
+          "manual_action",
+        );
+      }
+    });
+
+    // H para ayuda
+    this.input.keyboard?.on("keydown-H", () => {
+      logAutopoiesis.info("🎮 Controles:", {
+        TAB: "Cambiar control (IA/Isa/Stev)",
+        SPACE: "Acción manual",
+        "Flechas/WASD": "Movimiento",
+        H: "Esta ayuda",
+        C: "Centrar cámara",
+      });
+    });
+
+    // C para centrar cámara
+    this.input.keyboard?.on("keydown-C", () => {
+      const controlled = this.inputManager.getControlledEntity();
+      if (controlled !== "none") {
+        const entity = this.entityManager.getEntity(controlled);
+        if (entity) {
+          const pos = entity.getPosition();
+          this.cameras.main.centerOn(pos.x, pos.y);
+          logAutopoiesis.info(`📷 Cámara centrada en ${controlled}`);
+        }
+      }
+    });
   }
 }
 

@@ -68,10 +68,9 @@ export class UnifiedAssetManager {
   private readonly LOAD_TIMEOUT = 10000;
 
   private static readonly CORE_ASSETS: AssetDefinition[] = [
-    
     {
       key: "isa_happy",
-      path: "assets/entities/new_woman_idle.png",
+      path: "assets/entities/animated/characters/whomen1.png",
       type: "image",
       required: true,
       priority: "critical",
@@ -79,7 +78,7 @@ export class UnifiedAssetManager {
     },
     {
       key: "isa_sad",
-      path: "assets/entities/new_woman_idle.png",
+      path: "assets/entities/animated/characters/whomen1.png",
       type: "image",
       required: true,
       priority: "critical",
@@ -87,7 +86,7 @@ export class UnifiedAssetManager {
     },
     {
       key: "stev_happy",
-      path: "assets/entities/new_man_idle.png",
+      path: "assets/entities/animated/characters/man1.png",
       type: "image",
       required: true,
       priority: "critical",
@@ -95,17 +94,15 @@ export class UnifiedAssetManager {
     },
     {
       key: "stev_sad",
-      path: "assets/entities/new_man_idle.png",
+      path: "assets/entities/animated/characters/man1.png",
       type: "image",
       required: true,
       priority: "critical",
       category: "character",
     },
-
-    
     {
       key: "woman",
-      path: "assets/entities/new_woman_idle.png",
+      path: "assets/entities/animated/characters/whomen1.png",
       type: "image",
       required: true,
       priority: "critical",
@@ -113,7 +110,7 @@ export class UnifiedAssetManager {
     },
     {
       key: "woman_walk",
-      path: "assets/entities/new_woman_walk.png",
+      path: "assets/entities/animated/characters/whomen1.png",
       type: "image",
       required: true,
       priority: "critical",
@@ -121,7 +118,7 @@ export class UnifiedAssetManager {
     },
     {
       key: "man",
-      path: "assets/entities/new_man_idle.png",
+      path: "assets/entities/animated/characters/man1.png",
       type: "image",
       required: true,
       priority: "critical",
@@ -129,7 +126,7 @@ export class UnifiedAssetManager {
     },
     {
       key: "man_walk",
-      path: "assets/entities/new_man_walk.png",
+      path: "assets/entities/animated/characters/man1.png",
       type: "image",
       required: true,
       priority: "critical",
@@ -139,7 +136,7 @@ export class UnifiedAssetManager {
     // SPRITES DE WALKING PARA ANIMACIONES
     {
       key: "isa_walking",
-      path: "assets/entities/new_woman_walk.png",
+      path: "assets/entities/animated/characters/whomen1.png",
       type: "image",
       required: true,
       priority: "critical",
@@ -147,14 +144,12 @@ export class UnifiedAssetManager {
     },
     {
       key: "stev_walking",
-      path: "assets/entities/new_man_walk.png",
+      path: "assets/entities/animated/characters/man1.png",
       type: "image",
       required: true,
       priority: "critical",
       category: "character",
     },
-
-    
     {
       key: "grass_middle",
       path: "assets/terrain/base/Grass_Middle.png",
@@ -188,8 +183,6 @@ export class UnifiedAssetManager {
       category: "terrain",
       fallback: "grass_middle",
     },
-
-    
     {
       key: "water_middle",
       path: "assets/water/Water_Middle.png",
@@ -206,8 +199,6 @@ export class UnifiedAssetManager {
       category: "terrain",
       fallback: "water_middle",
     },
-
-    
     {
       key: "dialogues",
       path: "dialogs/dialogos_chat_isa.lite.censored_plus.json",
@@ -215,8 +206,6 @@ export class UnifiedAssetManager {
       required: true,
       priority: "critical",
     },
-
-    
     {
       key: "campfire_anim",
       path: "assets/animated_entities/campfire.png",
@@ -233,8 +222,6 @@ export class UnifiedAssetManager {
       category: "animation",
       frameConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
-
-    
     {
       key: "tree_emerald_1",
       path: "assets/foliage/trees/tree_emerald_1.png",
@@ -305,8 +292,6 @@ export class UnifiedAssetManager {
       priority: "medium",
       category: "decoration",
     },
-
-    
     {
       key: "apple_pie",
       path: "assets/consumable_items/food/05_apple_pie.png",
