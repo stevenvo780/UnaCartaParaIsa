@@ -44,3 +44,18 @@ docs/_agent/**
 
 # Project scripts not intended for release
 scripts/
+
+# Prevenir futura basura
+*_broken.*
+*_backup.*
+*_original.*
+*_old.*
+*.bak
+*.tmp
+.playwright-mcp/
+.qodo/
+artifacts/
+.agent/
+docs/_agent/
+scripts/temp/
+*.cjs
