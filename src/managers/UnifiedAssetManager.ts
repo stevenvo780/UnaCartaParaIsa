@@ -136,6 +136,24 @@ export class UnifiedAssetManager {
       category: "character",
     },
 
+    // SPRITES DE WALKING PARA ANIMACIONES
+    {
+      key: "isa_walking",
+      path: "assets/entities/new_woman_walk.png",
+      type: "image",
+      required: true,
+      priority: "critical",
+      category: "character",
+    },
+    {
+      key: "stev_walking",
+      path: "assets/entities/new_man_walk.png",
+      type: "image",
+      required: true,
+      priority: "critical",
+      category: "character",
+    },
+
     
     {
       key: "grass_middle",

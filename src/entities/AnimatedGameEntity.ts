@@ -149,18 +149,85 @@ export class AnimatedGameEntity extends GameEntity {
         (100 - stats.boredom)) /
       4;
 
+    // Check if entity is moving (has velocity)
+    const isMoving = this.isEntityMoving();
+
+    // DEBUG: Log animation determination
+    console.log(`[${entityId}] Animation debug:`, {
+      avgStat,
+      isMoving,
+      velocity: this.body && 'velocity' in this.body ? this.body.velocity : 'no velocity',
+      currentAnimation: this.currentAnimationKey
+    });
+
+    // Actualizar la textura según el movimiento ANTES de devolver la animación
+    this.updateTextureForMovement(entityId, isMoving, avgStat);
+
     // Priority 1: Death/Critical state
     if (entityData.isDead || stats.health <= 10 || avgStat < 20) {
-      return `${entityId}_dying`;
+      const anim = `${entityId}_dying`;
+      console.log(`[${entityId}] Using dying animation:`, anim);
+      return anim;
     }
 
     // Priority 2: Low well-being (sad)
     if (avgStat < 40 || stats.happiness < 30) {
-      return `${entityId}_sad`;
+      const anim = `${entityId}_sad`;
+      console.log(`[${entityId}] Using sad animation:`, anim);
+      return anim;
     }
 
     // Priority 3: Normal/Happy state (default)
-    return `${entityId}_happy`;
+    const anim = `${entityId}_happy`;
+    console.log(`[${entityId}] Using happy animation:`, anim);
+    return anim;
+  }
+
+  /**
+   * Actualiza la textura del sprite según el movimiento
+   */
+  private updateTextureForMovement(entityId: string, isMoving: boolean, avgStat: number): void {
+    let textureKey: string;
+    
+    if (avgStat < 40) {
+      // Sad state - always use idle texture for now
+      textureKey = entityId === "isa" ? "isa_sad" : "stev_sad";
+    } else {
+      // Happy state - choose between idle and walking
+      if (isMoving) {
+        textureKey = entityId === "isa" ? "isa_walking" : "stev_walking";
+      } else {
+        textureKey = entityId === "isa" ? "isa_happy" : "stev_happy";
+      }
+    }
+
+    // Cambiar textura si es diferente
+    if (this.texture.key !== textureKey) {
+      console.log(`[${entityId}] Changing texture from ${this.texture.key} to ${textureKey}`);
+      if (this.scene.textures.exists(textureKey)) {
+        this.setTexture(textureKey);
+      } else {
+        console.warn(`[${entityId}] Texture ${textureKey} not found!`);
+      }
+    }
+  }
+
+  /**
+   * Check if entity is currently moving (has significant velocity)
+   */
+  private isEntityMoving(): boolean {
+    if (!this.body || !('velocity' in this.body)) {
+      console.log('No body or velocity available');
+      return false;
+    }
+
+    const velocity = this.body.velocity as { x: number; y: number };
+    const speedThreshold = 1; // Minimum speed to consider "moving" (lowered for easier detection)
+    const currentSpeed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+    
+    console.log('Movement check:', { velocity, currentSpeed, threshold: speedThreshold, isMoving: currentSpeed > speedThreshold });
+    
+    return currentSpeed > speedThreshold;
   }
 
   /**
@@ -181,8 +248,9 @@ export class AnimatedGameEntity extends GameEntity {
     ); // Reduce precision to avoid too frequent changes
 
     const healthTier = Math.floor(stats.health / 20);
+    const movingState = this.isEntityMoving() ? 'moving' : 'idle';
 
-    return `${avgStat}-${healthTier}-${mood}-${activity}`;
+    return `${avgStat}-${healthTier}-${mood}-${activity}-${movingState}`;
   }
 
   /**

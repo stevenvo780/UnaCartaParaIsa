@@ -37,6 +37,22 @@ export class UIScene extends Phaser.Scene {
   private foodUI!: FoodUI;
   private explorationUI!: ExplorationUI;
   private dialogueCardUI!: DialogueCardUI;
+  // Modal grid system
+  private modalRegistry: Map<string, Phaser.GameObjects.Container> = new Map();
+  private modalOrder: string[] = [];
+  private statsModal?: Phaser.GameObjects.Container;
+  private messagesModal?: Phaser.GameObjects.Container;
+  // Top bar layout refs
+  private topMenuBtn?: Phaser.GameObjects.Container;
+  private topBarIndicators: Phaser.GameObjects.Container[] = [];
+  private topBarModalButtons: Phaser.GameObjects.Container[] = [];
+  private topTitleContainer?: Phaser.GameObjects.Container;
+  // Constants de layout
+  private readonly TOP_BAR_HEIGHT = 70;
+  private readonly BOTTOM_BAR_HEIGHT = 80;
+  private readonly LEFT_PANEL_WIDTH = 300;
+  private readonly RIGHT_PANEL_WIDTH = 220;
+  private readonly MODAL_MARGIN = 16;
 
   // Navigation and control
   private isDraggingCamera = false;
@@ -73,6 +89,9 @@ export class UIScene extends Phaser.Scene {
 
     // Edge toggles to reopen minimized panels
     this.createEdgeToggles();
+
+    // Botones para abrir/cerrar modales en la barra superior
+    this.createTopBarModalShortcuts();
 
     // Connect to game logic
     const mainScene = this.scene.get("MainScene");
@@ -114,6 +133,9 @@ export class UIScene extends Phaser.Scene {
       this.updateCharacterPanels(data.entities);
     }
 
+    // Actualizar stats en el modal si está abierto
+    this.updateStatsModal(data);
+
     // Actualizar UI pesada solo cada segundo
     if (now - this.lastUIUpdate > this.UI_UPDATE_INTERVAL) {
       this.updateBottomBarInfo(data);
@@ -124,6 +146,22 @@ export class UIScene extends Phaser.Scene {
       }
       this.lastUIUpdate = now;
     }
+  }
+
+  private updateStatsModal(data: GameLogicUpdateData) {
+    if (!this.statsModal || !this.statsModal.visible) return;
+    const texts = this.statsModal.list.filter((o) => (o as any).getData?.("statKey")) as Phaser.GameObjects.Text[];
+    const findVal = (path: string): number => {
+      // path: "isa.health" etc
+      const [id, stat] = path.split(".");
+      const ent = data.entities?.find((e) => e.id === id);
+      return Math.round((ent?.stats as any)?.[stat] ?? 0);
+    };
+    texts.forEach((t) => {
+      const key = t.getData("statKey") as string;
+      const label = t.text.split(":")[0];
+      t.setText(`${label}: ${findVal(key)}`);
+    });
   }
 
   // =================== MODERN UI CREATION METHODS ===================
@@ -166,6 +204,7 @@ export class UIScene extends Phaser.Scene {
 
     // Modern game title with better typography
     const titleContainer = this.add.container(25, 35);
+    this.topTitleContainer = titleContainer;
 
     const titleText = this.add
       .text(0, 0, "Una Carta Para Isa", {
@@ -326,7 +365,10 @@ export class UIScene extends Phaser.Scene {
         });
       });
 
+      // Guardar ancho estimado para layout en resize
+      (container as any).w = indicator.width;
       this.topBar.add(container);
+      this.topBarIndicators.push(container);
     });
 
     // Add quick action menu button
@@ -412,6 +454,7 @@ export class UIScene extends Phaser.Scene {
     });
 
     this.topBar.add(menuBtn);
+    this.topMenuBtn = menuBtn;
 
     // Subtle breathing animation
     this.tweens.add({
@@ -422,6 +465,31 @@ export class UIScene extends Phaser.Scene {
       repeat: -1,
       ease: "Sine.easeInOut",
     });
+  }
+
+  private createTopBarModalShortcuts() {
+    const baseY = 35;
+    let x = this.cameras.main.width - 45 - 50; // antes del botón de menú
+
+    const makeIconBtn = (emoji: string, onClick: () => void) => {
+      const c = this.add.container(x, baseY);
+      const bg = this.add.graphics();
+      bg.fillStyle(0x000000, 0.25);
+      bg.fillRoundedRect(-12, -12, 24, 24, 6);
+      const t = this.add.text(0, 0, emoji, { fontSize: "14px" }).setOrigin(0.5);
+      c.add([bg, t]);
+      c.setSize(24, 24);
+      c.setInteractive();
+      c.on("pointerdown", onClick);
+      this.topBar.add(c);
+      this.topBarModalButtons.push(c);
+      x -= 34;
+    };
+
+    // 📊 abre/cierra modal de estadísticas
+    makeIconBtn("📊", () => this.toggleStatsModal());
+    // 💬 abre/cierra modal de mensajes
+    makeIconBtn("💬", () => this.toggleMessagesModal());
   }
 
   private createBottomBar() {
@@ -989,7 +1057,7 @@ export class UIScene extends Phaser.Scene {
         pointer.x < this.cameras.main.width - rightPanelWidth &&
         pointer.y > topBarHeight &&
         pointer.y < this.cameras.main.height - bottomBarHeight &&
-        !this.isPointerOverDialogueUI(pointer);
+        !this.isPointerOverAnyUI(pointer);
 
       if (isInNavigableArea) {
         this.isDraggingCamera = true;
@@ -1103,16 +1171,164 @@ export class UIScene extends Phaser.Scene {
     );
   }
 
-  private isPointerOverDialogueUI(pointer: Phaser.Input.Pointer): boolean {
-    if (!this.dialogueCardUI) return false;
-    const container = this.dialogueCardUI.getContainer();
-    const bounds = container.getBounds();
-    return (
-      pointer.x >= bounds.x &&
-      pointer.x <= bounds.x + bounds.width &&
-      pointer.y >= bounds.y &&
-      pointer.y <= bounds.y + bounds.height
-    );
+  private isPointerOverAnyUI(pointer: Phaser.Input.Pointer): boolean {
+    const containers: Phaser.GameObjects.Container[] = [];
+    if (this.topBar) containers.push(this.topBar);
+    if (this.bottomBar) containers.push(this.bottomBar);
+    if (this.leftPanelExpanded && this.leftPanel) containers.push(this.leftPanel);
+    if (this.rightPanelExpanded && this.rightPanel) containers.push(this.rightPanel);
+    if (this.showMinimap && this.minimapContainer) containers.push(this.minimapContainer);
+    // Modales visibles
+    this.modalRegistry.forEach((m) => {
+      if (m.visible) containers.push(m);
+    });
+    // Cartas si estuvieran fuera de modal (fallback)
+    if (this.dialogueCardUI) containers.push(this.dialogueCardUI.getContainer());
+
+    return containers.some((c) => {
+      const b = c.getBounds();
+      return pointer.x >= b.x && pointer.x <= b.x + b.width && pointer.y >= b.y && pointer.y <= b.y + b.height;
+    });
+  }
+
+  // =================== MODAL GRID SYSTEM ===================
+
+  private createModalWindow(
+    id: string,
+    title: string,
+    content: Phaser.GameObjects.Container,
+    width = 360,
+    height = 220,
+  ): Phaser.GameObjects.Container {
+    const modal = this.add.container(0, 0);
+    modal.setScrollFactor(0);
+    modal.setDepth(1003);
+
+    const bg = this.add.graphics();
+    bg.fillStyle(0x1a1a2e, 0.95);
+    bg.fillRoundedRect(0, 0, width, height, 8);
+    bg.lineStyle(2, 0x3498db, 0.8);
+    bg.strokeRoundedRect(0, 0, width, height, 8);
+    modal.add(bg);
+
+    const titleBar = this.add.graphics();
+    titleBar.fillStyle(0x0f3460, 0.9);
+    titleBar.fillRoundedRect(0, 0, width, 28, 8);
+    modal.add(titleBar);
+
+    const titleText = this.add
+      .text(12, 14, title, {
+        fontSize: "12px",
+        color: "#ecf0f1",
+        fontFamily: "Arial, sans-serif",
+        fontStyle: "bold",
+      })
+      .setOrigin(0, 0.5);
+    modal.add(titleText);
+
+    const closeBtn = this.createModernButton(width - 28, 6, 20, 16, "×", "#e74c3c", () => {
+      this.closeModal(id);
+    });
+    modal.add(closeBtn);
+
+    content.setPosition(12, 36);
+    modal.add(content);
+
+    // Registrar y distribuir
+    this.modalRegistry.set(id, modal);
+    if (!this.modalOrder.includes(id)) this.modalOrder.push(id);
+    this.layoutModals();
+    return modal;
+  }
+
+  private layoutModals() {
+    const visibleIds = this.modalOrder.filter((id) => this.modalRegistry.get(id)?.visible);
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    const leftW = this.leftPanelExpanded ? this.LEFT_PANEL_WIDTH : 0;
+    const rightW = this.rightPanelExpanded ? this.RIGHT_PANEL_WIDTH : 0;
+    const availX = leftW + this.MODAL_MARGIN;
+    const availW = width - leftW - rightW - this.MODAL_MARGIN * 2;
+    const startY = this.TOP_BAR_HEIGHT + this.MODAL_MARGIN;
+    const maxY = height - this.BOTTOM_BAR_HEIGHT - this.MODAL_MARGIN;
+
+    let cursorX = availX;
+    let cursorY = startY;
+    let rowH = 0;
+
+    visibleIds.forEach((id) => {
+      const modal = this.modalRegistry.get(id)!;
+      const g = modal.list[0] as Phaser.GameObjects.Graphics;
+      const b = g.getBounds();
+      const w = b.width;
+      const h = b.height;
+      // Wrap si no cabe
+      if (cursorX + w > availX + availW) {
+        cursorX = availX;
+        cursorY += rowH + this.MODAL_MARGIN;
+        rowH = 0;
+      }
+      // Evitar invadir barra inferior
+      if (cursorY + h > maxY) {
+        // Si no cabe, forzar posición justo encima de bottom bar
+        cursorY = Math.max(startY, maxY - h);
+      }
+      modal.setPosition(cursorX, cursorY);
+      cursorX += w + this.MODAL_MARGIN;
+      rowH = Math.max(rowH, h);
+    });
+  }
+
+  private closeModal(id: string) {
+    const modal = this.modalRegistry.get(id);
+    if (modal) {
+      modal.setVisible(false);
+      this.layoutModals();
+    }
+  }
+
+  private toggleStatsModal() {
+    if (!this.statsModal) {
+      const content = this.buildStatsModalContent();
+      this.statsModal = this.createModalWindow("stats", "📊 Estadísticas", content, 360, 240);
+    } else {
+      this.statsModal.setVisible(!this.statsModal.visible);
+      this.layoutModals();
+    }
+  }
+
+  private toggleMessagesModal() {
+    if (!this.messagesModal) {
+      const inner = this.dialogueCardUI.getContainer();
+      inner.setPosition(0, 0);
+      this.children.remove(inner);
+      this.messagesModal = this.createModalWindow("messages", "💬 Mensajes", inner, 360, 260);
+    } else {
+      this.messagesModal.setVisible(!this.messagesModal.visible);
+      this.layoutModals();
+    }
+  }
+
+  private buildStatsModalContent(): Phaser.GameObjects.Container {
+    const c = this.add.container(0, 0);
+    const mkRow = (y: number, label: string, key: string, color: string) => {
+      const t = this.add.text(0, y, `${label}: 0`, { fontSize: "11px", color });
+      // store key as data to update later
+      t.setData("statKey", key);
+      c.add(t);
+      return t;
+    };
+    const isaTitle = this.add.text(0, 0, "👩 Isa", { fontSize: "12px", color: "#e91e63", fontStyle: "bold" });
+    c.add(isaTitle);
+    mkRow(16, "Salud", "isa.health", "#ecf0f1");
+    mkRow(32, "Energía", "isa.energy", "#ecf0f1");
+    mkRow(48, "Hambre", "isa.hunger", "#ecf0f1");
+    const stevTitle = this.add.text(180, 0, "👨 Stev", { fontSize: "12px", color: "#3498db", fontStyle: "bold" });
+    c.add(stevTitle);
+    mkRow(16, "Salud", "stev.health", "#ecf0f1").setX(180);
+    mkRow(32, "Energía", "stev.energy", "#ecf0f1").setX(180);
+    mkRow(48, "Hambre", "stev.hunger", "#ecf0f1").setX(180);
+    return c;
   }
 
   private updateEntityStatsDisplay(
@@ -1857,6 +2073,36 @@ export class UIScene extends Phaser.Scene {
    */
   private handleResize(gameSize: Phaser.Structs.Size) {
     const { width, height } = gameSize;
+
+    // Resize and reposition top bar
+    const topBg = this.topBar.getData("bg") as Phaser.GameObjects.Graphics;
+    if (topBg) {
+      topBg.clear();
+      topBg.fillStyle(0x1a1a2e, 0.85);
+      topBg.fillRect(0, 0, width, 70);
+      topBg.lineStyle(2, 0x74b9ff, 0.6);
+      topBg.lineBetween(0, 68, width, 68);
+      topBg.fillStyle(0x000000, 0.2);
+      topBg.fillRect(0, 70, width, 4);
+    }
+    if (this.topTitleContainer) {
+      this.topTitleContainer.setPosition(25, 35);
+    }
+    if (this.topMenuBtn) {
+      this.topMenuBtn.setPosition(width - 45, 35);
+    }
+    // Reposition modal shortcuts and indicators packed from right to left
+    let currentX = width - 45 - 50; // space before menu
+    this.topBarModalButtons.forEach((btn) => {
+      btn.setPosition(currentX, 35);
+      currentX -= 34;
+    });
+    this.topBarIndicators.forEach((ind) => {
+      // Keep width of indicator pill
+      const w = (ind as any).width ?? 120;
+      currentX -= (w || 120) + 15;
+      ind.setPosition(currentX, 35);
+    });
 
     // Reposition panels based on new screen size
     if (this.leftPanel) {

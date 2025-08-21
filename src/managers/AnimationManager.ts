@@ -59,6 +59,22 @@ export class AnimationManager {
       totalFrames: 1,
     },
 
+    // SPRITES DE WALKING
+    {
+      key: "isa_walking",
+      path: "assets/entities/new_woman_walk.png",
+      frameWidth: 18,
+      frameHeight: 18,
+      totalFrames: 1,
+    },
+    {
+      key: "stev_walking",
+      path: "assets/entities/new_man_walk.png",
+      frameWidth: 18,
+      frameHeight: 18,
+      totalFrames: 1,
+    },
+
     // ANIMACIONES DE AMBIENTE
     {
       key: "campfire_anim",
@@ -129,7 +145,7 @@ export class AnimationManager {
     },
     {
       key: "isa_happy_walk",
-      spriteSheetKey: "isa_happy",
+      spriteSheetKey: "isa_walking",
       frames: [0],
       frameRate: 1,
       repeat: 0,
@@ -143,7 +159,7 @@ export class AnimationManager {
     },
     {
       key: "isa_sad_walk",
-      spriteSheetKey: "isa_sad",
+      spriteSheetKey: "isa_walking",
       frames: [0],
       frameRate: 1,
       repeat: 0,
@@ -159,7 +175,7 @@ export class AnimationManager {
     },
     {
       key: "stev_happy_walk",
-      spriteSheetKey: "stev_happy",
+      spriteSheetKey: "stev_walking",
       frames: [0],
       frameRate: 1,
       repeat: 0,
@@ -173,7 +189,7 @@ export class AnimationManager {
     },
     {
       key: "stev_sad_walk",
-      spriteSheetKey: "stev_sad",
+      spriteSheetKey: "stev_walking",
       frames: [0],
       frameRate: 1,
       repeat: 0,

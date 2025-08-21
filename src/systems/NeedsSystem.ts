@@ -48,13 +48,13 @@ export class NeedsSystem {
     this.gameState = gameState;
 
     this.needsConfig = {
-      hungerDecayRate: 0.8, // Pierde 0.8 puntos por segundo
-      thirstDecayRate: 1.2, // Sed decae más rápido
-      energyDecayRate: 0.5, // Energía decae más lento
-      mentalHealthDecayRate: 0.3, // Salud mental decae muy lento
+      hungerDecayRate: 0.2, // Pierde 0.2 puntos por segundo = 12/minuto → 100 a 0 en 8 minutos
+      thirstDecayRate: 0.3, // Pierde 0.3 puntos por segundo = 18/minuto → 100 a 0 en 5.5 minutos
+      energyDecayRate: 0.15, // Pierde 0.15 puntos por segundo = 9/minuto → 100 a 0 en 11 minutos
+      mentalHealthDecayRate: 0.05, // Pierde 0.05 puntos por segundo = 3/minuto → 100 a 0 en 33 minutos
       criticalThreshold: 20, // Crítico bajo 20
       warningThreshold: 40, // Advertencia bajo 40
-      recoveryMultiplier: 2.5, // Velocidad de recuperación en zonas apropiadas
+      recoveryMultiplier: 5.0, // Velocidad de recuperación optimizada en zonas
     };
 
     logAutopoiesis.info("💚 Sistema de Necesidades inicializado", {
@@ -143,33 +143,33 @@ export class NeedsSystem {
   }
 
   /**
-   * Aplicar efectos cruzados entre necesidades
+   * Aplicar efectos cruzados entre necesidades (REBALANCEADO)
    */
   private applyNeedsCrossEffects(needs: NeedsState, deltaTime: number): void {
-    // Hambre crítica afecta energía y salud mental
+    // Hambre crítica afecta energía y salud mental (efectos reducidos)
     if (needs.hunger < 20) {
-      needs.energy = Math.max(0, needs.energy - 0.5 * deltaTime);
-      needs.mentalHealth = Math.max(0, needs.mentalHealth - 0.3 * deltaTime);
+      needs.energy = Math.max(0, needs.energy - 0.3 * deltaTime); // Reducido de 0.5
+      needs.mentalHealth = Math.max(0, needs.mentalHealth - 0.2 * deltaTime); // Reducido de 0.3
     }
 
-    // Sed crítica afecta todo
+    // Sed crítica afecta energía principalmente (eliminado efecto en hambre)
     if (needs.thirst < 15) {
-      needs.hunger = Math.max(0, needs.hunger - 0.3 * deltaTime);
-      needs.energy = Math.max(0, needs.energy - 0.8 * deltaTime);
-      needs.mentalHealth = Math.max(0, needs.mentalHealth - 0.5 * deltaTime);
+      needs.energy = Math.max(0, needs.energy - 0.4 * deltaTime); // Reducido de 0.8
+      needs.mentalHealth = Math.max(0, needs.mentalHealth - 0.2 * deltaTime); // Reducido de 0.5
+      // ELIMINADO: efecto en hambre para evitar espirales de muerte
     }
 
-    // Energía baja afecta capacidad de satisfacer otras necesidades
+    // Energía baja afecta menos agresivamente
     if (needs.energy < 25) {
-      // Dificulta la búsqueda de comida y agua
-      needs.hunger = Math.max(0, needs.hunger - 0.2 * deltaTime);
-      needs.thirst = Math.max(0, needs.thirst - 0.2 * deltaTime);
+      // Efectos mínimos para evitar cascadas
+      needs.hunger = Math.max(0, needs.hunger - 0.1 * deltaTime); // Reducido de 0.2
+      needs.thirst = Math.max(0, needs.thirst - 0.1 * deltaTime); // Reducido de 0.2
     }
 
-    // Salud mental baja afecta todo
+    // Salud mental baja tiene efectos reducidos
     if (needs.mentalHealth < 30) {
-      needs.hunger = Math.max(0, needs.hunger - 0.1 * deltaTime);
-      needs.energy = Math.max(0, needs.energy - 0.2 * deltaTime);
+      needs.hunger = Math.max(0, needs.hunger - 0.05 * deltaTime); // Reducido de 0.1
+      needs.energy = Math.max(0, needs.energy - 0.1 * deltaTime); // Reducido de 0.2
     }
   }
 
@@ -267,14 +267,19 @@ export class NeedsSystem {
   }
 
   /**
-   * Verificar si la entidad está cerca de la muerte
+   * Verificar si la entidad está cerca de la muerte (MEJORADO)
    */
   private isNearDeath(needs: NeedsState): boolean {
-    return (
-      (needs.hunger < 5 && needs.thirst < 5) ||
-      needs.thirst < 3 ||
-      (needs.hunger < 3 && needs.energy < 5)
-    );
+    // Contar necesidades en estado crítico extremo
+    const criticalCount = [
+      needs.hunger < 5,
+      needs.thirst < 5,
+      needs.energy < 5,
+      needs.mentalHealth < 5,
+    ].filter(Boolean).length;
+
+    // Muerte por múltiples necesidades críticas O sed extrema
+    return criticalCount >= 2 || needs.thirst < 2;
   }
 
   /**
@@ -408,7 +413,8 @@ export class NeedsSystem {
     const currentValue = needs[needType as keyof NeedsState] as number;
     const newValue = Math.max(0, Math.min(100, currentValue + amount));
 
-    (needs as any)[needType] = newValue;
+    // Usar type assertion más específica para la asignación
+    (needs as unknown as Record<string, number | Date>)[needType] = newValue;
 
     // Actualizar timestamp
     needs.lastUpdate = Date.now();
