@@ -109,6 +109,24 @@ export class UnifiedAssetManager {
       frameConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
 
+    // Fallback static character sprites
+    {
+      key: "woman",
+      path: "assets/entities/ent_woman.png",
+      type: "image",
+      required: true,
+      priority: "critical",
+      category: "character",
+    },
+    {
+      key: "man",
+      path: "assets/entities/ent_man.png",
+      type: "image",
+      required: true,
+      priority: "critical",
+      category: "character",
+    },
+
     // ==========================================
     // TERRENO BÁSICO
     // ==========================================

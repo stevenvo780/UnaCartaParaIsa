@@ -381,6 +381,41 @@ export class NeedsSystem {
   }
 
   /**
+   * Modificar directamente una necesidad específica de una entidad
+   */
+  public modifyEntityNeed(entityId: string, needType: string, amount: number): boolean {
+    const entityData = this.entityNeeds.get(entityId);
+    if (!entityData) {
+      logAutopoiesis.warn(`❌ Entidad ${entityId} no encontrada para modificar necesidad ${needType}`);
+      return false;
+    }
+
+    const needs = entityData.needs;
+    const validNeeds = ['hunger', 'thirst', 'energy', 'mentalHealth'];
+    
+    if (!validNeeds.includes(needType)) {
+      logAutopoiesis.warn(`❌ Tipo de necesidad inválido: ${needType}`);
+      return false;
+    }
+
+    // Aplicar modificación con clamps
+    const currentValue = needs[needType as keyof NeedsState] as number;
+    const newValue = Math.max(0, Math.min(100, currentValue + amount));
+    
+    (needs as any)[needType] = newValue;
+    
+    // Actualizar timestamp
+    needs.lastUpdate = Date.now();
+    
+    // Re-evaluar nivel de emergencia
+    this.updateEmergencyLevel(entityData);
+    
+    logAutopoiesis.debug(`🔧 Necesidad modificada: ${entityId}.${needType} ${currentValue} → ${newValue} (${amount > 0 ? '+' : ''}${amount})`);
+    
+    return true;
+  }
+
+  /**
    * Obtener el estado más crítico de necesidades
    */
   public getMostCriticalNeed(entityId: string): string | null {

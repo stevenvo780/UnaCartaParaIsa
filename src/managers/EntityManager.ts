@@ -4,6 +4,7 @@
 
 import type { Entity } from "../types";
 import { logAutopoiesis } from "../utils/logger";
+import { AnimatedGameEntity } from "../entities/AnimatedGameEntity";
 
 export class EntityManager {
   private entities = new Map<string, Entity>();
@@ -80,22 +81,63 @@ export class EntityManager {
   }
 
   /**
-   * Crea las entidades principales (isa y stev) - Legacy method for MainScene compatibility
+   * Crea las entidades principales (isa y stev) - Método real con AnimatedGameEntity
    */
   public createEntities(gameState: any): { isaEntity: any; stevEntity: any } {
-    // This is a legacy method for compatibility with MainScene
-    // In a proper implementation, entities should be created through proper factories
-    logAutopoiesis.warn(
-      "Using legacy createEntities method - should be refactored",
-    );
+    // Importar AnimatedGameEntity dinámicamente
+    const scene = gameState.scene || this.getActiveScene();
+    
+    if (!scene) {
+      logAutopoiesis.error("No scene available to create entities");
+      return this.createMockEntities();
+    }
 
-    // Return mock entities that satisfy the interface
+    try {
+      // Crear entidades reales con AnimatedGameEntity
+      const isaEntity = new AnimatedGameEntity(scene, 400, 300, "isa");
+      const stevEntity = new AnimatedGameEntity(scene, 450, 300, "stev");
+
+      // Registrar las entidades en el manager
+      this.registerEntity("isa", isaEntity);
+      this.registerEntity("stev", stevEntity);
+
+      // Añadir a la escena y al grupo
+      scene.add.existing(isaEntity);
+      scene.add.existing(stevEntity);
+      
+      // Añadir al grupo de entidades
+      this.addToGroup(isaEntity);
+      this.addToGroup(stevEntity);
+
+      logAutopoiesis.info("✅ Entidades reales creadas exitosamente", {
+        isa: { x: isaEntity.x, y: isaEntity.y },
+        stev: { x: stevEntity.x, y: stevEntity.y }
+      });
+
+      return { isaEntity, stevEntity };
+    } catch (error) {
+      logAutopoiesis.error("Error creando entidades reales, usando mock", error);
+      return this.createMockEntities();
+    }
+  }
+
+  /**
+   * Crear entidades mock como fallback
+   */
+  private createMockEntities(): { isaEntity: any; stevEntity: any } {
+    logAutopoiesis.warn("Using mock entities as fallback");
+    
     const mockEntity = {
       id: "",
       position: { x: 0, y: 0 },
       stats: { happiness: 50, energy: 50, health: 50 },
       setPartnerEntity: () => {},
       updateEntity: () => {},
+      getPosition: () => ({ x: 0, y: 0 }),
+      getCurrentActivity: () => "idle",
+      getMood: () => "neutral",
+      getStats: () => ({ happiness: 50, energy: 50, health: 50 }),
+      isDead: () => false,
     };
 
     return {
@@ -105,20 +147,53 @@ export class EntityManager {
   }
 
   /**
-   * Obtiene grupo de entidades - Legacy method for MainScene compatibility
+   * Obtener la scene activa del registro de Phaser
    */
-  public getEntitiesGroup(): any {
-    logAutopoiesis.warn(
-      "Using legacy getEntitiesGroup method - should be refactored",
-    );
-    // Return a mock Phaser Group-like object to prevent null access errors
-    return {
-      children: [],
-      add: () => {},
-      remove: () => {},
-      setVisible: () => {},
-      setDepth: () => {},
-    };
+  private getActiveScene(): Phaser.Scene | null {
+    // Intentar obtener la scene del game global si está disponible
+    if (typeof window !== 'undefined' && (window as any).game) {
+      const game = (window as any).game;
+      const scenes = game.scene.getScenes(true); // Solo scenes activas
+      return scenes.find((s: Phaser.Scene) => s.scene.key === 'MainScene') || scenes[0] || null;
+    }
+    return null;
+  }
+
+  private entitiesGroup?: Phaser.GameObjects.Group;
+
+  /**
+   * Obtiene grupo de entidades - Método real con Phaser Group
+   */
+  public getEntitiesGroup(): Phaser.GameObjects.Group {
+    if (!this.entitiesGroup) {
+      // Buscar scene activa para crear el grupo
+      const scene = this.getActiveScene();
+      if (scene) {
+        this.entitiesGroup = scene.add.group();
+        logAutopoiesis.info("Phaser Group creado para entidades");
+      } else {
+        logAutopoiesis.warn("No scene available for entities group, using mock");
+        // Return a mock Phaser Group-like object to prevent null access errors
+        return {
+          children: { size: 0 },
+          add: () => {},
+          remove: () => {},
+          setVisible: () => {},
+          setDepth: () => {},
+        } as any;
+      }
+    }
+    return this.entitiesGroup;
+  }
+
+  /**
+   * Añadir entidad al grupo
+   */
+  public addToGroup(entity: any): void {
+    const group = this.getEntitiesGroup();
+    if (group && typeof group.add === 'function') {
+      group.add(entity);
+    }
   }
 
   /**

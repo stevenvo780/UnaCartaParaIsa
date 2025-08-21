@@ -86,6 +86,9 @@ export class CardDialogueSystem {
 
   // Callback para cuando se genera una carta
   public onCardGenerated?: (card: DialogueCard) => void;
+  
+  // Timer tracking for cleanup
+  private activeTimers = new Set<NodeJS.Timeout>();
 
   constructor(
     scene: Phaser.Scene,
@@ -566,11 +569,14 @@ export class CardDialogueSystem {
     });
 
     // Programar expiración automática
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       if (this.activeCards.has(card.id)) {
         this.expireCard(card.id);
       }
+      this.activeTimers.delete(timer);
     }, card.duration);
+    
+    this.activeTimers.add(timer);
   }
 
   /**
@@ -1003,6 +1009,12 @@ export class CardDialogueSystem {
    * Limpiar sistema
    */
   public cleanup(): void {
+    // Limpiar todos los timers activos
+    this.activeTimers.forEach(timer => {
+      clearTimeout(timer);
+    });
+    this.activeTimers.clear();
+    
     this.activeCards.clear();
     this.cardQueue = [];
     this.cardHistory = [];

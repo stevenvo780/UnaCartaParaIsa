@@ -92,7 +92,8 @@ export class MainScene extends Phaser.Scene {
 
     await this.initializeManagers();
 
-    // Create entities using EntityManager
+    // Create entities using EntityManager (pass scene for real entity creation)
+    this.gameState.scene = this; // Pass scene reference
     const { isaEntity, stevEntity } = this.entityManager.createEntities(
       this.gameState,
     );
