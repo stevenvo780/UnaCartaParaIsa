@@ -228,6 +228,49 @@ export class UnifiedAssetManager {
       priority: "medium",
       category: "decoration",
     },
+    // Árboles adicionales para mayor variedad
+    {
+      key: "tree_emerald_3",
+      path: "assets/foliage/trees/tree_emerald_3.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "tree_emerald_4",
+      path: "assets/foliage/trees/tree_emerald_4.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "oak_tree",
+      path: "assets/foliage/trees/oak_tree.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "willow1",
+      path: "assets/foliage/trees/willow1.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "willow2",
+      path: "assets/foliage/trees/willow2.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "willow3",
+      path: "assets/foliage/trees/willow3.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
     {
       key: "bush_emerald_1",
       path: "assets/foliage/shrubs/bush_emerald_1.png",
@@ -353,7 +396,7 @@ export class UnifiedAssetManager {
       result.loadedAssets.push(key);
     });
 
-    this.scene.load.on("loaderror", (file: any) => {
+    this.scene.load.on("loaderror", (file: { key: string }) => {
       const asset = Array.from(this.loadQueue.values()).find(
         (a) => a.key === file.key,
       );
@@ -472,7 +515,7 @@ export class UnifiedAssetManager {
           resolve();
         };
 
-        const onError = (error: any) => {
+        const onError = (error: unknown) => {
           clearTimeout(timeout);
           this.loadingAssets.delete(config.key);
           this.currentLoads--;
@@ -563,7 +606,10 @@ export class UnifiedAssetManager {
   }
 
   public async loadFoodCategory(category: string): Promise<void> {
-    const categoryFoods = FoodCatalog.getFoodsByCategory(category as any);
+    // Tipar contra catálogo conocido si es posible
+    const categoryFoods = FoodCatalog.getFoodsByCategory(
+      category as Parameters<typeof FoodCatalog.getFoodsByCategory>[0],
+    );
     const foodIds = categoryFoods.map((food) => food.id);
 
     logAutopoiesis.info("Cargando categoría de comida", {
@@ -628,8 +674,12 @@ export class UnifiedAssetManager {
 
   private async generateTreeAssets(): Promise<AssetInfo[]> {
     const treeAssets: AssetInfo[] = [];
-    const treeTypes = [
-      { name: "tree_emerald", count: 3, rarity: "common" },
+    const treeTypes: Array<{
+      name: string;
+      count: number;
+      rarity: "common" | "uncommon" | "rare";
+    }> = [
+      { name: "tree_emerald", count: 4, rarity: "common" },
       { name: "tree_willow", count: 3, rarity: "uncommon" },
       { name: "tree_white", count: 2, rarity: "rare" },
     ];
@@ -642,7 +692,7 @@ export class UnifiedAssetManager {
           type: "tree",
           biome: "forest",
           variant: i,
-          rarity: tree.rarity as any,
+          rarity: tree.rarity,
         });
       }
     }
@@ -652,7 +702,11 @@ export class UnifiedAssetManager {
 
   private async generateRockAssets(): Promise<AssetInfo[]> {
     const rockAssets: AssetInfo[] = [];
-    const rockTypes = [
+    const rockTypes: Array<{
+      name: string;
+      count: number;
+      rarity: "common" | "uncommon";
+    }> = [
       { name: "rock_1", count: 5, rarity: "common" },
       { name: "rock_moss", count: 3, rarity: "uncommon" },
     ];
@@ -665,7 +719,7 @@ export class UnifiedAssetManager {
           type: "rock",
           biome: "forest",
           variant: i,
-          rarity: rock.rarity as any,
+          rarity: rock.rarity,
         });
       }
     }

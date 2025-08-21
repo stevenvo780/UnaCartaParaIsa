@@ -3,9 +3,9 @@
  * Sistema avanzado de generación con biomas, ruido Perlin y distribución orgánica
  */
 
-import type { GameState, Zone, MapElement } from "../types";
-import { NoiseUtils } from "./NoiseUtils";
+import type { GameState, MapElement, Zone } from "../types";
 import { logAutopoiesis } from "../utils/logger";
+import { NoiseUtils } from "./NoiseUtils";
 
 export interface BiomeDefinition {
   id: string;
@@ -586,7 +586,13 @@ export class ProceduralWorldGenerator {
         alphaColor: "rgba(76, 175, 80, 0.3)",
         noiseThreshold: { min: -0.3, max: 0.3 },
         resources: ["grass", "flowers", "herbs"],
-        decorations: ["bush_emerald_1", "flowers_red_anim", "grass_patch"],
+        // Incluir árboles en pradera para que siempre haya presencia visible
+        decorations: [
+          "tree_emerald_1",
+          "oak_tree",
+          "bush_emerald_1",
+          "flowers_red_anim",
+        ],
         rarity: "common",
         zoneTypes: ["food", "social", "rest"],
       },
@@ -597,7 +603,16 @@ export class ProceduralWorldGenerator {
         alphaColor: "rgba(56, 142, 60, 0.4)",
         noiseThreshold: { min: 0.1, max: 0.6 },
         resources: ["wood", "berries", "mushrooms"],
-        decorations: ["tree_emerald_1", "tree_emerald_2", "bush_emerald_2"],
+        // Ampliar variedad de árboles en bosque
+        decorations: [
+          "tree_emerald_1",
+          "tree_emerald_2",
+          "tree_emerald_3",
+          "tree_emerald_4",
+          "oak_tree",
+          "willow1",
+          "bush_emerald_2",
+        ],
         rarity: "common",
         zoneTypes: ["shelter", "work", "rest"],
       },
@@ -619,7 +634,8 @@ export class ProceduralWorldGenerator {
         alphaColor: "rgba(96, 125, 139, 0.4)",
         noiseThreshold: { min: 0.7, max: 1 },
         resources: ["stone", "minerals", "crystals"],
-        decorations: ["rock1_1", "tree_emerald_3"],
+        // Algunas coníferas/árboles resistentes
+        decorations: ["rock1_1", "tree_emerald_3", "oak_tree"],
         rarity: "rare",
         zoneTypes: ["work", "shelter"],
       },
@@ -630,7 +646,8 @@ export class ProceduralWorldGenerator {
         alphaColor: "rgba(141, 110, 99, 0.3)",
         noiseThreshold: { min: -0.2, max: 0.2 },
         resources: ["tools", "food", "crafts"],
-        decorations: ["house_hay_1", "well_1", "road_path_cross"],
+        // Añadir alguna presencia de árboles en el pueblo
+        decorations: ["house_hay_1", "well_1", "oak_tree", "tree_emerald_1"],
         rarity: "uncommon",
         zoneTypes: ["social", "work", "food", "shelter"],
       },
@@ -641,7 +658,14 @@ export class ProceduralWorldGenerator {
         alphaColor: "rgba(78, 52, 46, 0.4)",
         noiseThreshold: { min: -0.1, max: 0.5 },
         resources: ["reeds", "mud", "rare_herbs"],
-        decorations: ["water_ruins_1", "bush_emerald_3"],
+        // Añadir sauces al humedal
+        decorations: [
+          "willow1",
+          "willow2",
+          "willow3",
+          "water_tile_1",
+          "bush_emerald_3",
+        ],
         rarity: "rare",
         zoneTypes: ["water", "rest"],
       },

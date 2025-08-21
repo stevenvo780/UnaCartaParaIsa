@@ -3,7 +3,7 @@
  * Renderiza mundos generados proceduralmente con biomas, terreno y decoraciones
  */
 
-import type { GameState, Zone, MapElement } from "../types";
+import type { GameState, MapElement } from "../types";
 import { logAutopoiesis } from "../utils/logger";
 
 export class WorldRenderer {
@@ -347,18 +347,33 @@ export class WorldRenderer {
       assetKey,
     );
 
-    sprite.setOrigin(0.5, 0.5);
-    sprite.setDisplaySize(decoration.size.width, decoration.size.height);
-    sprite.setDepth(2);
+    // Dimensiones por defecto (para props pequeños)
+    let width = decoration.size.width;
+    let height = decoration.size.height;
+
+    // Si es árbol, hacerlo más grande y ajustar origen
+    if (assetKey.includes("tree")) {
+      width = 64;
+      height = 96;
+      sprite.setOrigin(0.5, 0.85);
+    } else if (assetKey.includes("bush")) {
+      width = 48;
+      height = 36;
+      sprite.setOrigin(0.5, 0.6);
+    } else {
+      sprite.setOrigin(0.5, 0.5);
+    }
+
+    sprite.setDisplaySize(width, height);
+
+    // Depth suave por Y para orden de pintado natural
+    sprite.setDepth(2 + sprite.y * 0.001);
     sprite.name = `decoration_${decoration.id}`;
 
-    // Añadir variación visual
+    // Variación visual ligera
     const variation = Math.random();
-    if (variation < 0.1) {
-      sprite.setTint(0xcccccc); // Algo más oscuro
-    } else if (variation < 0.2) {
-      sprite.setAlpha(0.9); // Algo más transparente
-    }
+    if (variation < 0.08) sprite.setTint(0xdddddd);
+    else if (variation < 0.16) sprite.setAlpha(0.92);
 
     return sprite;
   }

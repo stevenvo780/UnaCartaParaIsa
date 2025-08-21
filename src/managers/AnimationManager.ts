@@ -285,6 +285,16 @@ export class AnimationManager {
       return;
     }
 
+    // Evitar warnings: solo crear la animación si el spritesheet existe
+    const textureManager = this.scene.textures;
+    if (!textureManager.exists(config.spriteSheetKey)) {
+      logAutopoiesis.warn("SpriteSheet no cargado, omitiendo animación", {
+        key: config.key,
+        spriteSheetKey: config.spriteSheetKey,
+      });
+      return;
+    }
+
     if (!this.scene.anims.exists(config.key)) {
       this.scene.anims.create({
         key: config.key,

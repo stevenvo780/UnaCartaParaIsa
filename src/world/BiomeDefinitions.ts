@@ -44,23 +44,39 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
       },
 
       trees: {
-        primary: ["oak_tree.png"],
-        rare: ["tree_emerald_1.png", "tree_emerald_2.png"],
-        density: 0.15,
-        clustering: 0.3,
+        primary: ["oak_tree.png", "willow1.png", "willow2.png", "willow3.png"],
+        rare: [
+          "tree_emerald_1.png",
+          "tree_emerald_2.png",
+          "blue-green_balls_tree1.png",
+          "blue-green_balls_tree2.png",
+          "blue-green_balls_tree3.png",
+          "curved_tree1.png",
+          "curved_tree2.png",
+          "curved_tree3.png",
+          "light_balls_tree1.png",
+          "light_balls_tree2.png",
+          "light_balls_tree3.png",
+          "luminous_tree1.png",
+          "luminous_tree2.png",
+          "luminous_tree3.png",
+          "luminous_tree4.png",
+        ],
+        density: 0.23, // was 0.15
+        clustering: 0.4, // was 0.3
       },
       shrubs: {
         assets: [],
-        density: 0.1,
+        density: 0.12,
       },
       props: {
         common: ["flowers_white.png", "flowers_red.png"],
         rare: [],
-        density: 0.2,
+        density: 0.22,
       },
       decals: {
         assets: ["grass_patch_01.png"],
-        density: 0.3,
+        density: 0.35,
       },
     },
 
@@ -124,21 +140,21 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
           "oak_tree.png",
         ],
         rare: ["mega_tree1.png", "mega_tree2.png"],
-        density: 0.45,
-        clustering: 0.7,
+        density: 0.53, // was 0.45
+        clustering: 0.8, // was 0.7
       },
       shrubs: {
         assets: [],
-        density: 0.3,
+        density: 0.33, // was 0.3
       },
       props: {
         common: ["mushrooms"],
         rare: [],
-        density: 0.15,
+        density: 0.17, // was 0.15
       },
       decals: {
         assets: ["shadow_soft_01.png", "dirt_patch_01.png"],
-        density: 0.4,
+        density: 0.45, // was 0.4
       },
     },
 
@@ -211,12 +227,12 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
           "tree_idol_human.png",
           "tree_idol_wolf.png",
         ],
-        density: 0.25,
-        clustering: 0.4,
+        density: 0.3, // was 0.25
+        clustering: 0.45, // was 0.4
       },
       shrubs: {
         assets: [],
-        density: 0.2,
+        density: 0.22, // was 0.2
       },
       props: {
         common: [
@@ -225,11 +241,11 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
           "light_balls_tree3.png",
         ],
         rare: [],
-        density: 0.1,
+        density: 0.12, // was 0.1
       },
       decals: {
         assets: ["shadow_soft_01.png"],
-        density: 0.2,
+        density: 0.24, // was 0.2
       },
     },
 
@@ -287,21 +303,21 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
           "white_tree2.png",
         ],
         rare: ["tree_emerald_1.png"],
-        density: 0.2,
-        clustering: 0.5,
+        density: 0.25, // was 0.2
+        clustering: 0.55, // was 0.5
       },
       shrubs: {
         assets: [],
-        density: 0.4,
+        density: 0.45, // was 0.4
       },
       props: {
         common: ["mushrooms"],
         rare: [],
-        density: 0.3,
+        density: 0.33, // was 0.3
       },
       decals: {
         assets: ["dirt_patch_01.png"],
-        density: 0.5,
+        density: 0.55, // was 0.5
       },
     },
 
@@ -351,31 +367,21 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
       trees: {
         primary: ["mega_tree1.png", "mega_tree2.png", "oak_tree.png"],
         rare: ["curved_tree1.png", "curved_tree2.png"],
-        density: 0.1,
-        clustering: 0.2,
+        density: 0.13, // was 0.1
+        clustering: 0.25, // was 0.2
       },
       shrubs: {
         assets: [],
-        density: 0.05,
+        density: 0.07, // was 0.05
       },
       props: {
         common: [],
         rare: [],
-        density: 0.4,
-      },
-      structures: {
-        assets: [
-          "cliff_face_n.png",
-          "cliff_face_s.png",
-          "cliff_face_e.png",
-          "cliff_face_w.png",
-        ],
-        density: 0.3,
-        spacing: 2,
+        density: 0.42, // was 0.4
       },
       decals: {
         assets: ["dirt_patch_01.png", "shadow_soft_01.png"],
-        density: 0.6,
+        density: 0.65, // was 0.6
       },
     },
 
@@ -426,34 +432,21 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
       trees: {
         primary: ["oak_tree.png", "tree_emerald_1.png"],
         rare: [],
-        density: 0.1,
-        clustering: 0.1,
+        density: 0.13, // was 0.1
+        clustering: 0.15, // was 0.1
       },
       shrubs: {
         assets: [],
-        density: 0.15,
+        density: 0.18, // was 0.15
       },
       props: {
         common: ["flowers_white.png", "flowers_red.png"],
         rare: [],
-        density: 0.2,
-      },
-      structures: {
-        assets: [
-          "House.png",
-          "House_Hay_1.png",
-          "House_Hay_2.png",
-          "House_Hay_3.png",
-          "House_Hay_4_Purple.png",
-          "Well_Hay_1.png",
-          "Fences.png",
-        ],
-        density: 0.05,
-        spacing: 4,
+        density: 0.22, // was 0.2
       },
       decals: {
         assets: ["grass_patch_01.png"],
-        density: 0.1,
+        density: 0.12, // was 0.1
       },
     },
 

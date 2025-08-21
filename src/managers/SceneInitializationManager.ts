@@ -25,7 +25,7 @@ export class SceneInitializationManager {
       height: 1600,
       seed: `world_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       biomeDensity: 0.6,
-      resourceDensity: 0.4,
+      resourceDensity: 0.65, // antes 0.4 → más decoraciones (árboles)
     });
 
     // Generar mundo completo
