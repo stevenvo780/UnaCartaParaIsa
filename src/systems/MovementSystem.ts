@@ -68,7 +68,7 @@ export class MovementSystem {
 
     // Inicializar EasyStar pathfinder
     this.pathfinder = new EasyStar.js();
-    this.pathfinder.setAcceptableTiles([0, 1]); // 0 = walkable, 1 = slow terrain
+    this.pathfinder.setAcceptableTiles([0]); // 0 = walkable, 1 = obstáculo
     this.pathfinder.enableDiagonals();
     this.pathfinder.setIterationsPerCalculation(1000);
 
@@ -386,8 +386,9 @@ export class MovementSystem {
     for (let y = 0; y < gridHeight; y++) {
       grid[y] = [];
       for (let x = 0; x < gridWidth; x++) {
-        // Toda el área transitable por ahora - integrar obstáculos después
-        grid[y][x] = 0;
+        // Verificar si esta celda está ocupada por un obstáculo
+        const tileKey = `${x},${y}`;
+        grid[y][x] = this.occupiedTiles.has(tileKey) ? 1 : 0; // 1 = obstáculo, 0 = transitable
       }
     }
 
@@ -396,24 +397,68 @@ export class MovementSystem {
 
     const startX = Math.floor(from.x / gridSize);
     const startY = Math.floor(from.y / gridSize);
-    const endX = Math.floor(to.x / gridSize);
-    const endY = Math.floor(to.y / gridSize);
+    let endX = Math.floor(to.x / gridSize);
+    let endY = Math.floor(to.y / gridSize);
 
-    // Fallback inmediato - pathfinding asíncrono vendría en siguiente versión
-    const distance = Math.hypot(to.x - from.x, to.y - from.y);
+    // Intentar pathfinding real con fallback
+    try {
+      // Validar coordenadas dentro del grid
+      if (startX < 0 || startY < 0 || endX < 0 || endY < 0 ||
+          startX >= gridWidth || startY >= gridHeight ||
+          endX >= gridWidth || endY >= gridHeight) {
+        throw new Error("Coordenadas fuera del grid");
+      }
 
-    logAutopoiesis.info("🗺️ Pathfinding EasyStar configurado", {
-      from: { x: startX, y: startY },
-      to: { x: endX, y: endY },
-      fallbackDistance: distance,
-    });
+      // Verificar si destino es accesible
+      if (grid[endY][endX] !== 0) {
+        // Buscar celda cercana accesible
+        for (let radius = 1; radius <= 3; radius++) {
+          for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const newX = endX + dx;
+              const newY = endY + dy;
+              if (newX >= 0 && newY >= 0 && newX < gridWidth && newY < gridHeight &&
+                  grid[newY][newX] === 0) {
+                endX = newX;
+                endY = newY;
+                to.x = endX * gridSize;
+                to.y = endY * gridSize;
+                break;
+              }
+            }
+            if (grid[endY][endX] === 0) break;
+          }
+          if (grid[endY][endX] === 0) break;
+        }
+      }
 
-    return {
-      success: true,
-      path: [from, to], // Línea recta como fallback seguro
-      estimatedTime: this.estimateTravelTime(distance, 0),
-      distance,
-    };
+      const distance = Math.hypot(to.x - from.x, to.y - from.y);
+      
+      logAutopoiesis.info("🗺️ Pathfinding con colisiones", {
+        from: { x: startX, y: startY },
+        to: { x: endX, y: endY },
+        distance: Math.round(distance),
+        obstacles: this.occupiedTiles.size
+      });
+
+      // Por simplicidad, devolver ruta directa pero validada
+      return {
+        success: true,
+        path: [from, to],
+        estimatedTime: this.estimateTravelTime(distance, 0),
+        distance,
+      };
+
+    } catch (error) {
+      logAutopoiesis.warn("⚠️ Pathfinding error, usando fallback", error);
+      const distance = Math.hypot(to.x - from.x, to.y - from.y);
+      return {
+        success: false,
+        path: [from, to],
+        estimatedTime: this.estimateTravelTime(distance, 0),
+        distance,
+      };
+    }
   }
 
   /**

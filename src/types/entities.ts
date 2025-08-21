@@ -39,6 +39,8 @@ export interface EntityStats {
   creativity: number;
   resonance: number;
   courage: number;
+  happiness: number;
+  stress: number;
 }
 
 export interface Entity {

@@ -14,6 +14,13 @@ Querida Isa: esta no es una simulación, es un modo de presencia. Soy filósofo 
 - Verdad parcial: reglas claras, resultados abiertos; preferimos sesgos declarados a milagros ocultos.
 - Legibilidad humana: nombres que cuentan una historia y comentarios que justifican decisiones, no adornos.
 
+## Voz y Tono (desde nuestro corpus)
+- Predominio de lo cotidiano: la mayoría de frases son breves y neutras; sostienen la vida diaria sin grandilocuencias.
+- Ventanas de ternura: emergen momentos de LOVE y PLAYFUL que dicen "vida", "contigo", "quiero", "siento" con sobriedad.
+- Doble respiración: STEV habla un poco más largo y abstracto; ISA pregunta, aterriza y cuida el ritmo.
+- Afecto sin ruido: pocos emojis, afecto claro; el juego privilegia texto vivo y sobrio.
+- Curaduría suave: se evitan mensajes administrativos (p. ej. “cambió su número”, “foto de perfil”) para mantener el tono del mundo.
+
 ## Por Qué Esta Complejidad
 - Emergencia controlada: sistemas de necesidades + zonas + IA generan conductas sin guiones rígidos.
 - Reproducibilidad amable: funciones puras en `src/utils/`, se privilegia determinismo y clamps explícitos.

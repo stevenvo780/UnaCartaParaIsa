@@ -21,7 +21,8 @@ export interface AssetDefinition {
     | "food"
     | "structure"
     | "decoration"
-    | "animation";
+    | "animation"
+    | "audio";
   biome?: string;
   frameConfig?: {
     frameWidth: number;
@@ -305,6 +306,23 @@ export class UnifiedAssetManager {
       type: "image",
       priority: "medium",
       category: "food",
+    },
+    // Audio assets
+    {
+      key: "snd_select",
+      path: "assets/sounds/snd_select.wav",
+      type: "audio",
+      priority: "low",
+      category: "audio",
+      required: false,
+    },
+    {
+      key: "snd_moveselect",
+      path: "assets/sounds/snd_moveselect.wav",
+      type: "audio",
+      priority: "low",
+      category: "audio",
+      required: false,
     },
   ];
 

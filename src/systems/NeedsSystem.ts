@@ -146,30 +146,31 @@ export class NeedsSystem {
    * Aplicar efectos cruzados entre necesidades (REBALANCEADO)
    */
   private applyNeedsCrossEffects(needs: NeedsState, deltaTime: number): void {
-    // Hambre crítica afecta energía y salud mental (efectos reducidos)
+    // Límites de seguridad mínimos para evitar espirales de muerte
+    const SAFETY_THRESHOLD = 10;
+    
+    // Hambre crítica afecta energía y salud mental (con límites duros)
     if (needs.hunger < 20) {
-      needs.energy = Math.max(0, needs.energy - 0.3 * deltaTime); // Reducido de 0.5
-      needs.mentalHealth = Math.max(0, needs.mentalHealth - 0.2 * deltaTime); // Reducido de 0.3
+      needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.3 * deltaTime);
+      needs.mentalHealth = Math.max(SAFETY_THRESHOLD, needs.mentalHealth - 0.2 * deltaTime);
     }
 
-    // Sed crítica afecta energía principalmente (eliminado efecto en hambre)
+    // Sed crítica afecta energía principalmente (con límites duros)
     if (needs.thirst < 15) {
-      needs.energy = Math.max(0, needs.energy - 0.4 * deltaTime); // Reducido de 0.8
-      needs.mentalHealth = Math.max(0, needs.mentalHealth - 0.2 * deltaTime); // Reducido de 0.5
-      // ELIMINADO: efecto en hambre para evitar espirales de muerte
+      needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.4 * deltaTime);
+      needs.mentalHealth = Math.max(SAFETY_THRESHOLD, needs.mentalHealth - 0.2 * deltaTime);
     }
 
-    // Energía baja afecta menos agresivamente
+    // Energía baja afecta menos agresivamente (con límites duros)
     if (needs.energy < 25) {
-      // Efectos mínimos para evitar cascadas
-      needs.hunger = Math.max(0, needs.hunger - 0.1 * deltaTime); // Reducido de 0.2
-      needs.thirst = Math.max(0, needs.thirst - 0.1 * deltaTime); // Reducido de 0.2
+      needs.hunger = Math.max(SAFETY_THRESHOLD, needs.hunger - 0.1 * deltaTime);
+      needs.thirst = Math.max(SAFETY_THRESHOLD, needs.thirst - 0.1 * deltaTime);
     }
 
-    // Salud mental baja tiene efectos reducidos
+    // Salud mental baja tiene efectos reducidos (con límites duros)
     if (needs.mentalHealth < 30) {
-      needs.hunger = Math.max(0, needs.hunger - 0.05 * deltaTime); // Reducido de 0.1
-      needs.energy = Math.max(0, needs.energy - 0.1 * deltaTime); // Reducido de 0.2
+      needs.hunger = Math.max(SAFETY_THRESHOLD, needs.hunger - 0.05 * deltaTime);
+      needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.1 * deltaTime);
     }
   }
 

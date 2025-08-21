@@ -100,6 +100,7 @@ export class CardDialogueSystem {
     this.needsSystem = needsSystem;
 
     this.initializeCardTemplates();
+    this.setupEventListeners();
 
     logAutopoiesis.info("💌 Sistema de Cartas de Diálogo inicializado", {
       templates: this.cardTemplates.length,
@@ -557,8 +558,8 @@ export class CardDialogueSystem {
       this.onCardGenerated(card);
     }
 
-    // También emitir evento para compatibilidad
-    this.scene.events.emit("cardDisplayed", card);
+    // Emitir evento para DialogueCardUI
+    this.scene.events.emit("showDialogueCard", card);
 
     logAutopoiesis.info("💌 Carta mostrada", {
       cardId: card.id,
@@ -590,6 +591,9 @@ export class CardDialogueSystem {
 
       // Notificar que la carta expiró
       this.scene.events.emit("cardExpired", cardId);
+      
+      // Emitir evento para DialogueCardUI
+      this.scene.events.emit("hideDialogueCard", cardId);
 
       logAutopoiesis.info("⏰ Carta expirada", {
         cardId: card.id,
@@ -630,6 +634,18 @@ export class CardDialogueSystem {
 
     // Emitir evento de respuesta
     this.scene.events.emit("cardResponded", { card, choice });
+    
+    // Emitir evento para QuestSystem
+    this.scene.events.emit("dialogue_completed", { 
+      cardId, 
+      choiceId, 
+      participants: card.participants,
+      outcome: choice.outcome,
+      effects: choice.effects
+    });
+    
+    // Emitir evento para DialogueCardUI (ocultar carta respondida)
+    this.scene.events.emit("hideDialogueCard", cardId);
 
     logAutopoiesis.info(`✨ Respuesta a carta: ${card.title}`, {
       choice: choice.text,
@@ -1003,6 +1019,16 @@ export class CardDialogueSystem {
       emotionalContext: { ...this.emotionalContext },
       templates: this.cardTemplates.length,
     };
+  }
+
+  /**
+   * Configurar listeners de eventos
+   */
+  private setupEventListeners(): void {
+    // Escuchar respuestas del usuario desde DialogueCardUI
+    this.scene.events.on("dialogueChoiceSelected", (eventData: any) => {
+      this.respondToCard(eventData.cardId, eventData.choice.id);
+    });
   }
 
   /**

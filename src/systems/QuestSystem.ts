@@ -4,6 +4,7 @@
  */
 
 import { QuestCatalog } from "../data/QuestCatalog";
+import { QuestUI } from "../components/QuestUI";
 import type {
   Quest,
   QuestEvent,
@@ -26,7 +27,7 @@ export class QuestSystem {
   private _questProgress: QuestProgress;
   private _eventEmitter: Phaser.Events.EventEmitter;
   private _questCheckTimer?: Phaser.Time.TimerEvent;
-  private _questUI?: Phaser.GameObjects.Container;
+  private _questUI?: QuestUI;
 
   public constructor(scene: Phaser.Scene) {
     this._scene = scene;
@@ -46,6 +47,9 @@ export class QuestSystem {
 
     this._setupEventListeners();
     this._initializeQuests();
+    
+    // Inicializar QuestUI
+    this._questUI = new QuestUI(scene);
   }
 
   /**
@@ -285,8 +289,8 @@ export class QuestSystem {
 
         case "achieve_stats":
           if (objective.requirements?.stats) {
-            const entityStats = data.entities?.[objective.targetEntity || "isa"]?.stats;
-            if (entityStats && this._checkStatsRequirements(entityStats, objective.requirements.stats)) {
+            const targetEntity = entities.find((e: EntityEventData) => e.id === (objective.targetEntity || "isa"));
+            if (targetEntity?.stats && this._checkStatsRequirements(targetEntity.stats, objective.requirements.stats)) {
               this.updateObjectiveProgress(quest.id, objective.id);
             }
           }
@@ -581,11 +585,22 @@ export class QuestSystem {
             ? this._questProgress.completedQuests.has(req.questId)
             : false;
         case "stats_threshold":
-          // Implementar cuando el sistema de stats esté disponible
-          return true;
+          if (req.entityId && req.stat && req.value) {
+            const gameLogicManager = this._scene.registry.get("gameLogicManager");
+            if (gameLogicManager) {
+              const entities = gameLogicManager.getEntities();
+              const entity = entities.find((e: EntityEventData) => e.id === req.entityId);
+              return entity?.stats[req.stat] >= req.value;
+            }
+          }
+          return false;
         case "time_elapsed":
-          // Implementar sistema de tiempo de juego
-          return true;
+          if (req.duration) {
+            const gameStartTime = this._scene.registry.get("gameStartTime") || Date.now();
+            const elapsed = Date.now() - gameStartTime;
+            return elapsed >= req.duration;
+          }
+          return false;
         default:
           return true;
       }

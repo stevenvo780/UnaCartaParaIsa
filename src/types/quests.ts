@@ -104,6 +104,13 @@ export interface QuestObjective {
   isCompleted: boolean;
   isOptional: boolean;
   hints?: string[];
+  targetEntity?: string;
+  requirements?: {
+    stats?: { [key: string]: number };
+    items?: { [key: string]: number };
+    proximity?: { entityId: string; distance: number };
+    time?: number;
+  };
 }
 
 /**
