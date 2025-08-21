@@ -5,12 +5,12 @@
 // Tipos principales
 export type {
   BiomeDefinition,
+  BiomeTransition,
+  GeneratedWorld,
+  NoiseOptions,
   TerrainTile,
   WorldGenConfig,
-  GeneratedWorld,
   WorldLayer,
-  NoiseOptions,
-  BiomeTransition,
 } from "./types";
 
 // Enum principal
@@ -20,25 +20,25 @@ export { BiomeType } from "./types";
 export { BiomeSystem } from "./BiomeSystem";
 
 // Generadores
+export { NoiseUtils } from "./NoiseUtils";
 export { TerrainGenerator } from "./TerrainGenerator";
-export { NoiseGenerator, NoiseProcessor } from "./NoiseUtils";
 
 // Configuración y definiciones
 export {
   BIOME_DEFINITIONS,
   DEFAULT_WORLD_CONFIG,
-  getBiomeDefinition,
-  getAllBiomes,
-  canBiomeSpawn,
   calculateBiomeFitness,
+  canBiomeSpawn,
+  getAllBiomes,
+  getBiomeDefinition,
 } from "./BiomeDefinitions";
 
 export {
-  WORLD_PRESETS,
   DENSITY_CONFIGS,
-  getWorldPreset,
-  getAvailablePresets,
+  WORLD_PRESETS,
   applyDensityConfig,
   createCustomWorldConfig,
+  getAvailablePresets,
+  getWorldPreset,
   validateWorldConfig,
 } from "./WorldConfig";

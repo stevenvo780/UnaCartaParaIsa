@@ -3,8 +3,13 @@
  * Centraliza actualizaciones, timers y estado del juego
  */
 
-import { gameConfig } from "../config/gameConfig";
-import { GAME_BALANCE } from "../config/gameConfig";
+import { GAME_BALANCE, gameConfig } from "../config/gameConfig";
+import { AISystem } from "../systems/AISystem";
+import { CardDialogueSystem } from "../systems/CardDialogueSystem";
+import { DayNightSystem } from "../systems/DayNightSystem";
+import { EmergenceSystem } from "../systems/EmergenceSystem";
+import { MovementSystem } from "../systems/MovementSystem";
+import { NeedsSystem } from "../systems/NeedsSystem";
 import type {
   Entity,
   EntityStats,
@@ -13,14 +18,8 @@ import type {
   GameState,
   IGameLogicManager,
 } from "../types";
-import { EntityManager } from "./EntityManager";
-import { NeedsSystem } from "../systems/NeedsSystem";
-import { AISystem } from "../systems/AISystem";
-import { MovementSystem } from "../systems/MovementSystem";
-import { CardDialogueSystem } from "../systems/CardDialogueSystem";
-import { DayNightSystem } from "../systems/DayNightSystem";
-import { EmergenceSystem } from "../systems/EmergenceSystem";
 import { logAutopoiesis } from "../utils/logger";
+import { EntityManager } from "./EntityManager";
 
 export class GameLogicManager implements IGameLogicManager {
   private _scene: Phaser.Scene;
@@ -314,17 +313,38 @@ export class GameLogicManager implements IGameLogicManager {
    * Get specific entity by ID
    */
   public getEntity(entityId: string): Entity | undefined {
-    return this._entityManager.getEntity(entityId);
+    const entity = this._entityManager.getEntity(entityId);
+    if (!entity) return undefined;
+    // If the stored entity has a getEntityData method, use it to obtain domain data
+    if (
+      typeof entity === "object" &&
+      entity !== null &&
+      "getEntityData" in entity &&
+      typeof (entity as any).getEntityData === "function"
+    ) {
+      return (entity as any).getEntityData();
+    }
+    return entity as unknown as Entity;
   }
 
   /**
    * Get all registered entities
    */
   public getEntities(): Entity[] {
-    return this._entityManager.getEntities();
+    return this._entityManager.getEntities().map((entity) => {
+      if (
+        typeof entity === "object" &&
+        entity !== null &&
+        "getEntityData" in entity &&
+        typeof (entity as any).getEntityData === "function"
+      ) {
+        return (entity as any).getEntityData();
+      }
+      return entity as unknown as Entity;
+    });
   }
 
-  public getAllEntities(): Map<string, Entity> {
+  public getAllEntities() {
     return this._entityManager.getAllEntities();
   }
 

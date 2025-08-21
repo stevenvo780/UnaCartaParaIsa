@@ -3,14 +3,13 @@
  * Usa todas las herramientas existentes del motor para detectar y actualizar progreso
  */
 
-import type { ActivityType } from "../types";
+import type { ActivityType, Quest } from "../types";
 import type {
+  DialogueCompletedEventData,
   EntityEventData,
+  FoodConsumedEventData,
   GameUpdateEventData,
   PlayerInteractionEventData,
-  FoodConsumedEventData,
-  DialogueCompletedEventData,
-  QuestEventData,
 } from "../types/events";
 import { randomBool } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
@@ -272,7 +271,7 @@ export class QuestController {
       quest.objectives.forEach((objective) => {
         if (
           objective.type === "talk_to_npc" &&
-          objective.target === data.speakerId &&
+          objective.target === data.speaker &&
           !objective.isCompleted
         ) {
           this._questSystem.updateObjectiveProgress(quest.id, objective.id);
@@ -374,10 +373,9 @@ export class QuestController {
   /**
    * Muestra diálogo específico de misión usando el sistema existente
    */
-  private _showQuestDialogue(quest: QuestEventData, stage: string): void {
+  private _showQuestDialogue(quest: Quest, stage: string): void {
     const dialogue = quest.dialogues.find((d) => d.stage === stage);
     if (dialogue) {
-      // Usar el sistema de diálogos existente
       this._scene.events.emit("show_dialogue", {
         speaker: dialogue.speaker,
         text: dialogue.text,

@@ -3,7 +3,15 @@
  * Sistema avanzado de generación con biomas, ruido Perlin y distribución orgánica
  */
 
-import type { GameState, MapElement, Zone } from "../types";
+import type {
+  GameState,
+  MapElement,
+  ObjectLayer,
+  Position,
+  RoadPolyline,
+  TerrainTile,
+  Zone,
+} from "../types";
 import { logAutopoiesis } from "../utils/logger";
 import { NoiseUtils } from "./NoiseUtils";
 
@@ -77,10 +85,10 @@ export class ProceduralWorldGenerator {
     // FASE 3: Generar zonas funcionales basadas en biomas
     const zones = this.generateZones(biomeMap, heightMap);
 
-    // FASE 4: Distribuir recursos y decoraciones
+    // FASE 4: Distribuir recursos y decoraciones (solo decoraciones)
     const mapElements = this.generateMapElements(biomeMap, heightMap);
 
-    // FASE 5: Crear caminos conectando zonas
+    // FASE 5: Crear caminos conectando zonas como polilíneas
     const roads = this.generateRoadNetwork(zones);
 
     const generationTime = Date.now() - startTime;
@@ -118,8 +126,8 @@ export class ProceduralWorldGenerator {
       objectLayers: this.generateObjectLayers(biomeMap, mapElements),
       worldSize: { width: this.config.width, height: this.config.height },
       generatorVersion: "2.0.0",
-      seed: this.config.seed,
-    };
+      mapSeed: this.config.seed,
+    } as GameState;
   }
 
   /**
@@ -306,9 +314,11 @@ export class ProceduralWorldGenerator {
       type: zoneType as any,
       color: biome.alphaColor,
       attractiveness: 3 + Math.floor(Math.random() * 5),
-      biome: biome.id,
-      resources: [...biome.resources],
-    };
+      metadata: {
+        biome: biome.id,
+        resources: [...biome.resources],
+      },
+    } as Zone;
   }
 
   /**
@@ -388,9 +398,8 @@ export class ProceduralWorldGenerator {
           size: { width: 32, height: 32 },
           type: "decoration",
           color: biomeData.color,
-          assetKey: decoration,
-          biome: biome,
-        });
+          metadata: { assetId: decoration, biome },
+        } as MapElement);
       }
     }
 
@@ -406,8 +415,8 @@ export class ProceduralWorldGenerator {
   /**
    * Generar red de caminos conectando zonas importantes
    */
-  private generateRoadNetwork(zones: Zone[]): MapElement[] {
-    const roads: MapElement[] = [];
+  private generateRoadNetwork(zones: Zone[]): RoadPolyline[] {
+    const roads: RoadPolyline[] = [];
 
     // Encontrar zona central
     const centerX = this.config.width / 2;
@@ -432,20 +441,16 @@ export class ProceduralWorldGenerator {
     });
 
     // Conectar todas las zonas a la zona central
-    zones.forEach((zone, index) => {
+    zones.forEach((zone) => {
       if (zone.id === centralZone.id) return;
 
       const path = this.generatePathBetweenZones(centralZone, zone);
-      roads.push(
-        ...path.map((point, i) => ({
-          id: `road_${centralZone.id}_${zone.id}_${i}`,
-          position: { x: point.x - 16, y: point.y - 16 },
-          size: { width: 32, height: 32 },
-          type: "road" as const,
-          color: "#8D6E63",
-          assetKey: "road_path_straight_h", // Will be determined by direction
-        })),
-      );
+      roads.push({
+        id: `road_${centralZone.id}_${zone.id}`,
+        points: path as Position[],
+        width: 8,
+        type: "path",
+      });
     });
 
     return roads;
@@ -490,13 +495,8 @@ export class ProceduralWorldGenerator {
    */
   private generateTerrainTiles(
     biomeMap: Record<string, string>,
-  ): Array<{ x: number; y: number; biome: string; assetKey: string }> {
-    const terrainTiles: Array<{
-      x: number;
-      y: number;
-      biome: string;
-      assetKey: string;
-    }> = [];
+  ): TerrainTile[] {
+    const terrainTiles: TerrainTile[] = [];
     const { width, height, tileSize } = this.config;
 
     const cols = Math.ceil(width / tileSize);
@@ -505,13 +505,15 @@ export class ProceduralWorldGenerator {
     for (let y = 0; y < rows; y++) {
       for (let x = 0; x < cols; x++) {
         const biome = biomeMap[`${x},${y}`] || "grassland";
-        const assetKey = this.getTerrainAssetForBiome(biome);
+        const assetId = this.getTerrainAssetForBiome(biome);
+        const type = this.mapBiomeToTerrainType(biome);
 
         terrainTiles.push({
           x: x * tileSize,
           y: y * tileSize,
-          biome,
-          assetKey,
+          assetId,
+          type,
+          variant: 0,
         });
       }
     }
@@ -525,18 +527,28 @@ export class ProceduralWorldGenerator {
   private generateObjectLayers(
     biomeMap: Record<string, string>,
     elements: MapElement[],
-  ): Array<{ name: string; objects: MapElement[] }> {
-    const layers: Array<{ name: string; objects: MapElement[] }> = [];
+  ): ObjectLayer[] {
+    const layers: ObjectLayer[] = [];
 
-    // Agrupar elementos por tipo
+    // Agrupar elementos por tipo (solo decoraciones)
     const decorationElements = elements.filter((e) => e.type === "decoration");
-    const roadElements = elements.filter((e) => e.type === "road");
 
     layers.push(
-      { name: "terrain", objects: [] },
-      { name: "decorations", objects: decorationElements },
-      { name: "roads", objects: roadElements },
-      { name: "entities", objects: [] },
+      { id: "terrain", name: "terrain", objects: [], zIndex: 0, visible: true },
+      {
+        id: "decorations",
+        name: "decorations",
+        objects: decorationElements,
+        zIndex: 2,
+        visible: true,
+      },
+      {
+        id: "entities",
+        name: "entities",
+        objects: [],
+        zIndex: 3,
+        visible: true,
+      },
     );
 
     return layers;
@@ -572,6 +584,18 @@ export class ProceduralWorldGenerator {
     };
 
     return assetMap[biome] || "grass_middle";
+  }
+
+  private mapBiomeToTerrainType(biome: string): TerrainTile["type"] {
+    switch (biome) {
+      case "water":
+        return "water";
+      case "mountain":
+      case "desert":
+        return "stone";
+      default:
+        return "grass";
+    }
   }
 
   /**

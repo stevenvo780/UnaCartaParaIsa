@@ -3,10 +3,10 @@
  */
 
 import type { WorldEntity } from "../types/worldEntities";
-import { BiomeManager } from "./BiomeManager";
+import { logAutopoiesis } from "../utils/logger";
 import { BiomeType } from "../world/types";
 import type { AnimationManager } from "./AnimationManager";
-import { logAutopoiesis } from "../utils/logger";
+import { BiomeManager } from "./BiomeManager";
 
 export class EntityRenderer {
   private scene: Phaser.Scene;
@@ -132,8 +132,13 @@ export class EntityRenderer {
       (sprite as any).setDepth(entity.depth);
     }
 
-    // Aplicar efectos del bioma
-    BiomeManager.applyBiomeEffects(sprite, biome);
+    // Aplicar efectos del bioma de forma segura
+    try {
+      const asSprite = sprite as unknown as Phaser.GameObjects.Sprite;
+      if ((asSprite as any).setTint) {
+        BiomeManager.applyBiomeEffects(asSprite, biome);
+      }
+    } catch {}
 
     // Aplicar propiedades adicionales si existen
     if (entity.metadata) {

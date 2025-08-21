@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import { QuestUI } from "../components/QuestUI";
-import { DialogueCardUI } from "../components/DialogueCardUI";
 import { DayNightUI } from "../components/DayNightUI";
+import { DialogueCardUI } from "../components/DialogueCardUI";
+import { QuestUI } from "../components/QuestUI";
 import { SystemStatusUI } from "../components/SystemStatusUI";
 import { AnimatedGameEntity } from "../entities/AnimatedGameEntity";
 import { EntityManager } from "../managers/EntityManager";
@@ -93,10 +93,7 @@ export class MainScene extends Phaser.Scene {
     await this.initializeManagers();
 
     // Create entities using EntityManager (pass scene for real entity creation)
-    this.gameState.scene = this; // Pass scene reference
-    const { isaEntity, stevEntity } = this.entityManager.createEntities(
-      this.gameState,
-    );
+    const { isaEntity, stevEntity } = this.entityManager.createEntities({});
 
     // Store entity references for game stats
     this.isaEntity = isaEntity;
@@ -289,26 +286,30 @@ export class MainScene extends Phaser.Scene {
       if (!needs) return;
 
       // Generate urgent cards for critical needs
-      if (needs.hunger < 20 && Math.random() < 0.2) {
+      if (needs.needs.hunger < 20 && Math.random() < 0.2) {
         cardDialogueSystem.triggerEventCard("hunger_crisis", [entityId]);
       }
 
-      if (needs.thirst < 20 && Math.random() < 0.2) {
+      if (needs.needs.thirst < 20 && Math.random() < 0.2) {
         cardDialogueSystem.triggerEventCard("thirst_crisis", [entityId]);
       }
 
-      if (needs.energy < 15 && Math.random() < 0.15) {
+      if (needs.needs.energy < 15 && Math.random() < 0.15) {
         cardDialogueSystem.triggerEventCard("exhaustion", [entityId]);
       }
 
-      if (needs.mentalHealth < 30 && Math.random() < 0.1) {
+      if (needs.needs.mentalHealth < 30 && Math.random() < 0.1) {
         cardDialogueSystem.triggerEventCard("mental_health_concern", [
           entityId,
         ]);
       }
 
       // Generate positive cards for good conditions
-      if (needs.hunger > 80 && needs.energy > 70 && Math.random() < 0.05) {
+      if (
+        needs.needs.hunger > 80 &&
+        needs.needs.energy > 70 &&
+        Math.random() < 0.05
+      ) {
         cardDialogueSystem.triggerEventCard("feeling_great", [entityId]);
       }
     });
@@ -722,7 +723,7 @@ export class MainScene extends Phaser.Scene {
   public getGameStats() {
     return {
       logic: this.gameLogicManager?.getStats(),
-      renderer: this.worldRenderer?.getStats(),
+      renderer: (this.worldRenderer as any)?.getRenderStats?.(),
       entities: {
         total: this.entities.children.size,
         isa: this.isaEntity
@@ -752,7 +753,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     if (this.worldRenderer) {
-      this.worldRenderer.destroy();
+      this.worldRenderer.cleanup();
     }
 
     if (this.dialogueSystem) {

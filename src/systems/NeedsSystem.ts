@@ -3,7 +3,7 @@
  * Maneja hambre, sed, energía, salud mental y supervivencia de los agentes
  */
 
-import type { GameState, Zone } from "../types";
+import type { GameState } from "../types";
 import { logAutopoiesis } from "../utils/logger";
 
 export interface NeedsState {
@@ -383,16 +383,22 @@ export class NeedsSystem {
   /**
    * Modificar directamente una necesidad específica de una entidad
    */
-  public modifyEntityNeed(entityId: string, needType: string, amount: number): boolean {
+  public modifyEntityNeed(
+    entityId: string,
+    needType: string,
+    amount: number,
+  ): boolean {
     const entityData = this.entityNeeds.get(entityId);
     if (!entityData) {
-      logAutopoiesis.warn(`❌ Entidad ${entityId} no encontrada para modificar necesidad ${needType}`);
+      logAutopoiesis.warn(
+        `❌ Entidad ${entityId} no encontrada para modificar necesidad ${needType}`,
+      );
       return false;
     }
 
     const needs = entityData.needs;
-    const validNeeds = ['hunger', 'thirst', 'energy', 'mentalHealth'];
-    
+    const validNeeds = ["hunger", "thirst", "energy", "mentalHealth"];
+
     if (!validNeeds.includes(needType)) {
       logAutopoiesis.warn(`❌ Tipo de necesidad inválido: ${needType}`);
       return false;
@@ -401,17 +407,19 @@ export class NeedsSystem {
     // Aplicar modificación con clamps
     const currentValue = needs[needType as keyof NeedsState] as number;
     const newValue = Math.max(0, Math.min(100, currentValue + amount));
-    
+
     (needs as any)[needType] = newValue;
-    
+
     // Actualizar timestamp
     needs.lastUpdate = Date.now();
-    
+
     // Re-evaluar nivel de emergencia
-    this.updateEmergencyLevel(entityData);
-    
-    logAutopoiesis.debug(`🔧 Necesidad modificada: ${entityId}.${needType} ${currentValue} → ${newValue} (${amount > 0 ? '+' : ''}${amount})`);
-    
+    this.checkEmergencyLevels(entityData);
+
+    logAutopoiesis.debug(
+      `🔧 Necesidad modificada: ${entityId}.${needType} ${currentValue} → ${newValue} (${amount > 0 ? "+" : ""}${amount})`,
+    );
+
     return true;
   }
 

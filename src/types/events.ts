@@ -2,10 +2,12 @@
  * Sistema de eventos tipado para el juego
  */
 
+import type { GeneratedWorld } from "../world/types";
+import type { ActivityType } from "./activities";
+import type { Position } from "./core";
 import type { Entity, EntityStats } from "./entities";
 import type { FoodItem } from "./food";
 import type { Zone } from "./zones";
-import type { GeneratedWorld } from "../world/types";
 
 export interface MapElement {
   id: string;

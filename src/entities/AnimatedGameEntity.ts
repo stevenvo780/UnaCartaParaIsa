@@ -235,20 +235,19 @@ export class AnimatedGameEntity extends GameEntity {
       return true; // Retornar éxito silenciosamente para sprites estáticos
     }
 
-    // Skip animation for static sprites (no animation manager)
+    // Skip animation para sprites sin animation manager
     if (!this.animationManager) {
-      return true; // Return true to indicate "success" (no error) for static sprites
+      return true; // Éxito silencioso
     }
 
-    // Validate animation key format
+    // Validación de clave
     if (!animationKey || typeof animationKey !== "string") {
       logAutopoiesis.error(`Invalid animation key: ${animationKey}`);
       return false;
     }
 
-    // Check if animation exists
+    // Chequear existencia de animación
     if (!this.animationManager.hasAnimation(animationKey)) {
-      // Para sprites estáticos, no mostrar warnings
       if (this.isStaticSprite(textureKey)) {
         return true;
       }
@@ -256,9 +255,9 @@ export class AnimatedGameEntity extends GameEntity {
         `Animation not found: ${animationKey}, attempting fallback`,
       );
 
-      // Try fallback animation based on entity type
+      // Fallback por entidad
       const entityId = this.getEntityData().id;
-      const fallbackAnimation = `${entityId}_happy`;
+      const fallbackAnimation = `${entityId}_happy_idle`;
 
       if (this.animationManager.hasAnimation(fallbackAnimation)) {
         logAutopoiesis.info(`Using fallback animation: ${fallbackAnimation}`);
@@ -268,7 +267,7 @@ export class AnimatedGameEntity extends GameEntity {
       return false;
     }
 
-    // Validate sprite has animation component
+    // Validar componente de animación
     if (!this.anims) {
       logAutopoiesis.error(
         `Sprite lacks animation component for ${animationKey}`,
@@ -277,27 +276,22 @@ export class AnimatedGameEntity extends GameEntity {
     }
 
     try {
-      const success = this.animationManager.playAnimation(
-        this,
-        animationKey,
-        !force,
-      );
+      const previousAnimation = this.currentAnimationKey;
+      // AnimationManager.playAnimation no retorna valor
+      this.animationManager.playAnimation(this, animationKey);
 
-      if (success) {
-        const previousAnimation = this.currentAnimationKey;
-        this.currentAnimationKey = animationKey;
+      this.currentAnimationKey = animationKey;
 
-        // Solo logear cambios de animación, no repeticiones
-        if (previousAnimation !== animationKey || force) {
-          logAutopoiesis.debug(`Animation played: ${animationKey}`, {
-            entityId: this.getEntityData().id,
-            force,
-            previousAnimation,
-          });
-        }
+      // Solo logear cambios de animación, no repeticiones
+      if (previousAnimation !== animationKey || force) {
+        logAutopoiesis.debug(`Animation played: ${animationKey}`, {
+          entityId: this.getEntityData().id,
+          force,
+          previousAnimation,
+        });
       }
 
-      return success;
+      return true;
     } catch (error) {
       logAutopoiesis.error(`Failed to play animation ${animationKey}`, {
         error: String(error),

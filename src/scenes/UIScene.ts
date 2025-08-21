@@ -36,8 +36,8 @@ export class UIScene extends Phaser.Scene {
   private lastPointerY = 0;
 
   // UI state
-  private leftPanelExpanded = true;
-  private rightPanelExpanded = true;
+  private leftPanelExpanded = false;
+  private rightPanelExpanded = false;
   private showMinimap = true;
 
   constructor() {
@@ -1581,13 +1581,112 @@ export class UIScene extends Phaser.Scene {
   }
 
   private takeScreenshot() {
-    // Placeholder for screenshot functionality
-    logAutopoiesis.info("Screenshot requested");
+    // Capturar screenshot del canvas principal
+    const mainScene = this.scene.get("MainScene");
+    if (mainScene) {
+      const canvas = mainScene.game.canvas;
+      const link = document.createElement("a");
+      link.download = `UnaCartaParaIsa_${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+      logAutopoiesis.info("Screenshot captured");
+    }
   }
 
   private toggleGameMenu() {
-    // Placeholder for game menu
-    logAutopoiesis.info("Game menu toggle requested");
+    // Crear panel de menú de juego con opciones
+    const menuContainer = this.add.container(
+      this.cameras.main.width / 2,
+      this.cameras.main.height / 2,
+    );
+    menuContainer.setDepth(2000);
+
+    // Fondo semi-transparente
+    const overlay = this.add.rectangle(
+      0,
+      0,
+      this.cameras.main.width,
+      this.cameras.main.height,
+      0x000000,
+      0.7,
+    );
+    overlay.setInteractive();
+
+    // Panel del menú
+    const menuPanel = this.add.rectangle(0, 0, 400, 300, 0x2c3e50, 0.95);
+    menuPanel.setStrokeStyle(3, 0x1abc9c);
+
+    // Título
+    const title = this.add
+      .text(0, -100, "MENÚ DE JUEGO", {
+        fontSize: "24px",
+        color: "#ecf0f1",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+
+    // Botón Nueva Partida
+    const newGameBtn = this.createModernButton(
+      0,
+      -40,
+      200,
+      30,
+      "🎮 Nueva Partida",
+      "#e74c3c",
+      () => {
+        this.startNewGame();
+        menuContainer.destroy();
+      },
+    );
+
+    // Botón Configuración
+    const settingsBtn = this.createModernButton(
+      0,
+      0,
+      200,
+      30,
+      "⚙️ Configuración",
+      "#3498db",
+      () => {
+        this.openSettings();
+        menuContainer.destroy();
+      },
+    );
+
+    // Botón Cerrar
+    const closeBtn = this.createModernButton(
+      0,
+      40,
+      200,
+      30,
+      "❌ Cerrar",
+      "#95a5a6",
+      () => {
+        menuContainer.destroy();
+      },
+    );
+
+    menuContainer.add([
+      overlay,
+      menuPanel,
+      title,
+      newGameBtn,
+      settingsBtn,
+      closeBtn,
+    ]);
+
+    // Cerrar con click en overlay
+    overlay.on("pointerdown", () => {
+      menuContainer.destroy();
+    });
+
+    logAutopoiesis.info("Game menu opened");
+  }
+
+  private startNewGame() {
+    // Recargar la página para empezar una nueva partida
+    logAutopoiesis.info("Starting new game - reloading page");
+    window.location.reload();
   }
 
   private toggleLeftPanel() {

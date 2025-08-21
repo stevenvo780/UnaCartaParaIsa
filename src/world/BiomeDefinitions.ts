@@ -33,7 +33,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
           "cesped10.png",
         ],
         secondary: ["Grass_Middle.png", "TexturedGrass.png"],
-        weight: [0.7, 0.15, 0.1, 0.05],
+        weight: [0.9, 0.1],
       },
 
       // IDs de tiles del TilesetManager para mayor eficiencia
@@ -62,7 +62,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
           "luminous_tree3.png",
           "luminous_tree4.png",
         ],
-        density: 0.23, // was 0.15
+        density: 0.35, // was 0.23 (was 0.15) - increased vegetation density
         clustering: 0.4, // was 0.3
       },
       shrubs: {
@@ -140,7 +140,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
           "oak_tree.png",
         ],
         rare: ["mega_tree1.png", "mega_tree2.png"],
-        density: 0.53, // was 0.45
+        density: 0.65, // was 0.53 (was 0.45) - increased forest density
         clustering: 0.8, // was 0.7
       },
       shrubs: {
@@ -199,7 +199,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
           "cesped31.png",
         ],
         secondary: [],
-        weight: [1.0],
+        weight: [],
       },
 
       tileIds: {
@@ -420,7 +420,7 @@ export const BIOME_DEFINITIONS: Record<BiomeType, BiomeDefinition> = {
           "cesped5.png",
         ],
         secondary: [],
-        weight: [1.0],
+        weight: [],
       },
 
       tileIds: {

@@ -19,7 +19,7 @@ export class DayNightUI {
   private weatherText: Phaser.GameObjects.Text;
   private temperatureText: Phaser.GameObjects.Text;
   private weatherIcon: Phaser.GameObjects.Text;
-  private lightIndicator: Phaser.GameObjects.Circle;
+  private lightIndicator: Phaser.GameObjects.Arc;
 
   // Current data
   private currentTime?: TimeOfDay;

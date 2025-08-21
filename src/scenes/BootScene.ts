@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { AnimationManager } from "../managers/AnimationManager";
 import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
+import { WaterRipplePipeline } from "../plugins/WaterRipplePipeline";
 import { logAutopoiesis } from "../utils/logger";
 
 /*
@@ -22,6 +23,22 @@ export class BootScene extends Phaser.Scene {
     // Inicializar manager unificado
     this.unifiedAssetManager = new UnifiedAssetManager(this);
     this.animationManager = new AnimationManager(this);
+
+    // Registrar pipeline de agua (plugin visual)
+    try {
+      const renderer = this.game
+        .renderer as Phaser.Renderer.WebGL.WebGLRenderer;
+      const pm = renderer.pipelines;
+      if (!pm.has("WaterRipple")) {
+        pm.add("WaterRipple", new WaterRipplePipeline(this.game));
+      }
+      // Guardar referencia en registry
+      this.registry.set("waterPipelineKey", "WaterRipple");
+    } catch (e: unknown) {
+      logAutopoiesis.warn("No se pudo registrar WaterRipplePipeline", {
+        error: String(e),
+      });
+    }
 
     // Ocultar pantalla de carga inicial
     this.hideLoadingScreen();
@@ -67,9 +84,9 @@ export class BootScene extends Phaser.Scene {
 
       // FASE 5: Cargar assets adicionales en background
       this.startBackgroundLoading();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logAutopoiesis.error("Error crítico en BootScene unificado", {
-        error: error?.toString?.() || String(error),
+        error: String(error),
       });
 
       this.showCriticalError(error);
@@ -124,7 +141,7 @@ export class BootScene extends Phaser.Scene {
     if (loadingElement) {
       loadingElement.classList.add("fade-out");
       setTimeout(() => {
-        loadingElement.style.display = "none";
+        (loadingElement as HTMLElement).style.display = "none";
       }, 500);
     }
   }

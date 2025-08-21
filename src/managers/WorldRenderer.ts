@@ -3,7 +3,12 @@
  * Renderiza mundos generados proceduralmente con biomas, terreno y decoraciones
  */
 
-import type { GameState, MapElement } from "../types";
+import type {
+  GameState,
+  MapElement,
+  RoadPolyline,
+  TerrainTile,
+} from "../types";
 import { logAutopoiesis } from "../utils/logger";
 
 export class WorldRenderer {
@@ -17,8 +22,11 @@ export class WorldRenderer {
   private roadLayer?: Phaser.GameObjects.Group;
 
   // Cache para optimización
-  private renderedTiles = new Map<string, Phaser.GameObjects.Sprite>();
-  private renderedDecorations = new Map<string, Phaser.GameObjects.Sprite>();
+  private renderedTiles = new Map<string, Phaser.GameObjects.GameObject>();
+  private renderedDecorations = new Map<
+    string,
+    Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle
+  >();
   private zoneGraphics: Phaser.GameObjects.Graphics[] = [];
 
   // Configuración de renderizado
@@ -47,20 +55,6 @@ export class WorldRenderer {
     this.decorationLayer = this.scene.add.group({ name: "decorations" });
     this.zoneLayer = this.scene.add.group({ name: "zones" });
     this.roadLayer = this.scene.add.group({ name: "roads" });
-
-    // Configurar depth de capas
-    this.terrainLayer.children.entries.forEach((child: any) =>
-      child.setDepth?.(0),
-    );
-    this.roadLayer.children.entries.forEach((child: any) =>
-      child.setDepth?.(1),
-    );
-    this.decorationLayer.children.entries.forEach((child: any) =>
-      child.setDepth?.(2),
-    );
-    this.zoneLayer.children.entries.forEach((child: any) =>
-      child.setDepth?.(-1),
-    );
   }
 
   /**
@@ -143,33 +137,67 @@ export class WorldRenderer {
   /**
    * Crear tile de terreno individual
    */
-  private createTerrainTile(tile: any): Phaser.GameObjects.Sprite | null {
-    const assetManager = this.scene.registry.get("unifiedAssetManager");
+  private createTerrainTile(
+    tile: TerrainTile,
+  ): Phaser.GameObjects.GameObject | null {
+    const assetManager = this.scene.registry.get("unifiedAssetManager") as
+      | { isAssetLoaded: (k: string) => boolean }
+      | undefined;
 
-    // Verificar si el asset existe
-    if (!assetManager?.isAssetLoaded(tile.assetKey)) {
-      // Usar fallback basado en bioma
-      const fallbackKey = this.getFallbackTerrainAsset(tile.biome);
-      if (!assetManager?.isAssetLoaded(fallbackKey)) {
+    // Resolver clave de asset desde ProceduralWorldGenerator (assetId)
+    let key: string | undefined = tile.assetId;
+
+    if (!key || !assetManager?.isAssetLoaded(key)) {
+      // Usar fallback por tipo de terreno
+      const fallbackKey = this.getFallbackTerrainAssetByType(
+        tile.type as string,
+      );
+      if (assetManager?.isAssetLoaded(fallbackKey)) {
+        key = fallbackKey;
+      } else {
         return this.createFallbackTerrainTile(tile);
       }
-      tile.assetKey = fallbackKey;
     }
 
-    const sprite = this.scene.add.sprite(tile.x, tile.y, tile.assetKey);
+    const sprite = this.scene.add.sprite(tile.x, tile.y, key);
     sprite.setOrigin(0, 0);
     sprite.setDisplaySize(32, 32);
     sprite.setDepth(0);
     sprite.name = `terrain_${tile.x}_${tile.y}`;
 
+    // Aplicar plugin/pipeline de agua para tiles de tipo "water"
+    if (tile.type === "water") {
+      const pipelineKey = this.scene.registry.get("waterPipelineKey") as
+        | string
+        | undefined;
+      if (pipelineKey) {
+        (sprite as Phaser.GameObjects.Sprite).setPipeline(pipelineKey);
+      }
+    }
+
     return sprite;
+  }
+
+  /**
+   * Obtener asset fallback por tipo de terreno (procedural)
+   */
+  private getFallbackTerrainAssetByType(type: string): string {
+    const fallbacks: Record<string, string> = {
+      grass: "grass_middle",
+      water: "water_middle",
+      stone: "grass_3",
+      path: "grass_middle",
+    };
+    return fallbacks[type] || "grass_middle";
   }
 
   /**
    * Crear tile de terreno fallback
    */
-  private createFallbackTerrainTile(tile: any): Phaser.GameObjects.Rectangle {
-    const color = this.getBiomeColor(tile.biome);
+  private createFallbackTerrainTile(
+    tile: TerrainTile,
+  ): Phaser.GameObjects.Rectangle {
+    const color = this.getBiomeColor(tile.type || "grassland");
     const rect = this.scene.add.rectangle(
       tile.x + 16,
       tile.y + 16,
@@ -180,7 +208,7 @@ export class WorldRenderer {
     rect.setDepth(0);
     rect.name = `terrain_fallback_${tile.x}_${tile.y}`;
 
-    return rect as any;
+    return rect;
   }
 
   /**
@@ -256,39 +284,27 @@ export class WorldRenderer {
   }
 
   /**
-   * Crear tile de camino
+   * Crear tile de camino (polyline)
    */
-  private createRoadTile(road: MapElement): Phaser.GameObjects.Sprite | null {
-    const assetManager = this.scene.registry.get("unifiedAssetManager");
+  private createRoadTile(
+    road: RoadPolyline,
+  ): Phaser.GameObjects.GameObject | null {
+    // Dibujar línea con Graphics a partir de polyline
+    if (!road.points || road.points.length === 0) return null;
 
-    // Usar asset específico o fallback
-    const assetKey = road.assetKey || "road_path_straight_h";
+    const gfx = this.scene.add.graphics();
+    gfx.lineStyle(road.width || 8, 0x8d6e63, 1);
 
-    if (!assetManager?.isAssetLoaded(assetKey)) {
-      // Crear camino procedural simple
-      const rect = this.scene.add.rectangle(
-        road.position.x + 16,
-        road.position.y + 16,
-        road.size.width,
-        road.size.height,
-        0x8d6e63,
-      );
-      rect.setDepth(1);
-      rect.name = `road_${road.id}`;
-      return rect as any;
+    gfx.beginPath();
+    gfx.moveTo(road.points[0].x, road.points[0].y);
+    for (let i = 1; i < road.points.length; i++) {
+      gfx.lineTo(road.points[i].x, road.points[i].y);
     }
+    gfx.strokePath();
 
-    const sprite = this.scene.add.sprite(
-      road.position.x,
-      road.position.y,
-      assetKey,
-    );
-    sprite.setOrigin(0, 0);
-    sprite.setDisplaySize(road.size.width, road.size.height);
-    sprite.setDepth(1);
-    sprite.name = `road_${road.id}`;
-
-    return sprite;
+    gfx.setDepth(1);
+    gfx.name = `road_${road.id}`;
+    return gfx;
   }
 
   /**
@@ -326,15 +342,23 @@ export class WorldRenderer {
    * Crear sprite de decoración
    */
   private createDecorationSprite(
-    decoration: MapElement,
-  ): Phaser.GameObjects.Sprite | null {
-    const assetManager = this.scene.registry.get("unifiedAssetManager");
+    decoration: MapElement & { assetKey?: string; biome?: string },
+  ): Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle | null {
+    const assetManager = this.scene.registry.get("unifiedAssetManager") as
+      | { isAssetLoaded: (k: string) => boolean }
+      | undefined;
 
-    let assetKey = decoration.assetKey;
+    // Resolver asset desde metadata si no viene en assetKey
+    let assetKey = decoration.assetKey as string | undefined;
+    const meta = decoration.metadata || {};
+    if (!assetKey && (meta as { assetId?: string }).assetId) {
+      assetKey = (meta as { assetId?: string }).assetId;
+    }
 
-    // Verificar asset o usar fallback
+    const biomeHint = decoration.biome || (meta as { biome?: string }).biome;
+
     if (!assetKey || !assetManager?.isAssetLoaded(assetKey)) {
-      assetKey = this.getFallbackDecorationAsset(decoration.biome);
+      assetKey = this.getFallbackDecorationAsset(biomeHint);
 
       if (!assetManager?.isAssetLoaded(assetKey)) {
         return this.createFallbackDecoration(decoration);
@@ -375,6 +399,16 @@ export class WorldRenderer {
     if (variation < 0.08) sprite.setTint(0xdddddd);
     else if (variation < 0.16) sprite.setAlpha(0.92);
 
+    // Aplicar pipeline de agua a decoraciones acuáticas
+    if (assetKey.includes("water")) {
+      const pipelineKey = this.scene.registry.get("waterPipelineKey") as
+        | string
+        | undefined;
+      if (pipelineKey) {
+        sprite.setPipeline(pipelineKey);
+      }
+    }
+
     return sprite;
   }
 
@@ -383,7 +417,7 @@ export class WorldRenderer {
    */
   private createFallbackDecoration(
     decoration: MapElement,
-  ): Phaser.GameObjects.Sprite {
+  ): Phaser.GameObjects.Rectangle {
     const color = decoration.color
       ? this.parseColorString(decoration.color).hex
       : 0x9370db;
@@ -397,7 +431,7 @@ export class WorldRenderer {
     rect.setDepth(2);
     rect.name = `decoration_fallback_${decoration.id}`;
 
-    return rect as any;
+    return rect;
   }
 
   /**
@@ -431,7 +465,7 @@ export class WorldRenderer {
     };
 
     // Culling de decoraciones
-    this.renderedDecorations.forEach((sprite, key) => {
+    this.renderedDecorations.forEach((sprite) => {
       const inBounds =
         sprite.x >= bounds.left &&
         sprite.x <= bounds.right &&
@@ -445,23 +479,6 @@ export class WorldRenderer {
   // ==========================================
   // UTILIDADES Y HELPERS
   // ==========================================
-
-  /**
-   * Obtener asset fallback para terreno
-   */
-  private getFallbackTerrainAsset(biome: string): string {
-    const fallbacks: Record<string, string> = {
-      grassland: "grass_middle",
-      forest: "grass_1",
-      water: "water_middle",
-      mountain: "grass_3",
-      desert: "grass_2",
-      village: "grass_middle",
-      wetland: "water_tile_1",
-    };
-
-    return fallbacks[biome] || "grass_middle";
-  }
 
   /**
    * Obtener asset fallback para decoración

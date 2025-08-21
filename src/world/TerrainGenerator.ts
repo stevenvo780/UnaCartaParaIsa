@@ -2,30 +2,31 @@
  * Generador principal de terreno usando biomas y ruido procedural
  */
 
-import { NoiseGenerator, NoiseProcessor } from "./NoiseUtils";
+import { logAutopoiesis } from "../utils/logger";
 import {
-  getBiomeDefinition,
   calculateBiomeFitness,
   canBiomeSpawn,
   DEFAULT_WORLD_CONFIG,
+  getBiomeDefinition,
 } from "./BiomeDefinitions";
+import { NoiseUtils } from "./NoiseUtils";
 import {
   BiomeType,
-  type WorldGenConfig,
+  type BiomeDefinition,
   type GeneratedWorld,
   type TerrainTile,
+  type WorldGenConfig,
   type WorldLayer,
-  type BiomeDefinition,
 } from "./types";
-import { logAutopoiesis } from "../utils/logger";
 
 export class TerrainGenerator {
-  private noiseGen: NoiseGenerator;
+  private noiseGen: NoiseUtils;
   private config: WorldGenConfig;
 
   constructor(config: WorldGenConfig = DEFAULT_WORLD_CONFIG) {
     this.config = { ...DEFAULT_WORLD_CONFIG, ...config };
-    this.noiseGen = new NoiseGenerator(this.config.seed);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    this.noiseGen = new NoiseUtils(this.config.seed);
   }
 
   /**
@@ -100,6 +101,21 @@ export class TerrainGenerator {
     return world;
   }
 
+  /** Normaliza un mapa 2D de números al rango [0,1] */
+  private normalize2D(map: number[][]): number[][] {
+    let min = Infinity;
+    let max = -Infinity;
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 0; x < map[y].length; x++) {
+        const v = map[y][x];
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+    }
+    const range = max - min || 1;
+    return map.map((row) => row.map((v) => (v - min) / range));
+  }
+
   /**
    * Genera un mapa de ruido 2D
    */
@@ -109,20 +125,25 @@ export class TerrainGenerator {
     persistence: number;
     lacunarity: number;
   }): number[][] {
-    const map = Array(this.config.height)
-      .fill(0)
-      .map(() => Array(this.config.width).fill(0));
+    const map: number[][] = Array.from({ length: this.config.height }, () =>
+      Array<number>(this.config.width).fill(0),
+    );
 
     for (let y = 0; y < this.config.height; y++) {
       for (let x = 0; x < this.config.width; x++) {
-        map[y][x] = this.noiseGen.fractalNoise(x, y, {
-          ...noiseConfig,
-          seed: this.config.seed,
-        });
+        // Uso de ruido fractal con parámetros del config
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        map[y][x] = this.noiseGen.fractalNoise(
+          x,
+          y,
+          noiseConfig.octaves,
+          noiseConfig.persistence,
+          noiseConfig.scale,
+        );
       }
     }
 
-    return NoiseProcessor.normalize(map);
+    return this.normalize2D(map);
   }
 
   /**
@@ -133,9 +154,10 @@ export class TerrainGenerator {
     moistureMap: number[][],
     elevationMap: number[][],
   ): BiomeType[][] {
-    const biomeMap: BiomeType[][] = Array(this.config.height)
-      .fill(0)
-      .map(() => Array(this.config.width).fill(BiomeType.GRASSLAND));
+    const biomeMap: BiomeType[][] = Array.from(
+      { length: this.config.height },
+      () => Array<BiomeType>(this.config.width).fill(BiomeType.GRASSLAND),
+    );
 
     for (let y = 0; y < this.config.height; y++) {
       for (let x = 0; x < this.config.width; x++) {
@@ -257,9 +279,10 @@ export class TerrainGenerator {
     moistureMap: number[][],
     elevationMap: number[][],
   ): TerrainTile[][] {
-    const terrain: TerrainTile[][] = Array(this.config.height)
-      .fill(0)
-      .map(() => Array(this.config.width).fill(null));
+    const terrain: TerrainTile[][] = Array.from(
+      { length: this.config.height },
+      () => new Array<TerrainTile>(this.config.width),
+    );
 
     for (let y = 0; y < this.config.height; y++) {
       for (let x = 0; x < this.config.width; x++) {
@@ -288,7 +311,7 @@ export class TerrainGenerator {
           moisture,
           elevation,
           assets,
-        };
+        } as TerrainTile;
       }
     }
 
@@ -348,9 +371,10 @@ export class TerrainGenerator {
       decals: [],
     };
 
-    // Seleccionar terreno base
-    const terrainAsset = this.selectAsset(
+    // Seleccionar terreno base (soporta pesos por-asset o por-grupo primary/secondary)
+    const terrainAsset = this.selectTerrainAsset(
       biomeDef.assets.terrain.primary,
+      biomeDef.assets.terrain.secondary,
       biomeDef.assets.terrain.weight,
     );
     assets.terrain = terrainAsset || "cesped1.png"; // fallback
@@ -407,6 +431,60 @@ export class TerrainGenerator {
   }
 
   /**
+   * Selecciona un asset de terreno admitiendo diversos formatos de pesos:
+   * - Pesos por asset (weights.length === primary.length)
+   * - Pesos por asset combinados (weights.length === primary.length + secondary.length)
+   * - Pesos por grupo [primaryWeight, secondaryWeight]
+   * Si nada coincide, hace selección uniforme razonable.
+   */
+  private selectTerrainAsset(
+    primary: string[],
+    secondary: string[],
+    weights?: number[],
+  ): string | null {
+    const pCount = primary?.length || 0;
+    const sCount = secondary?.length || 0;
+
+    if (pCount === 0 && sCount === 0) return null;
+    if (!weights || weights.length === 0) {
+      // Sin pesos: priorizar primary si existe
+      if (pCount > 0) return this.selectAsset(primary);
+      return this.selectAsset(secondary);
+    }
+
+    // Caso 1: pesos por-asset solo para primary
+    if (pCount > 0 && weights.length === pCount) {
+      return this.selectAsset(primary, weights);
+    }
+
+    // Caso 2: pesos por-asset combinados primary+secondary
+    if (pCount + sCount > 0 && weights.length === pCount + sCount) {
+      const combined = [...primary, ...secondary];
+      return this.selectAsset(combined, weights);
+    }
+
+    // Caso 3: pesos por-grupo [primaryWeight, secondaryWeight]
+    if (weights.length === 2 && (pCount > 0 || sCount > 0)) {
+      const [wp, ws] = weights;
+      const total = (wp ?? 0) + (ws ?? 0);
+      const r = Math.random() * (total || 1);
+      if (r <= (wp ?? 0)) {
+        // Elegir de primary
+        if (pCount > 0) return this.selectAsset(primary);
+        if (sCount > 0) return this.selectAsset(secondary);
+      } else {
+        // Elegir de secondary
+        if (sCount > 0) return this.selectAsset(secondary);
+        if (pCount > 0) return this.selectAsset(primary);
+      }
+    }
+
+    // Fallback robusto: elegir de primary si hay, si no de secondary
+    if (pCount > 0) return this.selectAsset(primary);
+    return this.selectAsset(secondary);
+  }
+
+  /**
    * Selecciona un asset de una lista con pesos opcionales
    */
   private selectAsset(assets: string[], weights?: number[]): string | null {
@@ -439,8 +517,9 @@ export class TerrainGenerator {
   ): string | null {
     const { clustering } = biomeDef.assets.trees;
 
-    // Usar ruido para determinar si es una zona de clustering
-    const clusterNoise = this.noiseGen.perlin2D(x * 0.1, y * 0.1);
+    // Usar ruido normalizado para determinar si es una zona de clustering
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const clusterNoise = this.noiseGen.normalizedNoise(x * 0.1, y * 0.1);
     const inCluster = clusterNoise > 0.5 - clustering * 0.3;
 
     let treeAssets = biomeDef.assets.trees.primary;
@@ -519,7 +598,41 @@ export class TerrainGenerator {
       }
     }
 
+    this.addSurfaceWater(layers, terrain);
+
     return layers;
+  }
+
+  /**
+   * Inserta una capa de agua (lagos/estanques) usando humedad alta y elevación baja.
+   * Esto añade diversidad visible (agua) incluso cuando los biomas asignados son pradera.
+   */
+  private addSurfaceWater(
+    layers: WorldLayer[],
+    terrain: TerrainTile[][],
+  ): void {
+    const waterLayer: WorldLayer = { name: "water", zIndex: 0.5, tiles: [] };
+
+    for (let y = 0; y < this.config.height; y++) {
+      for (let x = 0; x < this.config.width; x++) {
+        const t = terrain[y][x];
+        // Condición simple: humedad muy alta y elevación baja
+        if (t.moisture > 0.8 && t.elevation < 0.3) {
+          const pixelX = x * this.config.tileSize;
+          const pixelY = y * this.config.tileSize;
+          waterLayer.tiles.push({
+            x: pixelX,
+            y: pixelY,
+            asset: `assets/water/Water_Middle.png`,
+          });
+        }
+      }
+    }
+
+    if (waterLayer.tiles.length > 0) {
+      // Insertar agua entre terreno (0) y decals (1)
+      layers.splice(1, 0, waterLayer);
+    }
   }
 
   /**

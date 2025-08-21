@@ -43,6 +43,26 @@ export class DialogueCardUI {
     this.container.setScrollFactor(0); // UI should not scroll with camera
     this.container.setDepth(1000); // Always on top
 
+    // Área de click para cerrar todas con botón derecho
+    const invisibleBg = this.scene.add.rectangle(
+      0,
+      0,
+      this.scene.scale.width,
+      this.scene.scale.height,
+      0x000000,
+      0,
+    );
+    invisibleBg.setOrigin(0, 0);
+    invisibleBg.setScrollFactor(0);
+    invisibleBg.setDepth(999); // debajo de las cartas (1000)
+    invisibleBg.setInteractive();
+    invisibleBg.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      if (pointer.rightButtonDown()) {
+        this.clearAllCards();
+      }
+    });
+    this.container.add(invisibleBg);
+
     // Subscribe to card system events
     this.setupEventListeners();
 
@@ -71,6 +91,11 @@ export class DialogueCardUI {
     // Toggle visibility with 'M' key (Messages)
     this.scene.input.keyboard?.on("keydown-M", () => {
       this.toggleVisibility();
+    });
+
+    // Close all cards with Escape key
+    this.scene.input.keyboard?.on("keydown-ESC", () => {
+      this.clearAllCards();
     });
   }
 
@@ -149,7 +174,7 @@ export class DialogueCardUI {
    * Clear all active cards
    */
   public clearAllCards(): void {
-    this.activeCards.forEach((cardVisual, cardId) => {
+    this.activeCards.forEach((cardVisual) => {
       cardVisual.destroy();
     });
     this.activeCards.clear();
@@ -261,6 +286,7 @@ class DialogueCardVisual {
   private titleText: Phaser.GameObjects.Text;
   private contentText: Phaser.GameObjects.Text;
   private choiceButtons: Phaser.GameObjects.Text[] = [];
+  private closeButton?: Phaser.GameObjects.Text;
   public onChoiceSelected?: (choice: DialogueChoice) => void;
 
   constructor(scene: Phaser.Scene, card: DialogueCard, config: CardUIConfig) {
@@ -330,6 +356,19 @@ class DialogueCardVisual {
 
     // Add emotional tone indicator
     this.addEmotionalIndicator();
+
+    // Botón de cierre visible (×)
+    this.closeButton = this.scene.add.text(this.config.width - 18, 6, "×", {
+      fontSize: "14px",
+      color: "#c0392b",
+      fontStyle: "bold",
+    });
+    this.closeButton.setInteractive({ useHandCursor: true });
+    this.closeButton.on("pointerdown", () => {
+      // Emitir evento para cerrar esta carta concreta
+      this.scene.events.emit("hideDialogueCard", this.card.id);
+    });
+    this.container.add(this.closeButton);
   }
 
   /**
@@ -382,17 +421,19 @@ class DialogueCardVisual {
    */
   private addPriorityIndicator(): void {
     const colors = {
-      low: "#95a5a6",
-      medium: "#f39c12",
-      high: "#e74c3c",
-      urgent: "#c0392b",
-    };
+      low: 0x95a5a6,
+      medium: 0xf39c12,
+      high: 0xe74c3c,
+      urgent: 0xc0392b,
+    } as const;
+
+    const priority = this.card.priority;
 
     const indicator = this.scene.add.circle(
       this.config.width - 15,
       15,
       6,
-      colors[this.card.priority] || colors.medium,
+      colors[priority] ?? colors.medium,
     );
     this.container.add(indicator);
   }
