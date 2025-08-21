@@ -30,38 +30,36 @@ export class AnimatedGameEntity extends GameEntity {
       );
     }
 
-    // Initialize with base spritesheet instead of static sprite
-    const initialSpriteKey = entityId === "isa" ? "isa_happy" : "stev_happy";
+    // Initialize with new animated spritesheets
+    const initialSpriteKey = entityId === "isa" ? "whomen1" : "man1";
 
     // Call parent constructor with a fallback texture
     super(scene, x, y, entityId, services);
 
-    // Override the texture with the animated spritesheet if available
+    // Try to use the new animated spritesheets first
     if (scene.textures.exists(initialSpriteKey)) {
       this.setTexture(initialSpriteKey);
-
-      // Para sprites estáticos (como ent_woman.png), no intentar animaciones
-      // Solo cambiar la textura directamente
-      const texture = scene.textures.get(initialSpriteKey);
-      const isStaticSprite =
-        !texture.frames || Object.keys(texture.frames).length <= 1;
-
-      if (isStaticSprite) {
-        logAutopoiesis.info(
-          `Using static sprite for ${entityId}: ${initialSpriteKey}`,
-        );
-        // Desactivar el sistema de animación para sprites estáticos
-        this.animationManager = undefined;
-      }
+      logAutopoiesis.info(
+        `Using new animated sprite for ${entityId}: ${initialSpriteKey}`,
+      );
     } else {
-      // Fallback to basic texture from UnifiedAssetManager
-      const fallbackKey = entityId === "isa" ? "woman" : "man";
+      // Fallback to old static sprites
+      const fallbackKey = entityId === "isa" ? "isa_happy" : "stev_happy";
       if (scene.textures.exists(fallbackKey)) {
         this.setTexture(fallbackKey);
+        logAutopoiesis.warn(
+          `New spritesheet ${initialSpriteKey} not found, using fallback: ${fallbackKey}`,
+        );
+      } else {
+        // Final fallback to basic textures
+        const basicFallback = entityId === "isa" ? "woman" : "man";
+        if (scene.textures.exists(basicFallback)) {
+          this.setTexture(basicFallback);
+        }
+        logAutopoiesis.warn(
+          `All spritesheets failed, using basic fallback: ${basicFallback}`,
+        );
       }
-      logAutopoiesis.warn(
-        `Spritesheet ${initialSpriteKey} not found, using fallback`,
-      );
     }
 
     // Type-safe assignment of animation manager
@@ -69,8 +67,8 @@ export class AnimatedGameEntity extends GameEntity {
       animManager instanceof AnimationManager ? animManager : undefined;
 
     if (this.animationManager) {
-      // Start with appropriate initial animation
-      const initialAnimation = entityId === "isa" ? "isa_happy" : "stev_happy";
+      // Start with appropriate initial animation using new multi-frame sprites
+      const initialAnimation = entityId === "isa" ? "isa_happy_new" : "stev_happy_new";
 
       // Validate animation exists before playing
       if (this.animationManager.hasAnimation(initialAnimation)) {
@@ -78,16 +76,26 @@ export class AnimatedGameEntity extends GameEntity {
         this.animationManager.playAnimation(this, initialAnimation);
 
         logAutopoiesis.info(
-          `AnimatedGameEntity ${entityId} created with animation`,
+          `AnimatedGameEntity ${entityId} created with new multi-frame animation`,
           {
             initialAnimation,
             spriteKey: initialSpriteKey,
           },
         );
       } else {
-        logAutopoiesis.warn(
-          `Animation ${initialAnimation} not found for ${entityId}`,
-        );
+        // Fallback to basic row animation
+        const fallbackAnimation = entityId === "isa" ? "whomen1:row0" : "man1:row0";
+        if (this.animationManager.hasAnimation(fallbackAnimation)) {
+          this.currentAnimationKey = fallbackAnimation;
+          this.animationManager.playAnimation(this, fallbackAnimation);
+          logAutopoiesis.info(
+            `Using fallback row animation for ${entityId}: ${fallbackAnimation}`,
+          );
+        } else {
+          logAutopoiesis.warn(
+            `All animations failed for ${entityId}, using static sprite`,
+          );
+        }
       }
     } else {
       logAutopoiesis.warn(
@@ -187,27 +195,30 @@ export class AnimatedGameEntity extends GameEntity {
    * Actualiza la textura del sprite según el movimiento
    */
   private updateTextureForMovement(entityId: string, isMoving: boolean, avgStat: number): void {
-    let textureKey: string;
+    let animationKey: string;
     
+    // Usar las nuevas animaciones multi-frame
     if (avgStat < 40) {
-      // Sad state - always use idle texture for now
-      textureKey = entityId === "isa" ? "isa_sad" : "stev_sad";
+      // Sad state - usar row1 (fila media) para estado triste
+      animationKey = entityId === "isa" ? "whomen1:row1" : "man1:row1";
     } else {
       // Happy state - choose between idle and walking
       if (isMoving) {
-        textureKey = entityId === "isa" ? "isa_walking" : "stev_walking";
+        // Usar animaciones de caminar específicas
+        animationKey = entityId === "isa" ? "isa_walking_new" : "stev_walking_new";
       } else {
-        textureKey = entityId === "isa" ? "isa_happy" : "stev_happy";
+        // Usar animaciones de idle 
+        animationKey = entityId === "isa" ? "isa_happy_new" : "stev_happy_new";
       }
     }
 
-    // Cambiar textura si es diferente
-    if (this.texture.key !== textureKey) {
-      console.log(`[${entityId}] Changing texture from ${this.texture.key} to ${textureKey}`);
-      if (this.scene.textures.exists(textureKey)) {
-        this.setTexture(textureKey);
+    // Cambiar animación si es diferente
+    if (this.currentAnimationKey !== animationKey) {
+      console.log(`[${entityId}] Changing animation from ${this.currentAnimationKey} to ${animationKey}`);
+      if (this.animationManager?.hasAnimation(animationKey)) {
+        this.playAnimation(animationKey);
       } else {
-        console.warn(`[${entityId}] Texture ${textureKey} not found!`);
+        console.warn(`[${entityId}] Animation ${animationKey} not found!`);
       }
     }
   }

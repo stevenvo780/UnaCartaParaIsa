@@ -1,13 +1,20 @@
 import Phaser from "phaser";
+import { DialogueCardUI } from "../components/DialogueCardUI";
 import {
   ExplorationUI,
   type ExplorationStats,
 } from "../components/ExplorationUI";
 import { FoodUI } from "../components/FoodUI";
-import { ResonanceLabel, UIElementPool } from "../managers/UIElementPool";
-import { DialogueCardUI } from "../components/DialogueCardUI";
 import { SystemStatusUI } from "../components/SystemStatusUI";
-import type { Entity, GameLogicUpdateData } from "../types";
+import { MessagesModalContent } from "../components/ui/MessagesModal";
+import { ModalManager } from "../components/ui/ModalManager";
+import { StatsModalContent } from "../components/ui/StatsModal";
+import { TopBar } from "../components/ui/TopBar";
+import { WorldModalContent } from "../components/ui/WorldModal";
+import { ResonanceBar } from "../components/ResonanceBar";
+import { ResonanceLabel, UIElementPool } from "../managers/UIElementPool";
+import type { TimeOfDay } from "../systems/DayNightSystem";
+import type { GameLogicUpdateData } from "../types";
 import { randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
 
@@ -22,34 +29,39 @@ interface StatElement {
 
 export class UIScene extends Phaser.Scene {
   private resonanceLabelPool!: UIElementPool<ResonanceLabel>;
+  private resonanceBar?: ResonanceBar;
 
   // Modern UI system
-  private topBar!: Phaser.GameObjects.Container;
+  private topBar!: TopBar;
   private bottomBar!: Phaser.GameObjects.Container;
-  // Paneles laterales y minimapa como UI suelta se reemplazan por modales
-  // (se mantienen tipos pero no se crean instancias)
-  private leftPanel!: Phaser.GameObjects.Container;
-  private rightPanel!: Phaser.GameObjects.Container;
+  // Paneles/minimapa legacy eliminados: UI sintetizada con modales
   private foodUI!: FoodUI;
   private explorationUI!: ExplorationUI;
   private dialogueCardUI!: DialogueCardUI;
   private systemStatusUI!: SystemStatusUI;
   private systemModal?: Phaser.GameObjects.Container;
-  // Modal grid system
+  private modalManager!: ModalManager;
+  private worldModal?: Phaser.GameObjects.Container;
+  private worldModalContent?: WorldModalContent;
+  private statsModal?: Phaser.GameObjects.Container;
+  private statsModalContent?: StatsModalContent;
+  private messagesModal?: Phaser.GameObjects.Container;
+
+  // AGREGADAS: Propiedades faltantes
   private modalRegistry: Map<string, Phaser.GameObjects.Container> = new Map();
   private modalOrder: string[] = [];
-  private statsModal?: Phaser.GameObjects.Container;
-  private messagesModal?: Phaser.GameObjects.Container;
-  // Top bar layout refs
+  private topCenterIndicators?: Phaser.GameObjects.Container;
   private topMenuBtn?: Phaser.GameObjects.Container;
-  private topBarIndicators: Phaser.GameObjects.Container[] = [];
   private topBarModalButtons: Phaser.GameObjects.Container[] = [];
-  private topTitleContainer?: Phaser.GameObjects.Container;
+
+  // Top bar layout refs (gestionados por TopBar)
+  private topResonanceText?: Phaser.GameObjects.Text;
+  private topCyclesText?: Phaser.GameObjects.Text;
+  private topTimeText?: Phaser.GameObjects.Text;
   // Constants de layout
   private readonly TOP_BAR_HEIGHT = 70;
   private readonly BOTTOM_BAR_HEIGHT = 80;
-  private readonly LEFT_PANEL_WIDTH = 300;
-  private readonly RIGHT_PANEL_WIDTH = 220;
+  // Panel widths eliminados
   private readonly MODAL_MARGIN = 16;
 
   // Navigation and control
@@ -57,10 +69,7 @@ export class UIScene extends Phaser.Scene {
   private lastPointerX = 0;
   private lastPointerY = 0;
 
-  // UI state
-  private leftPanelExpanded = false;
-  private rightPanelExpanded = false;
-  private showMinimap = false;
+  // UI state simplificado
 
   constructor() {
     super({ key: "UIScene" });
@@ -69,12 +78,19 @@ export class UIScene extends Phaser.Scene {
   create() {
     logAutopoiesis.info("🎨 Creating Modern Game UI");
 
+    // Configurar como overlay sobre MainScene
+    this.scene.bringToTop();
+
     this.initializePools();
+
+    // Crear ResonanceBar primero (parte superior)
+    this.createResonanceBar();
 
     // Create modern modular UI
     this.createTopBar();
     this.createBottomBar();
-    // Paneles laterales y minimapa se sustituyen por modales
+    // Instanciar gestor de modales
+    this.modalManager = new ModalManager(this);
     // Colocar los diálogos en la UIScene para que no dependan del zoom
     this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
     this.createFoodUI();
@@ -85,19 +101,34 @@ export class UIScene extends Phaser.Scene {
 
     // (Sin toggles de borde; usar atajos en top bar)
 
-    // Botones para abrir/cerrar modales en la barra superior
-    this.createTopBarModalShortcuts();
+    // Botones de la barra superior integrados en TopBar
 
     // Connect to game logic
     const mainScene = this.scene.get("MainScene");
     mainScene.events.on("gameLogicUpdate", this.updateUI, this);
 
+    // Listen for time changes to update top bar
+    this.events.on("timeChanged", (timeData: TimeOfDay) => {
+      this.updateTopBarTime(timeData);
+    });
+
     // Handle resize events
     this.scale.on("resize", this.handleResize, this);
     this.events.on("shutdown", this.destroy, this);
 
-    logAutopoiesis.info("✅ Modern UI Scene created");
+    logAutopoiesis.info("✅ UIScene created", {
+      poolSize: this.resonanceLabelPool.getStats(),
+    });
   }
+
+  private createResonanceBar(): void {
+    const centerX = this.cameras.main.width / 2;
+    this.resonanceBar = new ResonanceBar(this, centerX, 30);
+
+    logAutopoiesis.info("🎵 ResonanceBar añadida a UIScene");
+  }
+
+  private createTopBar() {}
 
   /**
    * Inicializar pools de elementos UI
@@ -122,19 +153,24 @@ export class UIScene extends Phaser.Scene {
   private updateUI(data: GameLogicUpdateData) {
     const now = Date.now();
 
+    // Actualizar ResonanceBar con gameState
+    if (this.resonanceBar && data.gameState) {
+      this.resonanceBar.updateFromGameState(data.gameState);
+      this.resonanceBar.update();
+    }
+
     // Actualizar datos críticos siempre
     this.updateTopBarInfo(data);
-    if (data.entities) {
-      this.updateCharacterPanels(data.entities);
-    }
+    // (Panel de stats lateral eliminado; se actualiza el modal de stats)
 
     // Actualizar stats en el modal si está abierto
     this.updateStatsModal(data);
+    // Actualizar mundo (modal) si está abierto
+    this.updateWorldModal(data);
 
     // Actualizar UI pesada solo cada segundo
     if (now - this.lastUIUpdate > this.UI_UPDATE_INTERVAL) {
       this.updateBottomBarInfo(data);
-      this.updateMinimap(data);
       // Solo actualizar exploración UI cada 5 segundos
       if (now - this.lastUIUpdate > 5000) {
         this.updateExplorationUI(data);
@@ -145,7 +181,9 @@ export class UIScene extends Phaser.Scene {
 
   private updateStatsModal(data: GameLogicUpdateData) {
     if (!this.statsModal || !this.statsModal.visible) return;
-    const texts = this.statsModal.list.filter((o) => (o as any).getData?.("statKey")) as Phaser.GameObjects.Text[];
+    const texts = this.statsModal.list.filter((o) =>
+      (o as any).getData?.("statKey"),
+    ) as Phaser.GameObjects.Text[];
     const findVal = (path: string): number => {
       // path: "isa.health" etc
       const [id, stat] = path.split(".");
@@ -162,211 +200,77 @@ export class UIScene extends Phaser.Scene {
   // =================== MODERN UI CREATION METHODS ===================
 
   private createTopBar() {
-    this.topBar = this.add.container(0, 0);
-    this.topBar.setScrollFactor(0);
-    this.topBar.setDepth(1000);
-
-    // Modern top bar background with glassmorphism effect
-    const topBg = this.add.graphics();
-
-    // Glassmorphism background
-    topBg.fillStyle(0x1a1a2e, 0.85);
-    topBg.fillRect(0, 0, this.cameras.main.width, 70);
-
-    // Subtle gradient overlay
-    topBg.fillGradientStyle(
-      0x6c5ce7,
-      0x74b9ff,
-      0x6c5ce7,
-      0x74b9ff,
-      0.1,
-      0.1,
-      0.2,
-      0.2,
-    );
-    topBg.fillRect(0, 0, this.cameras.main.width, 70);
-
-    // Bottom accent line
-    topBg.lineStyle(2, 0x74b9ff, 0.6);
-    topBg.lineBetween(0, 68, this.cameras.main.width, 68);
-
-    // Subtle shadow
-    topBg.fillStyle(0x000000, 0.2);
-    topBg.fillRect(0, 70, this.cameras.main.width, 4);
-
-    this.topBar.add(topBg);
-    this.topBar.setData("bg", topBg);
-
-    // Modern game title with better typography
-    const titleContainer = this.add.container(25, 35);
-    this.topTitleContainer = titleContainer;
-
-    const titleText = this.add
-      .text(0, 0, "Una Carta Para Isa", {
-        fontSize: "22px",
-        color: "#FFFFFF",
-        fontFamily: "Arial, sans-serif",
-        fontStyle: "bold",
-        stroke: "#6C5CE7",
-        strokeThickness: 1,
-      })
-      .setOrigin(0, 0.5);
-
-    const titleIcon = this.add
-      .text(-30, 0, "💌", {
-        fontSize: "24px",
-      })
-      .setOrigin(0.5, 0.5);
-
-    titleContainer.add([titleIcon, titleText]);
-    this.topBar.add(titleContainer);
-
-    // Subtle breathing animation for the title
-    this.tweens.add({
-      targets: titleIcon,
-      scaleX: { from: 1, to: 1.1 },
-      scaleY: { from: 1, to: 1.1 },
-      duration: 3000,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
+    this.topBar = new TopBar(this, {
+      onToggleStats: () => this.toggleStatsModal(),
+      onToggleMessages: () => this.toggleMessagesModal(),
+      onToggleSystem: () => this.toggleSystemModal(),
+      onToggleWorld: () => this.toggleWorldModal(),
+      onTogglePerformance: () => {
+        // Emitir togglePerformanceMode a MainScene
+        const mainScene = this.scene.get("MainScene");
+        if (mainScene) {
+          mainScene.events.emit("togglePerformanceMode");
+          logAutopoiesis.info("⚡ Performance mode toggled");
+        }
+      },
+      onOpenMenu: () => this.toggleGameMenu(),
     });
-
-    // Modern status indicators
-    this.createModernTopBarIndicators();
   }
 
   private createModernTopBarIndicators() {
-    const indicatorY = 35;
-    const rightMargin = 30;
+    // Contenedor centrado con tres badges compactos
+    const y = 35;
+    const container = this.add.container(this.cameras.main.width / 2, y);
+    let xCursor = -160; // arranca a la izquierda para centrar grupo (~320px total)
 
-    // Create modern indicator pills
-    const indicators = [
-      {
-        icon: "💫",
-        label: "Resonancia",
-        value: "0%",
-        color: 0x74b9ff,
-        dataKey: "resonanceText",
-        width: 140,
-      },
-      {
-        icon: "⚡",
-        label: "Ciclos",
-        value: "0",
-        color: 0x00cec9,
-        dataKey: "cyclesText",
-        width: 110,
-      },
-      {
-        icon: "⏰",
-        label: "Tiempo",
-        value: "00:00",
-        color: 0xfdcb6e,
-        dataKey: "timeText",
-        width: 120,
-      },
-    ];
-
-    let currentX = this.cameras.main.width - rightMargin;
-
-    indicators.forEach((indicator, index) => {
-      currentX -= indicator.width + 15;
-
-      const container = this.add.container(currentX, indicatorY);
-
-      // Modern pill background with glassmorphism
+    const makeBadge = (
+      icon: string,
+      label: string,
+      value: string,
+      color: number,
+      dataKey: string,
+      width = 100,
+    ) => {
+      const c = this.add.container(xCursor, 0);
       const bg = this.add.graphics();
-      bg.fillStyle(indicator.color, 0.15);
-      bg.fillRoundedRect(0, -15, indicator.width, 30, 15);
-
-      bg.lineStyle(1, indicator.color, 0.4);
-      bg.strokeRoundedRect(0, -15, indicator.width, 30, 15);
-
-      // Inner glow effect
-      bg.fillStyle(indicator.color, 0.05);
-      bg.fillRoundedRect(2, -13, indicator.width - 4, 26, 13);
-
-      // Icon with subtle glow
-      const iconContainer = this.add.container(18, 0);
-
-      const iconGlow = this.add.graphics();
-      iconGlow.fillStyle(indicator.color, 0.3);
-      iconGlow.fillCircle(0, 0, 12);
+      bg.fillStyle(color, 0.15);
+      bg.fillRoundedRect(0, -14, width, 28, 14);
+      bg.lineStyle(1, color, 0.4);
+      bg.strokeRoundedRect(0, -14, width, 28, 14);
 
       const iconText = this.add
-        .text(0, 0, indicator.icon, {
-          fontSize: "14px",
-        })
-        .setOrigin(0.5, 0.5);
-
-      iconContainer.add([iconGlow, iconText]);
-
-      // Value text
-      const valueText = this.add
-        .text(indicator.width / 2 + 20, 0, indicator.value, {
-          fontSize: "11px",
-          color: "#FFFFFF",
-          fontFamily: "Arial, sans-serif",
-          fontStyle: "bold",
-        })
-        .setOrigin(0.5, 0.5);
-
-      // Label text
-      const labelText = this.add
-        .text(indicator.width / 2 + 20, -8, indicator.label, {
-          fontSize: "8px",
-          color: "#B2BEC3",
-          fontFamily: "Arial, sans-serif",
-        })
-        .setOrigin(0.5, 0.5);
-
-      container.add([bg, iconContainer, labelText, valueText]);
-      container.setData(indicator.dataKey, valueText);
-
-      // Breathing animation for icons
-      this.tweens.add({
-        targets: iconText,
-        alpha: { from: 0.8, to: 1 },
-        scaleX: { from: 0.9, to: 1 },
-        scaleY: { from: 0.9, to: 1 },
-        duration: 2000 + index * 500,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
+        .text(14, 0, icon, { fontSize: "13px" })
+        .setOrigin(0.5);
+      const labelText = this.add.text(28, -8, label, {
+        fontSize: "8px",
+        color: "#B2BEC3",
       });
-
-      // Hover effects
-      container.setSize(indicator.width, 30);
-      container.setInteractive();
-
-      container.on("pointerover", () => {
-        this.tweens.add({
-          targets: container,
-          scaleX: 1.05,
-          scaleY: 1.05,
-          duration: 200,
-          ease: "Back.easeOut",
-        });
+      const valueText = this.add.text(28, 4, value, {
+        fontSize: "11px",
+        color: "#FFFFFF",
+        fontStyle: "bold",
       });
+      c.add([bg, iconText, labelText, valueText]);
+      c.setData(dataKey, valueText);
+      container.add(c);
+      xCursor += width + 20;
 
-      container.on("pointerout", () => {
-        this.tweens.add({
-          targets: container,
-          scaleX: 1,
-          scaleY: 1,
-          duration: 200,
-          ease: "Back.easeOut",
-        });
-      });
+      if (dataKey === "resonanceText")
+        this.topResonanceText = valueText as Phaser.GameObjects.Text;
+      if (dataKey === "cyclesText")
+        this.topCyclesText = valueText as Phaser.GameObjects.Text;
+      if (dataKey === "timeText")
+        this.topTimeText = valueText as Phaser.GameObjects.Text;
+    };
 
-      // Guardar ancho estimado para layout en resize
-      (container as any).w = indicator.width;
-      this.topBar.add(container);
-      this.topBarIndicators.push(container);
-    });
+    makeBadge("💫", "Resonancia", "0%", 0x74b9ff, "resonanceText", 120);
+    makeBadge("⚡", "Ciclos", "0", 0x00cec9, "cyclesText", 90);
+    makeBadge("⏰", "Tiempo", "00:00", 0xfdcb6e, "timeText", 100);
 
-    // Add quick action menu button
+    this.topBar.add(container);
+    this.topCenterIndicators = container;
+
+    // Botón de menú a la derecha
     this.createModernMenuButton();
   }
 
@@ -487,6 +391,8 @@ export class UIScene extends Phaser.Scene {
     makeIconBtn("💬", () => this.toggleMessagesModal());
     // 🌌 abre/cierra modal de estado del sistema (emergencia/autopoiesis)
     makeIconBtn("🌌", () => this.toggleSystemModal());
+    // 🌍 abre/cierra modal de mundo (incluye minimapa)
+    makeIconBtn("🌍", () => this.toggleWorldModal());
   }
 
   private createBottomBar() {
@@ -540,7 +446,12 @@ export class UIScene extends Phaser.Scene {
       "🤖 AUTO",
       "#95a5a6",
       () => {
-        this.setControlMode("auto");
+        // Emitir a MainScene
+        const mainScene = this.scene.get("MainScene");
+        if (mainScene) {
+          mainScene.events.emit("changeEntityControl", "none");
+          logAutopoiesis.info("🎮 Control cambiado a AUTO");
+        }
       },
     );
     this.bottomBar.add(autoBtn);
@@ -552,9 +463,14 @@ export class UIScene extends Phaser.Scene {
       buttonWidth,
       buttonHeight,
       "👩 ISA",
-      "#e91e63",
+      "#e74c3c",
       () => {
-        this.setControlMode("isa");
+        // Emitir a MainScene
+        const mainScene = this.scene.get("MainScene");
+        if (mainScene) {
+          mainScene.events.emit("changeEntityControl", "isa");
+          logAutopoiesis.info("🎮 Control cambiado a ISA");
+        }
       },
     );
     this.bottomBar.add(isaBtn);
@@ -568,7 +484,12 @@ export class UIScene extends Phaser.Scene {
       "👨 STEV",
       "#3498db",
       () => {
-        this.setControlMode("stev");
+        // Emitir a MainScene
+        const mainScene = this.scene.get("MainScene");
+        if (mainScene) {
+          mainScene.events.emit("changeEntityControl", "stev");
+          logAutopoiesis.info("🎮 Control cambiado a STEV");
+        }
       },
     );
     this.bottomBar.add(stevBtn);
@@ -699,345 +620,21 @@ export class UIScene extends Phaser.Scene {
     this.bottomBar.add(speedContainer);
   }
 
-  private createLeftPanel() {
-    const panelWidth = 300;
-    const panelHeight = this.cameras.main.height - 140;
+  // (Legacy) createLeftPanel eliminado: reemplazado por modal de Estadísticas
 
-    // Start minimized by default
-    const initialX = this.leftPanelExpanded ? 10 : -250;
-    this.leftPanel = this.add.container(initialX, 70);
-    this.leftPanel.setScrollFactor(0);
+  /*
+   * (Eliminado) Panel derecho sustituido por modal de Mundo
+   */
+  // (Legacy) createRightPanel eliminado: reemplazado por modal de Mundo
 
-    // Enhanced panel background with shadow effect
-    const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.3);
-    shadow.fillRoundedRect(3, 3, panelWidth, panelHeight, 8);
-    this.leftPanel.add(shadow);
+  /*
+   * (Eliminado) Minimapa independiente sustituido por minimapa en modal Mundo
+   */
+  // (Legacy) createMinimap eliminado: minimapa integrado en modal de Mundo
 
-    const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0.96,
-      0.96,
-      0.96,
-      0.96,
-    );
-    panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
-    panelBg.lineStyle(3, 0x1abc9c, 0.8);
-    panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
+  // (Creación de toggles de borde eliminada para UI sintetizada)
 
-    // Add inner glow effect
-    panelBg.lineStyle(1, 0x1abc9c, 0.3);
-    panelBg.strokeRoundedRect(2, 2, panelWidth - 4, panelHeight - 4, 6);
-    this.leftPanel.add(panelBg);
-
-    // Enhanced panel header
-    const headerBg = this.add.graphics();
-    headerBg.fillGradientStyle(
-      0x1abc9c,
-      0x16a085,
-      0x1abc9c,
-      0x16a085,
-      0.2,
-      0.2,
-      0.1,
-      0.1,
-    );
-    headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
-    this.leftPanel.add(headerBg);
-
-    // Panel title with better styling
-    const title = this.add
-      .text(panelWidth / 2, 18, "📊 ESTADÍSTICAS DE PERSONAJES", {
-        fontSize: "14px",
-        color: "#ecf0f1",
-        fontFamily: "Arial, sans-serif",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
-    this.leftPanel.add(title);
-
-    // Character panels with improved spacing
-    this.createCharacterPanel("isa", 15, 50, "#e91e63", "👩 ISA");
-    this.createCharacterPanel("stev", 15, 235, "#3498db", "👨 STEV");
-
-    // Enhanced toggle button
-    const toggleBtn = this.createModernButton(
-      panelWidth - 35,
-      8,
-      30,
-      20,
-      "◀",
-      "#95a5a6",
-      () => {
-        this.toggleLeftPanel();
-      },
-    );
-    this.leftPanel.add(toggleBtn);
-  }
-
-  private createRightPanel() {
-    const panelWidth = 220;
-    const panelHeight = this.cameras.main.height - 140;
-    // Start minimized by default
-    const panelX = this.rightPanelExpanded
-      ? this.cameras.main.width - panelWidth - 10
-      : this.cameras.main.width + 10;
-
-    this.rightPanel = this.add.container(panelX, 70);
-    this.rightPanel.setScrollFactor(0);
-
-    // Enhanced panel background with shadow effect
-    const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.3);
-    shadow.fillRoundedRect(-3, 3, panelWidth, panelHeight, 8);
-    this.rightPanel.add(shadow);
-
-    const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0.96,
-      0.96,
-      0.96,
-      0.96,
-    );
-    panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 8);
-    panelBg.lineStyle(3, 0x9b59b6, 0.8);
-    panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 8);
-
-    // Add inner glow effect
-    panelBg.lineStyle(1, 0x9b59b6, 0.3);
-    panelBg.strokeRoundedRect(2, 2, panelWidth - 4, panelHeight - 4, 6);
-    this.rightPanel.add(panelBg);
-
-    // Enhanced panel header
-    const headerBg = this.add.graphics();
-    headerBg.fillGradientStyle(
-      0x9b59b6,
-      0x8e44ad,
-      0x9b59b6,
-      0x8e44ad,
-      0.2,
-      0.2,
-      0.1,
-      0.1,
-    );
-    headerBg.fillRoundedRect(0, 0, panelWidth, 35, 8);
-    this.rightPanel.add(headerBg);
-
-    // Panel title with better styling
-    const title = this.add
-      .text(panelWidth / 2, 18, "🎯 INFORMACIÓN DEL MUNDO", {
-        fontSize: "12px",
-        color: "#ecf0f1",
-        fontFamily: "Arial, sans-serif",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
-    this.rightPanel.add(title);
-
-    // Zone info section with better layout
-    const zoneSection = this.add.container(0, 45);
-    const zoneBg = this.add.graphics();
-    zoneBg.fillStyle(0x2c3e50, 0.6);
-    zoneBg.fillRoundedRect(10, 0, panelWidth - 20, 80, 5);
-    zoneSection.add(zoneBg);
-
-    const zoneTitle = this.add.text(15, 10, "🗺️ ZONA ACTUAL", {
-      fontSize: "11px",
-      color: "#9b59b6",
-      fontFamily: "Arial, sans-serif",
-      fontStyle: "bold",
-    });
-    zoneSection.add(zoneTitle);
-
-    const zoneInfo = this.add.text(
-      15,
-      25,
-      "Zona: Ninguna\nTipo: ---\nBeneficio: ---\nDistancia: ---",
-      {
-        fontSize: "10px",
-        color: "#bdc3c7",
-        fontFamily: "Arial, sans-serif",
-        lineSpacing: 2,
-      },
-    );
-    zoneSection.add(zoneInfo);
-    this.rightPanel.add(zoneSection);
-
-    // Activities section with better layout
-    const activitiesSection = this.add.container(0, 140);
-    const activitiesBg = this.add.graphics();
-    activitiesBg.fillStyle(0x2c3e50, 0.6);
-    activitiesBg.fillRoundedRect(10, 0, panelWidth - 20, 90, 5);
-    activitiesSection.add(activitiesBg);
-
-    const activitiesTitle = this.add.text(15, 10, "📋 ACTIVIDADES", {
-      fontSize: "11px",
-      color: "#f39c12",
-      fontFamily: "Arial, sans-serif",
-      fontStyle: "bold",
-    });
-    activitiesSection.add(activitiesTitle);
-
-    const activitiesText = this.add.text(
-      15,
-      25,
-      "👩 Isa: IDLE\n👨 Stev: IDLE\n\n⏱️ Tiempo: 00:00",
-      {
-        fontSize: "10px",
-        color: "#ecf0f1",
-        fontFamily: "Arial, sans-serif",
-        lineSpacing: 3,
-      },
-    );
-    activitiesSection.add(activitiesText);
-    this.rightPanel.add(activitiesSection);
-
-    // Enhanced toggle button
-    const toggleBtn = this.createModernButton(
-      8,
-      8,
-      30,
-      20,
-      "▶",
-      "#95a5a6",
-      () => {
-        this.toggleRightPanel();
-      },
-    );
-    this.rightPanel.add(toggleBtn);
-  }
-
-  private createMinimap() {
-    const minimapSize = 140;
-    // Position minimap bottom-right, evitando panel derecho expandido
-    const rightW = this.rightPanelExpanded ? this.RIGHT_PANEL_WIDTH : 0;
-    const minimapX = this.cameras.main.width - rightW - minimapSize - 15;
-    const minimapY = this.cameras.main.height - minimapSize - 90; // Above the bottom bar
-
-    this.minimapContainer = this.add.container(minimapX, minimapY);
-    this.minimapContainer.setScrollFactor(0);
-
-    // Minimap background with improved styling
-    const minimapBg = this.add.graphics();
-    minimapBg.fillGradientStyle(
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0.95,
-      0.95,
-      0.95,
-      0.95,
-    );
-    minimapBg.fillRoundedRect(0, 0, minimapSize, minimapSize, 8);
-    minimapBg.lineStyle(2, 0x3498db, 0.7);
-    minimapBg.strokeRoundedRect(0, 0, minimapSize, minimapSize, 8);
-    this.minimapContainer.add(minimapBg);
-
-    // Minimap title with better positioning
-    const title = this.add
-      .text(minimapSize / 2, 12, "🗺️ MAPA", {
-        fontSize: "11px",
-        color: "#3498db",
-        fontFamily: "Arial",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
-    this.minimapContainer.add(title);
-
-    // Improved minimap content representation
-    const mapContent = this.add.graphics();
-    
-    // Base terrain
-    mapContent.fillStyle(0x27ae60, 0.4);
-    mapContent.fillRoundedRect(8, 28, minimapSize - 16, minimapSize - 40, 4);
-
-    // Different zones with better visual distinction
-    mapContent.fillStyle(0xe74c3c, 0.8); // Red zone
-    mapContent.fillRoundedRect(15, 35, 25, 18, 2);
-
-    mapContent.fillStyle(0xf39c12, 0.8); // Orange zone
-    mapContent.fillRoundedRect(50, 40, 20, 20, 2);
-
-    mapContent.fillStyle(0x9b59b6, 0.8); // Purple zone
-    mapContent.fillRoundedRect(80, 35, 30, 25, 2);
-
-    mapContent.fillStyle(0x1abc9c, 0.8); // Teal zone
-    mapContent.fillRoundedRect(20, 70, 35, 20, 2);
-
-    mapContent.fillStyle(0x3498db, 0.8); // Blue zone
-    mapContent.fillRoundedRect(65, 75, 25, 15, 2);
-
-    // Player positions (will be updated dynamically)
-    mapContent.fillStyle(0xff1744, 1); // Isa position
-    mapContent.fillCircle(30, 50, 3);
-
-    mapContent.fillStyle(0x00bcd4, 1); // Stev position
-    mapContent.fillCircle(85, 55, 3);
-
-    this.minimapContainer.add(mapContent);
-    this.minimapContent = mapContent;
-
-    // Improved toggle button
-    const toggleBtn = this.createModernButton(
-      minimapSize - 20,
-      2,
-      16,
-      16,
-      "×",
-      "#e74c3c",
-      () => {
-        this.toggleMinimap();
-      },
-    );
-    this.minimapContainer.add(toggleBtn);
-
-    // Also add a small floating reopen button when minimap is hidden
-    const reopenBtn = this.createModernButton(
-      this.cameras.main.width - 45,
-      this.cameras.main.height - 45,
-      28,
-      28,
-      "🗺️",
-      "#3498db",
-      () => this.toggleMinimap(),
-    );
-    reopenBtn.setScrollFactor(0);
-    reopenBtn.setDepth(1002);
-    this.minimapToggleBtn = reopenBtn;
-    // Hidden button is visible only when minimap is hidden
-    this.minimapToggleBtn.setVisible(!this.showMinimap);
-
-    // Apply initial visibility state
-    this.minimapContainer.setVisible(this.showMinimap);
-  }
-
-  private createEdgeToggles() {
-    // Left edge toggle (open/close left panel)
-    const leftBtn = this.createModernButton(5, 90, 22, 40, "▶", "#95a5a6", () => {
-      this.toggleLeftPanel();
-    });
-    leftBtn.setScrollFactor(0);
-    leftBtn.setDepth(1001);
-    this.leftEdgeToggle = leftBtn;
-
-    // Right edge toggle
-    const rightX = this.cameras.main.width - 27;
-    const rightBtn = this.createModernButton(rightX, 90, 22, 40, "◀", "#95a5a6", () => {
-      this.toggleRightPanel();
-    });
-    rightBtn.setScrollFactor(0);
-    rightBtn.setDepth(1001);
-    this.rightEdgeToggle = rightBtn;
-  }
+  // (Legacy) createEdgeToggles eliminado
 
   private setupModernNavigation() {
     // Mouse drag navigation - improved bounds detection
@@ -1045,8 +642,8 @@ export class UIScene extends Phaser.Scene {
       // Calculate accurate UI bounds to avoid navigation conflicts
       const topBarHeight = 60;
       const bottomBarHeight = 80;
-      const leftPanelWidth = this.leftPanelExpanded ? 300 : 50;
-      const rightPanelWidth = this.rightPanelExpanded ? 220 : 50;
+      const leftPanelWidth = 0;
+      const rightPanelWidth = 0;
 
       // Check if clicking within navigable area (not on UI elements)
       // Excluir áreas de UI (barras, paneles, minimapa y cartas de diálogo)
@@ -1173,19 +770,23 @@ export class UIScene extends Phaser.Scene {
     const containers: Phaser.GameObjects.Container[] = [];
     if (this.topBar) containers.push(this.topBar);
     if (this.bottomBar) containers.push(this.bottomBar);
-    if (this.leftPanelExpanded && this.leftPanel) containers.push(this.leftPanel);
-    if (this.rightPanelExpanded && this.rightPanel) containers.push(this.rightPanel);
-    if (this.showMinimap && this.minimapContainer) containers.push(this.minimapContainer);
+    // Paneles/minimapa independientes ya no se usan
     // Modales visibles
-    this.modalRegistry.forEach((m) => {
-      if (m.visible) containers.push(m);
-    });
+    if (this.modalManager) {
+      containers.push(...this.modalManager.getVisibleContainers());
+    }
     // Cartas si estuvieran fuera de modal (fallback)
-    if (this.dialogueCardUI) containers.push(this.dialogueCardUI.getContainer());
+    if (this.dialogueCardUI)
+      containers.push(this.dialogueCardUI.getContainer());
 
     return containers.some((c) => {
       const b = c.getBounds();
-      return pointer.x >= b.x && pointer.x <= b.x + b.width && pointer.y >= b.y && pointer.y <= b.y + b.height;
+      return (
+        pointer.x >= b.x &&
+        pointer.x <= b.x + b.width &&
+        pointer.y >= b.y &&
+        pointer.y <= b.y + b.height
+      );
     });
   }
 
@@ -1224,9 +825,17 @@ export class UIScene extends Phaser.Scene {
       .setOrigin(0, 0.5);
     modal.add(titleText);
 
-    const closeBtn = this.createModernButton(width - 28, 6, 20, 16, "×", "#e74c3c", () => {
-      this.closeModal(id);
-    });
+    const closeBtn = this.createModernButton(
+      width - 28,
+      6,
+      20,
+      16,
+      "×",
+      "#e74c3c",
+      () => {
+        this.closeModal(id);
+      },
+    );
     modal.add(closeBtn);
 
     content.setPosition(12, 36);
@@ -1240,13 +849,13 @@ export class UIScene extends Phaser.Scene {
   }
 
   private layoutModals() {
-    const visibleIds = this.modalOrder.filter((id) => this.modalRegistry.get(id)?.visible);
+    const visibleIds = this.modalOrder.filter(
+      (id) => this.modalRegistry.get(id)?.visible,
+    );
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
-    const leftW = this.leftPanelExpanded ? this.LEFT_PANEL_WIDTH : 0;
-    const rightW = this.rightPanelExpanded ? this.RIGHT_PANEL_WIDTH : 0;
-    const availX = leftW + this.MODAL_MARGIN;
-    const availW = width - leftW - rightW - this.MODAL_MARGIN * 2;
+    const availX = this.MODAL_MARGIN;
+    const availW = width - this.MODAL_MARGIN * 2;
     const startY = this.TOP_BAR_HEIGHT + this.MODAL_MARGIN;
     const maxY = height - this.BOTTOM_BAR_HEIGHT - this.MODAL_MARGIN;
 
@@ -1287,32 +896,31 @@ export class UIScene extends Phaser.Scene {
 
   private toggleStatsModal() {
     if (!this.statsModal) {
-      const content = this.buildStatsModalContent();
-      this.statsModal = this.createModalWindow("stats", "📊 Estadísticas", content, 360, 240);
+      this.statsModalContent = new StatsModalContent(this);
+      this.statsModal = this.modalManager.createWindow(
+        "stats",
+        "📊 Estadísticas",
+        this.statsModalContent.getContainer(),
+        360,
+        240,
+      );
     } else {
-      this.statsModal.setVisible(!this.statsModal.visible);
-      this.layoutModals();
+      this.modalManager.toggle("stats");
     }
   }
 
   private toggleMessagesModal() {
     if (!this.messagesModal) {
-      const inner = this.dialogueCardUI.getContainer();
-      inner.setPosition(0, 0);
-      this.children.remove(inner);
-      const modalWidth = 360;
-      const modalHeight = 260;
-      this.messagesModal = this.createModalWindow("messages", "💬 Mensajes", inner, modalWidth, modalHeight);
-      // Aplicar máscara en el contenido, no en el modal completo
-      const maskGfx = this.add.graphics();
-      maskGfx.fillStyle(0xffffff, 0.001);
-      maskGfx.fillRect(12, 36, modalWidth - 24, modalHeight - 48);
-      const mask = maskGfx.createGeometryMask();
-      inner.setMask(mask);
-      maskGfx.setScrollFactor(0);
+      const content = new MessagesModalContent(this, this.dialogueCardUI);
+      this.messagesModal = this.modalManager.createWindow(
+        "messages",
+        "💬 Mensajes",
+        content.getContainer(),
+        360,
+        260,
+      );
     } else {
-      this.messagesModal.setVisible(!this.messagesModal.visible);
-      this.layoutModals();
+      this.modalManager.toggle("messages");
     }
   }
 
@@ -1321,7 +929,7 @@ export class UIScene extends Phaser.Scene {
       this.systemStatusUI = new SystemStatusUI(this, 0, 0, { embedded: true });
       const inner = this.systemStatusUI.getContainer();
       inner.setPosition(0, 0);
-      this.systemModal = this.createModalWindow(
+      this.systemModal = this.modalManager.createWindow(
         "system",
         "🌌 Sistema",
         inner,
@@ -1329,279 +937,28 @@ export class UIScene extends Phaser.Scene {
         260,
       );
     } else {
-      this.systemModal.setVisible(!this.systemModal.visible);
-      this.layoutModals();
+      this.modalManager.toggle("system");
     }
   }
 
-  private buildStatsModalContent(): Phaser.GameObjects.Container {
-    const c = this.add.container(0, 0);
-    const mkRow = (y: number, label: string, key: string, color: string) => {
-      const t = this.add.text(0, y, `${label}: 0`, { fontSize: "11px", color });
-      // store key as data to update later
-      t.setData("statKey", key);
-      c.add(t);
-      return t;
-    };
-    const isaTitle = this.add.text(0, 0, "👩 Isa", { fontSize: "12px", color: "#e91e63", fontStyle: "bold" });
-    c.add(isaTitle);
-    mkRow(16, "Salud", "isa.health", "#ecf0f1");
-    mkRow(32, "Energía", "isa.energy", "#ecf0f1");
-    mkRow(48, "Hambre", "isa.hunger", "#ecf0f1");
-    const stevTitle = this.add.text(180, 0, "👨 Stev", { fontSize: "12px", color: "#3498db", fontStyle: "bold" });
-    c.add(stevTitle);
-    mkRow(16, "Salud", "stev.health", "#ecf0f1").setX(180);
-    mkRow(32, "Energía", "stev.energy", "#ecf0f1").setX(180);
-    mkRow(48, "Hambre", "stev.hunger", "#ecf0f1").setX(180);
-    return c;
-  }
-
-  private updateEntityStatsDisplay(
-    panel: Phaser.GameObjects.Container,
-    entityData: Entity,
-    color: string,
-  ) {
-    if (!entityData.stats) return;
-
-    const { stats } = entityData;
-
-    // Update activity text if it exists
-    const activityText = panel.getData("activityText");
-    if (activityText && entityData.activity) {
-      activityText.setText(entityData.activity || "IDLE");
-    }
-
-    // Check if stats elements exist, if not create them
-    let statsElements = panel.getData("statsElements");
-    if (!statsElements) {
-      statsElements = this.createStatsElements(panel);
-      panel.setData("statsElements", statsElements);
-    }
-
-    // Define current stats data
-    const statsColumn1 = [
-      {
-        icon: "❤️",
-        label: "Salud",
-        value: Math.round(stats.health || 0),
-        color: "#e74c3c",
-        key: "health",
-      },
-      {
-        icon: "😊",
-        label: "Felicidad",
-        value: Math.round(stats.happiness || 0),
-        color: "#f39c12",
-        key: "happiness",
-      },
-      {
-        icon: "⚡",
-        label: "Energía",
-        value: Math.round(stats.energy || 0),
-        color: "#3498db",
-        key: "energy",
-      },
-    ];
-
-    const statsColumn2 = [
-      {
-        icon: "🍎",
-        label: "Hambre",
-        value: Math.round(stats.hunger || 0),
-        color: "#27ae60",
-        key: "hunger",
-      },
-      {
-        icon: "😴",
-        label: "Sueño",
-        value: Math.round(stats.sleepiness || 0),
-        color: "#9b59b6",
-        key: "sleepiness",
-      },
-      {
-        icon: "💰",
-        label: "Dinero",
-        value: Math.round(stats.money || 0),
-        color: "#f1c40f",
-        key: "money",
-      },
-    ];
-
-    // Animate column 1 stats
-    if (statsElements?.column1) {
-      statsColumn1.forEach((stat, index) => {
-        if (statsElements.column1[index]) {
-          this.animateStatBar(statsElements.column1[index], stat);
-        }
-      });
-    }
-
-    // Animate column 2 stats
-    if (statsElements?.column2) {
-      statsColumn2.forEach((stat, index) => {
-        if (statsElements.column2[index]) {
-          this.animateStatBar(statsElements.column2[index], stat);
-        }
-      });
-    }
-
-    // Mood indicator at the bottom
-    if (entityData.mood) {
-      const moodBg = this.add.graphics();
-      moodBg.fillStyle(0x2c3e50, 0.6);
-      moodBg.fillRoundedRect(10, 155, 250, 15, 3);
-      panel.add(moodBg);
-
-      const moodText = this.add
-        .text(135, 162, `💭 Humor: ${entityData.mood}`, {
-          fontSize: "10px",
-          color,
-          fontFamily: "Arial, sans-serif",
-          fontStyle: "bold",
-        })
-        .setOrigin(0.5);
-      panel.add(moodText);
-    }
-  }
-
-  /**
-   * Creates persistent stat elements that can be animated instead of recreated
-   */
-  private createStatsElements(panel: Phaser.GameObjects.Container) {
-    const column1Elements: StatElement[] = [];
-    const column2Elements: StatElement[] = [];
-
-    // Create column 1 stat elements (left side)
-    for (let i = 0; i < 3; i++) {
-      const statLabel = this.add.text(10, 80 + i * 25, "", {
-        fontSize: "10px",
-        color: "#ffffff",
-        fontFamily: "Arial, sans-serif",
-        fontStyle: "bold",
-      });
-
-      const valueText = this.add.text(10, 92 + i * 25, "0", {
-        fontSize: "9px",
-        color: "#ecf0f1",
-        fontFamily: "Arial, sans-serif",
-      });
-
-      const barBg = this.add.graphics();
-      barBg.fillStyle(0x2c3e50, 0.8);
-      barBg.fillRoundedRect(45, 83 + i * 25, 80, 8, 4);
-
-      const bar = this.add.graphics();
-      bar.fillStyle(0x27ae60, 0.8);
-      bar.fillRoundedRect(47, 85 + i * 25, 2, 4, 2);
-
-      panel.add([statLabel, valueText, barBg, bar]);
-
-      column1Elements.push({
-        label: statLabel,
-        value: valueText,
-        barBg: barBg,
-        bar: bar,
-        currentValue: 0,
-      });
-    }
-
-    // Create column 2 stat elements (right side)
-    for (let i = 0; i < 3; i++) {
-      const statLabel = this.add.text(140, 80 + i * 25, "", {
-        fontSize: "10px",
-        color: "#ffffff",
-        fontFamily: "Arial, sans-serif",
-        fontStyle: "bold",
-      });
-
-      const valueText = this.add.text(140, 92 + i * 25, "0", {
-        fontSize: "9px",
-        color: "#ecf0f1",
-        fontFamily: "Arial, sans-serif",
-      });
-
-      const barBg = this.add.graphics();
-      barBg.fillStyle(0x2c3e50, 0.8);
-      barBg.fillRoundedRect(175, 83 + i * 25, 80, 8, 4);
-
-      const bar = this.add.graphics();
-      bar.fillStyle(0x27ae60, 0.8);
-      bar.fillRoundedRect(177, 85 + i * 25, 2, 4, 2);
-
-      panel.add([statLabel, valueText, barBg, bar]);
-
-      column2Elements.push({
-        label: statLabel,
-        value: valueText,
-        barBg: barBg,
-        bar: bar,
-        currentValue: 0,
-      });
-    }
-
-    return { column1: column1Elements, column2: column2Elements };
-  }
-
-  /**
-   * Animates a stat bar to new value with smooth tween
-   */
-  private animateStatBar(
-    element: StatElement,
-    stat: {
-      icon: string;
-      label: string;
-      value: number;
-      color: string;
-      key: string;
-    },
-  ) {
-    // Update label and color
-    element.label.setText(`${stat.icon} ${stat.label}`);
-    element.label.setStyle({ color: stat.color });
-
-    // Animate value change
-    if (element.currentValue !== stat.value) {
-      this.tweens.addCounter({
-        from: element.currentValue,
-        to: stat.value,
-        duration: 800, // 800ms smooth animation
-        ease: "Power2",
-        onUpdate: (tween) => {
-          const value = Math.round(tween.getValue());
-          element.value.setText(`${value}`);
-
-          // Animate bar width
-          let barColor = "#e74c3c";
-          if (value > 70) {
-            barColor = "#27ae60";
-          } else if (value > 30) {
-            barColor = "#f39c12";
-          }
-
-          const barWidth = Math.max((value / 100) * 76, 2);
-
-          element.bar.clear();
-          element.bar.fillStyle(
-            Phaser.Display.Color.HexStringToColor(barColor).color,
-            0.8,
-          );
-
-          // For column 1 or column 2 position
-          const isColumn2 = element.label.x === 140;
-          const barX = isColumn2 ? 177 : 47;
-          const barY = element.label.y + 5; // Relative to label
-
-          element.bar.fillRoundedRect(barX, barY, barWidth, 4, 2);
-        },
-        onComplete: () => {
-          element.currentValue = stat.value;
-        },
-      });
+  private toggleWorldModal() {
+    if (!this.worldModal) {
+      this.worldModalContent = new WorldModalContent(this);
+      this.worldModal = this.modalManager.createWindow(
+        "world",
+        "🌍 Mundo",
+        this.worldModalContent.getContainer(),
+        360,
+        260,
+      );
     } else {
-      // Just update text if value hasn't changed
-      element.value.setText(`${stat.value}`);
+      this.modalManager.toggle("world");
     }
   }
+
+  // (World modal content extraído a WorldModalContent)
+
+  // (Stats modal content extraído a StatsModalContent)
 
   // =================== HELPER METHODS ===================
 
@@ -1643,207 +1000,23 @@ export class UIScene extends Phaser.Scene {
     return button;
   }
 
-  private createCharacterPanel(
-    character: string,
-    x: number,
-    y: number,
-    color: string,
-    title: string,
-  ) {
-    const panelContainer = this.add.container(x, y);
-    const panelWidth = 270;
-    const panelHeight = 175;
-
-    // Enhanced character panel background with shadow
-    const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.2);
-    shadow.fillRoundedRect(2, 2, panelWidth, panelHeight, 6);
-    panelContainer.add(shadow);
-
-    const panelBg = this.add.graphics();
-    panelBg.fillGradientStyle(
-      0x2c3e50,
-      0x34495e,
-      0x2c3e50,
-      0x34495e,
-      0.8,
-      0.8,
-      0.8,
-      0.8,
-    );
-    panelBg.fillRoundedRect(0, 0, panelWidth, panelHeight, 6);
-    panelBg.lineStyle(
-      2,
-      Phaser.Display.Color.HexStringToColor(color).color,
-      0.9,
-    );
-    panelBg.strokeRoundedRect(0, 0, panelWidth, panelHeight, 6);
-
-    // Inner highlight
-    panelBg.lineStyle(
-      1,
-      Phaser.Display.Color.HexStringToColor(color).color,
-      0.4,
-    );
-    panelBg.strokeRoundedRect(1, 1, panelWidth - 2, panelHeight - 2, 5);
-    panelContainer.add(panelBg);
-
-    // Character header
-    const headerBg = this.add.graphics();
-    const headerColor = Phaser.Display.Color.HexStringToColor(color).color;
-    headerBg.fillGradientStyle(
-      headerColor,
-      headerColor,
-      headerColor,
-      headerColor,
-      0.3,
-      0.3,
-      0.1,
-      0.1,
-    );
-    headerBg.fillRoundedRect(0, 0, panelWidth, 30, 6);
-    panelContainer.add(headerBg);
-
-    // Character title with better styling
-    const charTitle = this.add
-      .text(panelWidth / 2, 15, title, {
-        fontSize: "13px",
-        color: "#ffffff",
-        fontFamily: "Arial, sans-serif",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
-    panelContainer.add(charTitle);
-
-    // Character portrait placeholder (could be sprite in future)
-    const portrait = this.add.graphics();
-    portrait.fillStyle(headerColor, 0.2);
-    portrait.fillCircle(35, 55, 20);
-    portrait.lineStyle(2, headerColor, 0.8);
-    portrait.strokeCircle(35, 55, 20);
-    panelContainer.add(portrait);
-
-    // Portrait emoji
-    const portraitEmoji = this.add
-      .text(35, 55, character === "isa" ? "👩" : "👨", {
-        fontSize: "24px",
-      })
-      .setOrigin(0.5);
-    panelContainer.add(portraitEmoji);
-
-    // Activity status indicator
-    const activityBg = this.add.graphics();
-    activityBg.fillStyle(0x2c3e50, 0.7);
-    activityBg.fillRoundedRect(65, 40, panelWidth - 75, 30, 4);
-    panelContainer.add(activityBg);
-
-    const activityLabel = this.add.text(70, 45, "🎯 Estado:", {
-      fontSize: "10px",
-      color: "#95a5a6",
-      fontFamily: "Arial, sans-serif",
-      fontStyle: "bold",
-    });
-    panelContainer.add(activityLabel);
-
-    const activityText = this.add.text(70, 58, "IDLE", {
-      fontSize: "11px",
-      color,
-      fontFamily: "Arial, sans-serif",
-      fontStyle: "bold",
-    });
-    panelContainer.add(activityText);
-
-    // Stats will be added dynamically by updateEntityStatsDisplay starting at y: 75
-    panelContainer.setData("character", character);
-    panelContainer.setData("activityText", activityText);
-
-    this.leftPanel.add(panelContainer);
-
-    // Store reference for updates
-    if (character === "isa") {
-      this.leftPanel.setData("isaStatsPanel", panelContainer);
-    } else {
-      this.leftPanel.setData("stevStatsPanel", panelContainer);
-    }
-  }
-
-  private updateCharacterPanels(
-    entities: Entity[] | { [key: string]: Entity },
-  ) {
-    // Handle both array format and object format
-    let isaEntity = null;
-    let stevEntity = null;
-
-    if (Array.isArray(entities)) {
-      isaEntity = entities.find((entity) => entity.id === "isa");
-      stevEntity = entities.find((entity) => entity.id === "stev");
-    } else if (entities && typeof entities === "object") {
-      // Handle object format: { isa: {...}, stev: {...} }
-      isaEntity = entities.isa;
-      stevEntity = entities.stev;
-    }
-
-    if (isaEntity) {
-      const isaPanel = this.leftPanel.getData("isaStatsPanel");
-      if (isaPanel && isaEntity.stats) {
-        // Create Entity-like object from the data
-        const entityData = {
-          id: "isa",
-          stats: isaEntity.stats,
-          activity: isaEntity.activity,
-          mood: isaEntity.mood,
-          position: isaEntity.position,
-          state: "idle" as const,
-          isDead: false,
-          resonance: isaEntity.resonance || 0,
-        };
-        this.updateEntityStatsDisplay(isaPanel, entityData, "#e91e63");
-      }
-    }
-
-    if (stevEntity) {
-      const stevPanel = this.leftPanel.getData("stevStatsPanel");
-      if (stevPanel && stevEntity.stats) {
-        // Create Entity-like object from the data
-        const entityData = {
-          id: "stev",
-          stats: stevEntity.stats,
-          activity: stevEntity.activity,
-          mood: stevEntity.mood,
-          position: stevEntity.position,
-          state: "idle" as const,
-          isDead: false,
-          resonance: stevEntity.resonance || 0,
-        };
-        this.updateEntityStatsDisplay(stevPanel, entityData, "#3498db");
-      }
-    }
-  }
+  // (Legacy) createCharacterPanel / updateCharacterPanels eliminados (uso modal de Estadísticas)
 
   private updateTopBarInfo(data: GameLogicUpdateData) {
-    // Update resonance indicator
-    const resonanceContainer = this.topBar.list.find(
-      (child: Phaser.GameObjects.GameObject) =>
-        (child as any).getData?.("resonanceText"),
-    ) as Phaser.GameObjects.Container;
-    if (resonanceContainer && data.resonance !== undefined) {
-      const resonanceText = resonanceContainer.getData("resonanceText");
-      if (resonanceText) {
-        resonanceText.setText(`Resonancia: ${Math.round(data.resonance)}%`);
-      }
+    if (this.topBar && data.resonance !== undefined) {
+      (this.topBar as any).updateResonance(data.resonance);
     }
+    if (this.topBar && data.cycles !== undefined) {
+      (this.topBar as any).updateCycles(data.cycles);
+    }
+  }
 
-    // Update cycles indicator
-    const cyclesContainer = this.topBar.list.find(
-      (child: Phaser.GameObjects.GameObject) =>
-        (child as any).getData?.("cyclesText"),
-    ) as Phaser.GameObjects.Container;
-    if (cyclesContainer && data.cycles !== undefined) {
-      const cyclesText = cyclesContainer.getData("cyclesText");
-      if (cyclesText) {
-        cyclesText.setText(`Ciclos: ${data.cycles}`);
-      }
-    }
+  private updateTopBarTime(timeData: TimeOfDay) {
+    const timeString = `${timeData.hour.toString().padStart(2, "0")}:${timeData.minute
+      .toString()
+      .padStart(2, "0")}`;
+    if (this.topBar) (this.topBar as any).updateTime(timeString);
+    (this as any)._currentTimeString = timeString;
   }
 
   private updateBottomBarInfo(_data: GameLogicUpdateData) {
@@ -1851,64 +1024,12 @@ export class UIScene extends Phaser.Scene {
     // Could highlight active control buttons based on current mode
   }
 
-  private updateMinimap(data: GameLogicUpdateData) {
-    if (!this.minimapContainer || !this.minimapContent) return;
-    // Obtain world size from registry to scale positions
+  private updateWorldModal(data: GameLogicUpdateData) {
+    if (!this.worldModal || !this.worldModal.visible || !this.worldModalContent)
+      return;
     const gameState = this.registry.get("gameState") as any;
-    const worldSize = gameState?.worldSize || { width: 1200, height: 800 };
-
-    const minimapSize = 140;
-    const contentX = 8;
-    const contentY = 28;
-    const contentW = minimapSize - 16;
-    const contentH = minimapSize - 40;
-
-    const scaleX = contentW / worldSize.width;
-    const scaleY = contentH / worldSize.height;
-
-    // Clear and redraw base terrain area
-    this.minimapContent.clear();
-    this.minimapContent.fillStyle(0x27ae60, 0.4);
-    this.minimapContent.fillRoundedRect(contentX, contentY, contentW, contentH, 4);
-
-    // Optional: draw a few zones from game state for orientation
-    const zones = gameState?.zones || [];
-    zones.slice(0, 4).forEach((z: any, idx: number) => {
-      const colrs = [0xe74c3c, 0xf39c12, 0x9b59b6, 0x1abc9c];
-      const c = colrs[idx % colrs.length];
-      const zx = contentX + z.bounds.x * scaleX;
-      const zy = contentY + z.bounds.y * scaleY;
-      const zw = Math.max(2, z.bounds.width * scaleX);
-      const zh = Math.max(2, z.bounds.height * scaleY);
-      this.minimapContent.fillStyle(c, 0.6);
-      this.minimapContent.fillRoundedRect(zx, zy, zw, zh, 2);
-    });
-
-    // Ensure dots exist
-    if (!this.minimapIsaDot) {
-      this.minimapIsaDot = this.add.circle(0, 0, 3, 0xff1744, 1);
-      this.minimapContainer.add(this.minimapIsaDot);
-    }
-    if (!this.minimapStevDot) {
-      this.minimapStevDot = this.add.circle(0, 0, 3, 0x00bcd4, 1);
-      this.minimapContainer.add(this.minimapStevDot);
-    }
-
-    // Update entity markers
-    const isa = data.entities?.find((e) => e.id === "isa");
-    const stev = data.entities?.find((e) => e.id === "stev");
-    if (isa) {
-      this.minimapIsaDot.setPosition(
-        contentX + isa.position.x * scaleX,
-        contentY + isa.position.y * scaleY,
-      );
-    }
-    if (stev) {
-      this.minimapStevDot.setPosition(
-        contentX + stev.position.x * scaleX,
-        contentY + stev.position.y * scaleY,
-      );
-    }
+    const timeStr = (this as any)._currentTimeString || "00:00";
+    this.worldModalContent.update(data, timeStr, gameState);
   }
 
   // =================== CONTROL METHODS ===================
@@ -2058,55 +1179,7 @@ export class UIScene extends Phaser.Scene {
     window.location.reload();
   }
 
-  private toggleLeftPanel() {
-    this.leftPanelExpanded = !this.leftPanelExpanded;
-    const targetX = this.leftPanelExpanded ? 10 : -250;
-
-    this.tweens.add({
-      targets: this.leftPanel,
-      x: targetX,
-      duration: 300,
-      ease: "Power2",
-      onComplete: () => {
-        this.layoutModals();
-      },
-    });
-  }
-
-  private toggleRightPanel() {
-    this.rightPanelExpanded = !this.rightPanelExpanded;
-    const panelWidth = 220;
-    const targetX = this.rightPanelExpanded
-      ? this.cameras.main.width - panelWidth - 10
-      : this.cameras.main.width + 10;
-
-    this.tweens.add({
-      targets: this.rightPanel,
-      x: targetX,
-      duration: 300,
-      ease: "Power2",
-      onComplete: () => {
-        // Reposicionar minimapa para evitar panel derecho
-        if (this.minimapContainer) {
-          const minimapSize = 140;
-          const rightW = this.rightPanelExpanded ? this.RIGHT_PANEL_WIDTH : 0;
-          this.minimapContainer.setPosition(
-            this.cameras.main.width - rightW - minimapSize - 15,
-            this.minimapContainer.y,
-          );
-        }
-        this.layoutModals();
-      },
-    });
-  }
-
-  private toggleMinimap() {
-    this.showMinimap = !this.showMinimap;
-    this.minimapContainer.setVisible(this.showMinimap);
-    if (this.minimapToggleBtn) {
-      this.minimapToggleBtn.setVisible(!this.showMinimap);
-    }
-  }
+  // (Toggles de paneles eliminados)
 
   /**
    * Handle screen resize events
@@ -2114,64 +1187,12 @@ export class UIScene extends Phaser.Scene {
   private handleResize(gameSize: Phaser.Structs.Size) {
     const { width, height } = gameSize;
 
-    // Resize and reposition top bar
-    const topBg = this.topBar.getData("bg") as Phaser.GameObjects.Graphics;
-    if (topBg) {
-      topBg.clear();
-      topBg.fillStyle(0x1a1a2e, 0.85);
-      topBg.fillRect(0, 0, width, 70);
-      topBg.lineStyle(2, 0x74b9ff, 0.6);
-      topBg.lineBetween(0, 68, width, 68);
-      topBg.fillStyle(0x000000, 0.2);
-      topBg.fillRect(0, 70, width, 4);
-    }
-    if (this.topTitleContainer) {
-      this.topTitleContainer.setPosition(25, 35);
-    }
-    if (this.topMenuBtn) {
-      this.topMenuBtn.setPosition(width - 45, 35);
-    }
-    // Reposition modal shortcuts and indicators packed from right to left
-    let currentX = width - 45 - 50; // space before menu
-    this.topBarModalButtons.forEach((btn) => {
-      btn.setPosition(currentX, 35);
-      currentX -= 34;
-    });
-    this.topBarIndicators.forEach((ind) => {
-      const w = (ind as any).w ?? 120;
-      currentX -= w + 15;
-      ind.setPosition(currentX, 35);
-    });
-
-    // Reposition panels based on new screen size
-    if (this.leftPanel) {
-      // Keep aligned below top bar, same as initial layout
-      this.leftPanel.setPosition(10, 70);
+    // Resize and reposition top bar controls
+    if (this.topBar && (this.topBar as any).handleResize) {
+      (this.topBar as any).handleResize(width);
     }
 
-    if (this.rightPanel) {
-      // Keep aligned below top bar; panel width is 220
-      this.rightPanel.setPosition(width - 220 - 10, 70);
-    }
-
-    if (this.minimapContainer) {
-      // Use same offsets as initial creation
-      const minimapSize = 140;
-      const rightW = this.rightPanelExpanded ? this.RIGHT_PANEL_WIDTH : 0;
-      this.minimapContainer.setPosition(width - rightW - minimapSize - 15, height - minimapSize - 90);
-    }
-
-    if (this.minimapToggleBtn) {
-      this.minimapToggleBtn.setPosition(width - 45, height - 45);
-    }
-
-    // Reposition edge toggles
-    if (this.leftEdgeToggle) {
-      this.leftEdgeToggle.setPosition(5, 90);
-    }
-    if (this.rightEdgeToggle) {
-      this.rightEdgeToggle.setPosition(width - 27, 90);
-    }
+    // (Paneles laterales/minimapa eliminados en favor de modales)
 
     if (this.bottomBar) {
       // Anchor to bottom-left consistent with initial creation

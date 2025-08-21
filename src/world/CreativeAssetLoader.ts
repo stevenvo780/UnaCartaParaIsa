@@ -1033,4 +1033,18 @@ export class CreativeAssetLoader {
 
     return stats;
   }
+
+  /**
+   * Obtiene todos los assets cargados
+   */
+  getAllAssets(): AssetInfo[] {
+    return Array.from(this.loadedAssets.values());
+  }
+
+  /**
+   * Obtiene el total de assets cargados
+   */
+  getTotalAssetsCount(): number {
+    return this.loadedAssets.size;
+  }
 }

@@ -1,10 +1,9 @@
 import Phaser from "phaser";
 import { gameConfig } from "./config/gameConfig";
-import { BootScene } from "./scenes/BootScene";
-import { MainScene } from "./scenes/MainScene";
-import { UIScene } from "./scenes/UIScene";
-import { productionOptimizer } from "./utils/productionOptimizer";
+import BootScene from "./scenes/BootScene";
+import MainScene from "./scenes/MainScene";
 import { logAutopoiesis } from "./utils/logger";
+import { productionOptimizer } from "./utils/productionOptimizer";
 
 // Obtener optimizaciones de producción
 const phaserOptimizations = productionOptimizer.getPhaserOptimizations();
@@ -16,6 +15,7 @@ const config: Phaser.Types.Core.GameConfig = {
   backgroundColor: "#2c3e50",
   parent: "game-container",
   pixelArt: true,
+  roundPixels: true,
   scale: {
     mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -37,7 +37,7 @@ const config: Phaser.Types.Core.GameConfig = {
       ...(phaserOptimizations.physics?.arcade || {}),
     },
   },
-  scene: [BootScene, MainScene, UIScene],
+  scene: [BootScene, MainScene], // UIScene temporalmente quitado para debug
   // Aplicar optimizaciones de producción
   ...phaserOptimizations,
   callbacks: {
@@ -59,7 +59,9 @@ const config: Phaser.Types.Core.GameConfig = {
         ).scenes = {
           boot: game.scene.getScene("BootScene"),
           main: game.scene.getScene("MainScene"),
-          ui: game.scene.getScene("UIScene"),
+          ui: game.scene.isActive("UIScene")
+            ? game.scene.getScene("UIScene")
+            : (undefined as unknown as Phaser.Scene),
         };
         // Solo en modo debug, usar logAutopoiesis para información de desarrollo
         if (gameConfig.debugMode) {

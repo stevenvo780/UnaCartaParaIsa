@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { logAutopoiesis } from "../utils/logger";
 
-export default class BootScene extends Phaser.Scene {
+export class BootScene extends Phaser.Scene {
   constructor() {
     super({ key: "BootScene" });
   }
@@ -16,18 +16,7 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create() {
-    logAutopoiesis.info(
-      "🔄 Registrando mock asset manager y cambiando a MainScene...",
-    );
-
-    // Crear un mock muy básico de UnifiedAssetManager
-    const mockAssetManager = {
-      isLoaded: true,
-      assets: new Map(),
-    };
-
-    this.registry.set("unifiedAssetManager", mockAssetManager);
-
+    logAutopoiesis.info("🔄 Cambiando a MainScene...");
     this.scene.start("MainScene");
   }
 
@@ -38,6 +27,3 @@ export default class BootScene extends Phaser.Scene {
     }
   }
 }
-
-// Export con nombre para compatibilidad
-export { BootScene };

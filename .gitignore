@@ -29,3 +29,18 @@ artifacts*
 *.pyc
 *venv*
 
+# MCP/Playwright/agent artifacts
+artifacts/
+playwright-report/
+test-results/
+trace.zip
+storageState.json
+*.har
+*.tmp
+
+# Agent/work dirs
+.agent/
+docs/_agent/**
+
+# Project scripts not intended for release
+scripts/
