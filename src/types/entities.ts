@@ -27,16 +27,14 @@ export type MoodType =
 
 export interface EntityStats {
   health: number;
-  happiness: number;
   energy: number;
   hunger: number;
-  thirst: number; // Nueva necesidad crítica
-  mentalHealth: number; // Reemplaza happiness + stress combinados
+  thirst: number; // Necesidad crítica
+  mentalHealth: number; // Salud mental unificada
   boredom: number;
   loneliness: number;
   sleepiness: number;
   money: number;
-  stress: number;
   comfort: number;
   creativity: number;
   resonance: number;

@@ -558,4 +558,93 @@ export class LayeredWorldRenderer {
 
     logAutopoiesis.info("🧹 LayeredWorldRenderer destruido");
   }
+
+  /**
+   * Crea un tilemap base para el terreno usando Phaser Tilemap
+   */
+  private createTerrainTilemap(composedWorld: ComposedWorld): Phaser.Tilemaps.Tilemap | null {
+    try {
+      const { terrain } = composedWorld.layers;
+      if (!terrain || terrain.length === 0) return null;
+
+      // Configuración del tilemap
+      const tileWidth = 32;
+      const tileHeight = 32;
+      const mapWidth = Math.ceil(this.worldConfig.width / tileWidth);
+      const mapHeight = Math.ceil(this.worldConfig.height / tileHeight);
+
+      // Crear tilemap vacío
+      const map = this.scene.make.tilemap({
+        key: 'terrain-map',
+        tileWidth,
+        tileHeight,
+        width: mapWidth,
+        height: mapHeight
+      });
+
+      // Añadir tilesets (necesita tilesheet preloaded)
+      const terrainTileset = map.addTilesetImage('terrain-tiles', 'terrain-tilesheet');
+      if (!terrainTileset) {
+        logAutopoiesis.warn("No se pudo cargar tileset de terreno");
+        return null;
+      }
+
+      // Crear capa de terreno
+      const terrainLayer = map.createLayer('terrain', terrainTileset, 0, 0);
+      if (!terrainLayer) {
+        logAutopoiesis.warn("No se pudo crear capa de terreno");
+        return null;
+      }
+
+      // Llenar tilemap con tiles basados en el terrain generado
+      terrain.forEach(placedAsset => {
+        const tileX = Math.floor(placedAsset.x / tileWidth);
+        const tileY = Math.floor(placedAsset.y / tileHeight);
+        
+        // Mapear tipo de bioma a índice de tile
+        const tileIndex = this.getBiomeTileIndex(placedAsset.metadata?.biome);
+        
+        if (tileX >= 0 && tileX < mapWidth && tileY >= 0 && tileY < mapHeight) {
+          terrainLayer.putTileAt(tileIndex, tileX, tileY);
+        }
+      });
+
+      // Configurar culling del tilemap
+      terrainLayer.setCullPadding(2, 2);
+      
+      // Asignar al layer group correspondiente
+      if (this.layerGroups.terrain) {
+        this.layerGroups.terrain.add(terrainLayer);
+      }
+
+      logAutopoiesis.info("🗺️ Tilemap de terreno creado", {
+        mapSize: { width: mapWidth, height: mapHeight },
+        tileSize: { width: tileWidth, height: tileHeight },
+        tilesCount: mapWidth * mapHeight
+      });
+
+      return map;
+    } catch (error) {
+      logAutopoiesis.error("Error creando tilemap de terreno", error);
+      return null;
+    }
+  }
+
+  /**
+   * Mapea tipos de bioma a índices de tiles
+   */
+  private getBiomeTileIndex(biome?: string): number {
+    const biomeToTile: Record<string, number> = {
+      'GRASSLAND': 1,
+      'FOREST': 2,
+      'DESERT': 3,
+      'MOUNTAINOUS': 4,
+      'WETLAND': 5,
+      'COASTAL': 6,
+      'VILLAGE': 7,
+      'WASTELAND': 8
+    };
+    
+    return biomeToTile[biome || 'GRASSLAND'] || 1;
+  }
 }

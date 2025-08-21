@@ -195,9 +195,4 @@ export class TopBar {
     this.container.add(child);
     return this;
   }
-
-  // Método para obtener el container si es necesario
-  getContainer(): Phaser.GameObjects.Container {
-    return this.container;
-  }
 }
