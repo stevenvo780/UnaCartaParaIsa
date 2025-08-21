@@ -16,6 +16,7 @@ export class SystemStatusUI {
   private container: Phaser.GameObjects.Container;
   private isVisible: boolean = false; // Hidden by default - advanced info
   private isExpanded: boolean = false;
+  private embedded: boolean = false;
 
   // UI Elements
   private background: Phaser.GameObjects.Rectangle;
@@ -48,12 +49,18 @@ export class SystemStatusUI {
     spacing: 20,
   };
 
-  constructor(scene: Phaser.Scene, x: number = 20, y: number = 160) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number = 20,
+    y: number = 160,
+    options?: { embedded?: boolean },
+  ) {
     this.scene = scene;
+    this.embedded = !!options?.embedded;
 
     this.container = this.scene.add.container(x, y);
     this.container.setScrollFactor(0);
-    this.container.setDepth(999); // Below dialogue cards but above most UI
+    this.container.setDepth(999); // Will be wrapped by modal when embedded
     this.container.setVisible(this.isVisible);
 
     this.createUI();
@@ -110,11 +117,13 @@ export class SystemStatusUI {
     this.container.add(this.feedbackContainer);
     this.createFeedbackDisplay();
 
-    // Make background interactive
-    this.background.setInteractive();
-    this.background.on("pointerdown", () => {
-      this.toggleExpanded();
-    });
+    // Toggle expand only when no embedded mode
+    if (!this.embedded) {
+      this.background.setInteractive();
+      this.background.on("pointerdown", () => {
+        this.toggleExpanded();
+      });
+    }
   }
 
   /**
@@ -229,17 +238,19 @@ export class SystemStatusUI {
       this.showPatternNotification(data);
     });
 
-    // Toggle visibility with 'E' key (Emergence)
-    this.scene.input.keyboard?.on("keydown-E", () => {
-      this.toggleVisibility();
-    });
+    if (!this.embedded) {
+      // Toggle visibility with 'E' key (Emergence)
+      this.scene.input.keyboard?.on("keydown-E", () => {
+        this.toggleVisibility();
+      });
 
-    // Toggle expanded view with 'X' key
-    this.scene.input.keyboard?.on("keydown-X", () => {
-      if (this.isVisible) {
-        this.toggleExpanded();
-      }
-    });
+      // Toggle expanded view with 'X' key
+      this.scene.input.keyboard?.on("keydown-X", () => {
+        if (this.isVisible) {
+          this.toggleExpanded();
+        }
+      });
+    }
   }
 
   /**
@@ -532,6 +543,10 @@ export class SystemStatusUI {
         this.currentFeedback,
       );
     }
+  }
+
+  public getContainer(): Phaser.GameObjects.Container {
+    return this.container;
   }
 
   /**

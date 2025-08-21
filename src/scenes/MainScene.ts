@@ -2,7 +2,6 @@ import Phaser from "phaser";
 import { DayNightUI } from "../components/DayNightUI";
 import { DialogueCardUI } from "../components/DialogueCardUI";
 import { QuestUI } from "../components/QuestUI";
-import { SystemStatusUI } from "../components/SystemStatusUI";
 import { AnimatedGameEntity } from "../entities/AnimatedGameEntity";
 import { EntityManager } from "../managers/EntityManager";
 import { GameLogicManager } from "../managers/GameLogicManager";
@@ -35,7 +34,6 @@ export class MainScene extends Phaser.Scene {
   private questUI!: QuestUI;
   private dialogueCardUI!: DialogueCardUI;
   private dayNightUI!: DayNightUI;
-  private systemStatusUI!: SystemStatusUI;
   private gameLogicManager!: GameLogicManager;
   private worldRenderer!: WorldRenderer;
   private entityManager!: EntityManager;
@@ -84,7 +82,6 @@ export class MainScene extends Phaser.Scene {
     );
     this.questUI = new QuestUI(this);
     this.dayNightUI = new DayNightUI(this, 20, 20);
-    this.systemStatusUI = new SystemStatusUI(this, 20, 160);
 
     await this.initializeManagers();
 
@@ -180,13 +177,21 @@ export class MainScene extends Phaser.Scene {
       "emergenceSystem",
       this.gameLogicManager.getEmergenceSystem(),
     );
-    this.registry.set("systemStatusUI", this.systemStatusUI);
 
     this.gameLogicManager.on("gameLogicUpdate", (data: GameLogicUpdateData) => {
       this.events.emit("gameLogicUpdate", data);
     });
 
     this.setupDialogueCardEventHandlers();
+
+    // Forward emergence-related events to UIScene to keep UI unified
+    const uiScene = this.scene.get("UIScene");
+    this.events.on("emergenceMetricsUpdated", (payload: any) => {
+      uiScene.events.emit("emergenceMetricsUpdated", payload);
+    });
+    this.events.on("emergentPatternDetected", (payload: any) => {
+      uiScene.events.emit("emergentPatternDetected", payload);
+    });
 
     logAutopoiesis.debug("All managers initialized");
   }
@@ -689,9 +694,6 @@ export class MainScene extends Phaser.Scene {
       this.dayNightUI.destroy();
     }
 
-    if (this.systemStatusUI) {
-      this.systemStatusUI.destroy();
-    }
 
     logAutopoiesis.info("MainScene destroyed");
   }

@@ -6,6 +6,7 @@ import {
 import { FoodUI } from "../components/FoodUI";
 import { ResonanceLabel, UIElementPool } from "../managers/UIElementPool";
 import { DialogueCardUI } from "../components/DialogueCardUI";
+import { SystemStatusUI } from "../components/SystemStatusUI";
 import type { Entity, GameLogicUpdateData } from "../types";
 import { randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
@@ -25,18 +26,15 @@ export class UIScene extends Phaser.Scene {
   // Modern UI system
   private topBar!: Phaser.GameObjects.Container;
   private bottomBar!: Phaser.GameObjects.Container;
+  // Paneles laterales y minimapa como UI suelta se reemplazan por modales
+  // (se mantienen tipos pero no se crean instancias)
   private leftPanel!: Phaser.GameObjects.Container;
   private rightPanel!: Phaser.GameObjects.Container;
-  private leftEdgeToggle?: Phaser.GameObjects.Container;
-  private rightEdgeToggle?: Phaser.GameObjects.Container;
-  private minimapContainer!: Phaser.GameObjects.Container;
-  private minimapContent?: Phaser.GameObjects.Graphics;
-  private minimapIsaDot?: Phaser.GameObjects.Arc;
-  private minimapStevDot?: Phaser.GameObjects.Arc;
-  private minimapToggleBtn?: Phaser.GameObjects.Container;
   private foodUI!: FoodUI;
   private explorationUI!: ExplorationUI;
   private dialogueCardUI!: DialogueCardUI;
+  private systemStatusUI!: SystemStatusUI;
+  private systemModal?: Phaser.GameObjects.Container;
   // Modal grid system
   private modalRegistry: Map<string, Phaser.GameObjects.Container> = new Map();
   private modalOrder: string[] = [];
@@ -76,9 +74,7 @@ export class UIScene extends Phaser.Scene {
     // Create modern modular UI
     this.createTopBar();
     this.createBottomBar();
-    this.createLeftPanel();
-    this.createRightPanel();
-    this.createMinimap();
+    // Paneles laterales y minimapa se sustituyen por modales
     // Colocar los diálogos en la UIScene para que no dependan del zoom
     this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
     this.createFoodUI();
@@ -87,8 +83,7 @@ export class UIScene extends Phaser.Scene {
     // Setup modern navigation
     this.setupModernNavigation();
 
-    // Edge toggles to reopen minimized panels
-    this.createEdgeToggles();
+    // (Sin toggles de borde; usar atajos en top bar)
 
     // Botones para abrir/cerrar modales en la barra superior
     this.createTopBarModalShortcuts();
@@ -490,6 +485,8 @@ export class UIScene extends Phaser.Scene {
     makeIconBtn("📊", () => this.toggleStatsModal());
     // 💬 abre/cierra modal de mensajes
     makeIconBtn("💬", () => this.toggleMessagesModal());
+    // 🌌 abre/cierra modal de estado del sistema (emergencia/autopoiesis)
+    makeIconBtn("🌌", () => this.toggleSystemModal());
   }
 
   private createBottomBar() {
@@ -920,8 +917,9 @@ export class UIScene extends Phaser.Scene {
 
   private createMinimap() {
     const minimapSize = 140;
-    // Position minimap in bottom-right corner but inside the right panel area
-    const minimapX = this.cameras.main.width - minimapSize - 15;
+    // Position minimap bottom-right, evitando panel derecho expandido
+    const rightW = this.rightPanelExpanded ? this.RIGHT_PANEL_WIDTH : 0;
+    const minimapX = this.cameras.main.width - rightW - minimapSize - 15;
     const minimapY = this.cameras.main.height - minimapSize - 90; // Above the bottom bar
 
     this.minimapContainer = this.add.container(minimapX, minimapY);
@@ -1302,9 +1300,36 @@ export class UIScene extends Phaser.Scene {
       const inner = this.dialogueCardUI.getContainer();
       inner.setPosition(0, 0);
       this.children.remove(inner);
-      this.messagesModal = this.createModalWindow("messages", "💬 Mensajes", inner, 360, 260);
+      const modalWidth = 360;
+      const modalHeight = 260;
+      this.messagesModal = this.createModalWindow("messages", "💬 Mensajes", inner, modalWidth, modalHeight);
+      // Aplicar máscara en el contenido, no en el modal completo
+      const maskGfx = this.add.graphics();
+      maskGfx.fillStyle(0xffffff, 0.001);
+      maskGfx.fillRect(12, 36, modalWidth - 24, modalHeight - 48);
+      const mask = maskGfx.createGeometryMask();
+      inner.setMask(mask);
+      maskGfx.setScrollFactor(0);
     } else {
       this.messagesModal.setVisible(!this.messagesModal.visible);
+      this.layoutModals();
+    }
+  }
+
+  private toggleSystemModal() {
+    if (!this.systemModal) {
+      this.systemStatusUI = new SystemStatusUI(this, 0, 0, { embedded: true });
+      const inner = this.systemStatusUI.getContainer();
+      inner.setPosition(0, 0);
+      this.systemModal = this.createModalWindow(
+        "system",
+        "🌌 Sistema",
+        inner,
+        360,
+        260,
+      );
+    } else {
+      this.systemModal.setVisible(!this.systemModal.visible);
       this.layoutModals();
     }
   }
@@ -2042,6 +2067,9 @@ export class UIScene extends Phaser.Scene {
       x: targetX,
       duration: 300,
       ease: "Power2",
+      onComplete: () => {
+        this.layoutModals();
+      },
     });
   }
 
@@ -2057,6 +2085,18 @@ export class UIScene extends Phaser.Scene {
       x: targetX,
       duration: 300,
       ease: "Power2",
+      onComplete: () => {
+        // Reposicionar minimapa para evitar panel derecho
+        if (this.minimapContainer) {
+          const minimapSize = 140;
+          const rightW = this.rightPanelExpanded ? this.RIGHT_PANEL_WIDTH : 0;
+          this.minimapContainer.setPosition(
+            this.cameras.main.width - rightW - minimapSize - 15,
+            this.minimapContainer.y,
+          );
+        }
+        this.layoutModals();
+      },
     });
   }
 
@@ -2098,9 +2138,8 @@ export class UIScene extends Phaser.Scene {
       currentX -= 34;
     });
     this.topBarIndicators.forEach((ind) => {
-      // Keep width of indicator pill
-      const w = (ind as any).width ?? 120;
-      currentX -= (w || 120) + 15;
+      const w = (ind as any).w ?? 120;
+      currentX -= w + 15;
       ind.setPosition(currentX, 35);
     });
 
@@ -2118,10 +2157,8 @@ export class UIScene extends Phaser.Scene {
     if (this.minimapContainer) {
       // Use same offsets as initial creation
       const minimapSize = 140;
-      this.minimapContainer.setPosition(
-        width - minimapSize - 15,
-        height - minimapSize - 90,
-      );
+      const rightW = this.rightPanelExpanded ? this.RIGHT_PANEL_WIDTH : 0;
+      this.minimapContainer.setPosition(width - rightW - minimapSize - 15, height - minimapSize - 90);
     }
 
     if (this.minimapToggleBtn) {
