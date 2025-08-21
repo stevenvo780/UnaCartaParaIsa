@@ -70,25 +70,25 @@ export class SceneInitializationManager {
 
     // Crear mundo básico sin DiverseWorldComposer por ahora (scene no disponible)
     const startTime = Date.now();
-    
+
     // Generar mundo básico para que el juego funcione
     const composedWorld: ComposedWorld = {
       layers: [
         {
           type: "terrain",
-          name: "Basic Terrain", 
+          name: "Basic Terrain",
           assets: [],
           zIndex: 0,
-          visible: true
-        }
+          visible: true,
+        },
       ],
       clusters: [],
       stats: {
         totalAssets: 0,
         diversityIndex: 0,
         compositionTime: 0,
-        complexity: "basic"
-      }
+        complexity: "basic",
+      },
     };
     const generationTime = Date.now() - startTime;
 

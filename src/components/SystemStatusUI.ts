@@ -5,11 +5,12 @@
 
 import Phaser from "phaser";
 import type {
-  SystemMetrics,
   EmergentPattern,
   FeedbackLoop,
+  SystemMetrics,
 } from "../systems/EmergenceSystem";
 import { logAutopoiesis } from "../utils/logger";
+import { SystemLights } from "./ui/SystemLights";
 
 export class SystemStatusUI {
   private scene: Phaser.Scene;
@@ -24,6 +25,7 @@ export class SystemStatusUI {
   private metricsContainer: Phaser.GameObjects.Container;
   private patternsContainer: Phaser.GameObjects.Container;
   private feedbackContainer: Phaser.GameObjects.Container;
+  private lights?: SystemLights;
 
   // Data displays
   private metricsBars: Map<
@@ -590,6 +592,77 @@ export class SystemStatusUI {
         ? Math.round(this.currentMetrics.autopoiesis * 100)
         : undefined,
     };
+  }
+
+  // Public helpers to update lights from outside
+  public updateNeedsSummary(criticalCount: number, warningCount: number): void {
+    if (!this.lights) return;
+    if (criticalCount > 0) {
+      this.lights.upsert(
+        {
+          name: "Needs",
+          status: "error",
+          details: `${criticalCount} críticos`,
+          color: 0xe74c3c,
+        },
+        2,
+      );
+    } else if (warningCount > 0) {
+      this.lights.upsert(
+        {
+          name: "Needs",
+          status: "warning",
+          details: `${warningCount} advertencias`,
+          color: 0xf39c12,
+        },
+        2,
+      );
+    } else {
+      this.lights.upsert(
+        { name: "Needs", status: "active", details: "OK", color: 0x27ae60 },
+        2,
+      );
+    }
+  }
+
+  /**
+   * Inicializar el panel de luces del sistema
+   */
+  private initializeSystemLights(): void {
+    // Optional compact lights panel (top-right)
+    try {
+      this.lights = new SystemLights(this.scene, this.config.width - 210, 10);
+      const lc = this.lights.getContainer();
+      lc.setScale(0.85);
+      this.container.add(lc);
+      // Seed with defaults
+      this.lights.upsert(
+        { name: "World", status: "active", details: "OK", color: 0x27ae60 },
+        0,
+      );
+      this.lights.upsert(
+        { name: "AI", status: "active", details: "OK", color: 0x3498db },
+        1,
+      );
+      this.lights.upsert(
+        { name: "Needs", status: "inactive", details: "--", color: 0x95a5a6 },
+        2,
+      );
+      this.lights.upsert(
+        { name: "Time", status: "active", details: "--:--", color: 0xf1c40f },
+        3,
+      );
+    } catch (error) {
+      // Manejar error silenciosamente
+    }
+  }
+
+  public updateTimeLight(timeString: string): void {
+    if (!this.lights) return;
+    this.lights.upsert(
+      { name: "Time", status: "active", details: timeString, color: 0xf1c40f },
+      3,
+    );
   }
 
   /**

@@ -108,9 +108,19 @@ export class EntityManager {
       // Crear entidades en el centro del mundo (mundo de 100x100 tiles * 32px = 3200x3200px)
       const worldCenterX = 1600; // 3200/2
       const worldCenterY = 1600; // 3200/2
-      
-      const isaEntity = new AnimatedGameEntity(scene, worldCenterX - 25, worldCenterY, "isa");
-      const stevEntity = new AnimatedGameEntity(scene, worldCenterX + 25, worldCenterY, "stev");
+
+      const isaEntity = new AnimatedGameEntity(
+        scene,
+        worldCenterX - 25,
+        worldCenterY,
+        "isa",
+      );
+      const stevEntity = new AnimatedGameEntity(
+        scene,
+        worldCenterX + 25,
+        worldCenterY,
+        "stev",
+      );
 
       // Registrar las entidades en el manager
       this.registerEntity("isa", isaEntity);

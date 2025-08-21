@@ -329,7 +329,7 @@ export class UnifiedAssetManager {
       key: "blue_green_balls_tree2",
       path: "assets/foliage/trees/blue-green_balls_tree2.png",
       type: "image",
-      priority: "medium", 
+      priority: "medium",
       category: "decoration",
     },
     {
@@ -591,10 +591,13 @@ export class UnifiedAssetManager {
           // Si el asset no es crítico, fallamos silenciosamente
           if (config.required !== true && config.priority !== "critical") {
             this.failedAssets.add(config.key);
-            logAutopoiesis.warn(`Asset opcional falló al cargar: ${config.key}`, {
-              error: String(error),
-              path: config.path,
-            });
+            logAutopoiesis.warn(
+              `Asset opcional falló al cargar: ${config.key}`,
+              {
+                error: String(error),
+                path: config.path,
+              },
+            );
             resolve(); // Continuar en lugar de fallar
             return;
           }

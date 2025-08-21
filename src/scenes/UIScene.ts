@@ -7,14 +7,19 @@ import {
 import { FoodUI } from "../components/FoodUI";
 import { ResonanceBar } from "../components/ResonanceBar";
 import { SystemStatusUI } from "../components/SystemStatusUI";
+import { BottomBar } from "../components/ui/BottomBar";
 import { MessagesModalContent } from "../components/ui/MessagesModal";
 import { ModalManager } from "../components/ui/ModalManager";
+import { SettingsModalContent } from "../components/ui/SettingsModal";
 import { StatsModalContent } from "../components/ui/StatsModal";
 import { TopBar } from "../components/ui/TopBar";
 import { WorldModalContent } from "../components/ui/WorldModal";
+import { gameConfig } from "../config/gameConfig";
+import { UIDesignSystem as DS } from "../config/uiDesignSystem";
 import { ResonanceLabel, UIElementPool } from "../managers/UIElementPool";
 import type { TimeOfDay } from "../systems/DayNightSystem";
 import type { GameLogicUpdateData } from "../types";
+import { NeedsUI } from "../ui/NeedsUI";
 import { randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
 
@@ -33,7 +38,7 @@ export class UIScene extends Phaser.Scene {
 
   // Modern UI system
   private topBar!: TopBar;
-  private bottomBar!: Phaser.GameObjects.Container;
+  private bottomBar!: BottomBar;
   // Paneles/minimapa legacy eliminados: UI sintetizada con modales
   private foodUI!: FoodUI;
   private explorationUI!: ExplorationUI;
@@ -46,10 +51,10 @@ export class UIScene extends Phaser.Scene {
   private statsModal?: Phaser.GameObjects.Container;
   private statsModalContent?: StatsModalContent;
   private messagesModal?: Phaser.GameObjects.Container;
+  private settingsModal?: Phaser.GameObjects.Container;
+  private needsUI?: NeedsUI;
 
   // AGREGADAS: Propiedades faltantes
-  private modalRegistry: Map<string, Phaser.GameObjects.Container> = new Map();
-  private modalOrder: string[] = [];
   private topCenterIndicators?: Phaser.GameObjects.Container;
   private topMenuBtn?: Phaser.GameObjects.Container;
   private topBarModalButtons: Phaser.GameObjects.Container[] = [];
@@ -76,12 +81,18 @@ export class UIScene extends Phaser.Scene {
   }
 
   create() {
-    console.log("🚀 UIScene.create() STARTED");
+    logAutopoiesis.info("🚀 UIScene.create() iniciado");
     logAutopoiesis.info("🚀 UIScene.create() STARTED");
     try {
-      // TEMPORAL: Crear indicador visual de debug INMEDIATAMENTE
-      this.createDebugIndicator();
+      // Indicador visual de debug sólo en modo debug
+      if (gameConfig.debugMode) {
+        this.createDebugIndicator();
+      }
       logAutopoiesis.info("✅ Debug indicator created");
+
+      // CRÍTICO: Activar UI de necesidades desde el inicio
+      this.createNeedsUI();
+      logAutopoiesis.info("✅ Needs UI activated - barras visibles");
 
       logAutopoiesis.info("🎨 Creating Modern Game UI");
 
@@ -120,6 +131,24 @@ export class UIScene extends Phaser.Scene {
       // Setup modern navigation
       this.setupModernNavigation();
       logAutopoiesis.info("✅ Modern navigation setup complete");
+
+      // Suscribirse a necesidades desde MainScene (UI + luces)
+      const mainScene = this.scene.get("MainScene");
+      mainScene.events.on("needsUpdated", (data: any) => {
+        this.needsUI?.updateNeeds(data.entityData);
+        const needs = data?.entityData?.needs as
+          | Record<string, number>
+          | undefined;
+        if (needs) {
+          const criticalCount = Object.entries(needs).filter(
+            ([k, v]) => k !== "lastUpdate" && v < 20,
+          ).length;
+          const warningCount = Object.entries(needs).filter(
+            ([k, v]) => k !== "lastUpdate" && v < 40 && v >= 20,
+          ).length;
+          this.systemStatusUI?.updateNeedsSummary(criticalCount, warningCount);
+        }
+      });
     } catch (error) {
       logAutopoiesis.error("❌ Error in UIScene.create():", error);
     }
@@ -132,9 +161,13 @@ export class UIScene extends Phaser.Scene {
     const mainScene = this.scene.get("MainScene");
     mainScene.events.on("gameLogicUpdate", this.updateUI, this);
 
-    // Listen for time changes to update top bar
+    // Listen for time changes to update top bar y luces
     this.events.on("timeChanged", (timeData: TimeOfDay) => {
       this.updateTopBarTime(timeData);
+      const timeString = `${timeData.hour.toString().padStart(2, "0")}:${timeData.minute
+        .toString()
+        .padStart(2, "0")}`;
+      this.systemStatusUI?.updateTimeLight(timeString);
     });
 
     // Handle resize events
@@ -237,6 +270,7 @@ export class UIScene extends Phaser.Scene {
         }
       },
       onOpenMenu: () => this.toggleGameMenu(),
+      onToggleContrast: () => this.toggleHighContrast(),
     });
   }
 
@@ -419,39 +453,13 @@ export class UIScene extends Phaser.Scene {
   }
 
   private createBottomBar() {
-    const barHeight = 80;
-    this.bottomBar = this.add.container(
-      0,
-      this.cameras.main.height - barHeight,
-    );
-    this.bottomBar.setScrollFactor(0);
-
-    // Bottom bar background
-    const bottomBg = this.add.graphics();
-    bottomBg.fillGradientStyle(
-      0x34495e,
-      0x34495e,
-      0x2c3e50,
-      0x2c3e50,
-      0.9,
-      0.9,
-      1,
-      1,
-    );
-    bottomBg.fillRect(0, 0, this.cameras.main.width, barHeight);
-    bottomBg.lineStyle(2, 0x1abc9c, 0.8);
-    bottomBg.lineBetween(0, 2, this.cameras.main.width, 2);
-    this.bottomBar.add(bottomBg);
-    this.bottomBar.setData("bg", bottomBg);
-
-    // Control buttons
-    this.createControlButtons();
-
-    // Action buttons
-    this.createActionButtons();
-
-    // Speed controls
-    this.createSpeedControls();
+    this.bottomBar = new BottomBar(this, {
+      onSetControl: (mode) => this.setControlMode(mode),
+      onTogglePause: () => this.togglePause(),
+      onOpenSettings: () => this.openSettings(),
+      onScreenshot: () => this.takeScreenshot(),
+      onSetSpeed: (m) => this.setGameSpeed(m),
+    });
   }
 
   private createControlButtons() {
@@ -960,6 +968,7 @@ export class UIScene extends Phaser.Scene {
         360,
         260,
       );
+      // Actualizaciones se reciben desde UIScene.create; aquí ya no nos suscribimos
     } else {
       this.modalManager.toggle("system");
     }
@@ -980,49 +989,28 @@ export class UIScene extends Phaser.Scene {
     }
   }
 
+  private toggleSettingsModal() {
+    if (!this.settingsModal) {
+      const content = new SettingsModalContent(this);
+      this.settingsModal = this.modalManager.createWindow(
+        "settings",
+        "⚙️ Configuración",
+        content.getContainer(),
+        360,
+        160,
+      );
+    } else {
+      this.modalManager.toggle("settings");
+    }
+  }
+
   // (World modal content extraído a WorldModalContent)
 
   // (Stats modal content extraído a StatsModalContent)
 
   // =================== HELPER METHODS ===================
 
-  private createModernButton(
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    text: string,
-    color: string,
-    callback: () => void,
-  ) {
-    const button = this.add.container(x, y);
-
-    const bg = this.add.graphics();
-    const colorValue = Phaser.Display.Color.HexStringToColor(color).color;
-    bg.fillStyle(colorValue, 0.8);
-    bg.fillRoundedRect(0, 0, width, height, 3);
-    button.add(bg);
-
-    const label = this.add
-      .text(width / 2, height / 2, text, {
-        fontSize: "11px",
-        color: "#ffffff",
-        fontFamily: "Arial",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
-    button.add(label);
-
-    button.setInteractive(
-      new Phaser.Geom.Rectangle(0, 0, width, height),
-      Phaser.Geom.Rectangle.Contains,
-    );
-    button.on("pointerdown", callback);
-    button.on("pointerover", () => bg.setAlpha(1));
-    button.on("pointerout", () => bg.setAlpha(0.8));
-
-    return button;
-  }
+  // Eliminado: usar createUIButton para evitar duplicación
 
   // (Legacy) createCharacterPanel / updateCharacterPanels eliminados (uso modal de Estadísticas)
 
@@ -1090,8 +1078,7 @@ export class UIScene extends Phaser.Scene {
   }
 
   private openSettings() {
-    // Placeholder for settings menu
-    logAutopoiesis.info("Settings menu requested");
+    this.toggleSettingsModal();
   }
 
   private takeScreenshot() {
@@ -1140,43 +1127,50 @@ export class UIScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     // Botón Nueva Partida
-    const newGameBtn = this.createModernButton(
+    const newGameBtn = createUIButton(
+      this,
       0,
       -40,
-      200,
-      30,
       "🎮 Nueva Partida",
-      "#e74c3c",
       () => {
         this.startNewGame();
         menuContainer.destroy();
       },
+      {
+        width: 200,
+        height: 30,
+        color: Phaser.Display.Color.HexStringToColor("#e74c3c").color,
+      },
     );
 
     // Botón Configuración
-    const settingsBtn = this.createModernButton(
+    const settingsBtn = createUIButton(
+      this,
       0,
       0,
-      200,
-      30,
       "⚙️ Configuración",
-      "#3498db",
       () => {
         this.openSettings();
         menuContainer.destroy();
       },
+      {
+        width: 200,
+        height: 30,
+        color: Phaser.Display.Color.HexStringToColor("#3498db").color,
+      },
     );
 
     // Botón Cerrar
-    const closeBtn = this.createModernButton(
+    const closeBtn = createUIButton(
+      this,
       0,
       40,
-      200,
-      30,
       "❌ Cerrar",
-      "#95a5a6",
-      () => {
-        menuContainer.destroy();
+      () => menuContainer.destroy(),
+      {
+        width: 200,
+        height: 30,
+        color: Phaser.Display.Color.HexStringToColor("#95a5a6").color,
       },
     );
 
@@ -1219,33 +1213,27 @@ export class UIScene extends Phaser.Scene {
     // (Paneles laterales/minimapa eliminados en favor de modales)
 
     if (this.bottomBar) {
-      // Anchor to bottom-left consistent with initial creation
-      const barHeight = 80;
-      this.bottomBar.setPosition(0, height - barHeight);
-
-      // Resize bottom bar background to fit width
-      const bg = this.bottomBar.getData("bg") as Phaser.GameObjects.Graphics;
-      if (bg) {
-        bg.clear();
-        bg.fillGradientStyle(
-          0x34495e,
-          0x34495e,
-          0x2c3e50,
-          0x2c3e50,
-          0.9,
-          0.9,
-          1,
-          1,
-        );
-        bg.fillRect(0, 0, width, barHeight);
-        bg.lineStyle(2, 0x1abc9c, 0.8);
-        bg.lineBetween(0, 2, width, 2);
-      }
+      this.bottomBar.handleResize(width, height);
     }
 
     if (this.foodUI) {
       this.foodUI.updatePosition();
     }
+    if (this.needsUI) {
+      this.needsUI.setPosition(this.cameras.main.width - 220, 80);
+    }
+  }
+
+  private toggleHighContrast() {
+    const now = !(this.registry.get("ui_high_contrast") as boolean);
+    this.registry.set("ui_high_contrast", now);
+    DS.setAccessibilityPreferences({ highContrastEnabled: now });
+    // Redibujar TopBar
+    (this.topBar as any)?.handleResize?.(this.cameras.main.width);
+    // Redibujar BottomBar
+    this.bottomBar?.handleResize(this.cameras.main.width, this.cameras.main.height);
+    // Redibujar estilos de modales
+    this.modalManager?.refreshStyles();
   }
 
   /**
@@ -1272,6 +1260,17 @@ export class UIScene extends Phaser.Scene {
     logAutopoiesis.info(
       "🔍 Debug indicator created - UIScene is active (green box visible)",
     );
+  }
+
+  // Crea y posiciona la UI de necesidades reutilizando el componente actual (no se elimina)
+  private createNeedsUI(): void {
+    try {
+      this.needsUI = new NeedsUI(this);
+      // Colocarla debajo del TopBar y sin solapar BottomBar
+      this.needsUI.setPosition(this.cameras.main.width - 220, 80);
+    } catch (e) {
+      logAutopoiesis.error("Error creando NeedsUI en UIScene", e);
+    }
   }
 
   /**

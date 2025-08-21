@@ -3,8 +3,9 @@
  * Proporciona funcionalidad común para ExplorationUI, FoodUI y otros componentes
  */
 
-import type Phaser from "phaser";
+import Phaser from "phaser";
 import { UIDesignSystem as DS } from "../config/uiDesignSystem";
+import { FocusTrap } from "./ui/FocusTrap";
 
 export interface UIComponentConfig {
   width: number;
@@ -23,6 +24,7 @@ export abstract class BaseUIComponent {
   protected isVisible = false;
   protected background: Phaser.GameObjects.Graphics;
   protected header: Phaser.GameObjects.Container;
+  private focusTrap?: FocusTrap;
 
   constructor(scene: Phaser.Scene, config: UIComponentConfig) {
     this.scene = scene;
@@ -42,6 +44,7 @@ export abstract class BaseUIComponent {
 
     if (this.config.modal) {
       this.createModalOverlay();
+      this.focusTrap = new FocusTrap(this.scene, this.container);
     }
 
     this.updatePosition();
@@ -153,13 +156,13 @@ export abstract class BaseUIComponent {
       this.scene.cameras.main.height,
     );
     overlay.setInteractive(
-      new (window as any).Phaser.Geom.Rectangle(
+      new Phaser.Geom.Rectangle(
         -this.scene.cameras.main.width / 2,
         -this.scene.cameras.main.height / 2,
         this.scene.cameras.main.width,
         this.scene.cameras.main.height,
       ),
-      (window as any).Phaser.Geom.Rectangle.Contains,
+      Phaser.Geom.Rectangle.Contains,
     );
     overlay.on("pointerdown", () => this.hide());
 
@@ -181,6 +184,7 @@ export abstract class BaseUIComponent {
   public show(): void {
     this.isVisible = true;
     this.container.setVisible(true);
+    this.focusTrap?.activate();
 
     DS.createAccessibleAnimation(this.scene, {
       targets: this.container,
@@ -200,6 +204,7 @@ export abstract class BaseUIComponent {
     if (!this.isVisible) return;
 
     this.isVisible = false;
+    this.focusTrap?.deactivate();
 
     DS.createAccessibleAnimation(this.scene, {
       targets: this.container,

@@ -249,10 +249,10 @@ export class EntityStateManager {
       state.lastUpdate > 0;
 
     if (!isValid) {
-      logAutopoiesis.error(
-        `Estado inconsistente para entidad ${entityId}`,
-        { entityId, isValid },
-      );
+      logAutopoiesis.error(`Estado inconsistente para entidad ${entityId}`, {
+        entityId,
+        isValid,
+      });
     }
 
     return isValid;

@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { UIDesignSystem as DS } from "../../config/uiDesignSystem";
 
 export interface TopBarCallbacks {
   onToggleStats: () => void;
@@ -7,6 +8,7 @@ export interface TopBarCallbacks {
   onToggleWorld: () => void;
   onTogglePerformance: () => void;
   onOpenMenu: () => void;
+  onToggleContrast: () => void;
 }
 
 export class TopBar {
@@ -49,11 +51,11 @@ export class TopBar {
   handleResize(width: number) {
     if (this.bg) {
       this.bg.clear();
-      this.bg.fillStyle(0x1a1a2e, 0.85);
+      this.bg.fillStyle(DS.COLORS.background, 0.85);
       this.bg.fillRect(0, 0, width, 70);
-      this.bg.lineStyle(2, 0x74b9ff, 0.6);
+      this.bg.lineStyle(2, DS.COLORS.secondary, 0.6);
       this.bg.lineBetween(0, 68, width, 68);
-      this.bg.fillStyle(0x000000, 0.2);
+      this.bg.fillStyle(DS.COLORS.shadow, 0.2);
       this.bg.fillRect(0, 70, width, 4);
     }
     if (this.centerGroup) this.centerGroup.setPosition(width / 2, 35);
@@ -74,11 +76,8 @@ export class TopBar {
     const titleContainer = this.scene.add.container(25, 35);
     const titleText = this.scene.add
       .text(0, 0, "Una Carta Para Isa", {
-        fontSize: "22px",
-        color: "#FFFFFF",
-        fontFamily: "Arial, sans-serif",
-        fontStyle: "bold",
-        stroke: "#6C5CE7",
+        ...DS.getTextStyle("xxl", DS.COLORS.text, "bold"),
+        stroke: `#${DS.COLORS.primary.toString(16)}`,
         strokeThickness: 1,
       })
       .setOrigin(0, 0.5);
@@ -121,13 +120,10 @@ export class TopBar {
         .text(14, 0, icon, { fontSize: "13px" })
         .setOrigin(0.5);
       const labelText = this.scene.add.text(28, -8, label, {
-        fontSize: "8px",
-        color: "#B2BEC3",
+        ...DS.getTextStyle("xs", DS.COLORS.textSecondary),
       });
       const valueText = this.scene.add.text(28, 4, value, {
-        fontSize: "11px",
-        color: "#FFFFFF",
-        fontStyle: "bold",
+        ...DS.getTextStyle("sm", DS.COLORS.text, "bold"),
       });
       c.add([bg, iconText, labelText, valueText]);
       this.centerGroup!.add(c);
@@ -143,9 +139,9 @@ export class TopBar {
     const addModalBtn = (emoji: string, onClick: () => void) => {
       const c = this.scene.add.container(0, 35);
       const bg = this.scene.add.graphics();
-      bg.fillStyle(0x34495e, 0.2);
+      bg.fillStyle(DS.COLORS.surface, 0.2);
       bg.fillCircle(0, 0, 18);
-      bg.lineStyle(1, 0x74b9ff, 0.6);
+      bg.lineStyle(1, DS.COLORS.secondary, 0.6);
       bg.strokeCircle(0, 0, 18);
       const label = this.scene.add
         .text(0, 0, emoji, {
@@ -165,17 +161,18 @@ export class TopBar {
     addModalBtn("💬", this.callbacks.onToggleMessages);
     addModalBtn("🌌", this.callbacks.onToggleSystem);
     addModalBtn("🌍", this.callbacks.onToggleWorld);
-    addModalBtn("⚡", this.callbacks.onTogglePerformance); // Botón de menú
+    addModalBtn("⚡", this.callbacks.onTogglePerformance);
+    addModalBtn("🌓", this.callbacks.onToggleContrast);
     const menuBtn = this.scene.add.container(
       this.scene.cameras.main.width - 45,
       35,
     );
     const menuBg = this.scene.add.graphics();
-    menuBg.fillStyle(0x6c5ce7, 0.3);
+    menuBg.fillStyle(DS.COLORS.primary, 0.3);
     menuBg.fillCircle(0, 0, 22);
-    menuBg.fillStyle(0x6c5ce7, 0.9);
+    menuBg.fillStyle(DS.COLORS.primary, 0.9);
     menuBg.fillCircle(0, 0, 18);
-    menuBg.fillStyle(0x74b9ff, 0.4);
+    menuBg.fillStyle(DS.COLORS.secondary, 0.4);
     menuBg.fillCircle(-3, -3, 8);
     const menuIcon = this.scene.add
       .text(0, 0, "⚙️", { fontSize: "16px" })

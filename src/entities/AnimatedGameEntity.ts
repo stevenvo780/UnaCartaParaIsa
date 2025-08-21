@@ -22,6 +22,10 @@ export class AnimatedGameEntity extends GameEntity {
     entityId: "isa" | "stev",
     services?: IEntityServices,
   ) {
+    logAutopoiesis.info(
+      `🎭 Creating AnimatedGameEntity: ${entityId} at (${x}, ${y})`,
+    );
+
     // Get animation manager from scene registry with proper type checking
     const animManager = scene.registry.get("animationManager");
     if (!animManager || !(animManager instanceof AnimationManager)) {
@@ -30,50 +34,67 @@ export class AnimatedGameEntity extends GameEntity {
       );
     }
 
-    // Initialize with new animated spritesheets
-    const initialSpriteKey = entityId === "isa" ? "whomen1" : "man1";
+    try {
+      // Call parent constructor with safe fallback texture
+      logAutopoiesis.info(`🎭 Calling parent constructor for ${entityId}`);
+      super(scene, x, y, entityId, services);
+      logAutopoiesis.info(`🎭 Parent constructor completed for ${entityId}`);
 
-    // Call parent constructor with a fallback texture
-    super(scene, x, y, entityId, services);
+      // Initialize with new animated spritesheets
+      const initialSpriteKey = entityId === "isa" ? "whomen1" : "man1";
 
-    // Try to use the new animated spritesheets first
-    if (scene.textures.exists(initialSpriteKey)) {
-      this.setTexture(initialSpriteKey);
-      logAutopoiesis.info(
-        `Using new animated sprite for ${entityId}: ${initialSpriteKey}`,
-      );
-    } else {
-      // Fallback to old static sprites
-      const fallbackKey = entityId === "isa" ? "isa_happy" : "stev_happy";
-      if (scene.textures.exists(fallbackKey)) {
-        this.setTexture(fallbackKey);
-        logAutopoiesis.warn(
-          `New spritesheet ${initialSpriteKey} not found, using fallback: ${fallbackKey}`,
+      // Try to use the new animated spritesheets first
+      if (scene.textures.exists(initialSpriteKey)) {
+        this.setTexture(initialSpriteKey);
+        logAutopoiesis.info(
+          `Using new animated sprite for ${entityId}: ${initialSpriteKey}`,
         );
       } else {
-        // Final fallback to basic textures
-        const basicFallback = entityId === "isa" ? "woman" : "man";
-        if (scene.textures.exists(basicFallback)) {
-          this.setTexture(basicFallback);
+        // Fallback to old static sprites
+        const fallbackKey = entityId === "isa" ? "isa_happy" : "stev_happy";
+        if (scene.textures.exists(fallbackKey)) {
+          this.setTexture(fallbackKey);
+          logAutopoiesis.warn(
+            `New spritesheet ${initialSpriteKey} not found, using fallback: ${fallbackKey}`,
+          );
+        } else {
+          logAutopoiesis.error(
+            `Critical: No suitable texture found for ${entityId}. Available textures:`,
+            Object.keys(scene.textures.list).slice(0, 10),
+          );
         }
-        logAutopoiesis.warn(
-          `All spritesheets failed, using basic fallback: ${basicFallback}`,
-        );
       }
+    } catch (error) {
+      logAutopoiesis.error(
+        `❌ Error in AnimatedGameEntity constructor for ${entityId}:`,
+        {
+          error: String(error),
+          stack: error instanceof Error ? error.stack : "No stack trace",
+        },
+      );
+      throw error; // Re-throw para que el EntityManager pueda manejarlo
     }
+
+    console.log(
+      `🎭 AnimatedGameEntity: About to setup animation manager for ${entityId}`,
+    );
 
     // Type-safe assignment of animation manager
     this.animationManager =
       animManager instanceof AnimationManager ? animManager : undefined;
 
+    console.log(`🎭 AnimationManager available:`, !!this.animationManager);
+
     if (this.animationManager) {
       // Start with appropriate initial animation using new multi-frame sprites
-      const initialAnimation =
-        entityId === "isa" ? "isa_happy" : "stev_happy";
+      const initialAnimation = entityId === "isa" ? "isa_happy" : "stev_happy";
+
+      console.log(`🎭 Checking animation: ${initialAnimation}`);
 
       // Validate animation exists before playing
       if (this.animationManager.hasAnimation(initialAnimation)) {
         this.currentAnimationKey = initialAnimation;
+        console.log(`🎭 Playing animation: ${initialAnimation}`);
         this.animationManager.playAnimation(this, initialAnimation);
 
         logAutopoiesis.info(
@@ -84,29 +105,85 @@ export class AnimatedGameEntity extends GameEntity {
           },
         );
       } else {
+        console.log(
+          `🎭 Animation ${initialAnimation} not found, trying fallback`,
+        );
         // Fallback to basic row animation
         const fallbackAnimation =
           entityId === "isa" ? "whomen1:row0" : "man1:row0";
-        if (this.animationManager.hasAnimation(fallbackAnimation)) {
+
+        console.log(`🎭 Trying fallback animation: ${fallbackAnimation}`);
+        console.log(
+          `🎭 AnimationManager has hasAnimation method:`,
+          typeof this.animationManager?.hasAnimation,
+        );
+
+        if (
+          this.animationManager &&
+          this.animationManager.hasAnimation(fallbackAnimation)
+        ) {
+          console.log(`🎭 Fallback animation found: ${fallbackAnimation}`);
           this.currentAnimationKey = fallbackAnimation;
-          this.animationManager.playAnimation(this, fallbackAnimation);
-          logAutopoiesis.info(
-            `Using fallback row animation for ${entityId}: ${fallbackAnimation}`,
-          );
+
+          console.log(`🎭 About to call playAnimation with:`, {
+            entityId,
+            fallbackAnimation,
+            thisType: this.constructor.name,
+            animManagerType: this.animationManager.constructor.name,
+          });
+
+          try {
+            this.animationManager.playAnimation(this, fallbackAnimation);
+            console.log(
+              `🎭 playAnimation completed successfully for ${fallbackAnimation}`,
+            );
+
+            logAutopoiesis.info(
+              `Using fallback row animation for ${entityId}: ${fallbackAnimation}`,
+            );
+          } catch (playError) {
+            console.log(`🎭 Error in playAnimation:`, playError);
+            logAutopoiesis.error(
+              `playAnimation failed for ${entityId}:`,
+              playError,
+            );
+
+            // Try the final fallback
+            const safeTexture = entityId === "isa" ? "isa_happy" : "stev_happy";
+            console.log(
+              `🎭 Using safe texture as final fallback: ${safeTexture}`,
+            );
+            this.setTexture(safeTexture);
+            this.setVisible(true);
+          }
         } else {
+          console.log(
+            `🎭 Fallback animation ${fallbackAnimation} also not found, using static`,
+          );
+          console.log(`🎭 All animations failed for ${entityId}, using static`);
           logAutopoiesis.warn(
             `All animations failed for ${entityId}, using static sprite`,
           );
-          // Final fallback: make entity visible with static texture
-          this.setTexture(initialSpriteKey);
+          // Final fallback: make entity visible with static texture - use safe texture
+          const safeTexture = entityId === "isa" ? "isa_happy" : "stev_happy";
+          console.log(`🎭 Setting safe texture: ${safeTexture}`);
+          this.setTexture(safeTexture);
           this.setVisible(true);
         }
       }
     } else {
+      console.log(`🎭 No animation manager available for ${entityId}`);
       logAutopoiesis.warn(
-        `AnimationManager not available for ${entityId}, falling back to static sprites`,
+        `No AnimationManager found for entity ${entityId}. Using static sprite.`,
       );
+      // Static sprite fallback when no animation manager
+      const staticTexture = entityId === "isa" ? "isa_happy" : "stev_happy";
+      console.log(`🎭 Using static texture: ${staticTexture}`);
+      this.setTexture(staticTexture);
+      this.setVisible(true);
     }
+
+    console.log(`🎭 AnimatedGameEntity constructor completed for ${entityId}`);
   }
 
   /**
@@ -165,16 +242,13 @@ export class AnimatedGameEntity extends GameEntity {
     // Check if entity is moving (has velocity)
     const isMoving = this.isEntityMoving();
 
-    // DEBUG: Log animation determination
-    console.log(`[${entityId}] Animation debug:`, {
-      avgStat,
-      isMoving,
-      velocity:
-        this.body && "velocity" in this.body
-          ? this.body.velocity
-          : "no velocity",
-      currentAnimation: this.currentAnimationKey,
-    });
+    // DEBUG: Animation determination (disabled to prevent spam)
+    // logAutopoiesis.debug(`[${entityId}] Animation debug:`, {
+    //   avgStat,
+    //   isMoving,
+    //   velocity: this.body && "velocity" in this.body ? this.body.velocity : "no velocity",
+    //   currentAnimation: this.currentAnimationKey,
+    // });
 
     // Actualizar la textura según el movimiento ANTES de devolver la animación
     this.updateTextureForMovement(entityId, isMoving, avgStat);
@@ -182,20 +256,20 @@ export class AnimatedGameEntity extends GameEntity {
     // Priority 1: Death/Critical state
     if (entityData.isDead || stats.health <= 10 || avgStat < 20) {
       const anim = `${entityId}_dying`;
-      console.log(`[${entityId}] Using dying animation:`, anim);
+      logAutopoiesis.debug(`[${entityId}] Using dying animation:`, anim);
       return anim;
     }
 
     // Priority 2: Low well-being (sad)
     if (avgStat < 40 || stats.happiness < 30) {
       const anim = `${entityId}_sad`;
-      console.log(`[${entityId}] Using sad animation:`, anim);
+      logAutopoiesis.debug(`[${entityId}] Using sad animation:`, anim);
       return anim;
     }
 
     // Priority 3: Normal/Happy state (default)
     const anim = `${entityId}_happy`;
-    console.log(`[${entityId}] Using happy animation:`, anim);
+    logAutopoiesis.debug(`[${entityId}] Using happy animation:`, anim);
     return anim;
   }
 
@@ -217,8 +291,7 @@ export class AnimatedGameEntity extends GameEntity {
       // Happy state - choose between idle and walking
       if (isMoving) {
         // Usar animaciones de caminar específicas
-        animationKey =
-          entityId === "isa" ? "isa_happy" : "stev_happy";
+        animationKey = entityId === "isa" ? "isa_happy" : "stev_happy";
       } else {
         // Usar animaciones de idle
         animationKey = entityId === "isa" ? "isa_happy" : "stev_happy";
@@ -227,13 +300,15 @@ export class AnimatedGameEntity extends GameEntity {
 
     // Cambiar animación si es diferente
     if (this.currentAnimationKey !== animationKey) {
-      console.log(
+      logAutopoiesis.debug(
         `[${entityId}] Changing animation from ${this.currentAnimationKey} to ${animationKey}`,
       );
       if (this.animationManager?.hasAnimation(animationKey)) {
         this.playAnimation(animationKey);
       } else {
-        console.warn(`[${entityId}] Animation ${animationKey} not found!`);
+        logAutopoiesis.warn(
+          `[${entityId}] Animation ${animationKey} not found!`,
+        );
       }
     }
   }
@@ -243,7 +318,7 @@ export class AnimatedGameEntity extends GameEntity {
    */
   private isEntityMoving(): boolean {
     if (!this.body || !("velocity" in this.body)) {
-      console.log("No body or velocity available");
+      logAutopoiesis.debug("No body or velocity available");
       return false;
     }
 
@@ -253,12 +328,8 @@ export class AnimatedGameEntity extends GameEntity {
       velocity.x * velocity.x + velocity.y * velocity.y,
     );
 
-    console.log("Movement check:", {
-      velocity,
-      currentSpeed,
-      threshold: speedThreshold,
-      isMoving: currentSpeed > speedThreshold,
-    });
+    // Movement check disabled to prevent spam
+    // Only log on actual state changes if needed
 
     return currentSpeed > speedThreshold;
   }

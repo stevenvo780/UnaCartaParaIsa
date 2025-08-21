@@ -4,9 +4,6 @@ import { GameLogicManager } from "../managers/GameLogicManager";
 import { InputManager } from "../managers/InputManager";
 import { SceneInitializationManager } from "../managers/SceneInitializationManager";
 import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
-import { DialogueCardUI } from "../components/DialogueCardUI";
-import { NeedsUI } from "../ui/NeedsUI";
-import { SystemStatusUI } from "../ui/SystemStatusUI";
 import { logAutopoiesis } from "../utils/logger";
 import { DiverseWorldComposer } from "../world/DiverseWorldComposer";
 import { LayeredWorldRenderer } from "../world/LayeredWorldRenderer";
@@ -31,10 +28,8 @@ export default class MainScene extends Phaser.Scene {
   private worldRenderer!: LayeredWorldRenderer;
   private performanceMode = true;
 
-  // UI de necesidades, cartas de diálogo y estado de sistemas
-  private needsUI!: NeedsUI;
-  private dialogueCardUI!: DialogueCardUI;
-  private systemStatusUI!: SystemStatusUI;
+  // UI principal (cartas, necesidades, estado) se gestiona en UIScene
+  // UI principal (cartas y estado de sistema) se gestiona en UIScene
 
   constructor() {
     super({ key: "MainScene" });
@@ -52,15 +47,18 @@ export default class MainScene extends Phaser.Scene {
   }
 
   async create() {
-    console.log("🎯 MainScene.create() STARTED");
+    logAutopoiesis.info("🎯 MainScene.create() iniciado");
     logAutopoiesis.info("🌍 Creating complete game world with entities...");
 
     // 1. Verificar asset manager
-    this.unifiedAssetManager = this.registry.get("unifiedAssetManager");
-    if (!this.unifiedAssetManager) {
+    const unifiedAssetManager = this.registry.get(
+      "unifiedAssetManager",
+    ) as UnifiedAssetManager;
+    if (!unifiedAssetManager) {
       logAutopoiesis.error("❌ UnifiedAssetManager no encontrado");
       return;
     }
+    this.unifiedAssetManager = unifiedAssetManager;
 
     // 2. Inicializar managers principales
     this.entityManager = new EntityManager(this);
@@ -68,19 +66,50 @@ export default class MainScene extends Phaser.Scene {
     this.animationManager = new AnimationManager(this);
     this.entities = this.add.group();
 
-    // 3. Registrar AnimationManager en registry para que las entidades lo encuentren
+    // 3. Crear todas las animaciones desde los nuevos sprites
+    this.animationManager.createAllAnimations();
+    logAutopoiesis.info(
+      "🎬 Animaciones activadas - sprites dinámicos disponibles",
+    );
+
+    // 4. Registrar AnimationManager en registry para que las entidades lo encuentren
     this.registry.set("animationManager", this.animationManager);
 
     try {
-      // 3. Generar mundo base
+      // 5. Generar mundo base simple primero
       const baseWorld = this.generateBasicWorld();
 
-      // 4. Inicializar GameState completo
+      // 6. Inicializar GameState
       const init = await SceneInitializationManager.initialize();
       const gameState = init.gameState;
 
-      // 5. Crear entidades Isa y Stev
-      // 4. Crear entidades
+      // 7. Componer y renderizar mundo diverso
+      logAutopoiesis.info("🎨 Iniciando composición de mundo diverso...");
+      this.worldComposer = new DiverseWorldComposer(this, `seed_${Date.now()}`);
+
+      // Componer el mundo CON assets reales
+      const composedWorld = await this.worldComposer.composeWorld(baseWorld);
+
+      logAutopoiesis.info("✅ Mundo compuesto", {
+        layers: composedWorld.layers.length,
+        totalAssets: composedWorld.stats.totalAssets,
+        diversityIndex: composedWorld.stats.diversityIndex,
+      });
+
+      // 8. Renderizar el mundo compuesto
+      this.worldRenderer = new LayeredWorldRenderer(this, {
+        enablePerformanceMode: this.performanceMode,
+        maxVisibleAssets: 3000,
+      });
+
+      await this.worldRenderer.renderComposedWorld(composedWorld);
+      logAutopoiesis.info("🎮 Mundo renderizado exitosamente");
+
+      // Activar modo performance por defecto
+      this.worldRenderer.setPerformanceMode(true);
+      this.performanceMode = true;
+
+      // 9. Crear entidades DESPUÉS del mundo
       const { isaEntity, stevEntity } = this.entityManager.createEntities({
         scene: this,
       });
@@ -89,7 +118,7 @@ export default class MainScene extends Phaser.Scene {
       isaEntity.setPartnerEntity(stevEntity);
       stevEntity.setPartnerEntity(isaEntity);
 
-      // 6. Inicializar GameLogicManager con entidades
+      // 10. Inicializar GameLogicManager con entidades
       this.gameLogicManager = new GameLogicManager(this, gameState);
       this.gameLogicManager.initialize();
 
@@ -97,93 +126,93 @@ export default class MainScene extends Phaser.Scene {
       this.gameLogicManager.registerEntity("isa", isaEntity);
       this.gameLogicManager.registerEntity("stev", stevEntity);
 
-      // 7. Configurar InputManager para controlar entidades del jugador
+      // 11. Configurar InputManager
       this.inputManager.setGameLogicManager(this.gameLogicManager);
       this.inputManager.setControlledEntity("stev"); // Jugador controla a Stev inicialmente
 
-      // 8. Componer mundo diverso
-      console.log("🎯 About to create DiverseWorldComposer...");
-      this.worldComposer = new DiverseWorldComposer(this, `seed_${Date.now()}`);
-      console.log("🎯 DiverseWorldComposer created, composing world...");
-      const composedWorld = await this.worldComposer.composeWorld(baseWorld);
-      console.log("🎯 World composed, layers:", composedWorld.layers.length);
-
-      // 9. Renderizar mundo en capas
-      console.log("🎯 Creating LayeredWorldRenderer...");
-      this.worldRenderer = new LayeredWorldRenderer(this);
-      console.log("🎯 LayeredWorldRenderer created, rendering world...");
-      await this.worldRenderer.renderComposedWorld(composedWorld);
-      console.log("🎯 World rendered, setting performance mode...");
-      // Activar modo performance por defecto (oculta efectos/detalles)
-      this.worldRenderer.setPerformanceMode(true);
-      this.performanceMode = true;
-      console.log("🎯 World rendering complete!");
-
-      // 10. Guardar stats para UI y estado de juego
+      // 12. Guardar stats para UI y estado de juego
       this.registry.set("worldStats", composedWorld.stats);
       this.registry.set("gameState", gameState);
       this.registry.set("gameLogicManager", this.gameLogicManager);
       this.registry.set("entityManager", this.entityManager);
 
-      // 11. Reenviar eventos a UIScene
+      // 13. Reenviar eventos a UIScene
       this.gameLogicManager.on(
         "gameLogicUpdate",
         (data) => this.events.emit("gameLogicUpdate", data),
         this,
       );
 
-      // 12. Configurar controles
+      // 14. Configurar controles
       this.setupControls();
 
-      // 13. Crear UI de necesidades, cartas de diálogo y estado de sistemas
-      this.needsUI = new NeedsUI(this);
-      this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
-      this.systemStatusUI = new SystemStatusUI(this);
+      // 15. UI de necesidades gestionada por UIScene
 
-      // 14. Configurar actualización de UI de necesidades
-      this.gameLogicManager.on("needsUpdated", (data: any) => {
-        if (data.entityId === "stev" || data.entityId === "isa") {
-          this.needsUI.updateNeeds(data.entityData);
+      // 16. Reemitir necesidades para UIScene y mostrar resumen
+      this.gameLogicManager.on("needsUpdated", (data: unknown) => {
+        // Reemitir evento a otras escenas (UIScene)
+        this.events.emit("needsUpdated", data);
 
-          // Actualizar estado del sistema de necesidades
-          const needsData = data.entityData;
-          const criticalCount = Object.entries(needsData.needs).filter(
-            ([key, value]) => key !== "lastUpdate" && (value as number) < 20,
-          ).length;
-          const warningCount = Object.entries(needsData.needs).filter(
-            ([key, value]) =>
-              key !== "lastUpdate" &&
-              (value as number) < 40 &&
-              (value as number) >= 20,
-          ).length;
+        // Estado resumido a mensajes - validación básica
+        if (typeof data === "object" && data !== null) {
+          const typedData = data as {
+            entityId?: string;
+            entityData?: { needs?: Record<string, number> };
+          };
 
-          this.systemStatusUI.updateNeedsStatus(criticalCount, warningCount);
+          if (typedData.entityId === "stev" || typedData.entityId === "isa") {
+            const needsData = typedData.entityData?.needs;
+            if (needsData) {
+              const criticalCount = Object.entries(needsData).filter(
+                ([key, value]) => key !== "lastUpdate" && value < 20,
+              ).length;
+              const warningCount = Object.entries(needsData).filter(
+                ([key, value]) =>
+                  key !== "lastUpdate" && value < 40 && value >= 20,
+              ).length;
+
+              const level =
+                criticalCount > 0
+                  ? "critical"
+                  : warningCount > 0
+                    ? "warning"
+                    : "ok";
+              this.events.emit("systemEvent", {
+                type: level === "critical" ? "warning" : "system",
+                message:
+                  level === "ok"
+                    ? "Needs: estado normal"
+                    : `Needs: ${criticalCount} críticos, ${warningCount} advertencias`,
+              });
+            }
+          }
         }
       });
 
-      // 15. Iniciar UI Scene
-      console.log("🎯 MainScene: About to launch UIScene");
+      // 17. Iniciar UI Scene
+      logAutopoiesis.debug("🎯 MainScene: About to launch UIScene");
       this.scene.launch("UIScene");
-      console.log("🎯 MainScene: UIScene launch called");
+      logAutopoiesis.debug("🎯 MainScene: UIScene launch called");
 
-      // 6. Configurar cámara
+      // 18. Configurar cámara
       const worldPixelWidth = baseWorld.config.width * 32;
       const worldPixelHeight = baseWorld.config.height * 32;
-      
+
       this.cameras.main.setBounds(0, 0, worldPixelWidth, worldPixelHeight);
       this.cameras.main.setZoom(0.5); // Zoom out para ver más del mundo
-      
+
       // Centrar la cámara en el centro real del mundo generado
       const centerX = worldPixelWidth / 2;
       const centerY = worldPixelHeight / 2;
       this.cameras.main.centerOn(centerX, centerY);
 
-      // 7. Eventos desde UI
+      // 19. Eventos desde UI
       this.events.on("togglePerformanceMode", () => {
         const current = this.worldRenderer?.getStats().performanceMode ?? true;
         this.worldRenderer?.setPerformanceMode(!current);
         this.performanceMode = !current;
       });
+
       this.events.on("changeEntityControl", (mode: "none" | "isa" | "stev") => {
         // Control manual: activar/desactivar IA
         if (!this.gameLogicManager) return;
@@ -388,7 +417,7 @@ export default class MainScene extends Phaser.Scene {
 
       logAutopoiesis.info(`🎮 Control cambiado a: ${next}`);
 
-      // Centrar cámara en entidad controlada
+      // Centrar la cámara en entidad controlada
       if (next !== "none") {
         const entity = this.entityManager.getEntity(next);
         if (entity) {

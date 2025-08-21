@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import { GAME_BALANCE } from "../config/gameConfig";
 import { EntityStatsComponent } from "../components/EntityStatsComponent";
 import { EntityVisualsComponent } from "../components/EntityVisualsComponent";
+import { GAME_BALANCE } from "../config/gameConfig";
 import {
   EntityServicesFactory,
   type IEntityServices,
@@ -34,17 +34,50 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     entityId: "isa" | "stev",
     services?: IEntityServices,
   ) {
-    // Use sprites from UnifiedAssetManager (now pointing to new Kenney sprites)
-    const initialSprite = entityId === "isa" ? "woman" : "man";
-    super(scene, x, y, initialSprite);
+    // Use sprites that actually exist - fallback to static sprites
+    const initialSprite = entityId === "isa" ? "isa_happy" : "stev_happy";
+
+    // Debug logging
+    console.log(
+      `🎭 GameEntity constructor: Creating ${entityId} with sprite ${initialSprite}`,
+    );
+    console.log(`🎭 Texture exists:`, scene.textures.exists(initialSprite));
+    console.log(
+      `🎭 Scene textures available:`,
+      Object.keys(scene.textures.list).slice(0, 10),
+    );
+
+    try {
+      super(scene, x, y, initialSprite);
+      console.log(
+        `🎭 Parent Phaser.Sprite constructor completed for ${entityId}`,
+      );
+    } catch (error) {
+      console.error(
+        `❌ Error in Phaser.Sprite constructor for ${entityId}:`,
+        error,
+      );
+      // Try with a guaranteed fallback
+      super(scene, x, y, "__DEFAULT");
+    }
 
     this.services = services || EntityServicesFactory.create();
     this.colorHue = entityId === "isa" ? 300 : 220;
 
     this.currentSprite = initialSprite;
 
+    console.log(`🎭 About to add ${entityId} to scene...`);
     scene.add.existing(this);
-    scene.physics.add.existing(this);
+    console.log(`🎭 Added ${entityId} to scene successfully`);
+
+    console.log(`🎭 About to add ${entityId} to physics...`);
+    console.log(`🎭 Scene physics available:`, !!scene.physics);
+    if (scene.physics) {
+      scene.physics.add.existing(this);
+      console.log(`🎭 Added ${entityId} to physics successfully`);
+    } else {
+      console.error(`❌ No physics available for ${entityId}`);
+    }
 
     this.entityData = {
       id: entityId,

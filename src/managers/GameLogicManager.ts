@@ -54,7 +54,7 @@ export class GameLogicManager implements IGameLogicManager {
       initialGameState,
       this._needsSystem,
     );
-    
+
     // FASE 2: Crear sistemas con dependencias (será completado en initialize())
     this._aiSystem = new AISystem(scene, initialGameState, this._needsSystem);
     this._cardDialogueSystem = new CardDialogueSystem(
@@ -71,24 +71,31 @@ export class GameLogicManager implements IGameLogicManager {
     );
     this._questSystem = new QuestSystem(scene);
 
-    logAutopoiesis.info("🏗️ Fase 1 de inicialización completada - sistemas básicos creados");
+    logAutopoiesis.info(
+      "🏗️ Fase 1 de inicialización completada - sistemas básicos creados",
+    );
   }
 
   /**
    * Initialize the game logic system - FASE 2 de inicialización
    */
   public initialize(): void {
-    logAutopoiesis.info("🔧 Iniciando FASE 2: conectando dependencias entre sistemas");
+    logAutopoiesis.info(
+      "🔧 Iniciando FASE 2: conectando dependencias entre sistemas",
+    );
 
     // FASE 2A: Conectar referencias entre sistemas (después de que todos existan)
     this._aiSystem.setMovementSystem(this._movementSystem);
-    
+
     // Solo conectar CardDialogueSystem con AISystem si ambos están listos
     if (this._cardDialogueSystem && this._aiSystem) {
       try {
         this._cardDialogueSystem.setAISystem?.(this._aiSystem);
       } catch (error) {
-        logAutopoiesis.warn("No se pudo conectar CardDialogueSystem con AISystem:", error);
+        logAutopoiesis.warn(
+          "No se pudo conectar CardDialogueSystem con AISystem:",
+          error,
+        );
       }
     }
 
@@ -137,22 +144,26 @@ export class GameLogicManager implements IGameLogicManager {
     const now = Date.now();
     const rawDelta = now - (this._lastUpdateTime || now);
     this._lastUpdateTime = now;
-    
+
     // Validación y limitación de deltaTime para prevenir espirales de muerte
     const deltaTimeSeconds = this._validateDeltaTime(rawDelta / 1000);
     const deltaTimeMs = deltaTimeSeconds * 1000;
-    
+
     this._gameState.cycles++;
 
     // Si hay lag excesivo, procesar en pasos más pequeños
-    if (deltaTimeSeconds > 0.1) { // Más de 100ms
+    if (deltaTimeSeconds > 0.1) {
+      // Más de 100ms
       const steps = Math.ceil(deltaTimeSeconds / 0.016); // Dividir en pasos de ~60fps
       const stepDelta = deltaTimeSeconds / steps;
       const stepDeltaMs = stepDelta * 1000;
-      
-      logAutopoiesis.warn(`🐌 Lag detectado: ${deltaTimeSeconds.toFixed(3)}s - dividiendo en ${steps} pasos`);
-      
-      for (let i = 0; i < Math.min(steps, 5); i++) { // Máximo 5 pasos para evitar bucles
+
+      logAutopoiesis.warn(
+        `🐌 Lag detectado: ${deltaTimeSeconds.toFixed(3)}s - dividiendo en ${steps} pasos`,
+      );
+
+      for (let i = 0; i < Math.min(steps, 5); i++) {
+        // Máximo 5 pasos para evitar bucles
         this._updateGameLogicStep(stepDeltaMs, stepDelta);
       }
     } else {
@@ -168,24 +179,29 @@ export class GameLogicManager implements IGameLogicManager {
   private _validateDeltaTime(deltaTimeSeconds: number): number {
     // Límites de seguridad
     const MIN_DELTA = 0.001; // 1ms mínimo
-    const MAX_DELTA = 0.1;   // 100ms máximo por actualización
-    
+    const MAX_DELTA = 0.1; // 100ms máximo por actualización
+
     if (deltaTimeSeconds < MIN_DELTA) {
       return MIN_DELTA;
     }
-    
+
     if (deltaTimeSeconds > MAX_DELTA) {
-      logAutopoiesis.warn(`⚠️ DeltaTime excesivo: ${deltaTimeSeconds.toFixed(3)}s - limitando a ${MAX_DELTA}s`);
+      logAutopoiesis.warn(
+        `⚠️ DeltaTime excesivo: ${deltaTimeSeconds.toFixed(3)}s - limitando a ${MAX_DELTA}s`,
+      );
       return MAX_DELTA;
     }
-    
+
     return deltaTimeSeconds;
   }
 
   /**
    * Paso individual de actualización de lógica de juego
    */
-  private _updateGameLogicStep(deltaTimeMs: number, deltaTimeSeconds: number): void {
+  private _updateGameLogicStep(
+    deltaTimeMs: number,
+    deltaTimeSeconds: number,
+  ): void {
     this._entityManager.getAllEntities().forEach((entity) => {
       // Check if entity has updateEntity method (AnimatedGameEntity)
       if (
@@ -284,7 +300,7 @@ export class GameLogicManager implements IGameLogicManager {
       const dx = isaData.position.x - stevData.position.x;
       const dy = isaData.position.y - stevData.position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      
+
       // Si están cerca (menos de 100 píxeles), incrementar tiempo juntos
       if (distance < 100) {
         this._gameState.togetherTime += gameConfig.timing.mainGameLogic;
@@ -401,20 +417,27 @@ export class GameLogicManager implements IGameLogicManager {
 
     // Inicializar en el gestor centralizado
     this._entityStateManager.initializeEntity(entityId);
-    
+
     // Obtener estado desde fuente única
     const entityState = this._entityStateManager.getEntityState(entityId);
     if (!entityState) {
-      logAutopoiesis.error(`No se pudo obtener estado para entidad ${entityId}`);
+      logAutopoiesis.error(
+        `No se pudo obtener estado para entidad ${entityId}`,
+      );
       return;
     }
 
     // Inicializar sistemas usando el estado centralizado
     this._needsSystem.initializeEntityNeeds(entityId, entityState.needs);
     this._aiSystem.initializeEntityAI(entityId);
-    this._movementSystem.initializeEntityMovement(entityId, entityState.position);
+    this._movementSystem.initializeEntityMovement(
+      entityId,
+      entityState.position,
+    );
 
-    logAutopoiesis.info(`Entidad ${entityId} registrada en sistemas con estado centralizado`);
+    logAutopoiesis.info(
+      `Entidad ${entityId} registrada en sistemas con estado centralizado`,
+    );
   }
 
   /**
@@ -702,7 +725,7 @@ export class GameLogicManager implements IGameLogicManager {
     // Eventos adicionales para conectar consumo de comida con quest system
     this._scene.events.on("food_consumed", (data: any) => {
       this._questSystem.handleEvent({
-        type: "food_consumed", 
+        type: "food_consumed",
         entityId: data.entityId,
         timestamp: Date.now(),
         data: { foodType: data.foodType, amount: data.amount },
@@ -760,7 +783,7 @@ export class GameLogicManager implements IGameLogicManager {
 
     // Refrescar obstáculos para movimiento (ahora que el mundo existe)
     try {
-      if (typeof this._movementSystem.refreshObstacles === 'function') {
+      if (typeof this._movementSystem.refreshObstacles === "function") {
         this._movementSystem.refreshObstacles();
         logAutopoiesis.info("✅ Obstáculos de movimiento actualizados");
       }
@@ -770,19 +793,22 @@ export class GameLogicManager implements IGameLogicManager {
 
     // Precomputar distancias entre zonas (ahora que las zonas existen)
     try {
-      if (typeof this._movementSystem.precomputeZoneDistances === 'function') {
+      if (typeof this._movementSystem.precomputeZoneDistances === "function") {
         this._movementSystem.precomputeZoneDistances();
         logAutopoiesis.info("✅ Distancias de zonas precomputadas");
       }
     } catch (error) {
-      logAutopoiesis.warn("⚠️ No se pudieron precomputar distancias de zonas:", error);
+      logAutopoiesis.warn(
+        "⚠️ No se pudieron precomputar distancias de zonas:",
+        error,
+      );
     }
 
     // Inicializar sistemas para entidades existentes usando estado centralizado
     this._entityManager.getAllEntities().forEach((_, entityId) => {
       // Inicializar en el gestor centralizado primero
       this._entityStateManager.initializeEntity(entityId);
-      
+
       // Obtener estado desde fuente única
       const entityState = this._entityStateManager.getEntityState(entityId);
       if (!entityState) return;
@@ -790,7 +816,10 @@ export class GameLogicManager implements IGameLogicManager {
       // Inicializar sistemas usando el estado centralizado
       this._needsSystem.initializeEntityNeeds(entityId, entityState.needs);
       this._aiSystem.initializeEntityAI(entityId);
-      this._movementSystem.initializeEntityMovement(entityId, entityState.position);
+      this._movementSystem.initializeEntityMovement(
+        entityId,
+        entityState.position,
+      );
     });
 
     logAutopoiesis.info("🎯 Inicialización completa", {

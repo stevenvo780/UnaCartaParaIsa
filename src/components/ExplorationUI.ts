@@ -2,7 +2,9 @@
  * ExplorationUI - UI mejorada que muestra la diversidad del mundo y progreso de exploración
  */
 
-import type Phaser from "phaser";
+import Phaser from "phaser";
+import { UIDesignSystem as DS } from "../config/uiDesignSystem";
+import { createUIPill } from "./ui/UIPill";
 import { logAutopoiesis } from "../utils/logger";
 import { BaseUIComponent, UIComponentConfig } from "./BaseUIComponent";
 
@@ -50,15 +52,20 @@ export class ExplorationUI extends BaseUIComponent {
   private createStatsPanel(): void {
     this.statsPanel = this.scene.add.container(0, -200);
 
-    const panelBg = this.scene.add.rectangle(0, 0, 360, 120, 0x34495e, 0.8);
-    panelBg.setStrokeStyle(1, 0x7fb3d3);
+    const panelBg = this.scene.add.rectangle(
+      0,
+      0,
+      360,
+      120,
+      DS.COLORS.surface,
+      0.8,
+    );
+    panelBg.setStrokeStyle(1, DS.COLORS.secondary);
     this.statsPanel.add(panelBg);
 
     const panelTitle = this.scene.add.text(0, -40, "📊 Estadísticas", {
-      fontSize: "16px",
-      color: "#3498db",
-      fontStyle: "bold",
-      align: "center",
+      ...DS.getTextStyle("lg", DS.COLORS.secondary, "bold"),
+      align: "center" as any,
     });
     panelTitle.setOrigin(0.5);
     this.statsPanel.add(panelTitle);
@@ -72,15 +79,20 @@ export class ExplorationUI extends BaseUIComponent {
   private createBiomesPanel(): void {
     this.biomesPanel = this.scene.add.container(0, -60);
 
-    const panelBg = this.scene.add.rectangle(0, 0, 360, 140, 0x27ae60, 0.3);
-    panelBg.setStrokeStyle(1, 0x2ecc71);
+    const panelBg = this.scene.add.rectangle(
+      0,
+      0,
+      360,
+      140,
+      DS.COLORS.success,
+      0.2,
+    );
+    panelBg.setStrokeStyle(1, DS.COLORS.success);
     this.biomesPanel.add(panelBg);
 
     const panelTitle = this.scene.add.text(0, -55, "🌍 Biomas Descubiertos", {
-      fontSize: "16px",
-      color: "#2ecc71",
-      fontStyle: "bold",
-      align: "center",
+      ...DS.getTextStyle("lg", DS.COLORS.success, "bold"),
+      align: "center" as any,
     });
     panelTitle.setOrigin(0.5);
     this.biomesPanel.add(panelTitle);
@@ -94,15 +106,20 @@ export class ExplorationUI extends BaseUIComponent {
   private createAssetsPanel(): void {
     this.assetsPanel = this.scene.add.container(0, 100);
 
-    const panelBg = this.scene.add.rectangle(0, 0, 360, 160, 0x8e44ad, 0.3);
-    panelBg.setStrokeStyle(1, 0x9b59b6);
+    const panelBg = this.scene.add.rectangle(
+      0,
+      0,
+      360,
+      160,
+      DS.COLORS.primary,
+      0.2,
+    );
+    panelBg.setStrokeStyle(1, DS.COLORS.primary);
     this.assetsPanel.add(panelBg);
 
     const panelTitle = this.scene.add.text(0, -65, "🎨 Assets Desbloqueados", {
-      fontSize: "16px",
-      color: "#9b59b6",
-      fontStyle: "bold",
-      align: "center",
+      ...DS.getTextStyle("lg", DS.COLORS.primary, "bold"),
+      align: "center" as any,
     });
     panelTitle.setOrigin(0.5);
     this.assetsPanel.add(panelTitle);
@@ -175,22 +192,27 @@ export class ExplorationUI extends BaseUIComponent {
 
     lines.forEach((line, index) => {
       const text = this.scene.add.text(0, -10 + index * 20, line, {
-        fontSize: "14px",
-        color: "#ecf0f1",
-        align: "center",
+        ...DS.getTextStyle("lg", DS.COLORS.text),
+        align: "center" as any,
       });
       text.setOrigin(0.5);
       this.statsPanel.add(text);
     });
 
     // Barra de progreso
-    const progressBg = this.scene.add.rectangle(0, 35, 200, 12, 0x34495e);
+    const progressBg = this.scene.add.rectangle(
+      0,
+      35,
+      200,
+      12,
+      DS.COLORS.surfaceLight,
+    );
     const progressFill = this.scene.add.rectangle(
       -100 + discoveryPercentage * 2,
       35,
       discoveryPercentage * 2,
       12,
-      0x3498db,
+      DS.COLORS.secondary,
     );
     progressFill.setOrigin(0, 0.5);
 
@@ -231,9 +253,11 @@ export class ExplorationUI extends BaseUIComponent {
         biomeIcon.setAlpha(alpha);
 
         const biomeName = this.scene.add.text(x, y + 15, biome.name, {
-          fontSize: "10px",
-          color: biome.color,
-          align: "center",
+          ...DS.getTextStyle(
+            "sm",
+            Phaser.Display.Color.HexStringToColor(biome.color).color as any,
+          ),
+          align: "center" as any,
         });
         biomeName.setOrigin(0.5);
         biomeName.setAlpha(alpha);
@@ -274,26 +298,21 @@ export class ExplorationUI extends BaseUIComponent {
     rarities.forEach((rarity, index) => {
       const y = -35 + index * 25;
 
-      const rarityText = this.scene.add.text(-80, y, rarity.name, {
-        fontSize: "14px",
-        color: rarity.color,
-        fontStyle: "bold",
-      });
-      rarityText.setOrigin(0, 0.5);
-
+      const pill = createUIPill(
+        this.scene,
+        -110,
+        y,
+        rarity.name,
+        Phaser.Display.Color.HexStringToColor(rarity.color).color as any,
+      );
+      pill.setScale(0.9);
       const countText = this.scene.add.text(80, y, rarity.count.toString(), {
-        fontSize: "14px",
-        color: "#ecf0f1",
-        align: "right",
+        ...DS.getTextStyle("lg", DS.COLORS.text),
+        align: "right" as any,
       });
       countText.setOrigin(1, 0.5);
-
-      // Indicador visual por rareza
-      const indicator = this.scene.add.circle(-100, y, 4, rarity.color as any);
-
-      this.assetsPanel.add(rarityText);
+      this.assetsPanel.add(pill);
       this.assetsPanel.add(countText);
-      this.assetsPanel.add(indicator);
     });
   }
 

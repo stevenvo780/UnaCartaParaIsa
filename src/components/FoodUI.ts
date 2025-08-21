@@ -3,11 +3,12 @@
  * Muestra inventario, tiendas y acciones de comida
  */
 
-import type Phaser from "phaser";
+import Phaser from "phaser";
 import type { FoodItem, FoodInventoryItem, FoodStoreData } from "../types";
 import { logAutopoiesis } from "../utils/logger";
 import { UIDesignSystem as DS } from "../config/uiDesignSystem";
 import { BaseUIComponent, UIComponentConfig } from "./BaseUIComponent";
+import { createUIButton } from "./ui/UIButton";
 
 export class FoodUI extends BaseUIComponent {
   private _inventoryPanel: Phaser.GameObjects.Container;
@@ -96,7 +97,7 @@ export class FoodUI extends BaseUIComponent {
       .setOrigin(0, 0.5);
 
     // Close button
-    const inventoryCloseBtn = this._createCloseButton();
+    const inventoryCloseBtn = this.createCloseButton();
     inventoryCloseBtn.setPosition(this.PANEL_WIDTH - 30, 30);
     inventoryCloseBtn.on("pointerdown", () => this.hide());
 
@@ -201,13 +202,13 @@ export class FoodUI extends BaseUIComponent {
       this.scene.cameras.main.height,
     );
     overlay.setInteractive(
-      new (window as any).Phaser.Geom.Rectangle(
+      new Phaser.Geom.Rectangle(
         -this.scene.cameras.main.width / 2,
         -this.scene.cameras.main.height / 2,
         this.scene.cameras.main.width,
         this.scene.cameras.main.height,
       ),
-      (window as any).Phaser.Geom.Rectangle.Contains,
+      Phaser.Geom.Rectangle.Contains,
     );
     overlay.on("pointerdown", () => this.hide());
 
@@ -215,49 +216,7 @@ export class FoodUI extends BaseUIComponent {
     this.container.addAt(overlay, 0);
   }
 
-  /**
-   * Crea un botón de cierre moderno
-   */
-  private _createCloseButton(): Phaser.GameObjects.Container {
-    const button = this.scene.add.container(0, 0);
-
-    const buttonBg = this.scene.add.graphics();
-    buttonBg.fillStyle(0xe17055, 0.9);
-    buttonBg.fillCircle(0, 0, 15);
-    buttonBg.lineStyle(2, 0xffffff, 0.8);
-    buttonBg.strokeCircle(0, 0, 15);
-
-    const closeIcon = this.scene.add
-      .text(0, 0, "×", DS.getTextStyle("xl", DS.COLORS.text, "bold"))
-      .setOrigin(0.5);
-
-    button.add([buttonBg, closeIcon]);
-    button.setSize(30, 30);
-    button.setInteractive();
-
-    // Hover effects
-    button.on("pointerover", () => {
-      this.scene.tweens.add({
-        targets: button,
-        scaleX: 1.1,
-        scaleY: 1.1,
-        duration: 150,
-        ease: "Back.easeOut",
-      });
-    });
-
-    button.on("pointerout", () => {
-      this.scene.tweens.add({
-        targets: button,
-        scaleX: 1,
-        scaleY: 1,
-        duration: 150,
-        ease: "Back.easeOut",
-      });
-    });
-
-    return button;
-  }
+  // Botón de cierre heredado desde BaseUIComponent
 
   /**
    * Configura los event listeners
@@ -506,35 +465,20 @@ export class FoodUI extends BaseUIComponent {
       effectsText.setOrigin(0, 0.5);
 
       // Botón para comprar
-      const buyButton = this.scene.add.rectangle(120, y, 80, 30, 0x27ae60);
-      const buyText = this.scene.add.text(
-        120,
-        y,
+      const buyBtn = createUIButton(
+        this.scene,
+        80,
+        y - 15,
         "Comprar",
-        DS.getTextStyle("sm", DS.COLORS.text),
+        () => this._buyFood(food.id),
+        {
+          width: 80,
+          height: 30,
+          color: 0x27ae60,
+        },
       );
-      buyText.setOrigin(0.5);
 
-      buyButton.setInteractive();
-      buyButton.on("pointerdown", () => {
-        this._buyFood(food.id);
-      });
-
-      buyButton.on("pointerover", () => {
-        buyButton.setFillStyle(0x2ecc71);
-      });
-
-      buyButton.on("pointerout", () => {
-        buyButton.setFillStyle(0x27ae60);
-      });
-
-      this._storePanel.add([
-        nameText,
-        priceText,
-        effectsText,
-        buyButton,
-        buyText,
-      ]);
+      this._storePanel.add([nameText, priceText, effectsText, buyBtn]);
     });
   }
 

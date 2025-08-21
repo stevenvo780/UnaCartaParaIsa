@@ -115,6 +115,7 @@ export interface AccessibilityConfig {
     primary: number;
     secondary: number;
   };
+  highContrastEnabled?: boolean;
   reducedMotion: boolean;
 }
 
@@ -246,6 +247,7 @@ export class UIDesignSystem {
       primary: 0x00ffff,
       secondary: 0xffff00,
     },
+    highContrastEnabled: false,
     reducedMotion: false,
   };
 
@@ -452,7 +454,7 @@ export class UIDesignSystem {
    * Obtiene colores con alto contraste si está habilitado
    */
   public static getAccessibleColors(): ColorPalette {
-    if (this.ACCESSIBILITY.reducedMotion) {
+    if (this.ACCESSIBILITY.highContrastEnabled) {
       return {
         ...this.COLORS,
         background: this.ACCESSIBILITY.highContrast.background,

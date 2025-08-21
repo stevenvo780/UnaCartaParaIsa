@@ -83,8 +83,8 @@ export default class BootScene extends Phaser.Scene {
 
     // Crear UnifiedAssetManager (sin await)
     this.unifiedAssetManager = new UnifiedAssetManager(this);
-    
-    // Los assets críticos se cargarán en create() 
+
+    // Los assets críticos se cargarán en create()
     logAutopoiesis.info("📦 Preparando carga de assets esenciales");
   }
 
@@ -93,34 +93,48 @@ export default class BootScene extends Phaser.Scene {
     for (let i = 1; i <= 31; i++) {
       this.load.image(`cesped${i}`, `assets/terrain/base/cesped${i}.png`);
     }
-    
+
     // Cargar assets de agua
     this.load.image("Water_Middle", "assets/water/Water_Middle.png");
     this.load.image("tile_01_00", "assets/water/tile_01_00.png");
-    
+
     // Cargar árboles principales
     this.load.image("oak_tree1", "assets/foliage/trees/oak_tree.png");
     this.load.image("mega_tree1", "assets/foliage/trees/mega_tree1.png");
     this.load.image("willow1", "assets/foliage/trees/willow1.png");
-    
+
     // Cargar rocas
     this.load.image("rock1_1", "assets/rocks/rock1_1.png");
     this.load.image("rock2_1", "assets/rocks/rock2_1.png");
     this.load.image("rock3_1", "assets/rocks/rock3_1.png");
-    
+
     // Cargar props básicos
     this.load.image("Chest", "assets/props/Chest.png");
-    this.load.image("Barrel_Small_Empty", "assets/props/Barrel_Small_Empty.png");
-    
+    this.load.image(
+      "Barrel_Small_Empty",
+      "assets/props/Barrel_Small_Empty.png",
+    );
+
     // Cargar estructuras
-    this.load.image("House", "assets/structures/estructuras_completas/House.png");
-    
+    this.load.image(
+      "House",
+      "assets/structures/estructuras_completas/House.png",
+    );
+
     // Cargar vegetación adicional
-    this.load.image("bush_emerald_1", "assets/foliage/shrubs/bush_emerald_1.png");
-    this.load.image("beige_green_mushroom1", "assets/mushrooms/beige_green_mushroom1.png");
+    this.load.image(
+      "bush_emerald_1",
+      "assets/foliage/shrubs/bush_emerald_1.png",
+    );
+    this.load.image(
+      "beige_green_mushroom1",
+      "assets/mushrooms/beige_green_mushroom1.png",
+    );
     this.load.image("blue-gray_ruins1", "assets/ruins/blue-gray_ruins1.png");
-    
-    logAutopoiesis.info("🌱 Cargando assets reales: terreno, agua, árboles, rocas, props");
+
+    logAutopoiesis.info(
+      "🌱 Cargando assets reales: terreno, agua, árboles, rocas, props",
+    );
   }
 
   private loadPlaceholderAssets(): void {
@@ -129,7 +143,7 @@ export default class BootScene extends Phaser.Scene {
       "placeholder-terrain",
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
     );
-    
+
     // Crear sprites temporales para entidades
     this.createTemporaryEntitySprites();
     this.load.image(
@@ -153,9 +167,9 @@ export default class BootScene extends Phaser.Scene {
 
     // Crear árboles básicos
     graphics.clear();
-    graphics.fillStyle(0x8B4513); // Tronco marrón
+    graphics.fillStyle(0x8b4513); // Tronco marrón
     graphics.fillRect(12, 20, 8, 12);
-    graphics.fillStyle(0x228B22); // Copa verde
+    graphics.fillStyle(0x228b22); // Copa verde
     graphics.fillCircle(16, 16, 12);
     graphics.generateTexture("oak_tree1", 32, 32);
 
@@ -167,37 +181,37 @@ export default class BootScene extends Phaser.Scene {
 
     // Crear agua básica
     graphics.clear();
-    graphics.fillStyle(0x4682B4);
+    graphics.fillStyle(0x4682b4);
     graphics.fillRect(0, 0, 32, 32);
     graphics.generateTexture("water_middle", 32, 32);
 
     // Crear casa básica
     graphics.clear();
-    graphics.fillStyle(0x8B4513); // Marrón para casa
+    graphics.fillStyle(0x8b4513); // Marrón para casa
     graphics.fillRect(4, 12, 24, 16);
-    graphics.fillStyle(0xFF0000); // Techo rojo
+    graphics.fillStyle(0xff0000); // Techo rojo
     graphics.fillTriangle(16, 4, 4, 12, 28, 12);
     graphics.generateTexture("house", 32, 32);
 
     // Crear cofre básico
     graphics.clear();
-    graphics.fillStyle(0x8B4513);
+    graphics.fillStyle(0x8b4513);
     graphics.fillRect(8, 16, 16, 12);
-    graphics.fillStyle(0xFFD700); // Dorado para detalles
+    graphics.fillStyle(0xffd700); // Dorado para detalles
     graphics.fillRect(14, 18, 4, 2);
     graphics.generateTexture("chest", 32, 32);
 
     // Crear arbusto básico
     graphics.clear();
-    graphics.fillStyle(0x32CD32);
+    graphics.fillStyle(0x32cd32);
     graphics.fillCircle(16, 20, 10);
     graphics.generateTexture("bush_emerald_1", 32, 32);
 
     // Crear hongo básico
     graphics.clear();
-    graphics.fillStyle(0xF5DEB3); // Beige para tallo
+    graphics.fillStyle(0xf5deb3); // Beige para tallo
     graphics.fillRect(14, 20, 4, 8);
-    graphics.fillStyle(0x90EE90); // Verde claro para sombrero
+    graphics.fillStyle(0x90ee90); // Verde claro para sombrero
     graphics.fillEllipse(16, 18, 12, 8);
     graphics.generateTexture("beige_green_mushroom1", 32, 32);
 
@@ -242,49 +256,103 @@ export default class BootScene extends Phaser.Scene {
         );
       }
     } catch (error) {
-      logAutopoiesis.error(
-        "❌ Error registrando pipelines personalizados:",
-        error,
-      );
+      logAutopoiesis.error("❌ Error registrando pipelines personalizados:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
   private createTemporaryEntitySprites(): void {
-    // Crear sprites temporales de 24x24 para Isa (rosa)
-    const isaCanvas = document.createElement('canvas');
-    isaCanvas.width = 24;
-    isaCanvas.height = 24;
-    const isaCtx = isaCanvas.getContext('2d')!;
-    isaCtx.fillStyle = '#ff69b4'; // Rosa para Isa
-    isaCtx.fillRect(0, 0, 24, 24);
-    isaCtx.fillStyle = '#ffffff';
-    isaCtx.fillRect(2, 2, 20, 20);
-    isaCtx.fillStyle = '#ff69b4';
-    isaCtx.fillRect(4, 4, 16, 16);
-    
-    // Crear sprites temporales de 32x32 para Stev (azul)
-    const stevCanvas = document.createElement('canvas');
-    stevCanvas.width = 32;
-    stevCanvas.height = 32;
-    const stevCtx = stevCanvas.getContext('2d')!;
-    stevCtx.fillStyle = '#4169e1'; // Azul para Stev
-    stevCtx.fillRect(0, 0, 32, 32);
-    stevCtx.fillStyle = '#ffffff';
-    stevCtx.fillRect(2, 2, 28, 28);
-    stevCtx.fillStyle = '#4169e1';
-    stevCtx.fillRect(4, 4, 24, 24);
-    
-    // Cargar como texturas en Phaser
-    this.load.image('whomen1', isaCanvas.toDataURL());
-    this.load.image('man1', stevCanvas.toDataURL());
-    this.load.image('isa_happy', isaCanvas.toDataURL());
-    this.load.image('stev_happy', stevCanvas.toDataURL());
-    
+    // Create enhanced sprites with animations
+    const spriteSize = 64; // Increase size for better visibility
+    const frameCount = 4; // Animation frames
+
+    // Create Isa's animated spritesheet
+    const isaCanvas = document.createElement("canvas");
+    isaCanvas.width = spriteSize * frameCount;
+    isaCanvas.height = spriteSize;
+    const isaCtx = isaCanvas.getContext("2d")!;
+
+    // Create 4 frames for Isa (walking animation)
+    for (let frame = 0; frame < frameCount; frame++) {
+      const x = frame * spriteSize;
+
+      // Base character (pink/purple for Isa)
+      isaCtx.fillStyle = "#ff69b4"; // Hot pink base
+      isaCtx.fillRect(x + 20, 10, 24, 32); // Body
+      isaCtx.fillRect(x + 24, 4, 16, 16); // Head
+
+      // Add details
+      isaCtx.fillStyle = "#ffffff";
+      isaCtx.fillRect(x + 26, 6, 4, 4); // Eye
+      isaCtx.fillRect(x + 32, 6, 4, 4); // Eye
+
+      // Legs animation (simple walk cycle)
+      const legOffset = Math.sin((frame / frameCount) * Math.PI * 2) * 4;
+      isaCtx.fillStyle = "#ff1493"; // Darker pink for legs
+      isaCtx.fillRect(x + 22, 42 + legOffset, 6, 16); // Left leg
+      isaCtx.fillRect(x + 34, 42 - legOffset, 6, 16); // Right leg
+
+      // Arms
+      isaCtx.fillRect(x + 16, 16, 6, 20); // Left arm
+      isaCtx.fillRect(x + 42, 16, 6, 20); // Right arm
+    }
+
+    // Create Stev's animated spritesheet
+    const stevCanvas = document.createElement("canvas");
+    stevCanvas.width = spriteSize * frameCount;
+    stevCanvas.height = spriteSize;
+    const stevCtx = stevCanvas.getContext("2d")!;
+
+    // Create 4 frames for Stev (walking animation)
+    for (let frame = 0; frame < frameCount; frame++) {
+      const x = frame * spriteSize;
+
+      // Base character (blue for Stev)
+      stevCtx.fillStyle = "#4169e1"; // Royal blue base
+      stevCtx.fillRect(x + 20, 10, 24, 32); // Body
+      stevCtx.fillRect(x + 24, 4, 16, 16); // Head
+
+      // Add details
+      stevCtx.fillStyle = "#ffffff";
+      stevCtx.fillRect(x + 26, 6, 4, 4); // Eye
+      stevCtx.fillRect(x + 32, 6, 4, 4); // Eye
+
+      // Legs animation (simple walk cycle)
+      const legOffset = Math.sin((frame / frameCount) * Math.PI * 2) * 4;
+      stevCtx.fillStyle = "#191970"; // Darker blue for legs
+      stevCtx.fillRect(x + 22, 42 + legOffset, 6, 16); // Left leg
+      stevCtx.fillRect(x + 34, 42 - legOffset, 6, 16); // Right leg
+
+      // Arms
+      stevCtx.fillRect(x + 16, 16, 6, 20); // Left arm
+      stevCtx.fillRect(x + 42, 16, 6, 20); // Right arm
+    }
+
+    // Load as textures and spritesheets in Phaser
+    this.load.image("whomen1", isaCanvas.toDataURL());
+    this.load.image("man1", stevCanvas.toDataURL());
+
+    // Load as spritesheets for animations
+    this.load.spritesheet("isa_spritesheet", isaCanvas.toDataURL(), {
+      frameWidth: spriteSize,
+      frameHeight: spriteSize,
+    });
+
+    this.load.spritesheet("stev_spritesheet", stevCanvas.toDataURL(), {
+      frameWidth: spriteSize,
+      frameHeight: spriteSize,
+    });
+
+    // Static happy frames (first frame of animation)
+    this.load.image("isa_happy", isaCanvas.toDataURL());
+    this.load.image("stev_happy", stevCanvas.toDataURL());
+
     logAutopoiesis.info("🎨 Sprites temporales de entidades creados");
   }
 
   create() {
-    console.log("🎯 BootScene.create() STARTED");
+    logAutopoiesis.info("🎯 BootScene.create() iniciado");
     logAutopoiesis.info(
       "🔄 Registrando UnifiedAssetManager y cambiando a MainScene...",
     );
@@ -293,9 +361,9 @@ export default class BootScene extends Phaser.Scene {
     this.registry.set("unifiedAssetManager", this.unifiedAssetManager);
 
     // Ir directamente a MainScene y que cargue lo que necesite
-    console.log("🎯 BootScene: About to start MainScene");
+    logAutopoiesis.debug("🎯 BootScene: About to start MainScene");
     this.scene.start("MainScene");
-    console.log("🎯 BootScene: MainScene start called");
+    logAutopoiesis.debug("🎯 BootScene: MainScene start called");
   }
 
   private hideLoadingScreen() {

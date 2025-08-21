@@ -446,33 +446,40 @@ export class CreativeAssetLoader {
    */
   async loadAllAssets(): Promise<void> {
     logAutopoiesis.info("🎨 Cargando assets creativamente...");
-    console.log("🎯 CreativeAssetLoader: Starting to load all assets...");
 
-    // Cargar en paralelo para mejor performance
-    console.log("🎯 CreativeAssetLoader: Loading asset categories...");
-    await Promise.all([
-      this.loadTerrainAssets(),
-      this.loadWaterAssets(),
-      this.loadRoadAssets(),
-      this.loadAutotileAssets(),
-      this.loadTreeAssets(),
-      this.loadRockAssets(),
-      this.loadStructureAssets(),
-      this.loadPropAssets(),
-      this.loadMushroomAssets(),
-      this.loadRuinAssets(),
-      this.loadFoliageAssets(),
-    ]);
-    console.log("🎯 CreativeAssetLoader: Asset categories loaded!");
+    try {
+      // Cargar en paralelo para mejor performance
+      await Promise.all([
+        this.loadTerrainAssets(),
+        this.loadWaterAssets(),
+        this.loadRoadAssets(),
+        this.loadAutotileAssets(),
+        this.loadTreeAssets(),
+        this.loadRockAssets(),
+        this.loadStructureAssets(),
+        this.loadPropAssets(),
+        this.loadMushroomAssets(),
+        this.loadRuinAssets(),
+        this.loadFoliageAssets(),
+      ]);
 
-    // Cargar en Phaser
-    console.log("🎯 CreativeAssetLoader: About to load assets in Phaser...");
-    await this.loadAssetsInPhaser();
-    console.log("🎯 CreativeAssetLoader: Assets loaded in Phaser!");
+      // Verificar que se cargaron assets
+      const totalAssets = this.loadedAssets.size;
+      if (totalAssets === 0) {
+        logAutopoiesis.warn("⚠️ No se cargaron assets, usando fallbacks");
+        this.createFallbackAssets();
+      }
 
-    logAutopoiesis.info(
-      `✅ Cargados ${this.loadedAssets.size} assets únicos organizados en categorías`,
-    );
+      // Cargar en Phaser
+      await this.loadAssetsInPhaser();
+
+      logAutopoiesis.info(
+        `✅ Cargados ${this.loadedAssets.size} assets únicos organizados en categorías`,
+      );
+    } catch (error) {
+      logAutopoiesis.error("Error cargando assets", String(error));
+      this.createFallbackAssets();
+    }
   }
 
   /**
@@ -480,15 +487,19 @@ export class CreativeAssetLoader {
    */
   private async loadAssetsInPhaser(): Promise<void> {
     return new Promise((resolve) => {
-      let loadedCount = 0;
+      const loadedCount = 0;
       const totalAssets = this.loadedAssets.size;
-      
+
       console.log(`🎯 loadAssetsInPhaser: Found ${totalAssets} assets to load`);
 
       // Skip asset loading entirely - we'll use fallback sprites from BootScene
       // This prevents hanging on non-existent asset files
-      logAutopoiesis.warn("⚠️ Skipping asset file loading, using procedural fallbacks instead");
-      console.log("🎯 loadAssetsInPhaser: Skipping file loading, using fallbacks");
+      logAutopoiesis.warn(
+        "⚠️ Skipping asset file loading, using procedural fallbacks instead",
+      );
+      console.log(
+        "🎯 loadAssetsInPhaser: Skipping file loading, using fallbacks",
+      );
       resolve();
       return;
 
@@ -648,7 +659,7 @@ export class CreativeAssetLoader {
         } else {
           assetPath = `assets/foliage/trees/${treeDef.name}${i}.png`;
         }
-        
+
         const assetInfo: AssetInfo = {
           key: `${treeDef.name}${i}`,
           path: assetPath,
@@ -1073,5 +1084,104 @@ export class CreativeAssetLoader {
    */
   getTotalAssetsCount(): number {
     return this.loadedAssets.size;
+  }
+
+  /**
+   * Crea assets de fallback procedurales para garantizar algo visible
+   */
+  private createFallbackAssets(): void {
+    logAutopoiesis.info("🎨 Creando assets de fallback procedurales...");
+
+    const graphics = this.scene.add.graphics();
+
+    // Terreno básico
+    graphics.fillStyle(0x4a7c4a);
+    graphics.fillRect(0, 0, 32, 32);
+    graphics.generateTexture("fallback_grass", 32, 32);
+
+    // Árbol básico
+    graphics.clear();
+    graphics.fillStyle(0x228b22);
+    graphics.fillCircle(16, 12, 10);
+    graphics.fillStyle(0x8b4513);
+    graphics.fillRect(14, 18, 4, 10);
+    graphics.generateTexture("fallback_tree", 32, 32);
+
+    // Roca básica
+    graphics.clear();
+    graphics.fillStyle(0x696969);
+    graphics.fillCircle(16, 20, 8);
+    graphics.fillStyle(0x808080);
+    graphics.fillCircle(16, 18, 6);
+    graphics.generateTexture("fallback_rock", 32, 32);
+
+    // Agua básica
+    graphics.clear();
+    graphics.fillStyle(0x4169e1);
+    graphics.fillRect(0, 0, 32, 32);
+    graphics.generateTexture("fallback_water", 32, 32);
+
+    // Estructura básica
+    graphics.clear();
+    graphics.fillStyle(0x8b4513);
+    graphics.fillRect(0, 16, 32, 16);
+    graphics.fillStyle(0xdc143c);
+    graphics.fillTriangle(16, 0, 0, 16, 32, 16);
+    graphics.generateTexture("fallback_house", 32, 32);
+
+    graphics.destroy();
+
+    // Registrar como assets disponibles
+    const fallbackAssets: AssetInfo[] = [
+      {
+        key: "fallback_grass",
+        path: "generated",
+        type: "terrain",
+        biome: "grassland",
+        rarity: "common",
+      },
+      {
+        key: "fallback_tree",
+        path: "generated",
+        type: "tree",
+        biome: "forest",
+        rarity: "common",
+      },
+      {
+        key: "fallback_rock",
+        path: "generated",
+        type: "rock",
+        biome: "mountainous",
+        rarity: "common",
+      },
+      {
+        key: "fallback_water",
+        path: "generated",
+        type: "water",
+        biome: "wetland",
+        rarity: "common",
+      },
+      {
+        key: "fallback_house",
+        path: "generated",
+        type: "structure",
+        biome: "village",
+        rarity: "common",
+      },
+    ];
+
+    // Registrar fallbacks en el sistema
+    for (const asset of fallbackAssets) {
+      this.loadedAssets.set(asset.key, asset);
+
+      const typeAssets = this.assetsByType.get(asset.type) || [];
+      typeAssets.push(asset);
+      this.assetsByType.set(asset.type, typeAssets);
+    }
+
+    logAutopoiesis.info("✅ Assets de fallback creados", {
+      total: fallbackAssets.length,
+      tipos: fallbackAssets.map((a) => a.type),
+    });
   }
 }

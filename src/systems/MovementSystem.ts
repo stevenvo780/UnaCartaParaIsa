@@ -66,7 +66,10 @@ export class MovementSystem {
   private occupiedTiles = new Set<string>();
   private cachedGrid: number[][] | null = null;
   private gridCacheTime: number = 0;
-  private pathCache = new Map<string, { result: PathfindingResult; timestamp: number }>();
+  private pathCache = new Map<
+    string,
+    { result: PathfindingResult; timestamp: number }
+  >();
   private readonly GRID_CACHE_DURATION = 5000; // 5 segundos
   private readonly PATH_CACHE_DURATION = 10000; // 10 segundos
   private lastCacheCleanup: number = 0;
@@ -251,8 +254,10 @@ export class MovementSystem {
 
     // Invalidar cache después de actualizar obstáculos
     this.invalidatePathfindingCache();
-    
-    logAutopoiesis.info(`🗺️ Obstáculos inicializados: ${this.occupiedTiles.size} tiles ocupados`);
+
+    logAutopoiesis.info(
+      `🗺️ Obstáculos inicializados: ${this.occupiedTiles.size} tiles ocupados`,
+    );
   }
 
   /**
@@ -486,12 +491,12 @@ export class MovementSystem {
     };
 
     // Crear cache key para rutas
-    const pathKey = `${Math.round(from.x/32)},${Math.round(from.y/32)}->${targetZone.id}`;
-    
+    const pathKey = `${Math.round(from.x / 32)},${Math.round(from.y / 32)}->${targetZone.id}`;
+
     // Verificar cache de rutas primero
     const now = Date.now();
     const cachedPath = this.pathCache.get(pathKey);
-    if (cachedPath && (now - cachedPath.timestamp) < this.PATH_CACHE_DURATION) {
+    if (cachedPath && now - cachedPath.timestamp < this.PATH_CACHE_DURATION) {
       logAutopoiesis.debug(`🚀 Usando ruta cacheada para ${pathKey}`);
       return cachedPath.result;
     }
@@ -571,7 +576,7 @@ export class MovementSystem {
         estimatedTime: this.estimateTravelTime(distance, 0),
         distance,
       };
-      
+
       // Cachear resultado exitoso
       this.pathCache.set(pathKey, { result, timestamp: now });
       return result;
@@ -584,7 +589,7 @@ export class MovementSystem {
         estimatedTime: this.estimateTravelTime(distance, 0),
         distance,
       };
-      
+
       // No cachear resultados fallidos
       return fallbackResult;
     }
@@ -595,9 +600,12 @@ export class MovementSystem {
    */
   private getOptimizedGrid(): number[][] {
     const now = Date.now();
-    
+
     // Usar cache si está disponible y válido
-    if (this.cachedGrid && (now - this.gridCacheTime) < this.GRID_CACHE_DURATION) {
+    if (
+      this.cachedGrid &&
+      now - this.gridCacheTime < this.GRID_CACHE_DURATION
+    ) {
       return this.cachedGrid;
     }
 
@@ -626,7 +634,9 @@ export class MovementSystem {
     this.cachedGrid = null;
     this.gridCacheTime = 0;
     this.pathCache.clear();
-    logAutopoiesis.debug("🗑️ Cache de pathfinding invalidado por cambio de obstáculos");
+    logAutopoiesis.debug(
+      "🗑️ Cache de pathfinding invalidado por cambio de obstáculos",
+    );
   }
 
   /**
@@ -634,7 +644,7 @@ export class MovementSystem {
    */
   private cleanupOldCache(now: number): void {
     let removedPaths = 0;
-    
+
     // Limpiar rutas cacheadas viejas
     for (const [key, cached] of this.pathCache.entries()) {
       if (now - cached.timestamp > this.PATH_CACHE_DURATION) {
@@ -644,13 +654,18 @@ export class MovementSystem {
     }
 
     // Invalidar grid cache si es muy viejo
-    if (this.cachedGrid && (now - this.gridCacheTime) > this.GRID_CACHE_DURATION * 2) {
+    if (
+      this.cachedGrid &&
+      now - this.gridCacheTime > this.GRID_CACHE_DURATION * 2
+    ) {
       this.cachedGrid = null;
       this.gridCacheTime = 0;
     }
 
     if (removedPaths > 0) {
-      logAutopoiesis.debug(`🧹 Limpieza de cache: ${removedPaths} rutas eliminadas`);
+      logAutopoiesis.debug(
+        `🧹 Limpieza de cache: ${removedPaths} rutas eliminadas`,
+      );
     }
   }
 

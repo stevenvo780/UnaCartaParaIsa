@@ -3,6 +3,7 @@
  */
 
 import type { NeedsState, EntityNeedsData } from "../systems/NeedsSystem";
+import { UIDesignSystem as DS } from "../config/uiDesignSystem";
 
 export class NeedsUI {
   private scene: Phaser.Scene;
@@ -25,18 +26,21 @@ export class NeedsUI {
     );
     this.container.setScrollFactor(0); // Fijo en pantalla
 
-    // Fondo semi-transparente
+    // Fondo con DS (glass + borde)
     const background = this.scene.add.graphics();
-    background.fillStyle(0x000000, 0.7);
-    background.fillRoundedRect(-10, -10, 200, 140, 8);
+    background.fillStyle(DS.COLORS.surfaceDark, 0.9);
+    background.fillRoundedRect(-10, -10, 200, 140, DS.RADIUS.md);
+    background.lineStyle(1, DS.COLORS.border, 0.6);
+    background.strokeRoundedRect(-10, -10, 200, 140, DS.RADIUS.md);
     this.container.add(background);
 
     // Título
-    const title = this.scene.add.text(0, 0, "NECESIDADES", {
-      fontSize: "14px",
-      color: "#ffffff",
-      fontStyle: "bold",
-    });
+    const title = this.scene.add.text(
+      0,
+      0,
+      "NECESIDADES",
+      DS.getTextStyle("lg", DS.COLORS.text, "bold"),
+    );
     this.container.add(title);
 
     // Crear barras de necesidades
@@ -51,17 +55,19 @@ export class NeedsUI {
       const yPos = 25 + index * 25;
 
       // Etiqueta
-      const label = this.scene.add.text(-5, yPos, need.label, {
-        fontSize: "10px",
-        color: "#ffffff",
-      });
+      const label = this.scene.add.text(
+        -5,
+        yPos,
+        need.label,
+        DS.getTextStyle("sm", DS.COLORS.text),
+      );
       this.needsLabels.set(need.key, label);
       this.container.add(label);
 
       // Barra de fondo
       const barBg = this.scene.add.graphics();
-      barBg.fillStyle(0x333333);
-      barBg.fillRect(50, yPos + 2, 120, 12);
+      barBg.fillStyle(DS.COLORS.surfaceLight, 1);
+      barBg.fillRoundedRect(50, yPos + 2, 120, 12, 6);
       this.container.add(barBg);
 
       // Barra de progreso
@@ -113,7 +119,7 @@ export class NeedsUI {
       // Dibujar barra con valor actual
       const barWidth = Math.max(0, (value / 100) * 120);
       bar.fillStyle(color);
-      bar.fillRect(50, 27 + index * 25, barWidth, 12);
+      bar.fillRoundedRect(50, 27 + index * 25, barWidth, 12, 6);
 
       // Actualizar texto con valor numérico
       const needLabels: Record<string, string> = {
@@ -131,7 +137,7 @@ export class NeedsUI {
       } else if (value < 40) {
         label.setColor("#FF6600");
       } else {
-        label.setColor("#FFFFFF");
+        label.setColor(`#${DS.COLORS.text.toString(16).padStart(6, "0")}`);
       }
     });
 

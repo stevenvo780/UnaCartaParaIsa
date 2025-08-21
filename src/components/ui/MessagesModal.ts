@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { UIDesignSystem as DS } from "../../config/uiDesignSystem";
 import { DialogueCardUI } from "../DialogueCardUI";
 
 interface MessageEntry {
@@ -115,17 +116,17 @@ export class MessagesModalContent {
 
   private build() {
     // Título de la sección
-    const title = this.scene.add.text(10, 10, "📜 Mensajes Recientes:", {
-      fontSize: "12px",
-      color: "#ecf0f1",
-      fontStyle: "bold",
-    });
+    const title = this.scene.add.text(
+      10,
+      10,
+      "📜 Mensajes Recientes:",
+      DS.getTextStyle("lg", DS.COLORS.text, "bold"),
+    );
     this.container.add(title);
 
     // Área de mensajes scrollable
     this.messagesText = this.scene.add.text(10, 35, this.getRecentMessages(), {
-      fontSize: "10px",
-      color: "#bdc3c7",
+      ...DS.getTextStyle("sm", DS.COLORS.textSecondary),
       wordWrap: { width: 320 },
       lineSpacing: 3,
     });
@@ -138,11 +139,12 @@ export class MessagesModalContent {
         const compactDialogue = this.scene.add.container(10, 120);
 
         // Información del diálogo actual
-        const dialogueInfo = this.scene.add.text(0, 0, "💬 Diálogo Activo", {
-          fontSize: "11px",
-          color: "#3498db",
-          fontStyle: "bold",
-        });
+        const dialogueInfo = this.scene.add.text(
+          0,
+          0,
+          "💬 Diálogo Activo",
+          DS.getTextStyle("sm", 0x3498db as any, "bold"),
+        );
         compactDialogue.add(dialogueInfo);
 
         this.container.add(compactDialogue);
@@ -153,10 +155,7 @@ export class MessagesModalContent {
 
     // Botón para limpiar mensajes
     const clearBtn = this.scene.add.text(280, 190, "🗑️ Limpiar", {
-      fontSize: "9px",
-      color: "#e74c3c",
-      backgroundColor: "#2c3e50",
-      padding: { x: 6, y: 3 },
+      ...DS.getTextStyle("xs", 0xe74c3c as any),
     });
     clearBtn.setInteractive({ useHandCursor: true });
     clearBtn.on("pointerdown", () => this.clearMessages());

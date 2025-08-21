@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { UIDesignSystem as DS } from "../../config/uiDesignSystem";
 
 export class WorldModalContent {
   private scene: Phaser.Scene;
@@ -87,50 +88,40 @@ export class WorldModalContent {
   }
 
   private build() {
-    const zoneTitle = this.scene.add.text(0, 0, "🗺️ ZONA ACTUAL", {
-      fontSize: "11px",
-      color: "#9b59b6",
-      fontFamily: "Arial, sans-serif",
-      fontStyle: "bold",
-    });
+    const zoneTitle = this.scene.add.text(
+      0,
+      0,
+      "🗺️ ZONA ACTUAL",
+      DS.getTextStyle("sm", 0x9b59b6 as any, "bold"),
+    );
     this.container.add(zoneTitle);
     this.infoZoneText = this.scene.add.text(
       0,
       16,
       "Zona: ---\nTipo: ---\nBeneficio: ---\nDistancia: ---",
-      {
-        fontSize: "10px",
-        color: "#bdc3c7",
-        fontFamily: "Arial, sans-serif",
-        lineSpacing: 2,
-      },
+      { ...DS.getTextStyle("sm", DS.COLORS.textSecondary), lineSpacing: 2 },
     );
     this.container.add(this.infoZoneText);
 
-    const actTitle = this.scene.add.text(180, 0, "📋 ACTIVIDADES", {
-      fontSize: "11px",
-      color: "#f39c12",
-      fontFamily: "Arial, sans-serif",
-      fontStyle: "bold",
-    });
+    const actTitle = this.scene.add.text(
+      180,
+      0,
+      "📋 ACTIVIDADES",
+      DS.getTextStyle("sm", 0xf39c12 as any, "bold"),
+    );
     this.container.add(actTitle);
     this.activitiesText = this.scene.add.text(
       180,
       16,
       "👩 Isa: IDLE\n👨 Stev: IDLE\n\n⏱️ Tiempo: 00:00",
-      {
-        fontSize: "10px",
-        color: "#ecf0f1",
-        fontFamily: "Arial, sans-serif",
-        lineSpacing: 3,
-      },
+      { ...DS.getTextStyle("sm", DS.COLORS.text), lineSpacing: 3 },
     );
     this.container.add(this.activitiesText);
 
     const minimapBg = this.scene.add.graphics();
-    minimapBg.fillStyle(0x2c3e50, 0.9);
+    minimapBg.fillStyle(DS.COLORS.surface, 0.9);
     minimapBg.fillRoundedRect(0, 90, 160, 120, 6);
-    minimapBg.lineStyle(2, 0x3498db, 0.7);
+    minimapBg.lineStyle(2, DS.COLORS.secondary, 0.7);
     minimapBg.strokeRoundedRect(0, 90, 160, 120, 6);
     this.container.add(minimapBg);
 

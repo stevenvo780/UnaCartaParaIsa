@@ -1,15 +1,24 @@
 import Phaser from "phaser";
+import { UIDesignSystem as DS } from "../../config/uiDesignSystem";
+import { FocusTrap } from "./FocusTrap";
 
 export class ModalManager {
   private scene: Phaser.Scene;
   private registry = new Map<string, Phaser.GameObjects.Container>();
   private order: string[] = [];
+  private traps = new Map<string, FocusTrap>();
   private readonly TOP_BAR_HEIGHT = 70;
   private readonly BOTTOM_BAR_HEIGHT = 80;
   private readonly MARGIN = 16;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
+    // ESC cierra el último modal visible
+    this.scene.input.keyboard?.on("keydown-ESC", () => {
+      const visible = this.order.filter((id) => this.registry.get(id)?.visible);
+      const last = visible[visible.length - 1];
+      if (last) this.close(last);
+    });
   }
 
   getVisibleContainers(): Phaser.GameObjects.Container[] {
@@ -26,6 +35,8 @@ export class ModalManager {
     const modal = this.scene.add.container(0, 0);
     modal.setScrollFactor(0);
     modal.setDepth(1003);
+    modal.setData("w", width);
+    modal.setData("h", height);
 
     const bg = this.scene.add.graphics();
     bg.fillStyle(0x1a1a2e, 0.95);
@@ -63,6 +74,10 @@ export class ModalManager {
 
     this.registry.set(id, modal);
     if (!this.order.includes(id)) this.order.push(id);
+    // Focus trap por modal
+    const trap = new FocusTrap(this.scene, modal);
+    trap.activate();
+    this.traps.set(id, trap);
     this.layout();
     return modal;
   }
@@ -70,7 +85,10 @@ export class ModalManager {
   toggle(id: string) {
     const m = this.registry.get(id);
     if (!m) return;
-    m.setVisible(!m.visible);
+    const next = !m.visible;
+    m.setVisible(next);
+    const trap = this.traps.get(id);
+    if (trap) next ? trap.activate() : trap.deactivate();
     this.layout();
   }
 
@@ -78,6 +96,8 @@ export class ModalManager {
     const m = this.registry.get(id);
     if (!m) return;
     m.setVisible(false);
+    const trap = this.traps.get(id);
+    trap?.deactivate();
     this.layout();
   }
 
@@ -97,11 +117,8 @@ export class ModalManager {
     );
     visibleIds.forEach((id) => {
       const modal = this.registry.get(id)!;
-      const g = modal.list[0] as Phaser.GameObjects.Graphics;
-      // Fallback para getBounds que puede no existir en Graphics
-      const b = { x: 0, y: 0, width: 200, height: 150 };
-      const w = b.width;
-      const h = b.height;
+      const w = (modal.getData("w") as number) ?? 200;
+      const h = (modal.getData("h") as number) ?? 150;
       if (cursorX + w > availX + availW) {
         cursorX = availX;
         cursorY += rowH + this.MARGIN;
@@ -114,5 +131,32 @@ export class ModalManager {
       cursorX += w + this.MARGIN;
       rowH = Math.max(rowH, h);
     });
+  }
+
+  // Re-dibuja fondos y barras de título con colores actuales del DS
+  refreshStyles() {
+    this.registry.forEach((modal) => {
+      const width = (modal.getData("w") as number) ?? 200;
+      const height = (modal.getData("h") as number) ?? 150;
+      const bg = modal.list[0] as Phaser.GameObjects.Graphics | undefined;
+      const titleBar = modal.list[1] as Phaser.GameObjects.Graphics | undefined;
+      const titleText = modal.list[2] as Phaser.GameObjects.Text | undefined;
+      if (bg) {
+        bg.clear();
+        bg.fillStyle(DS.COLORS.background, 0.95);
+        bg.fillRoundedRect(0, 0, width, height, 8);
+        bg.lineStyle(2, DS.COLORS.secondary, 0.8);
+        bg.strokeRoundedRect(0, 0, width, height, 8);
+      }
+      if (titleBar) {
+        titleBar.clear();
+        titleBar.fillStyle(DS.COLORS.surface, 0.9);
+        titleBar.fillRoundedRect(0, 0, width, 28, 8);
+      }
+      if (titleText) {
+        titleText.setStyle({ ...DS.getTextStyle("sm", DS.COLORS.text, "bold") });
+      }
+    });
+    this.layout();
   }
 }
