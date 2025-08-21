@@ -1,6 +1,4 @@
-/**
- * Tipos de datos válidos para logging
- */
+/** Tipos de datos válidos para logging */
 export type LogData =
   | Record<string, unknown>
   | unknown[]
@@ -11,9 +9,7 @@ export type LogData =
   | undefined
   | Error;
 
-/**
- * Niveles de logging y configuración
- */
+/** Niveles de logging y configuración */
 export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
@@ -22,36 +18,28 @@ export enum LogLevel {
   SILENT = 4,
 }
 
-/**
- * Configuración global de logging - ULTRA-OPTIMIZADO PARA 60 FPS
- */
+/** Configuración global de logging orientada a rendimiento */
 const CONFIG = {
-  // CAMBIO CRÍTICO: Solo errores en producción y desarrollo
-  level: LogLevel.ERROR, // Era INFO en dev - CAMBIO A ERROR para 60 FPS
-
-  // SISTEMAS COMPLETAMENTE BLOQUEADOS para performance
+  level: LogLevel.ERROR,
+  // Sistemas silenciados para evitar spam frecuente
   throttledSystems: new Set([
     "Animation played",
     "Decoration culling",
     "Asset placed",
     "Game cycle",
-    "updateEntity", // NUEVO: Bloquear entity updates
-    "Diálogo mostrado", // NUEVO: Bloquear diálogos frecuentes
-    "resonance updated", // NUEVO: Bloquear resonance logs
-    "sprite updated", // NUEVO: Bloquear sprite logs
-    "changed activity", // NUEVO: Bloquear activity logs
-    "visuals created", // NUEVO: Bloquear creation logs
+    "updateEntity",
+    "Diálogo mostrado",
+    "resonance updated",
+    "sprite updated",
+    "changed activity",
+    "visuals created",
   ]),
 };
 
-/**
- * Sistema de throttling para evitar spam de logs
- */
+/** Sistema de throttling para evitar spam de logs */
 const logThrottle = new Map<string, { count: number; lastLog: number }>();
 
-/**
- * Revisa si un mensaje debe ser throttled
- */
+/** Indica si un mensaje debe ser limitado (throttled) */
 function shouldThrottle(message: string): boolean {
   // Buscar sistemas conocidos que generan spam
   const isThrottledSystem = Array.from(CONFIG.throttledSystems).some((system) =>
@@ -61,7 +49,7 @@ function shouldThrottle(message: string): boolean {
   if (!isThrottledSystem) return false;
 
   const now = Date.now();
-  const key = message.split(" ").slice(0, 3).join(" "); // Usar las primeras 3 palabras como key
+  const key = message.split(" ").slice(0, 3).join(" ");
   const entry = logThrottle.get(key);
 
   if (!entry) {
@@ -71,7 +59,7 @@ function shouldThrottle(message: string): boolean {
 
   entry.count++;
 
-  // Solo logear cada 5 segundos para mensajes throttled
+  // Solo registrar cada 5 segundos para mensajes limitados
   if (now - entry.lastLog > 5000) {
     entry.lastLog = now;
     return false;
@@ -126,17 +114,13 @@ export const logAutopoiesis = {
   },
 };
 
-/**
- * Utilidad para cambiar el nivel de logging en runtime
- */
+/** Cambia el nivel de logging en runtime */
 export function setLogLevel(level: LogLevel): void {
   CONFIG.level = level;
   console.info(`🔧 Log level changed to: ${LogLevel[level]}`);
 }
 
-/**
- * Utilidad para debugging - muestra estadísticas de throttling
- */
+/** Devuelve estadísticas de throttling para debugging */
 export function getLogStats(): Record<
   string,
   { count: number; lastLog: number }

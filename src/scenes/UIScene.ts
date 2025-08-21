@@ -128,8 +128,6 @@ export class UIScene extends Phaser.Scene {
     logAutopoiesis.info("🎵 ResonanceBar añadida a UIScene");
   }
 
-  private createTopBar() {}
-
   /**
    * Inicializar pools de elementos UI
    */

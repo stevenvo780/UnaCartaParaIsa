@@ -13,9 +13,7 @@ let currentIndex = 0;
 let isLoaded = false;
 let totalDialogues = 0;
 
-/**
- * Inicializa el sistema de diálogos con carga ULTRA-OPTIMIZADA para 60 FPS
- */
+/** Inicializa el sistema de diálogos con carga por chunks */
 export const loadDialogueData = async (): Promise<void> => {
   try {
     logAutopoiesis.info("🗣️ Inicializando sistema de diálogos optimizado...");
@@ -23,7 +21,7 @@ export const loadDialogueData = async (): Promise<void> => {
     await dialogueChunkLoader.initialize();
     const stats = dialogueChunkLoader.getStats();
 
-    // ⚡ MEGA-OPTIMIZACIÓN: Limitar a solo 5000 diálogos para máximo rendimiento
+    // Limitar cantidad para garantizar rendimiento estable
     totalDialogues = Math.min(stats.totalEntries, 5000);
 
     logAutopoiesis.info("🚀 ULTRA-OPTIMIZED Dialogues system", {

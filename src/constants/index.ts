@@ -1,15 +1,4 @@
-/**
- * 🎯 CONSTANTES CONSOLIDADAS DEL JUEGO
- *
- * Fuente única de verdad que reemplaza:
- * ❌ biologicalDynamics.ts
- * ❌ gameConstants.ts
- * ❌ mathematicalCore.ts
- * ❌ physicsAndMovement.ts
- * ❌ systemTiming.ts
- *
- * Organizadas por categorías para máxima claridad
- */
+/** Constantes centrales del juego organizadas por categoría */
 
 export const MATH = {
   PI: Math.PI,
@@ -31,18 +20,18 @@ export const TIMING = {
   BREATHING_CYCLE_MS: 4000,
   ATTENTION_SPAN_MS: 90000,
 
-  MAIN_GAME_LOGIC: 3000, // ⚡ ULTRA-OPTIMIZADO: de 800ms a 3000ms para 60 FPS
-  DEGRADATION_UPDATE: 5000, // ⚡ ULTRA-OPTIMIZADO: de 2000ms a 5000ms
-  MOVEMENT_UPDATE: 32, // ⚡ ULTRA-OPTIMIZADO: de 16ms a 32ms
-  UI_UPDATE: 200, // ⚡ ULTRA-OPTIMIZADO: de 100ms a 200ms
-  BATCH_FLUSH: 200, // ⚡ ULTRA-OPTIMIZADO: de 100ms a 200ms
-  CLEANUP: 120000, // ⚡ ULTRA-OPTIMIZADO: de 60000ms a 120000ms
+  MAIN_GAME_LOGIC: 3000,
+  DEGRADATION_UPDATE: 5000,
+  MOVEMENT_UPDATE: 32,
+  UI_UPDATE: 200,
+  BATCH_FLUSH: 200,
+  CLEANUP: 120000,
 
-  main: 3000, // ⚡ ULTRA-OPTIMIZADO
-  degradation: 5000, // ⚡ ULTRA-OPTIMIZADO
-  movement: 32, // ⚡ ULTRA-OPTIMIZADO
-  ui: 200, // ⚡ ULTRA-OPTIMIZADO
-  entityMovementSpeed: 32, // ⚡ ULTRA-OPTIMIZADO
+  main: 3000,
+  degradation: 5000,
+  movement: 32,
+  ui: 200,
+  entityMovementSpeed: 32,
 
   SPEED_MULTIPLIERS: {
     PAUSED: 0,

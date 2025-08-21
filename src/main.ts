@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { gameConfig } from "./config/gameConfig";
 import BootScene from "./scenes/BootScene";
 import MainScene from "./scenes/MainScene";
+import { UIScene } from "./scenes/UIScene";
 import { logAutopoiesis } from "./utils/logger";
 import { productionOptimizer } from "./utils/productionOptimizer";
 
@@ -37,7 +38,7 @@ const config: Phaser.Types.Core.GameConfig = {
       ...(phaserOptimizations.physics?.arcade || {}),
     },
   },
-  scene: [BootScene, MainScene], // UIScene temporalmente quitado para debug
+  scene: [BootScene, MainScene, UIScene], // Reactivando UIScene completa
   // Aplicar optimizaciones de producción
   ...phaserOptimizations,
   callbacks: {
@@ -59,9 +60,7 @@ const config: Phaser.Types.Core.GameConfig = {
         ).scenes = {
           boot: game.scene.getScene("BootScene"),
           main: game.scene.getScene("MainScene"),
-          ui: game.scene.isActive("UIScene")
-            ? game.scene.getScene("UIScene")
-            : (undefined as unknown as Phaser.Scene),
+          ui: game.scene.getScene("UIScene"),
         };
         // Solo en modo debug, usar logAutopoiesis para información de desarrollo
         if (gameConfig.debugMode) {

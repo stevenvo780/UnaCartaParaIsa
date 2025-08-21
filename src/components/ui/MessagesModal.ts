@@ -109,13 +109,6 @@ export class MessagesModalContent {
     }
   }
 
-  constructor(scene: Phaser.Scene, dialogueUI: DialogueCardUI) {
-    this.scene = scene;
-    this.dialogueUI = dialogueUI;
-    this.container = this.scene.add.container(0, 0);
-    this.build();
-  }
-
   getContainer(): Phaser.GameObjects.Container {
     return this.container;
   }

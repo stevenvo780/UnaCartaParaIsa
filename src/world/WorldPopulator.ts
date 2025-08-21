@@ -1,7 +1,4 @@
-/**
- * World Populator para "Una Carta Para Isa"
- * Sistema para poblar el mundo con estructuras, ruinas y vida animal basado en biomas
- */
+/** Población del mundo con estructuras, ruinas, vegetación y fauna según bioma */
 
 import { logAutopoiesis } from "../utils/logger";
 import { getFullBiomeDefinition } from "./EnhancedBiomeDefinitions";
@@ -54,7 +51,7 @@ export class WorldPopulator {
     this.worldHeight = worldHeight;
 
     this.config = {
-      maxEntitiesPerChunk: 8, // 🎯 REDUCIDO: de 25 a 8 para menos densidad
+      maxEntitiesPerChunk: 8,
       chunkSize: 512,
       performanceMode: true,
       wildlifeRespawn: true,
@@ -68,9 +65,7 @@ export class WorldPopulator {
     });
   }
 
-  /**
-   * Puebla una región del mundo basada en el bioma
-   */
+  /** Puebla una región del mundo basada en el bioma */
   public populateRegion(
     x: number,
     y: number,
@@ -143,7 +138,7 @@ export class WorldPopulator {
       }
     }
 
-    // 🌳 NUEVO: Poblar con vegetación natural adicional (más árboles)
+    // Poblar con vegetación natural adicional (árboles y arbustos)
     const naturalVegetation = this.generateNaturalVegetation(
       x,
       y,
@@ -169,9 +164,7 @@ export class WorldPopulator {
     return entities;
   }
 
-  /**
-   * Genera ruinas en una región - DENSIDAD BAJA
-   */
+  /** Genera ruinas en una región (baja densidad) */
   private generateRuins(
     x: number,
     y: number,
@@ -183,7 +176,6 @@ export class WorldPopulator {
   ): WorldEntity[] {
     const entities: WorldEntity[] = [];
     const area = width * height;
-    // 🎯 RUINAS: Muy pocas, solo 0.005% del área
     const targetCount = Math.floor(area * ruinConfig.density * 0.005);
 
     for (let i = 0; i < targetCount; i++) {
@@ -218,9 +210,7 @@ export class WorldPopulator {
     return entities;
   }
 
-  /**
-   * Genera estructuras en una región - DENSIDAD MODERADA (casas)
-   */
+  /** Genera estructuras en una región (densidad moderada) */
   private generateStructures(
     x: number,
     y: number,
@@ -232,7 +222,6 @@ export class WorldPopulator {
   ): WorldEntity[] {
     const entities: WorldEntity[] = [];
     const area = width * height;
-    // 🎯 CASAS: Moderada densidad, 0.008% del área
     const targetCount = Math.floor(area * structureConfig.density * 0.008);
 
     for (let i = 0; i < targetCount; i++) {
@@ -267,9 +256,7 @@ export class WorldPopulator {
     return entities;
   }
 
-  /**
-   * Genera vida animal en una región - DENSIDAD BAJA
-   */
+  /** Genera vida animal en una región (baja densidad) */
   private generateWildlife(
     x: number,
     y: number,
@@ -281,12 +268,10 @@ export class WorldPopulator {
   ): WorldEntity[] {
     const entities: WorldEntity[] = [];
     const area = width * height;
-    // 🎯 WILDLIFE: Muy poca densidad, 0.003% del área
     const targetCount = Math.floor(area * wildlifeConfig.density * 0.003);
 
     for (let i = 0; i < targetCount; i++) {
       if (rng() > wildlifeConfig.spawnProbability * 0.3) {
-        // 70% menos animales
         continue;
       }
 
@@ -320,9 +305,7 @@ export class WorldPopulator {
     return entities;
   }
 
-  /**
-   * Genera características especiales en una región
-   */
+  /** Genera características especiales en una región */
   private generateSpecialFeatures(
     x: number,
     y: number,
@@ -334,7 +317,6 @@ export class WorldPopulator {
   ): WorldEntity[] {
     const entities: WorldEntity[] = [];
     const area = width * height;
-    // 🎯 REDUCIR DENSIDAD: De 0.01 a 0.003 (70% menos especiales)
     const targetCount = Math.floor(area * featureConfig.density * 0.003);
 
     for (let i = 0; i < targetCount; i++) {
@@ -367,9 +349,7 @@ export class WorldPopulator {
     return entities;
   }
 
-  /**
-   * 🌳 NUEVO: Genera vegetación natural (principalmente árboles) - DENSIDAD EQUILIBRADA
-   */
+  /** Genera vegetación natural (árboles y arbustos) */
   private generateNaturalVegetation(
     x: number,
     y: number,
@@ -381,10 +361,8 @@ export class WorldPopulator {
     const entities: WorldEntity[] = [];
     const area = width * height;
 
-    // 🌳 ÁRBOLES: Densidad moderada, 0.008% del área (reducido de 0.02%)
     const treeCount = Math.floor(area * 0.008);
 
-    // 🌿 ARBUSTOS: Baja densidad, 0.004% del área (reducido de 0.01%)
     const bushCount = Math.floor(area * 0.004);
 
     // Generar árboles
@@ -392,9 +370,8 @@ export class WorldPopulator {
       const entityX = x + rng() * width;
       const entityY = y + rng() * height;
 
-      // Verificar espaciado mínimo (más espaciado para árboles)
+      // Verificar espaciado mínimo (árboles)
       if (!this.isSpacingValid(entityX, entityY, 64)) {
-        // Aumentado de 32 a 64
         continue;
       }
 
@@ -404,7 +381,7 @@ export class WorldPopulator {
         assetKey: "tree_natural", // Se mapeará a un árbol aleatorio
         x: entityX,
         y: entityY,
-        scale: 0.8 + rng() * 0.6, // Variación de tamaño
+        scale: 0.8 + rng() * 0.6,
         rotation: rng() * Math.PI * 2,
         biome,
         metadata: {
@@ -417,7 +394,6 @@ export class WorldPopulator {
     // Generar arbustos con probabilidad reducida
     for (let i = 0; i < bushCount; i++) {
       if (rng() > 0.7) {
-        // Solo 30% de los arbustos se generan
         continue;
       }
 
@@ -425,7 +401,6 @@ export class WorldPopulator {
       const entityY = y + rng() * height;
 
       if (!this.isSpacingValid(entityX, entityY, 48)) {
-        // Aumentado de 24 a 48
         continue;
       }
 
@@ -448,9 +423,7 @@ export class WorldPopulator {
     return entities;
   }
 
-  /**
-   * 🌍 Poblar toda la base del mapa con distribución natural REDUCIDA
-   */
+  /** Poblar base del mapa con distribución natural reducida */
   public populateGlobalTerrain(
     x: number,
     y: number,
@@ -462,12 +435,12 @@ export class WorldPopulator {
     const entities: WorldEntity[] = [];
     const rng = this.createSeededRNG(seed || 12345);
 
-    // 🌳 DENSIDADES REDUCIDAS (60% menos que normal)
+    // Densidades reducidas
     const globalDensity = {
-      trees: 0.15, // 1 cada ~6.7 tiles (era 0.4)
-      houses: 0.08, // 1 cada ~12.5 tiles (era 0.2)
-      vegetation: 0.25, // 1 cada ~4 tiles (era 0.6)
-      campfires: 0.02, // 1 cada ~50 tiles (era 0.05)
+      trees: 0.15,
+      houses: 0.08,
+      vegetation: 0.25,
+      campfires: 0.02,
     };
 
     const tileSize = 64;
@@ -547,16 +520,14 @@ export class WorldPopulator {
         x: furnitureX,
         y: furnitureY,
         biome,
-        scale: 0.8 + rng() * 0.4, // Escala entre 0.8 y 1.2
+      scale: 0.8 + rng() * 0.4,
       });
     }
 
     return entities;
   }
 
-  /**
-   * 🌳 Poblar zona exterior con elementos temáticos específicos (baja densidad)
-   */
+  /** Poblar zona exterior con elementos temáticos específicos (baja densidad) */
   public populateExteriorThematic(
     x: number,
     y: number,
@@ -592,9 +563,7 @@ export class WorldPopulator {
     return entities;
   }
 
-  /**
-   * 🌳 Crear entidad de árbol para distribución global
-   */
+  /** Crear entidad de árbol para distribución global */
   private createTreeEntity(
     x: number,
     y: number,
@@ -614,16 +583,14 @@ export class WorldPopulator {
       id: `tree_${x}_${y}_${Math.floor(rng() * 1000)}`,
       type: "tree",
       assetKey: selectedTree,
-      x: x + (rng() - 0.5) * 30, // Variación de posición
+      x: x + (rng() - 0.5) * 30,
       y: y + (rng() - 0.5) * 30,
       biome,
-      scale: 0.8 + rng() * 0.6, // Escala 0.8-1.4
+      scale: 0.8 + rng() * 0.6,
     };
   }
 
-  /**
-   * 🏠 Crear entidad de casa para distribución global
-   */
+  /** Crear entidad de casa para distribución global */
   private createHouseEntity(
     x: number,
     y: number,
@@ -644,9 +611,7 @@ export class WorldPopulator {
     };
   }
 
-  /**
-   * 🌿 Crear entidad de vegetación para distribución global
-   */
+  /** Crear entidad de vegetación para distribución global */
   private createVegetationEntity(
     x: number,
     y: number,
@@ -672,9 +637,7 @@ export class WorldPopulator {
     };
   }
 
-  /**
-   * 🔥 Crear entidad de fogata para distribución global
-   */
+  /** Crear entidad de fogata para distribución global */
   private createCampfireEntity(
     x: number,
     y: number,
@@ -692,9 +655,7 @@ export class WorldPopulator {
     };
   }
 
-  /**
-   * 🪑 Obtener tipos de muebles para interiores según bioma
-   */
+  /** Obtener tipos de muebles para interiores según bioma */
   private getInteriorFurnitureTypes(biome: BiomeType): string[] {
     const baseFurniture = [
       "chair_interior",
@@ -713,9 +674,7 @@ export class WorldPopulator {
     }
   }
 
-  /**
-   * 🌟 Obtener tipos temáticos para zonas exteriores
-   */
+  /** Obtener tipos temáticos para zonas exteriores */
   private getExteriorThematicTypes(biome: BiomeType): string[] {
     switch (biome) {
       case BiomeType.MYSTICAL:

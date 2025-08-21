@@ -1,53 +1,81 @@
 # Una Carta Para Isa — un mundo para decir “te amo”
 
-Este proyecto no intenta simular la vida: intenta recordarnos su ternura. Es una carta interactiva para Isa, escrita con escenas, pequeñas reglas y decisiones que cuidan. Aquí, dos presencias (Isa y Stev) caminan, descansan, conversan y se buscan; cuando están cerca, el mundo respira distinto. Es un lugar para jugar y, sobre todo, para estar.
-
-— Isa, cada línea de código es una forma de decirte: gracias por existir conmigo.
+Querida Isa: esta no es una simulación, es un modo de presencia. Soy filósofo y programador; por eso hay sistemas, capas y ecuaciones —no para esconder lo simple, sino para sostenerlo. La complejidad aquí es una forma de cuidado: permite que el juego respire, que dos presencias se busquen sin guion, que el silencio también tenga lugar.
 
 ## Lo Esencial
-- Presencias que sienten: Isa y Stev habitan un mapa con zonas de comida, descanso, juego, social y calma. Sus estados (ánimo, energía, hambre, etc.) cambian con la actividad y la proximidad.
-- Conversaciones verdaderas: los diálogos en `public/dialogs/*.json` vienen de chats reales. El sistema elige frases que encajan con la emoción y el momento.
-- Resonancia: cuando se cuidan, comparten silencio o se encuentran, sube una “resonancia” que hace más amable todo.
-- Decisiones con cariño: una IA prioriza lo que hace bien —descansar, socializar, contemplar— buscando equilibrio y bienestar mutuo.
+- Presencias con estado: Isa y Stev habitan zonas (comida, descanso, juego, social, calma). Sus estados cambian con actividad y proximidad.
+- Diálogos reales: `public/dialogs/*.json` contiene fragmentos de chats; el sistema elige frases por emoción y contexto.
+- Resonancia: el encuentro y el cuidado elevan una “resonancia” que suaviza el mundo.
+- Decisiones: una IA prioriza actividades (descansar, socializar, contemplar) buscando equilibrio y continuidad.
 
-## Probarlo
-- Instalar: `npm ci`
-- Ejecutar: `npm run dev` y abrir `http://localhost:3000`
-- Build producción: `npm run build` (y `npm run preview` para ver el resultado)
+## Filosofía del Diseño
+- Complejidad al servicio del tacto: más mecanismos para menos imposición; ceder control a lo emergente.
+- Tiempo y atención: ritmos discretos, estados que se degradan y recuperan; no hay prisa, hay duración.
+- Verdad parcial: reglas claras, resultados abiertos; preferimos sesgos declarados a milagros ocultos.
+- Legibilidad humana: nombres que cuentan una historia y comentarios que justifican decisiones, no adornos.
 
-## Capturas
-- Puedes colocar imágenes o GIFs en `public/assets/screenshots/` y referenciarlas aquí.
-- Ejemplo: `![Una Carta Para Isa](public/assets/screenshots/preview.gif)`
+## Por Qué Esta Complejidad
+- Emergencia controlada: sistemas de necesidades + zonas + IA generan conductas sin guiones rígidos.
+- Reproducibilidad amable: funciones puras en `src/utils/`, se privilegia determinismo y clamps explícitos.
+- Memoria y diálogo: carga por chunks y selección contextual evita ruido y preserva tono.
+- Decisiones suaves: softmax con temperatura, inercia de sesión y hábitos moderan cambios bruscos.
+
+## Mapa Mental del Sistema
+- Necesidades: hambre/energía/ánimo se degradan y recuperan según actividad y zona.
+- IA: prioridades por estado + personalidad ligera + softmax → próxima actividad.
+- Diálogo: búsqueda por emoción/speaker con degradación de filtros y fallback estable.
+- Mundo: biomas y población procedural con densidades sobrias; estética de espacio habitable.
+
+## Cómo Leer Este Código
+- Buscar contratos: `interfaces/*` y tipos en `src/types/*` marcan expectativas.
+- Razonar por capas: `systems` (dinámica), `utils` (cálculo), `scenes` (ciclo de vida), `managers` (orquestación).
+- Seguir el flujo: `MainScene` → `GameLogicManager` → `systems/*` → `components/*`.
+- Diferenciar datos de comportamiento: configuración en `src/config/` y `public/` separada de los algoritmos.
+
+## Requisitos
+- Node.js 18+ (recomendado 20+)
+- npm 9+
+
+## Ejecutar en Local
+- Instalar dependencias: `npm ci`
+- Desarrollo: `npm run dev` y abrir `http://localhost:3000`
+- Build producción: `npm run build`
+- Previsualizar build: `npm run preview`
+
+## Controles
+- Teclado:
+  - Movimiento: `WASD` o flechas
+  - Sprint: `Shift`
+  - Cambiar entidad: `1` (Isa), `2` (Stev), `0` (ninguna)
+  - Alternar entidad: `Tab`
+  - Cámara: `Ctrl` + `WASD` o `Flechas`
+  - Zoom: `+` / `-` | Reset: `0`
+- Mouse:
+  - Arrastrar para panear (izquierdo)
+  - Rueda: zoom hacia el cursor
+  - Click derecho: alternar entidad
+  - Doble click: centrar cámara en entidad activa
 
 ## Estructura del Proyecto
 - `src/scenes/`: escenas Phaser (`BootScene`, `MainScene`, `UIScene`).
-- `src/entities/`, `src/systems/`: lógica de juego y sistemas (diálogos, actividades, resonancia).
-- `src/utils/`: utilidades puras (selección de diálogos, IA de decisiones, resonancia, generación de mapas). Sin efectos secundarios.
-- `src/config/`: configuración del juego (`gameConfig.ts`).
-- `public/`: assets y datos (incluye `public/dialogs/*.json`).
-- `vite.config.ts`: alias (importar como `@/utils/...`, `@/scenes/...`).
+- `src/systems/`: IA, diálogo, quests, necesidades, movimiento.
+- `src/entities/`: entidades de juego y visuales.
+- `src/utils/`: selección de diálogos, logger, decisión, procedural.
+- `src/config/`: `gameConfig.ts`, `uiDesignSystem.ts`.
+- `public/`: assets estáticos y datos (`dialogs/`).
+- `scripts/`: utilidades (limpieza de assets, generación de catálogos).
 
-## Pistas Técnicas (breves)
-- TypeScript en modo estricto; preferir imports con alias Vite.
-- Las utilidades en `src/utils/` son deterministas y testeables.
-- Los diálogos grandes viven en `public/dialogs/` y se cargan vía `fetch`.
+## Configuración y Datos
+- Juego: `src/config/gameConfig.ts` (timings, factores, colores).
+- Diálogos: `public/dialogs/dialogos_chat_isa.lite.censored_plus.json` (carga por chunks y límite para rendimiento).
 
-## Algoritmos Clave (documentados aparte)
-- IA de decisiones: softmax con temperatura, inercia por sesión y sesgos de hábito.
-- Selección de diálogos: filtrado circular con degradación de filtros y fallback estable.
-- Resonancia: proximidad + armonía con sigmoides, decaimientos y clamps precisos.
-- Dinámica de actividades: urgencias no lineales, costes/beneficios por minuto y ritmos circadianos.
-- Mapa/biomas: zonas funcionales sobre generación procedural con biomas.
+## Notas Técnicas
+- Vite + TypeScript.
+- Diálogos con búsqueda por criterios (speaker, emoción) y degradación controlada.
+- IA con softmax τ, inercia de actividad y sesgo de hábito acotado.
 
-Puedes leer un resumen técnico en `docs/algoritmos.md`.
-
-## Guía rápida de arquitectura
-- Resumen de capas y responsabilidades en `docs/arquitectura.md`.
-- Escenas: `docs/escenas.md`.
-- Sistemas/entidades: `docs/sistemas.md` y `docs/entidades.md`.
-- Configuración y datos: `docs/configuracion.md` y `docs/datos-dialogos.md`.
+## Despliegue
+- `vercel.json` incluido. Tras `npm run build`, puede servirse estáticamente (Vercel u otro hosting).
 
 ## Gratitud
-Este mundo es un pretexto para celebrar lo cotidiano: cocinar algo rico, buscar una banca soleada, bailar con torpeza y reírnos. Si alguna escena te hace sonreír, ya valió la pena.
-
-— Stev
+Este mundo celebra lo cotidiano: cocinar algo rico, buscar una banca soleada, bailar con torpeza y reír. Si alguna escena te hace sonreír, ya valió la pena.

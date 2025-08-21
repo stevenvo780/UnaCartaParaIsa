@@ -29,7 +29,6 @@ export class AnimationManager {
   private createdSprites = new Set<Phaser.GameObjects.Sprite>();
 
   private static readonly SPRITE_SHEET_CONFIGS: SpriteSheetConfig[] = [
-    // NUEVOS SPRITES CON ANIMACIONES MULTI-FRAME
     {
       key: "whomen1",
       path: "assets/entities/animated/characters/whomen1.png",
@@ -45,7 +44,7 @@ export class AnimationManager {
       totalFrames: 12, // 4 frames × 3 filas (128×96 = grid 4×3)
     },
 
-    // PERSONAJES PRINCIPALES - NUEVOS SPRITES KENNEY
+    // Personajes principales
     {
       key: "isa_happy",
       path: "assets/entities/new_woman_idle.png",
@@ -75,7 +74,7 @@ export class AnimationManager {
       totalFrames: 1,
     },
 
-    // SPRITES DE WALKING
+    // Sprites de caminata
     {
       key: "isa_walking",
       path: "assets/entities/new_woman_walk.png",
@@ -91,7 +90,7 @@ export class AnimationManager {
       totalFrames: 1,
     },
 
-    // ANIMACIONES DE AMBIENTE
+    // Animaciones de ambiente
     {
       key: "campfire_anim",
       path: "assets/animated_entities/campfire.png",
@@ -151,7 +150,7 @@ export class AnimationManager {
   ];
 
   private static readonly ANIMATION_CONFIGS: AnimationConfig[] = [
-    // NUEVAS ANIMACIONES MULTI-FRAME - WHOMEN1 (8 frames × 3 filas)
+    // Animaciones multi-frame - WHOMEN1 (8 frames × 3 filas)
     {
       key: "whomen1:row0",
       spriteSheetKey: "whomen1",
@@ -174,7 +173,7 @@ export class AnimationManager {
       repeat: -1,
     },
 
-    // NUEVAS ANIMACIONES MULTI-FRAME - MAN1 (4 frames × 3 filas)
+    // Animaciones multi-frame - MAN1 (4 frames × 3 filas)
     {
       key: "man1:row0",
       spriteSheetKey: "man1",
@@ -197,37 +196,37 @@ export class AnimationManager {
       repeat: -1,
     },
 
-    // ALIASES PARA COMPATIBILIDAD CON EL SISTEMA ACTUAL
+    // Aliases para compatibilidad con el sistema actual
     {
       key: "isa_walking_new",
       spriteSheetKey: "whomen1",
-      frames: [16, 17, 18, 19, 20, 21, 22, 23], // Usar row2 para caminar
+      frames: [16, 17, 18, 19, 20, 21, 22, 23], // row2 para caminar
       frameRate: 8,
       repeat: -1,
     },
     {
       key: "stev_walking_new",
       spriteSheetKey: "man1",
-      frames: [8, 9, 10, 11], // Usar row2 para caminar
+      frames: [8, 9, 10, 11], // row2 para caminar
       frameRate: 8,
       repeat: -1,
     },
     {
       key: "isa_happy_new",
       spriteSheetKey: "whomen1",
-      frames: [0, 1, 2, 3, 4, 5, 6, 7], // Usar row0 para idle
+      frames: [0, 1, 2, 3, 4, 5, 6, 7], // row0 para idle
       frameRate: 6,
       repeat: -1,
     },
     {
       key: "stev_happy_new",
       spriteSheetKey: "man1",
-      frames: [0, 1, 2, 3], // Usar row0 para idle
+      frames: [0, 1, 2, 3], // row0 para idle
       frameRate: 6,
       repeat: -1,
     },
 
-    // PERSONAJES - ISA (NUEVOS SPRITES ESTÁTICOS)
+    // Personajes - ISA (sprites estáticos)
     {
       key: "isa_happy_idle",
       spriteSheetKey: "isa_happy",
@@ -257,7 +256,7 @@ export class AnimationManager {
       repeat: 0,
     },
 
-    // PERSONAJES - STEV (NUEVOS SPRITES ESTÁTICOS)
+    // Personajes - STEV (sprites estáticos)
     {
       key: "stev_happy_idle",
       spriteSheetKey: "stev_happy",
@@ -287,7 +286,7 @@ export class AnimationManager {
       repeat: 0,
     },
 
-    // ANIMACIONES DE AMBIENTE
+    // Animaciones de ambiente
     {
       key: "campfire_anim",
       spriteSheetKey: "campfire_anim",

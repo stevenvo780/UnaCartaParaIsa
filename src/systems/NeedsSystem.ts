@@ -266,9 +266,7 @@ export class NeedsSystem {
     return warning;
   }
 
-  /**
-   * Verificar si la entidad está cerca de la muerte (MEJORADO)
-   */
+  /** Verifica si la entidad está cerca de la muerte */
   private isNearDeath(needs: NeedsState): boolean {
     // Contar necesidades en estado crítico extremo
     const criticalCount = [

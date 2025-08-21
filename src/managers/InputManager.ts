@@ -41,9 +41,7 @@ export class InputManager {
     this.setupControls();
   }
 
-  /**
-   * Configura los controles del juego
-   */
+  /** Configura los controles del juego */
   private setupControls(): void {
     if (!this.scene.input?.keyboard) return;
 
@@ -87,8 +85,7 @@ export class InputManager {
       this.scene.events.emit("sprintEnd");
     });
 
-    // MEJORA: Controles adicionales para navegación del mapa
-    // CTRL + WASD para mover la cámara directamente
+    // Controles adicionales para navegación del mapa (CTRL + WASD)
     this.scene.input.keyboard.on("keydown", (event: KeyboardEvent) => {
       if (event.ctrlKey && this.scene.cameras?.main) {
         const camera = this.scene.cameras.main;
@@ -149,13 +146,11 @@ export class InputManager {
     logAutopoiesis.info("Input controls configured");
   }
 
-  /**
-   * Configura los controles del mouse - MEJORADO para navegación fluida
-   */
+  /** Configura los controles del mouse para navegación fluida */
   private setupMouseControls(): void {
     if (!this.scene.input) return;
 
-    // MEJORA 1: Mouse drag para movimiento de cámara más suave + click derecho
+    // Mouse drag para movimiento de cámara más suave + click derecho
     this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       if (pointer.rightButtonDown && pointer.rightButtonDown()) {
         // Cycle through entities con click derecho
@@ -164,7 +159,7 @@ export class InputManager {
         const nextIndex = (currentIndex + 1) % entities.length;
         this.setControlledEntity(entities[nextIndex]);
       } else {
-        // Normal left-click drag behavior
+        // Left-click drag
         this.isDragging = true;
         this.lastPointerPosition = { x: pointer.x, y: pointer.y };
 
@@ -178,13 +173,13 @@ export class InputManager {
         const deltaX = pointer.x - this.lastPointerPosition.x;
         const deltaY = pointer.y - this.lastPointerPosition.y;
 
-        // MEJORA 2: Movimiento más sensible y natural (era 0.5, ahora 1.2)
+        // Movimiento más sensible y natural
         this.scene.cameras.main.scrollX -= deltaX * 1.2;
         this.scene.cameras.main.scrollY -= deltaY * 1.2;
 
         this.lastPointerPosition = { x: pointer.x, y: pointer.y };
       } else {
-        // MEJORA 3: Cursor grab cuando no está dragging
+        // Cursor grab cuando no está dragging
         this.scene.input.setDefaultCursor("grab");
       }
     });
@@ -195,7 +190,7 @@ export class InputManager {
       this.scene.input.setDefaultCursor("default");
     });
 
-    // MEJORA 4: Mouse wheel para zoom más suave
+    // Mouse wheel para zoom más suave
     this.scene.input.on(
       "wheel",
       (
@@ -211,7 +206,7 @@ export class InputManager {
           const zoomFactor = deltaY > 0 ? 0.95 : 1.05; // Más sutil que 0.9/1.1
           const newZoom = Phaser.Math.Clamp(camera.zoom * zoomFactor, 0.3, 3); // Más rango
 
-          // MEJORA 5: Zoom hacia el cursor del mouse
+          // Zoom hacia el cursor del mouse
           const worldPoint = camera.getWorldPoint(pointer.x, pointer.y);
           camera.setZoom(newZoom);
 
@@ -223,7 +218,7 @@ export class InputManager {
       },
     );
 
-    // MEJORA 6: Doble click para centrar en entidad controlada
+    // Doble click para centrar en entidad controlada
     this.scene.input.on("pointerdblclick", () => {
       if (this.controlledEntity !== "none" && this.scene.cameras?.main) {
         // Buscar la entidad actualmente controlada
@@ -255,9 +250,7 @@ export class InputManager {
     this.gameLogicManager = gameLogicManager;
   }
 
-  /**
-   * Establece qué entidad está siendo controlada - MEJORADO para control dual
-   */
+  /** Establece qué entidad está siendo controlada (control dual) */
   setControlledEntity(entity: ControlledEntity): void {
     const prevEntity = this.controlledEntity;
     const now = Date.now();

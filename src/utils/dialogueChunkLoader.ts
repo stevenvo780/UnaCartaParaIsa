@@ -1,7 +1,4 @@
-/**
- * Sistema de carga fragmentada de diálogos para optimizar rendimiento
- * Divide el archivo masivo de 5.3MB en chunks manejables
- */
+/** Sistema de carga fragmentada de diálogos para optimizar rendimiento */
 
 import type { DialogueCriteria, DialogueEntry } from "../types";
 import { logAutopoiesis } from "./logger";
@@ -26,10 +23,10 @@ export class DialogueChunkLoader {
   private cache = new Map<string, DialogueEntry[]>();
   private loadingPromises = new Map<string, Promise<DialogueEntry[]>>();
 
-  // 🚀 MEGA-OPTIMIZED: Configuración para máximo rendimiento con menos chunks
-  private readonly CHUNK_SIZE = 5000; // ⚡ AUMENTADO: más diálogos por chunk = menos chunks
-  private readonly MAX_CACHE_CHUNKS = 1; // ⚡ MÍNIMO: solo 1 chunk en memoria
-  private readonly PRELOAD_ADJACENT = false; // ⚡ DESACTIVADO: no precargar chunks
+  // Parámetros de chunking y cache
+  private readonly CHUNK_SIZE = 5000;
+  private readonly MAX_CACHE_CHUNKS = 1;
+  private readonly PRELOAD_ADJACENT = false;
 
   private constructor() {}
 
