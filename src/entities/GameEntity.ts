@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 import { GAME_BALANCE } from "../config/gameConfig";
+import { EntityStatsComponent } from "../components/EntityStatsComponent";
+import { EntityVisualsComponent } from "../components/EntityVisualsComponent";
 import {
   EntityServicesFactory,
   type IEntityServices,
@@ -20,6 +22,10 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private currentSprite = "";
   private services: IEntityServices;
   private colorHue: number;
+  
+  // Componentes modulares
+  private statsComponent: EntityStatsComponent;
+  private visualsComponent: EntityVisualsComponent;
 
   constructor(
     scene: Phaser.Scene,
@@ -72,6 +78,10 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     this.lastUpdateTime = Date.now();
     this.activityStartTime = Date.now();
     this.resonance = this.services.config.initialResonance;
+
+    // Inicializar componentes modulares
+    this.statsComponent = new EntityStatsComponent(this.entityData.stats);
+    this.visualsComponent = new EntityVisualsComponent(this, entityId, initialSprite);
 
     this.createVisuals();
 
@@ -160,24 +170,28 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       modifier: 1,
     };
 
-    this.entityData.stats = this.services.activityCalculator.applyHybridDecay(
-      this.entityData.stats,
+    let updatedStats = this.services.activityCalculator.applyHybridDecay(
+      this.statsComponent.getStats(),
       this.entityData.activity,
       deltaTimeMs,
     );
 
-    this.entityData.stats = this.services.activityCalculator.applySurvivalCosts(
-      this.entityData.stats,
+    updatedStats = this.services.activityCalculator.applySurvivalCosts(
+      updatedStats,
       deltaTimeMs,
     );
 
-    this.entityData.stats =
+    updatedStats =
       this.services.activityCalculator.applyActivityEffectsWithTimeModifiers(
         this.entityData.activity,
-        this.entityData.stats,
+        updatedStats,
         deltaTimeMs,
         timeOfDay,
       );
+
+    // Actualizar stats usando el componente
+    this.statsComponent.updateStats(updatedStats);
+    this.entityData.stats = this.statsComponent.getStats();
 
     this.updateMood();
 
@@ -362,21 +376,16 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   }
 
   private updateVisuals() {
+    // Actualizar usando el componente visual
+    this.visualsComponent.updatePulseEffect(this.scene.game.loop.delta);
+    this.visualsComponent.updateMoodVisuals(this.entityData.mood);
+    this.visualsComponent.updatePosition(this.x, this.y);
+
     this.updateVisualState();
 
     const healthRatio = this.entityData.stats.health / 100;
     const alpha = 0.5 + healthRatio * 0.5;
     this.setAlpha(alpha);
-
-    if (this.entityData.pulsePhase !== undefined) {
-      this.entityData.pulsePhase += GAME_BALANCE.VISUALS.PULSE_SPEED;
-      const basePulse = GAME_BALANCE.VISUALS.BASE_PULSE_SCALE ?? 1.5;
-      const pulse =
-        basePulse +
-        Math.sin(this.entityData.pulsePhase) *
-          (GAME_BALANCE.VISUALS.PULSE_AMPLITUDE ?? 0.1);
-      this.setScale(pulse);
-    }
 
     const tint = this.getMoodTint();
     this.setTint(tint);
@@ -461,19 +470,24 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   }
 
   public getEntityData(): Entity {
+    // Sincronizar stats del componente con entityData
+    this.entityData.stats = this.statsComponent.getStats();
     return { ...this.entityData };
   }
 
   public getStats(): EntityStats {
-    return { ...this.entityData.stats };
+    return this.statsComponent.getStats();
   }
 
   public updateStats(newStats: Partial<EntityStats>): void {
-    this.entityData.stats = { ...this.entityData.stats, ...newStats };
+    this.statsComponent.updateStats(newStats);
+    // Mantener sincronización con entityData
+    this.entityData.stats = this.statsComponent.getStats();
   }
 
   public setStats(newStats: EntityStats): void {
-    this.entityData.stats = { ...newStats };
+    this.statsComponent.updateStats(newStats);
+    this.entityData.stats = this.statsComponent.getStats();
   }
 
   public getCurrentActivity(): ActivityType {

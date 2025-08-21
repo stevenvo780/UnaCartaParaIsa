@@ -28,6 +28,7 @@ artifacts*
 *__pycache__*
 *.pyc
 *venv*
+repository-assets
 
 # MCP/Playwright/agent artifacts
 artifacts/

@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
+import { WaterRipplePipeline } from "../plugins/WaterRipplePipeline";
 import { logAutopoiesis } from "../utils/logger";
 
 export default class BootScene extends Phaser.Scene {
@@ -14,6 +15,9 @@ export default class BootScene extends Phaser.Scene {
 
     // Crear progress bar de carga
     this.createLoadingBar();
+
+    // Registrar pipelines WebGL
+    this.registerCustomPipelines();
 
     // Cargar assets esenciales para el juego
     await this.loadEssentialAssets();
@@ -35,10 +39,15 @@ export default class BootScene extends Phaser.Scene {
     const progressBar = this.add.graphics();
 
     // Texto de carga
-    const loadingText = this.add.text(width / 2, height / 2 - 50, "Cargando...", {
-      fontSize: "20px",
-      color: "#ffffff",
-    });
+    const loadingText = this.add.text(
+      width / 2,
+      height / 2 - 50,
+      "Cargando...",
+      {
+        fontSize: "20px",
+        color: "#ffffff",
+      },
+    );
     loadingText.setOrigin(0.5, 0.5);
 
     const percentText = this.add.text(width / 2, height / 2, "0%", {
@@ -51,7 +60,12 @@ export default class BootScene extends Phaser.Scene {
     this.load.on("progress", (value: number) => {
       progressBar.clear();
       progressBar.fillStyle(0x6c5ce7, 1);
-      progressBar.fillRect(width / 4 + 10, height / 2 - 20, (width / 2 - 20) * value, 40);
+      progressBar.fillRect(
+        width / 4 + 10,
+        height / 2 - 20,
+        (width / 2 - 20) * value,
+        40,
+      );
       percentText.setText(`${Math.round(value * 100)}%`);
     });
 
@@ -66,22 +80,31 @@ export default class BootScene extends Phaser.Scene {
   private async loadEssentialAssets(): Promise<void> {
     // Cargar placeholder/basic assets para desarrollo
     this.loadPlaceholderAssets();
-    
+
     // Crear y inicializar UnifiedAssetManager
     this.unifiedAssetManager = new UnifiedAssetManager(this);
-    await this.unifiedAssetManager.initialize();
-    
+    await this.unifiedAssetManager.loadCriticalAssets();
+
     logAutopoiesis.info("📦 Assets esenciales cargados", {
-      assetsCount: this.unifiedAssetManager.getLoadedAssetsCount(),
+      loadingStats: this.unifiedAssetManager.getLoadingStats(),
     });
   }
 
   private loadPlaceholderAssets(): void {
     // Crear texturas básicas procedurales para desarrollo
-    this.load.image("placeholder-terrain", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
-    this.load.image("placeholder-character", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
-    this.load.image("placeholder-ui", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
-    
+    this.load.image(
+      "placeholder-terrain",
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+    );
+    this.load.image(
+      "placeholder-character",
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+    );
+    this.load.image(
+      "placeholder-ui",
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+    );
+
     // Crear sprites básicos en memoria
     this.load.on("complete", () => {
       this.createBasicSprites();
@@ -90,24 +113,51 @@ export default class BootScene extends Phaser.Scene {
 
   private createBasicSprites(): void {
     const graphics = this.add.graphics();
-    
+
     // Crear sprite de terreno básico
     graphics.fillStyle(0x4a7c4a);
     graphics.fillRect(0, 0, 32, 32);
     graphics.generateTexture("terrain-grass", 32, 32);
-    
+
     // Crear sprite de personaje básico
     graphics.clear();
     graphics.fillStyle(0xff6b6b);
     graphics.fillCircle(16, 16, 12);
     graphics.generateTexture("character-isa", 32, 32);
-    
+
     graphics.clear();
     graphics.fillStyle(0x4ecdc4);
     graphics.fillCircle(16, 16, 12);
     graphics.generateTexture("character-stev", 32, 32);
-    
+
     graphics.destroy();
+  }
+
+  /**
+   * Registra pipelines personalizados de WebGL
+   */
+  private registerCustomPipelines(): void {
+    try {
+      // Registrar WaterRipplePipeline para efectos de agua
+      if (this.renderer && this.renderer.type === Phaser.WEBGL) {
+        const waterRipplePipeline = new WaterRipplePipeline(this.game);
+        (this.renderer as Phaser.Renderer.WebGL.WebGLRenderer).pipelines.add(
+          "WaterRipple",
+          waterRipplePipeline,
+        );
+
+        logAutopoiesis.info("🌊 WaterRipplePipeline registrado correctamente");
+      } else {
+        logAutopoiesis.warn(
+          "⚠️ WebGL no disponible, saltando registro de pipelines",
+        );
+      }
+    } catch (error) {
+      logAutopoiesis.error(
+        "❌ Error registrando pipelines personalizados:",
+        error,
+      );
+    }
   }
 
   create() {

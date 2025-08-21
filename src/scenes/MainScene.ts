@@ -1,3 +1,4 @@
+import { AnimationManager } from "../managers/AnimationManager";
 import { EntityManager } from "../managers/EntityManager";
 import { GameLogicManager } from "../managers/GameLogicManager";
 import { InputManager } from "../managers/InputManager";
@@ -20,6 +21,7 @@ export default class MainScene extends Phaser.Scene {
   public gameLogicManager!: GameLogicManager;
   public entityManager!: EntityManager;
   public inputManager!: InputManager;
+  public animationManager!: AnimationManager;
 
   // Sistema de mundo diverso
   private worldComposer!: DiverseWorldComposer;
@@ -54,7 +56,11 @@ export default class MainScene extends Phaser.Scene {
     // 2. Inicializar managers principales
     this.entityManager = new EntityManager(this);
     this.inputManager = new InputManager(this);
+    this.animationManager = new AnimationManager(this);
     this.entities = this.add.group();
+
+    // 3. Registrar AnimationManager en registry para que las entidades lo encuentren
+    this.registry.set("animationManager", this.animationManager);
 
     try {
       // 3. Generar mundo base
@@ -66,9 +72,9 @@ export default class MainScene extends Phaser.Scene {
 
       // 5. Crear entidades Isa y Stev
       // 4. Crear entidades
-    const { isaEntity, stevEntity } = this.entityManager.createEntities({
-      scene: this,
-    });
+      const { isaEntity, stevEntity } = this.entityManager.createEntities({
+        scene: this,
+      });
 
       // Configurar relaciones entre entidades
       isaEntity.setPartnerEntity(stevEntity);
@@ -77,7 +83,7 @@ export default class MainScene extends Phaser.Scene {
       // 6. Inicializar GameLogicManager con entidades
       this.gameLogicManager = new GameLogicManager(this, gameState);
       this.gameLogicManager.initialize();
-      
+
       // Registrar entidades en el manager
       this.gameLogicManager.registerEntity("isa", isaEntity);
       this.gameLogicManager.registerEntity("stev", stevEntity);
@@ -333,12 +339,12 @@ export default class MainScene extends Phaser.Scene {
     // TAB para cambiar control entre entidades
     this.input.keyboard?.on("keydown-TAB", () => {
       const current = this.inputManager.getControlledEntity();
-      const next = 
+      const next =
         current === "none" ? "isa" : current === "isa" ? "stev" : "none";
       this.inputManager.setControlledEntity(next);
-      
+
       logAutopoiesis.info(`🎮 Control cambiado a: ${next}`);
-      
+
       // Centrar cámara en entidad controlada
       if (next !== "none") {
         const entity = this.entityManager.getEntity(next);
