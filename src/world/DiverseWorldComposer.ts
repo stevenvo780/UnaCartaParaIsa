@@ -116,7 +116,7 @@ export class DiverseWorldComposer {
     const compositionTime = Date.now() - startTime;
 
     const totalCompositionTime = Date.now() - startTime;
-    
+
     logAutopoiesis.info("✅ Composición de mundo completada", {
       time: `${totalCompositionTime}ms`,
       layers: layers.length,
@@ -191,7 +191,7 @@ export class DiverseWorldComposer {
 
     // Crear base terrain con cobertura completa - usar índices de tiles directamente
     const tileSize = this.world.config.tileSize || 32;
-    
+
     for (let tileY = 0; tileY < this.world.config.height; tileY++) {
       for (let tileX = 0; tileX < this.world.config.width; tileX++) {
         if (
@@ -587,7 +587,7 @@ export class DiverseWorldComposer {
 
     // Efectos de agua (ondas, burbujas)
     const waterEffects = this.assetPool.get("decal") || [];
-    
+
     // Add fallback water effects if none available
     if (waterEffects.length === 0) {
       logAutopoiesis.warn(
@@ -599,7 +599,7 @@ export class DiverseWorldComposer {
         type: "water" as const,
       });
     }
-    
+
     if (waterEffects.length > 0) {
       for (let i = 0; i < 20; i++) {
         const x = Math.random() * this.world.config.width * 32;
@@ -631,7 +631,7 @@ export class DiverseWorldComposer {
 
     // Partículas de luz en bosques
     const lightEffects = this.assetPool.get("sprite") || [];
-    
+
     // Add fallback light effects if none available
     if (lightEffects.length === 0) {
       logAutopoiesis.warn(
@@ -643,7 +643,7 @@ export class DiverseWorldComposer {
         type: "foliage" as const,
       });
     }
-    
+
     if (lightEffects.length > 0) {
       for (let i = 0; i < 15; i++) {
         const x = Math.random() * this.world.config.width * 32;

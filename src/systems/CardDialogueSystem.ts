@@ -4,9 +4,9 @@
  */
 
 import type { GameState } from "../types";
-import type { NeedsSystem, EntityNeedsData } from "./NeedsSystem";
-import type { AISystem } from "./AISystem";
 import { logAutopoiesis } from "../utils/logger";
+import type { AISystem } from "./AISystem";
+import type { EntityNeedsData, NeedsSystem } from "./NeedsSystem";
 
 export interface DialogueCard {
   id: string;

@@ -5,13 +5,13 @@ import {
   type ExplorationStats,
 } from "../components/ExplorationUI";
 import { FoodUI } from "../components/FoodUI";
+import { ResonanceBar } from "../components/ResonanceBar";
 import { SystemStatusUI } from "../components/SystemStatusUI";
 import { MessagesModalContent } from "../components/ui/MessagesModal";
 import { ModalManager } from "../components/ui/ModalManager";
 import { StatsModalContent } from "../components/ui/StatsModal";
 import { TopBar } from "../components/ui/TopBar";
 import { WorldModalContent } from "../components/ui/WorldModal";
-import { ResonanceBar } from "../components/ResonanceBar";
 import { ResonanceLabel, UIElementPool } from "../managers/UIElementPool";
 import type { TimeOfDay } from "../systems/DayNightSystem";
 import type { GameLogicUpdateData } from "../types";
@@ -82,7 +82,7 @@ export class UIScene extends Phaser.Scene {
       // TEMPORAL: Crear indicador visual de debug INMEDIATAMENTE
       this.createDebugIndicator();
       logAutopoiesis.info("✅ Debug indicator created");
-      
+
       logAutopoiesis.info("🎨 Creating Modern Game UI");
 
       // Configurar como overlay sobre MainScene
@@ -99,28 +99,27 @@ export class UIScene extends Phaser.Scene {
       // Create modern modular UI
       this.createTopBar();
       logAutopoiesis.info("✅ TopBar created");
-      
+
       this.createBottomBar();
       logAutopoiesis.info("✅ BottomBar created");
-      
+
       // Instanciar gestor de modales
       this.modalManager = new ModalManager(this);
       logAutopoiesis.info("✅ ModalManager created");
-      
+
       // Colocar los diálogos en la UIScene para que no dependan del zoom
       this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
       logAutopoiesis.info("✅ DialogueCardUI created");
-      
+
       this.createFoodUI();
       logAutopoiesis.info("✅ FoodUI created");
-      
+
       this.createExplorationUI();
       logAutopoiesis.info("✅ ExplorationUI created");
 
       // Setup modern navigation
       this.setupModernNavigation();
       logAutopoiesis.info("✅ Modern navigation setup complete");
-      
     } catch (error) {
       logAutopoiesis.error("❌ Error in UIScene.create():", error);
     }
@@ -792,7 +791,8 @@ export class UIScene extends Phaser.Scene {
 
   private isPointerOverAnyUI(pointer: Phaser.Input.Pointer): boolean {
     const containers: Phaser.GameObjects.Container[] = [];
-    if (this.topBar && this.topBar.getContainer) containers.push(this.topBar.getContainer());
+    if (this.topBar && this.topBar.getContainer)
+      containers.push(this.topBar.getContainer());
     if (this.bottomBar) containers.push(this.bottomBar);
     // Paneles/minimapa independientes ya no se usan
     // Modales visibles
@@ -1268,8 +1268,10 @@ export class UIScene extends Phaser.Scene {
     graphics.fillRect(15, 15, 90, 40);
     graphics.fillStyle(0x000000, 1.0);
     graphics.fillRect(20, 20, 80, 30);
-    
-    logAutopoiesis.info("🔍 Debug indicator created - UIScene is active (green box visible)");
+
+    logAutopoiesis.info(
+      "🔍 Debug indicator created - UIScene is active (green box visible)",
+    );
   }
 
   /**

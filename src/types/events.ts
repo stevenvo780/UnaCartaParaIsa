@@ -7,12 +7,24 @@ import type { ActivityType } from "./activities";
 import type { Position } from "./core";
 import type { Entity, EntityStats } from "./entities";
 import type { FoodItem } from "./food";
-import type { Zone } from "./zones";
 import type { GameState } from "./index";
+import type { Zone } from "./zones";
 
 export interface MapElement {
   id: string;
-  type: "terrain" | "decoration" | "structure" | "vegetation" | "food_zone" | "rest_zone" | "play_zone" | "social_zone" | "work_zone" | "comfort_zone" | "obstacle" | "food_vendor";
+  type:
+    | "terrain"
+    | "decoration"
+    | "structure"
+    | "vegetation"
+    | "food_zone"
+    | "rest_zone"
+    | "play_zone"
+    | "social_zone"
+    | "work_zone"
+    | "comfort_zone"
+    | "obstacle"
+    | "food_vendor";
   position: { x: number; y: number };
   assetKey: string;
   biome?: string;

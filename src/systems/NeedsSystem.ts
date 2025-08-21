@@ -71,7 +71,10 @@ export class NeedsSystem {
   /**
    * Inicializar necesidades para una entidad
    */
-  public initializeEntityNeeds(entityId: string, initialNeeds?: NeedsState): void {
+  public initializeEntityNeeds(
+    entityId: string,
+    initialNeeds?: NeedsState,
+  ): void {
     const needsData: EntityNeedsData = {
       entityId,
       needs: initialNeeds || {
@@ -242,33 +245,38 @@ export class NeedsSystem {
   private applySafetyValidation(needs: NeedsState, deltaTime: number): void {
     const CRITICAL_THRESHOLD = 3; // Umbral crítico absoluto
     const SAFETY_MULTIPLIER = 0.1; // Ralentizar cambios extremos
-    
+
     // Si deltaTime es muy alto (lag/tabs), limitar efectos negativos
-    if (deltaTime > 5) { // Más de 5 segundos es sospechoso
-      logAutopoiesis.warn(`⚠️ DeltaTime sospechoso en NeedsSystem: ${deltaTime}s - aplicando compensación`);
-      
+    if (deltaTime > 5) {
+      // Más de 5 segundos es sospechoso
+      logAutopoiesis.warn(
+        `⚠️ DeltaTime sospechoso en NeedsSystem: ${deltaTime}s - aplicando compensación`,
+      );
+
       // Revertir efectos excesivos aplicando recuperación parcial
-      Object.keys(needs).forEach(key => {
+      Object.keys(needs).forEach((key) => {
         const need = needs[key as keyof NeedsState];
-        if (typeof need === 'number' && need < CRITICAL_THRESHOLD) {
+        if (typeof need === "number" && need < CRITICAL_THRESHOLD) {
           (needs as any)[key] = Math.min(CRITICAL_THRESHOLD + 5, need + 2);
-          logAutopoiesis.info(`🛡️ Recuperación de emergencia aplicada a ${key}: ${need} -> ${(needs as any)[key]}`);
+          logAutopoiesis.info(
+            `🛡️ Recuperación de emergencia aplicada a ${key}: ${need} -> ${(needs as any)[key]}`,
+          );
         }
       });
     }
 
     // Aplicar límites absolutos mínimos
-    Object.keys(needs).forEach(key => {
+    Object.keys(needs).forEach((key) => {
       const need = needs[key as keyof NeedsState];
-      if (typeof need === 'number' && need < CRITICAL_THRESHOLD) {
+      if (typeof need === "number" && need < CRITICAL_THRESHOLD) {
         (needs as any)[key] = CRITICAL_THRESHOLD;
       }
     });
 
     // Límites máximos también (prevenir valores extremos)
-    Object.keys(needs).forEach(key => {
+    Object.keys(needs).forEach((key) => {
       const need = needs[key as keyof NeedsState];
-      if (typeof need === 'number' && need > 100) {
+      if (typeof need === "number" && need > 100) {
         (needs as any)[key] = 100;
       }
     });

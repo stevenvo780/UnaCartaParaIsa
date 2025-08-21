@@ -6,10 +6,10 @@
 
 import Phaser from "phaser";
 import type { GameState } from "../types";
-import type { NeedsSystem, EntityNeedsData } from "./NeedsSystem";
+import { logAutopoiesis } from "../utils/logger";
 import type { AISystem } from "./AISystem";
 import type { DayNightSystem } from "./DayNightSystem";
-import { logAutopoiesis } from "../utils/logger";
+import type { NeedsSystem } from "./NeedsSystem";
 
 export interface EmergentPattern {
   id: string;
@@ -783,7 +783,10 @@ export class EmergenceSystem {
   /**
    * Obtener estadísticas del sistema (método público)
    */
-  public getSystemStats(): SystemMetrics & { patterns: number; feedbackLoops: number } {
+  public getSystemStats(): SystemMetrics & {
+    patterns: number;
+    feedbackLoops: number;
+  } {
     return {
       ...this.systemMetrics,
       patterns: this.emergentPatterns.size,

@@ -5,8 +5,8 @@
 
 import Phaser from "phaser";
 import type { GameState } from "../types";
-import type { NeedsSystem } from "./NeedsSystem";
 import { logAutopoiesis } from "../utils/logger";
+import type { NeedsSystem } from "./NeedsSystem";
 
 export interface TimeOfDay {
   hour: number; // 0-23

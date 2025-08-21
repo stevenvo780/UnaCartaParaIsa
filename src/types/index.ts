@@ -4,62 +4,62 @@
  */
 
 // Import types for use in this file
-import type { Position, Size, Rect, Color } from "./core";
+import type { Position, Rect, Size } from "./core";
+import type { Entity, EntityStats, MoodType } from "./entities";
 import type { ZoneType } from "./zones";
-import type { EntityStats, MoodType, Entity } from "./entities";
 
 // Core types (no dependencies)
-export type { Position, Size, Rect, Color } from "./core";
+export type { Color, Position, Rect, Size } from "./core";
 
 // Domain-specific types
 export type {
+  ActivityDefinition,
+  ActivityModifiers,
   ActivityType,
   EntityActivity,
-  ActivityModifiers,
-  ActivityDefinition,
 } from "./activities";
-export type { ZoneType, Zone as ZoneDefinition } from "./zones";
 export type {
-  EntityStateType,
-  MoodType,
-  EntityStats,
   Entity,
+  EntityStateType,
+  EntityStats,
+  MoodType,
 } from "./entities";
 export type {
-  FoodCategory,
-  FoodItem,
-  FoodInventoryItem,
   EatingAction,
+  FoodCategory,
+  FoodInventoryItem,
+  FoodItem,
 } from "./food";
 export type {
-  QuestStatus,
-  QuestObjectiveType,
-  QuestDifficulty,
+  Quest,
   QuestCategory,
-  RewardType,
+  QuestDialogue,
+  QuestDifficulty,
+  QuestEvent,
+  QuestObjective,
+  QuestObjectiveType,
+  QuestProgress,
   QuestRequirement,
   QuestReward,
-  QuestObjective,
-  QuestDialogue,
-  Quest,
-  QuestProgress,
-  QuestEvent,
+  QuestStatus,
   QuestSystemConfig,
+  RewardType,
 } from "./quests";
+export type { Zone as ZoneDefinition, ZoneType } from "./zones";
 
 // Event system types
 export type {
+  CriticalError,
+  DialogueCriteria,
+  FoodStoreData,
   GameEvents,
   GameLogicUpdateData,
-  LoadErrorData,
-  FoodStoreData,
-  DialogueCriteria,
   GeneratedWorldData,
+  IGameLogicManager,
+  LoadErrorData,
   NoiseConfig,
-  CriticalError,
   PlayerInteractionData,
   TypedEventEmitter,
-  IGameLogicManager,
 } from "./events";
 
 // Game-specific types that remain centralized

@@ -2,8 +2,8 @@
  * UI para mostrar el estado de sistemas críticos del juego
  */
 
-import { EmergenceSystem } from "../systems/EmergenceSystem";
 import { DayNightSystem } from "../systems/DayNightSystem";
+import { EmergenceSystem } from "../systems/EmergenceSystem";
 
 interface SystemStatus {
   name: string;
@@ -189,7 +189,12 @@ export class SystemStatusUI {
       name: "Time",
       status: "active",
       details: `${timeInfo.phase} ${String(timeInfo.hour).padStart(2, "0")}:${String(timeInfo.minute).padStart(2, "0")}`,
-      color: timeInfo.phase === "morning" || timeInfo.phase === "midday" || timeInfo.phase === "afternoon" ? 0xf1c40f : 0x2c3e50,
+      color:
+        timeInfo.phase === "morning" ||
+        timeInfo.phase === "midday" ||
+        timeInfo.phase === "afternoon"
+          ? 0xf1c40f
+          : 0x2c3e50,
     };
 
     // Agregar indicador de tiempo si no existe

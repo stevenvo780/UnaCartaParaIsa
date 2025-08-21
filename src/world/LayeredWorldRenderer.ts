@@ -203,7 +203,7 @@ export class LayeredWorldRenderer {
       if (!this.scene.textures.exists(placedAsset.asset.key)) {
         // Usar fallback asset si no existe
         const fallbackKey = this.getFallbackAsset(placedAsset.asset.type);
-        
+
         if (!this.scene.textures.exists(fallbackKey)) {
           return null; // No se puede crear el sprite
         }
@@ -435,7 +435,7 @@ export class LayeredWorldRenderer {
     const group = this.layerGroups.get(layerType);
     if (!group) return false;
 
-    const newVisible = visible ?? !(group as any).visible; 
+    const newVisible = visible ?? !(group as any).visible;
     group.setVisible(newVisible);
 
     logAutopoiesis.info(
@@ -538,7 +538,7 @@ export class LayeredWorldRenderer {
     this.renderedAssets.forEach((sprite) => {
       sprite.setVisible(true);
     });
-    
+
     // TODO: Implementar culling básico si es necesario para performance
     // const renderDistance = 2400; // Aumentar distancia de renderizado
     // this.renderedAssets.forEach((sprite) => {
