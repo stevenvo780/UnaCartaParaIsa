@@ -156,18 +156,18 @@ export class SystemStatusUI {
     const stats = emergenceSystem.getSystemStats();
 
     let status: SystemStatus;
-    if (stats.totalPatterns > 5) {
+    if (stats.patterns > 5) {
       status = {
         name: "Emergence",
         status: "active",
-        details: `${stats.totalPatterns} patrones`,
+        details: `${stats.patterns} patrones`,
         color: 0x27ae60,
       };
-    } else if (stats.totalPatterns > 2) {
+    } else if (stats.patterns > 2) {
       status = {
         name: "Emergence",
         status: "warning",
-        details: `${stats.totalPatterns} patrones`,
+        details: `${stats.patterns} patrones`,
         color: 0xf39c12,
       };
     } else {
@@ -188,8 +188,8 @@ export class SystemStatusUI {
     const status: SystemStatus = {
       name: "Time",
       status: "active",
-      details: `${timeInfo.period} ${String(timeInfo.hour).padStart(2, "0")}:${String(timeInfo.minute).padStart(2, "0")}`,
-      color: timeInfo.period === "day" ? 0xf1c40f : 0x2c3e50,
+      details: `${timeInfo.phase} ${String(timeInfo.hour).padStart(2, "0")}:${String(timeInfo.minute).padStart(2, "0")}`,
+      color: timeInfo.phase === "morning" || timeInfo.phase === "midday" || timeInfo.phase === "afternoon" ? 0xf1c40f : 0x2c3e50,
     };
 
     // Agregar indicador de tiempo si no existe

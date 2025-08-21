@@ -623,6 +623,20 @@ export class DayNightSystem {
   }
 
   /**
+   * Obtener información detallada del tiempo (alias para compatibilidad)
+   */
+  public getCurrentTimeInfo(): TimeOfDay & {
+    weather: WeatherCondition;
+    effects: EnvironmentalEffects;
+  } {
+    return {
+      ...this.currentTime,
+      weather: this.getCurrentWeather(),
+      effects: this.getCurrentEffects(),
+    };
+  }
+
+  /**
    * Obtener información actual del clima
    */
   public getCurrentWeather(): WeatherCondition {

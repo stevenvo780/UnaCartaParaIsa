@@ -27,6 +27,7 @@ export interface DialogueCard {
   duration: number; // Tiempo que permanece visible
   consequences?: Record<string, any>;
   timestamp: number;
+  container?: Phaser.GameObjects.Container; // Container visual de la carta
 }
 
 export interface DialogueChoice {

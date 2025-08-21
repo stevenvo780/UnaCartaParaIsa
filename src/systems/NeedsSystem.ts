@@ -582,7 +582,7 @@ export class NeedsSystem {
         (entityData.satisfactionSources[sourceKey] || 0) + amount;
 
       // Emitir evento para QuestSystem
-      this.emit("needsSatisfied", {
+      this.scene.events.emit("needsSatisfied", {
         entityId: entityData.entityId,
         needType,
         amount,

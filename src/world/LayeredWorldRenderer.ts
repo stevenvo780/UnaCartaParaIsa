@@ -203,6 +203,7 @@ export class LayeredWorldRenderer {
       if (!this.scene.textures.exists(placedAsset.asset.key)) {
         // Usar fallback asset si no existe
         const fallbackKey = this.getFallbackAsset(placedAsset.asset.type);
+        
         if (!this.scene.textures.exists(fallbackKey)) {
           return null; // No se puede crear el sprite
         }
@@ -257,6 +258,7 @@ export class LayeredWorldRenderer {
         break;
       case "terrain":
         sprite.setOrigin(0, 0); // Top-left para terrain tiles
+        sprite.setDisplaySize(32, 32); // Forzar tamaño exacto de 32x32 para eliminar espacios
         break;
       case "water":
         sprite.setOrigin(0.5, 0.5); // Centro para agua
@@ -387,19 +389,19 @@ export class LayeredWorldRenderer {
    */
   private getFallbackAsset(assetType: string): string {
     const fallbacks: Record<string, string> = {
-      terrain: "grass_01",
-      tree: "oak_01",
-      rock: "rock_01",
-      water: "water_01",
-      structure: "house_01",
-      prop: "chest_01",
-      decoration: "flower_01",
-      mushroom: "mushroom_01",
-      ruin: "ruin_01",
-      foliage: "bush_01",
+      terrain: "terrain-grass",
+      tree: "oak_tree1",
+      rock: "rock1_1",
+      water: "water_middle",
+      structure: "house",
+      prop: "chest",
+      decoration: "bush_emerald_1",
+      mushroom: "beige_green_mushroom1",
+      ruin: "blue-gray_ruins1",
+      foliage: "bush_emerald_1",
     };
 
-    return fallbacks[assetType] || "placeholder";
+    return fallbacks[assetType] || "terrain-grass";
   }
 
   /**
@@ -433,7 +435,7 @@ export class LayeredWorldRenderer {
     const group = this.layerGroups.get(layerType);
     if (!group) return false;
 
-    const newVisible = visible ?? !group.visible;
+    const newVisible = visible ?? !(group as any).visible; 
     group.setVisible(newVisible);
 
     logAutopoiesis.info(
@@ -532,13 +534,17 @@ export class LayeredWorldRenderer {
    * Actualiza culling basado en posición de cámara
    */
   public updateCulling(cameraX: number, cameraY: number): void {
-    // Implementar culling básico si es necesario para performance
-    const renderDistance = 1200;
-
+    // TEMPORALMENTE DESACTIVADO: Hacer todos los sprites visibles para debugging
     this.renderedAssets.forEach((sprite) => {
-      const distance = Math.hypot(sprite.x - cameraX, sprite.y - cameraY);
-      sprite.setVisible(distance < renderDistance);
+      sprite.setVisible(true);
     });
+    
+    // TODO: Implementar culling básico si es necesario para performance
+    // const renderDistance = 2400; // Aumentar distancia de renderizado
+    // this.renderedAssets.forEach((sprite) => {
+    //   const distance = Math.hypot(sprite.x - cameraX, sprite.y - cameraY);
+    //   sprite.setVisible(distance < renderDistance);
+    // });
   }
 
   /**

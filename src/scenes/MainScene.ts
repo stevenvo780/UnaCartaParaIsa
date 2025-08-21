@@ -102,15 +102,22 @@ export default class MainScene extends Phaser.Scene {
       this.inputManager.setControlledEntity("stev"); // Jugador controla a Stev inicialmente
 
       // 8. Componer mundo diverso
+      console.log("🎯 About to create DiverseWorldComposer...");
       this.worldComposer = new DiverseWorldComposer(this, `seed_${Date.now()}`);
+      console.log("🎯 DiverseWorldComposer created, composing world...");
       const composedWorld = await this.worldComposer.composeWorld(baseWorld);
+      console.log("🎯 World composed, layers:", composedWorld.layers.length);
 
       // 9. Renderizar mundo en capas
+      console.log("🎯 Creating LayeredWorldRenderer...");
       this.worldRenderer = new LayeredWorldRenderer(this);
+      console.log("🎯 LayeredWorldRenderer created, rendering world...");
       await this.worldRenderer.renderComposedWorld(composedWorld);
+      console.log("🎯 World rendered, setting performance mode...");
       // Activar modo performance por defecto (oculta efectos/detalles)
       this.worldRenderer.setPerformanceMode(true);
       this.performanceMode = true;
+      console.log("🎯 World rendering complete!");
 
       // 10. Guardar stats para UI y estado de juego
       this.registry.set("worldStats", composedWorld.stats);
@@ -160,16 +167,15 @@ export default class MainScene extends Phaser.Scene {
       console.log("🎯 MainScene: UIScene launch called");
 
       // 6. Configurar cámara
-      this.cameras.main.setBounds(
-        0,
-        0,
-        baseWorld.config.width * 32,
-        baseWorld.config.height * 32,
-      );
-      this.cameras.main.setZoom(1);
-      // Centrar la cámara en el centro del mundo
-      const centerX = (baseWorld.config.width * baseWorld.config.tileSize) / 2;
-      const centerY = (baseWorld.config.height * baseWorld.config.tileSize) / 2;
+      const worldPixelWidth = baseWorld.config.width * 32;
+      const worldPixelHeight = baseWorld.config.height * 32;
+      
+      this.cameras.main.setBounds(0, 0, worldPixelWidth, worldPixelHeight);
+      this.cameras.main.setZoom(0.5); // Zoom out para ver más del mundo
+      
+      // Centrar la cámara en el centro real del mundo generado
+      const centerX = worldPixelWidth / 2;
+      const centerY = worldPixelHeight / 2;
       this.cameras.main.centerOn(centerX, centerY);
 
       // 7. Eventos desde UI

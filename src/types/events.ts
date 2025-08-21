@@ -134,6 +134,8 @@ export interface DialogueCompletedEventData {
   listener: string;
   duration: number;
   timestamp: number;
+  cardId?: string; // Opcional para compatibilidad con cartas de diálogo
+  choiceId?: string; // Opcional para compatibilidad con elecciones de cartas
 }
 
 /**

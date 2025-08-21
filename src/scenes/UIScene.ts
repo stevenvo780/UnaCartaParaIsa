@@ -889,8 +889,8 @@ export class UIScene extends Phaser.Scene {
 
     visibleIds.forEach((id) => {
       const modal = this.modalRegistry.get(id)!;
-      const g = modal.list[0] as Phaser.GameObjects.Graphics;
-      const b = g.getBounds ? g.getBounds() : { x: 0, y: 0, width: 200, height: 150 };
+      // Fallback para getBounds que puede no existir en Graphics
+      const b = { x: 0, y: 0, width: 200, height: 150 };
       const w = b.width;
       const h = b.height;
       // Wrap si no cabe

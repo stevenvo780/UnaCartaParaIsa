@@ -69,7 +69,7 @@ export class AnimatedGameEntity extends GameEntity {
     if (this.animationManager) {
       // Start with appropriate initial animation using new multi-frame sprites
       const initialAnimation =
-        entityId === "isa" ? "isa_happy_new" : "stev_happy_new";
+        entityId === "isa" ? "isa_happy" : "stev_happy";
 
       // Validate animation exists before playing
       if (this.animationManager.hasAnimation(initialAnimation)) {
@@ -218,10 +218,10 @@ export class AnimatedGameEntity extends GameEntity {
       if (isMoving) {
         // Usar animaciones de caminar específicas
         animationKey =
-          entityId === "isa" ? "isa_walking_new" : "stev_walking_new";
+          entityId === "isa" ? "isa_happy" : "stev_happy";
       } else {
         // Usar animaciones de idle
-        animationKey = entityId === "isa" ? "isa_happy_new" : "stev_happy_new";
+        animationKey = entityId === "isa" ? "isa_happy" : "stev_happy";
       }
     }
 

@@ -45,7 +45,7 @@ export interface Zone {
     width: number;
     height: number;
   };
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   benefits?: {
     energy?: number;
     happiness?: number;

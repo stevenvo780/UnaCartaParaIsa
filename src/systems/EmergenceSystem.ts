@@ -19,9 +19,11 @@ export interface EmergentPattern {
   strength: number; // 0-1, how pronounced the pattern is
   duration: number; // How long the pattern has been active (ms)
   triggers: string[]; // What triggered this pattern
+  intensity?: number; // Intensidad del patrón (opcional para compatibilidad)
+  participants?: string[]; // Entidades participantes (opcional)
   effects: {
     needsModifiers?: Record<string, number>;
-    aiModifiers?: Record<string, any>;
+    aiModifiers?: Record<string, unknown>;
     worldModifiers?: Record<string, number>;
   };
   conditions: {
@@ -637,24 +639,28 @@ export class EmergenceSystem {
     this.emergentPatterns.forEach((pattern) => {
       // Aplicar efectos según el tipo de patrón
       switch (pattern.type) {
-        case "social_cluster":
+        case "social": {
           this.applySocialClusterEffects(pattern);
           break;
-        case "resource_scarcity":
+        }
+        case "environmental": {
           this.applyResourceScarcityEffects(pattern);
           break;
-        case "emotional_contagion":
+        }
+        case "behavioral": {
           this.applyEmotionalContagionEffects(pattern);
           break;
-        case "territorial_conflict":
+        }
+        case "systemic": {
           this.applyTerritorialEffects(pattern);
           break;
+        }
       }
 
       // Emitir evento para UI
       this.scene.events.emit("emergence:pattern_active", {
         pattern: pattern.name,
-        intensity: pattern.intensity,
+        intensity: pattern.intensity || pattern.strength,
         effects: pattern.effects,
       });
     });
@@ -771,6 +777,17 @@ export class EmergenceSystem {
       systemComplexity: Math.round(this.systemMetrics.complexity * 100),
       autopoiesisLevel: Math.round(this.systemMetrics.autopoiesis * 100),
       systemCoherence: Math.round(this.systemMetrics.coherence * 100),
+    };
+  }
+
+  /**
+   * Obtener estadísticas del sistema (método público)
+   */
+  public getSystemStats(): SystemMetrics & { patterns: number; feedbackLoops: number } {
+    return {
+      ...this.systemMetrics,
+      patterns: this.emergentPatterns.size,
+      feedbackLoops: this.feedbackLoops.size,
     };
   }
 

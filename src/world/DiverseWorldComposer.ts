@@ -57,6 +57,7 @@ export interface ComposedWorld {
     diversityIndex: number;
     clusterCount: number;
     layerCount: number;
+    compositionTime: number;
   };
 }
 
@@ -78,10 +79,13 @@ export class DiverseWorldComposer {
     this.world = world;
 
     logAutopoiesis.info("🎨 Iniciando composición de mundo diverso...");
+    console.log("🎯 Starting world composition...");
     const startTime = Date.now();
 
     // Cargar y organizar todos los assets disponibles
+    console.log("🎯 About to load and organize assets...");
     await this.loadAndOrganizeAssets();
+    console.log("🎯 Assets loaded and organized!");
 
     const layers: RenderLayer[] = [];
 
@@ -111,22 +115,31 @@ export class DiverseWorldComposer {
 
     const compositionTime = Date.now() - startTime;
 
-    logAutopoiesis.info("✅ Mundo diverso compuesto", {
-      compositionTime: `${compositionTime}ms`,
+    const totalCompositionTime = Date.now() - startTime;
+    
+    logAutopoiesis.info("✅ Composición de mundo completada", {
+      time: `${totalCompositionTime}ms`,
       layers: layers.length,
       totalAssets: stats.totalAssets,
       diversityIndex: stats.diversityIndex.toFixed(2),
       clusters: clusters.length,
     });
 
-    return { layers, clusters, stats };
+    const finalStats = {
+      ...stats,
+      compositionTime: totalCompositionTime,
+    };
+
+    return { layers, clusters, stats: finalStats };
   }
 
   /**
    * Carga y organiza todos los assets por tipo y rareza
    */
   private async loadAndOrganizeAssets(): Promise<void> {
+    console.log("🎯 Calling assetLoader.loadAllAssets()...");
     await this.assetLoader.loadAllAssets();
+    console.log("🎯 assetLoader.loadAllAssets() completed!");
 
     // Organizar assets por categorías amplias
     const categories = [
@@ -176,12 +189,11 @@ export class DiverseWorldComposer {
       };
     }
 
-    // Crear base terrain con variaciones
-    for (let y = 0; y < this.world.config.height; y += 32) {
-      for (let x = 0; x < this.world.config.width; x += 32) {
-        const tileX = Math.floor(x / 32);
-        const tileY = Math.floor(y / 32);
-
+    // Crear base terrain con cobertura completa - usar índices de tiles directamente
+    const tileSize = this.world.config.tileSize || 32;
+    
+    for (let tileY = 0; tileY < this.world.config.height; tileY++) {
+      for (let tileX = 0; tileX < this.world.config.width; tileX++) {
         if (
           this.world.terrain &&
           this.world.terrain[tileY] &&
@@ -189,6 +201,10 @@ export class DiverseWorldComposer {
         ) {
           const tile = this.world.terrain[tileY][tileX];
           const biome = tile.biome;
+
+          // Posición en píxeles
+          const x = tileX * tileSize;
+          const y = tileY * tileSize;
 
           // Seleccionar asset usando ruido orgánico
           const assetIndex = this.getOrganicIndex(x, y, terrainAssets.length);
@@ -227,21 +243,19 @@ export class DiverseWorldComposer {
    */
   private async createVegetationLayer(): Promise<RenderLayer> {
     const assets: PlacedAsset[] = [];
-    const clusters = this.generateVegetationClusters(25);
+    const clusters = this.generateVegetationClusters(200);
 
     const treeAssets = this.assetPool.get("tree") || [];
     const foliageAssets = this.assetPool.get("foliage") || [];
-    const allVegetation = [...treeAssets, ...foliageAssets];
+    let allVegetation = [...treeAssets, ...foliageAssets];
 
+    // Si no hay assets cargados, usar fallbacks básicos
     if (allVegetation.length === 0) {
-      logAutopoiesis.warn("No vegetation assets available");
-      return {
-        type: "vegetation",
-        name: "Vegetation",
-        assets: [],
-        zIndex: 2,
-        visible: true,
-      };
+      logAutopoiesis.warn("No vegetation assets available, using fallbacks");
+      allVegetation = [
+        { key: "oak_tree1", path: "", type: "tree" as const },
+        { key: "bush_emerald_1", path: "", type: "foliage" as const },
+      ];
     }
 
     for (const cluster of clusters) {
@@ -272,7 +286,7 @@ export class DiverseWorldComposer {
         if (!asset) continue; // Skip if no assets available
 
         // Variaciones naturales
-        const scale = 0.7 + Math.random() * 0.6; // 0.7x - 1.3x
+        const scale = 1.5 + Math.random() * 1.0; // 1.5x - 2.5x
         const rotation = Math.random() * Math.PI * 2;
         const tint = this.getVariationTint(cluster.biome);
 
@@ -308,20 +322,19 @@ export class DiverseWorldComposer {
     const assets: PlacedAsset[] = [];
     const structureAssets = this.assetPool.get("structure") || [];
     const ruinAssets = this.assetPool.get("ruin") || [];
-    const allStructures = [...structureAssets, ...ruinAssets];
+    let allStructures = [...structureAssets, ...ruinAssets];
 
+    // Si no hay assets cargados, usar fallbacks básicos
     if (allStructures.length === 0) {
-      return {
-        type: "structure",
-        name: "Structures",
-        assets: [],
-        zIndex: 3,
-        visible: true,
-      };
+      logAutopoiesis.warn("No structure assets available, using fallbacks");
+      allStructures = [
+        { key: "house", path: "", type: "structure" as const },
+        { key: "blue-gray_ruins1", path: "", type: "ruin" as const },
+      ];
     }
 
     // Generar estructuras en ubicaciones estratégicas
-    const structureClusters = this.generateStructureClusters(8);
+    const structureClusters = this.generateStructureClusters(50);
 
     for (const cluster of structureClusters) {
       const clusterAssets = this.getClusterAssets(cluster.type, allStructures);
@@ -350,7 +363,7 @@ export class DiverseWorldComposer {
           asset,
           x,
           y,
-          scale: 0.8 + Math.random() * 0.4,
+          scale: 2.0 + Math.random() * 1.0,
           rotation: Math.random() * Math.PI * 2,
           tint: this.getStructureTint(cluster.biome),
           depth: y + 100, // Estructuras por encima de vegetación
@@ -382,24 +395,24 @@ export class DiverseWorldComposer {
     const allDetails = [...rockAssets, ...mushroomAssets, ...decorationAssets];
 
     if (allDetails.length === 0) {
-      return {
-        type: "detail",
-        name: "Details",
-        assets: [],
-        zIndex: 1,
-        visible: true,
-      };
+      logAutopoiesis.warn("No detail assets available, using fallbacks");
+      allDetails.push(
+        { key: "rock1_1", path: "", type: "rock" as const },
+        { key: "beige_green_mushroom1", path: "", type: "mushroom" as const },
+        { key: "chest", path: "", type: "decoration" as const },
+      );
     }
 
     // Distribución orgánica de detalles
-    const detailDensity = 0.003; // 0.3% de tiles
+    const detailDensity = 0.02; // 2% de tiles
     const totalTiles =
       (this.world.config.width / 32) * (this.world.config.height / 32);
     const targetCount = Math.floor(totalTiles * detailDensity);
 
     for (let i = 0; i < targetCount; i++) {
-      const x = Math.random() * this.world.config.width;
-      const y = Math.random() * this.world.config.height;
+      // Convertir de tiles a píxeles para coincidir con terreno
+      const x = Math.random() * this.world.config.width * 32;
+      const y = Math.random() * this.world.config.height * 32;
 
       // Usar ruido para crear agrupaciones naturales
       const clusterNoise = this.noise.noise2D(x * 0.01, y * 0.01);
@@ -413,7 +426,7 @@ export class DiverseWorldComposer {
           asset,
           x,
           y,
-          scale: 0.6 + Math.random() * 0.8,
+          scale: 1.2 + Math.random() * 0.8,
           rotation: Math.random() * Math.PI * 2,
           tint: 0xffffff,
           depth: y - 5, // Ligeramente por debajo de vegetación
@@ -486,7 +499,7 @@ export class DiverseWorldComposer {
               asset,
               x: baseX + offsetX,
               y: baseY + offsetY,
-              scale: 0.4 + Math.random() * 0.4,
+              scale: 1.0 + Math.random() * 0.5,
               rotation: Math.random() * Math.PI * 2,
               tint: this.getTransitionTint(
                 currentBiome,
@@ -528,12 +541,12 @@ export class DiverseWorldComposer {
 
     // Props dispersos por el mundo basado en biomas
     const scatteredCount = Math.floor(
-      (this.world.config.width * this.world.config.height) / 120000,
+      (this.world.config.width * this.world.config.height) / 500,
     );
 
     for (let i = 0; i < scatteredCount; i++) {
-      const x = 100 + Math.random() * (this.world.config.width - 200);
-      const y = 100 + Math.random() * (this.world.config.height - 200);
+      const x = 100 + Math.random() * (this.world.config.width * 32 - 200);
+      const y = 100 + Math.random() * (this.world.config.height * 32 - 200);
 
       // Solo en áreas apropiadas (no en agua)
       const biome = this.getBiomeAtPosition(x, y);
@@ -546,7 +559,7 @@ export class DiverseWorldComposer {
             asset,
             x,
             y,
-            scale: 0.5 + Math.random() * 0.7,
+            scale: 1.5 + Math.random() * 1.0,
             rotation: Math.random() * Math.PI * 2,
             tint: this.getBiomeTint(biome, 0),
             depth: y + 25,
@@ -574,10 +587,23 @@ export class DiverseWorldComposer {
 
     // Efectos de agua (ondas, burbujas)
     const waterEffects = this.assetPool.get("decal") || [];
+    
+    // Add fallback water effects if none available
+    if (waterEffects.length === 0) {
+      logAutopoiesis.warn(
+        "No water effects available, using fallback water sprite",
+      );
+      waterEffects.push({
+        key: "water_middle",
+        path: "",
+        type: "water" as const,
+      });
+    }
+    
     if (waterEffects.length > 0) {
       for (let i = 0; i < 20; i++) {
-        const x = Math.random() * this.world.config.width;
-        const y = Math.random() * this.world.config.height;
+        const x = Math.random() * this.world.config.width * 32;
+        const y = Math.random() * this.world.config.height * 32;
 
         const biome = this.getBiomeAtPosition(x, y);
         if (biome === BiomeType.WETLAND) {
@@ -605,10 +631,23 @@ export class DiverseWorldComposer {
 
     // Partículas de luz en bosques
     const lightEffects = this.assetPool.get("sprite") || [];
+    
+    // Add fallback light effects if none available
+    if (lightEffects.length === 0) {
+      logAutopoiesis.warn(
+        "No light effects available, using fallback bush sprite",
+      );
+      lightEffects.push({
+        key: "bush_emerald_1",
+        path: "",
+        type: "foliage" as const,
+      });
+    }
+    
     if (lightEffects.length > 0) {
       for (let i = 0; i < 15; i++) {
-        const x = Math.random() * this.world.config.width;
-        const y = Math.random() * this.world.config.height;
+        const x = Math.random() * this.world.config.width * 32;
+        const y = Math.random() * this.world.config.height * 32;
 
         const biome = this.getBiomeAtPosition(x, y);
         if (biome === BiomeType.FOREST) {
@@ -720,8 +759,8 @@ export class DiverseWorldComposer {
       0.6;
 
     for (let attempt = 0; attempt < count * 3; attempt++) {
-      const x = 100 + Math.random() * (this.world.config.width - 200);
-      const y = 100 + Math.random() * (this.world.config.height - 200);
+      const x = 100 + Math.random() * (this.world.config.width * 32 - 200);
+      const y = 100 + Math.random() * (this.world.config.height * 32 - 200);
 
       // Verificar distancia mínima con otros clusters
       const tooClose = clusters.some(
@@ -758,8 +797,8 @@ export class DiverseWorldComposer {
       1.2;
 
     for (let attempt = 0; attempt < count * 4; attempt++) {
-      const x = 150 + Math.random() * (this.world.config.width - 300);
-      const y = 150 + Math.random() * (this.world.config.height - 300);
+      const x = 150 + Math.random() * (this.world.config.width * 32 - 300);
+      const y = 150 + Math.random() * (this.world.config.height * 32 - 300);
 
       const tooClose = clusters.some(
         (cluster) => Math.hypot(cluster.x - x, cluster.y - y) < minDistance,

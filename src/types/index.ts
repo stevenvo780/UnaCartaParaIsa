@@ -82,10 +82,14 @@ export interface MapElement {
     | "social_zone"
     | "work_zone"
     | "comfort_zone"
-    | "decoration";
+    | "decoration"
+    | "food_vendor";
   position: Position;
   size: Size;
   color: string;
+  width?: number; // Opcional para compatibilidad
+  height?: number; // Opcional para compatibilidad
+  priceMultiplier?: number; // Para food_vendor
   effect?: {
     statType: keyof EntityStats;
     modifier: number;
@@ -106,6 +110,7 @@ export interface Zone {
   effects?: Partial<Record<keyof EntityStats, number>>;
   color: string;
   attractiveness: number;
+  properties?: Record<string, unknown>;
   metadata?: {
     furnitureTypes?: string[];
     priority?: number;
