@@ -25,7 +25,7 @@ export class TerrainGenerator {
 
   constructor(config: WorldGenConfig = DEFAULT_WORLD_CONFIG) {
     this.config = { ...DEFAULT_WORLD_CONFIG, ...config };
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
     this.noiseGen = new NoiseUtils(this.config.seed);
   }
 
@@ -132,7 +132,7 @@ export class TerrainGenerator {
     for (let y = 0; y < this.config.height; y++) {
       for (let x = 0; x < this.config.width; x++) {
         // Uso de ruido fractal con parámetros del config
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
         map[y][x] = this.noiseGen.fractalNoise(
           x,
           y,
@@ -518,7 +518,7 @@ export class TerrainGenerator {
     const { clustering } = biomeDef.assets.trees;
 
     // Usar ruido normalizado para determinar si es una zona de clustering
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
     const clusterNoise = this.noiseGen.normalizedNoise(x * 0.1, y * 0.1);
     const inCluster = clusterNoise > 0.5 - clustering * 0.3;
 

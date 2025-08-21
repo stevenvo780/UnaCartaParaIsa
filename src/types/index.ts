@@ -182,4 +182,8 @@ export interface GameState {
   playerLevel?: number; // Nivel del jugador para desbloquear assets
   exploredBiomes?: string[]; // Biomas descubiertos
   unlockedAssets?: string[]; // Assets desbloqueados
+  dayTime?: number;
+  weather?: any;
+  resources?: any;
+  [key: string]: unknown; // Index signature for compatibility
 }

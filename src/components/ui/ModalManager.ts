@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import Phaser from "phaser";
 
 export class ModalManager {
   private scene: Phaser.Scene;
@@ -41,21 +41,21 @@ export class ModalManager {
 
     const titleText = this.scene.add
       .text(12, 14, title, {
-        fontSize: '12px',
-        color: '#ecf0f1',
-        fontFamily: 'Arial, sans-serif',
-        fontStyle: 'bold',
+        fontSize: "12px",
+        color: "#ecf0f1",
+        fontFamily: "Arial, sans-serif",
+        fontStyle: "bold",
       })
       .setOrigin(0, 0.5);
     modal.add(titleText);
 
-    const closeBtn = this.scene.add.text(width - 18, 6, '×', {
-      fontSize: '14px',
-      color: '#e74c3c',
-      fontStyle: 'bold',
+    const closeBtn = this.scene.add.text(width - 18, 6, "×", {
+      fontSize: "14px",
+      color: "#e74c3c",
+      fontStyle: "bold",
     });
     closeBtn.setInteractive({ useHandCursor: true });
-    closeBtn.on('pointerdown', () => this.close(id));
+    closeBtn.on("pointerdown", () => this.close(id));
     modal.add(closeBtn);
 
     content.setPosition(12, 36);
@@ -92,11 +92,13 @@ export class ModalManager {
     let cursorX = availX;
     let cursorY = startY;
     let rowH = 0;
-    const visibleIds = this.order.filter((id) => this.registry.get(id)?.visible);
+    const visibleIds = this.order.filter(
+      (id) => this.registry.get(id)?.visible,
+    );
     visibleIds.forEach((id) => {
       const modal = this.registry.get(id)!;
       const g = modal.list[0] as Phaser.GameObjects.Graphics;
-      const b = g.getBounds();
+      const b = g.getBounds ? g.getBounds() : { x: 0, y: 0, width: 200, height: 150 };
       const w = b.width;
       const h = b.height;
       if (cursorX + w > availX + availW) {
@@ -113,4 +115,3 @@ export class ModalManager {
     });
   }
 }
-

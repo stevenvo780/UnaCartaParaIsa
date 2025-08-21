@@ -19,9 +19,12 @@ export class NeedsUI {
 
   private createUI(): void {
     // Crear contenedor principal en esquina superior derecha
-    this.container = this.scene.add.container(this.scene.cameras.main.width - 220, 20);
+    this.container = this.scene.add.container(
+      this.scene.cameras.main.width - 220,
+      20,
+    );
     this.container.setScrollFactor(0); // Fijo en pantalla
-    
+
     // Fondo semi-transparente
     const background = this.scene.add.graphics();
     background.fillStyle(0x000000, 0.7);
@@ -32,25 +35,25 @@ export class NeedsUI {
     const title = this.scene.add.text(0, 0, "NECESIDADES", {
       fontSize: "14px",
       color: "#ffffff",
-      fontStyle: "bold"
+      fontStyle: "bold",
     });
     this.container.add(title);
 
     // Crear barras de necesidades
     const needs = [
-      { key: "hunger", label: "Hambre", color: 0x8B4513 },
-      { key: "thirst", label: "Sed", color: 0x4169E1 },
-      { key: "energy", label: "Energía", color: 0xFFD700 },
-      { key: "mentalHealth", label: "Mental", color: 0x32CD32 }
+      { key: "hunger", label: "Hambre", color: 0x8b4513 },
+      { key: "thirst", label: "Sed", color: 0x4169e1 },
+      { key: "energy", label: "Energía", color: 0xffd700 },
+      { key: "mentalHealth", label: "Mental", color: 0x32cd32 },
     ];
 
     needs.forEach((need, index) => {
-      const yPos = 25 + (index * 25);
-      
+      const yPos = 25 + index * 25;
+
       // Etiqueta
       const label = this.scene.add.text(-5, yPos, need.label, {
         fontSize: "10px",
-        color: "#ffffff"
+        color: "#ffffff",
       });
       this.needsLabels.set(need.key, label);
       this.container.add(label);
@@ -70,26 +73,26 @@ export class NeedsUI {
     // Hacer el UI interactivo (click para ocultar/mostrar)
     background.setInteractive(
       new Phaser.Geom.Rectangle(-10, -10, 200, 140),
-      Phaser.Geom.Rectangle.Contains
+      Phaser.Geom.Rectangle.Contains,
     );
-    
-    background.on('pointerdown', () => {
+
+    background.on("pointerdown", () => {
       this.toggleVisibility();
     });
   }
 
   public updateNeeds(entityData: EntityNeedsData): void {
     if (!this.isVisible) return;
-    
+
     this.currentEntityId = entityData.entityId;
     const needs = entityData.needs;
 
     // Actualizar cada barra
-    ['hunger', 'thirst', 'energy', 'mentalHealth'].forEach((needKey, index) => {
+    ["hunger", "thirst", "energy", "mentalHealth"].forEach((needKey, index) => {
       const value = needs[needKey as keyof NeedsState] as number;
       const bar = this.needsBars.get(needKey);
       const label = this.needsLabels.get(needKey);
-      
+
       if (!bar || !label) return;
 
       // Limpiar barra anterior
@@ -98,11 +101,11 @@ export class NeedsUI {
       // Determinar color basado en el valor
       let color: number;
       if (value < 20) {
-        color = 0xFF0000; // Rojo crítico
+        color = 0xff0000; // Rojo crítico
       } else if (value < 40) {
-        color = 0xFF6600; // Naranja advertencia
+        color = 0xff6600; // Naranja advertencia
       } else if (value < 60) {
-        color = 0xFFFF00; // Amarillo cuidado
+        color = 0xffff00; // Amarillo cuidado
       } else {
         color = this.getColorForNeed(needKey); // Color normal
       }
@@ -110,18 +113,18 @@ export class NeedsUI {
       // Dibujar barra con valor actual
       const barWidth = Math.max(0, (value / 100) * 120);
       bar.fillStyle(color);
-      bar.fillRect(50, 27 + (index * 25), barWidth, 12);
+      bar.fillRect(50, 27 + index * 25, barWidth, 12);
 
       // Actualizar texto con valor numérico
       const needLabels: Record<string, string> = {
         hunger: "Hambre",
-        thirst: "Sed", 
+        thirst: "Sed",
         energy: "Energía",
-        mentalHealth: "Mental"
+        mentalHealth: "Mental",
       };
-      
+
       label.setText(`${needLabels[needKey]}: ${Math.round(value)}`);
-      
+
       // Cambiar color del texto si es crítico
       if (value < 20) {
         label.setColor("#FF0000");
@@ -138,24 +141,26 @@ export class NeedsUI {
 
   private getColorForNeed(needKey: string): number {
     const colors: Record<string, number> = {
-      hunger: 0x8B4513,    // Marrón
-      thirst: 0x4169E1,    // Azul
-      energy: 0xFFD700,    // Dorado
-      mentalHealth: 0x32CD32 // Verde
+      hunger: 0x8b4513, // Marrón
+      thirst: 0x4169e1, // Azul
+      energy: 0xffd700, // Dorado
+      mentalHealth: 0x32cd32, // Verde
     };
-    return colors[needKey] || 0xFFFFFF;
+    return colors[needKey] || 0xffffff;
   }
 
   private updateEmergencyStatus(level: string): void {
     // Buscar o crear indicador de estado de emergencia
-    let statusText = this.container.list.find(obj => 
-      obj instanceof Phaser.GameObjects.Text && (obj as any).isStatusIndicator
+    let statusText = this.container.list.find(
+      (obj) =>
+        obj instanceof Phaser.GameObjects.Text &&
+        (obj as any).isStatusIndicator,
     ) as Phaser.GameObjects.Text;
 
     if (!statusText) {
       statusText = this.scene.add.text(0, 115, "", {
         fontSize: "10px",
-        fontStyle: "bold"
+        fontStyle: "bold",
       });
       (statusText as any).isStatusIndicator = true;
       this.container.add(statusText);

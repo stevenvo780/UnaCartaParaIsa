@@ -268,6 +268,8 @@ export class DiverseWorldComposer {
 
         // Selección ponderada por rareza
         const asset = this.weightedRandomSelect(clusterAssets);
+        if (!asset) continue; // Skip if no assets available
+        if (!asset) continue; // Skip if no assets available
 
         // Variaciones naturales
         const scale = 0.7 + Math.random() * 0.6; // 0.7x - 1.3x
@@ -342,6 +344,7 @@ export class DiverseWorldComposer {
         }
 
         const asset = this.weightedRandomSelect(clusterAssets);
+        if (!asset) continue; // Skip if no assets available
 
         assets.push({
           asset,
@@ -404,6 +407,7 @@ export class DiverseWorldComposer {
 
       if (shouldPlace) {
         const asset = this.weightedRandomSelect(allDetails);
+        if (!asset) continue; // Skip if no assets available
 
         assets.push({
           asset,
@@ -469,6 +473,7 @@ export class DiverseWorldComposer {
         if (hasDifferentBiome && Math.random() < 0.25) {
           // 25% probabilidad
           const asset = this.weightedRandomSelect(transitionAssets);
+          if (!asset) continue; // Skip if no assets available
 
           if (asset) {
             // Posición con variación orgánica
@@ -534,6 +539,7 @@ export class DiverseWorldComposer {
       const biome = this.getBiomeAtPosition(x, y);
       if (biome !== BiomeType.WETLAND) {
         const asset = this.weightedRandomSelect(propAssets);
+        if (!asset) continue; // Skip if no assets available
 
         if (asset) {
           assets.push({
@@ -576,6 +582,7 @@ export class DiverseWorldComposer {
         const biome = this.getBiomeAtPosition(x, y);
         if (biome === BiomeType.WETLAND) {
           const effect = this.weightedRandomSelect(waterEffects);
+          if (!effect) continue; // Skip if no effects available
           if (effect) {
             assets.push({
               asset: effect,
@@ -606,6 +613,7 @@ export class DiverseWorldComposer {
         const biome = this.getBiomeAtPosition(x, y);
         if (biome === BiomeType.FOREST) {
           const effect = this.weightedRandomSelect(lightEffects);
+          if (!effect) continue; // Skip if no effects available
           if (effect) {
             assets.push({
               asset: effect,
@@ -657,9 +665,10 @@ export class DiverseWorldComposer {
   /**
    * Selección ponderada por rareza
    */
-  private weightedRandomSelect(assets: AssetInfo[]): AssetInfo {
+  private weightedRandomSelect(assets: AssetInfo[]): AssetInfo | null {
     if (assets.length === 0) {
-      throw new Error("Cannot select from empty asset array");
+      logAutopoiesis.warn("⚠️ No assets available for selection");
+      return null;
     }
 
     if (assets.length === 1) return assets[0];

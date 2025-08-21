@@ -635,22 +635,80 @@ export class EmergenceSystem {
    */
   private applyPatternEffects(): void {
     this.emergentPatterns.forEach((pattern) => {
-      const effectStrength = pattern.strength * (pattern.duration / 60000); // Más efecto con tiempo
+      // Aplicar efectos según el tipo de patrón
+      switch (pattern.type) {
+        case "social_cluster":
+          this.applySocialClusterEffects(pattern);
+          break;
+        case "resource_scarcity":
+          this.applyResourceScarcityEffects(pattern);
+          break;
+        case "emotional_contagion":
+          this.applyEmotionalContagionEffects(pattern);
+          break;
+        case "territorial_conflict":
+          this.applyTerritorialEffects(pattern);
+          break;
+      }
 
-      // Aplicar modificadores de necesidades
-      if (pattern.effects.needsModifiers) {
-        ["isa", "stev"].forEach((entityId) => {
-          Object.entries(pattern.effects.needsModifiers!).forEach(
-            ([needType, modifier]) => {
-              const adjustedModifier = modifier * effectStrength * 0.1; // Escalar efecto
-              this.needsSystem.modifyEntityNeed(
-                entityId,
-                needType,
-                adjustedModifier,
-              );
-            },
-          );
-        });
+      // Emitir evento para UI
+      this.scene.events.emit("emergence:pattern_active", {
+        pattern: pattern.name,
+        intensity: pattern.intensity,
+        effects: pattern.effects,
+      });
+    });
+  }
+
+  private applySocialClusterEffects(pattern: EmergentPattern): void {
+    const affectedEntities = pattern.participants || [];
+
+    affectedEntities.forEach((entityId) => {
+      if (this.needsSystem && this.needsSystem.modifyNeed) {
+        // Boost social para entidades en el cluster
+        this.needsSystem.modifyNeed(entityId, "social", 0.5);
+        this.needsSystem.modifyNeed(entityId, "fun", 0.3);
+      }
+    });
+  }
+
+  private applyResourceScarcityEffects(pattern: EmergentPattern): void {
+    // Aumentar precios en vendors
+    const vendors = this.gameState.mapElements.filter(
+      (e) => e.type === "food_vendor",
+    );
+    vendors.forEach((vendor) => {
+      vendor.priceMultiplier = 1.5;
+    });
+
+    // Reducir spawn de recursos
+    this.scene.events.emit("resources:scarcity", { multiplier: 0.5 });
+  }
+
+  private applyEmotionalContagionEffects(pattern: EmergentPattern): void {
+    const affectedEntities = pattern.participants || [];
+
+    affectedEntities.forEach((entityId) => {
+      if (this.needsSystem && this.needsSystem.modifyNeed) {
+        // Propagar estado emocional
+        const intensity = pattern.intensity * 0.2;
+        this.needsSystem.modifyNeed(
+          entityId,
+          "mentalHealth",
+          intensity > 0.5 ? 0.3 : -0.2,
+        );
+      }
+    });
+  }
+
+  private applyTerritorialEffects(pattern: EmergentPattern): void {
+    const affectedEntities = pattern.participants || [];
+
+    affectedEntities.forEach((entityId) => {
+      if (this.needsSystem && this.needsSystem.modifyNeed) {
+        // Estrés por conflicto territorial
+        this.needsSystem.modifyNeed(entityId, "mentalHealth", -0.4);
+        this.needsSystem.modifyNeed(entityId, "energy", -0.2);
       }
     });
   }

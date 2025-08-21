@@ -30,7 +30,7 @@ export default class MainScene extends Phaser.Scene {
   private worldComposer!: DiverseWorldComposer;
   private worldRenderer!: LayeredWorldRenderer;
   private performanceMode = true;
-  
+
   // UI de necesidades, cartas de diálogo y estado de sistemas
   private needsUI!: NeedsUI;
   private dialogueCardUI!: DialogueCardUI;
@@ -52,6 +52,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   async create() {
+    console.log("🎯 MainScene.create() STARTED");
     logAutopoiesis.info("🌍 Creating complete game world with entities...");
 
     // 1. Verificar asset manager
@@ -131,25 +132,32 @@ export default class MainScene extends Phaser.Scene {
       this.needsUI = new NeedsUI(this);
       this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
       this.systemStatusUI = new SystemStatusUI(this);
-      
+
       // 14. Configurar actualización de UI de necesidades
       this.gameLogicManager.on("needsUpdated", (data: any) => {
         if (data.entityId === "stev" || data.entityId === "isa") {
           this.needsUI.updateNeeds(data.entityData);
-          
+
           // Actualizar estado del sistema de necesidades
           const needsData = data.entityData;
-          const criticalCount = Object.entries(needsData.needs).filter(([key, value]) => 
-            key !== 'lastUpdate' && (value as number) < 20).length;
-          const warningCount = Object.entries(needsData.needs).filter(([key, value]) => 
-            key !== 'lastUpdate' && (value as number) < 40 && (value as number) >= 20).length;
-          
+          const criticalCount = Object.entries(needsData.needs).filter(
+            ([key, value]) => key !== "lastUpdate" && (value as number) < 20,
+          ).length;
+          const warningCount = Object.entries(needsData.needs).filter(
+            ([key, value]) =>
+              key !== "lastUpdate" &&
+              (value as number) < 40 &&
+              (value as number) >= 20,
+          ).length;
+
           this.systemStatusUI.updateNeedsStatus(criticalCount, warningCount);
         }
       });
 
       // 15. Iniciar UI Scene
+      console.log("🎯 MainScene: About to launch UIScene");
       this.scene.launch("UIScene");
+      console.log("🎯 MainScene: UIScene launch called");
 
       // 6. Configurar cámara
       this.cameras.main.setBounds(

@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import Phaser from "phaser";
 
 export class WorldModalContent {
   private scene: Phaser.Scene;
@@ -20,10 +20,10 @@ export class WorldModalContent {
 
   update(data: any, timeString: string, gameState: any) {
     if (this.activitiesText) {
-      const isa = data.entities?.find((e: any) => e.id === 'isa');
-      const stev = data.entities?.find((e: any) => e.id === 'stev');
+      const isa = data.entities?.find((e: any) => e.id === "isa");
+      const stev = data.entities?.find((e: any) => e.id === "stev");
       this.activitiesText.setText(
-        `👩 Isa: ${isa?.activity ?? 'IDLE'}\n👨 Stev: ${stev?.activity ?? 'IDLE'}\n\n⏱️ Tiempo: ${timeString || '00:00'}`,
+        `👩 Isa: ${isa?.activity ?? "IDLE"}\n👨 Stev: ${stev?.activity ?? "IDLE"}\n\n⏱️ Tiempo: ${timeString || "00:00"}`,
       );
     }
     if (this.infoZoneText) {
@@ -54,7 +54,13 @@ export class WorldModalContent {
         const zw = Math.max(2, z.bounds.width * scaleX);
         const zh = Math.max(2, z.bounds.height * scaleY);
         this.minimapGfx!.fillStyle(c, 0.6);
-        this.minimapGfx!.fillRoundedRect(zx - contentX, zy - contentY, zw, zh, 2);
+        this.minimapGfx!.fillRoundedRect(
+          zx - contentX,
+          zy - contentY,
+          zw,
+          zh,
+          2,
+        );
       });
       if (!this.dots) {
         const isaDot = this.scene.add.circle(0, 0, 3, 0xff1744, 1);
@@ -63,46 +69,62 @@ export class WorldModalContent {
         this.container.add(stevDot);
         this.dots = { isa: isaDot, stev: stevDot };
       }
-      const isa = data.entities?.find((e: any) => e.id === 'isa');
-      const stev = data.entities?.find((e: any) => e.id === 'stev');
+      const isa = data.entities?.find((e: any) => e.id === "isa");
+      const stev = data.entities?.find((e: any) => e.id === "stev");
       if (isa && this.dots) {
-        this.dots.isa.setPosition(contentX + isa.position.x * scaleX, contentY + isa.position.y * scaleY);
+        this.dots.isa.setPosition(
+          contentX + isa.position.x * scaleX,
+          contentY + isa.position.y * scaleY,
+        );
       }
       if (stev && this.dots) {
-        this.dots.stev.setPosition(contentX + stev.position.x * scaleX, contentY + stev.position.y * scaleY);
+        this.dots.stev.setPosition(
+          contentX + stev.position.x * scaleX,
+          contentY + stev.position.y * scaleY,
+        );
       }
     }
   }
 
   private build() {
-    const zoneTitle = this.scene.add.text(0, 0, '🗺️ ZONA ACTUAL', {
-      fontSize: '11px',
-      color: '#9b59b6',
-      fontFamily: 'Arial, sans-serif',
-      fontStyle: 'bold',
+    const zoneTitle = this.scene.add.text(0, 0, "🗺️ ZONA ACTUAL", {
+      fontSize: "11px",
+      color: "#9b59b6",
+      fontFamily: "Arial, sans-serif",
+      fontStyle: "bold",
     });
     this.container.add(zoneTitle);
-    this.infoZoneText = this.scene.add.text(0, 16, 'Zona: ---\nTipo: ---\nBeneficio: ---\nDistancia: ---', {
-      fontSize: '10px',
-      color: '#bdc3c7',
-      fontFamily: 'Arial, sans-serif',
-      lineSpacing: 2,
-    });
+    this.infoZoneText = this.scene.add.text(
+      0,
+      16,
+      "Zona: ---\nTipo: ---\nBeneficio: ---\nDistancia: ---",
+      {
+        fontSize: "10px",
+        color: "#bdc3c7",
+        fontFamily: "Arial, sans-serif",
+        lineSpacing: 2,
+      },
+    );
     this.container.add(this.infoZoneText);
 
-    const actTitle = this.scene.add.text(180, 0, '📋 ACTIVIDADES', {
-      fontSize: '11px',
-      color: '#f39c12',
-      fontFamily: 'Arial, sans-serif',
-      fontStyle: 'bold',
+    const actTitle = this.scene.add.text(180, 0, "📋 ACTIVIDADES", {
+      fontSize: "11px",
+      color: "#f39c12",
+      fontFamily: "Arial, sans-serif",
+      fontStyle: "bold",
     });
     this.container.add(actTitle);
-    this.activitiesText = this.scene.add.text(180, 16, '👩 Isa: IDLE\n👨 Stev: IDLE\n\n⏱️ Tiempo: 00:00', {
-      fontSize: '10px',
-      color: '#ecf0f1',
-      fontFamily: 'Arial, sans-serif',
-      lineSpacing: 3,
-    });
+    this.activitiesText = this.scene.add.text(
+      180,
+      16,
+      "👩 Isa: IDLE\n👨 Stev: IDLE\n\n⏱️ Tiempo: 00:00",
+      {
+        fontSize: "10px",
+        color: "#ecf0f1",
+        fontFamily: "Arial, sans-serif",
+        lineSpacing: 3,
+      },
+    );
     this.container.add(this.activitiesText);
 
     const minimapBg = this.scene.add.graphics();
@@ -117,4 +139,3 @@ export class WorldModalContent {
     this.container.add(this.minimapGfx);
   }
 }
-

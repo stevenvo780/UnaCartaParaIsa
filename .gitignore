@@ -38,6 +38,7 @@ trace.zip
 storageState.json
 *.har
 *.tmp
+assets_curated
 
 # Agent/work dirs
 .agent/

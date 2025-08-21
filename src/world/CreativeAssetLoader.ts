@@ -593,7 +593,7 @@ export class CreativeAssetLoader {
     const treeDefinitions = [
       // Árboles mágicos
       {
-        name: "blue_green_balls_tree",
+        name: "blue-green_balls_tree",
         count: 3,
         biome: "magical",
         rarity: "uncommon",
@@ -619,9 +619,21 @@ export class CreativeAssetLoader {
 
     for (const treeDef of treeDefinitions) {
       for (let i = 1; i <= treeDef.count; i++) {
+        // Some assets use underscores, others don't - handle both patterns
+        let assetPath: string;
+        if (treeDef.name.includes("tree_emerald")) {
+          assetPath = `assets/foliage/trees/${treeDef.name}_${i}.png`;
+        } else if (treeDef.name.includes("tree_idol")) {
+          assetPath = `assets/foliage/trees/${treeDef.name}.png`;
+        } else if (treeDef.name === "oak_tree") {
+          assetPath = `assets/foliage/trees/oak_tree.png`;
+        } else {
+          assetPath = `assets/foliage/trees/${treeDef.name}${i}.png`;
+        }
+        
         const assetInfo: AssetInfo = {
           key: `${treeDef.name}${i}`,
-          path: `assets/foliage/trees/${treeDef.name}${i}.png`,
+          path: assetPath,
           type: "tree",
           biome: treeDef.biome,
           variant: i,
@@ -793,10 +805,7 @@ export class CreativeAssetLoader {
     const propAssets: AssetInfo[] = [];
 
     const propCategories = [
-      // Sillas y mobiliario
-      { prefix: "silla", count: 6, biome: "village" },
-      { prefix: "sillas", count: 6, biome: "village" },
-      { prefix: "sillas_de_calle", count: 4, biome: "city" },
+      // Sillas y mobiliario - REMOVED: assets not found
 
       // Ventanas
       { prefix: "ventana", count: 13, biome: "city" },

@@ -73,65 +73,73 @@ export class UnifiedAssetManager {
       key: "isa_happy",
       path: "assets/entities/animated/characters/whomen1.png",
       type: "image",
-      required: true,
-      priority: "critical",
+      required: false,
+      priority: "high",
       category: "character",
+      fallback: "assets/Spritesheet/spritesheet_characters.png",
     },
     {
       key: "isa_sad",
       path: "assets/entities/animated/characters/whomen1.png",
       type: "image",
-      required: true,
-      priority: "critical",
+      required: false,
+      priority: "high",
       category: "character",
+      fallback: "assets/Spritesheet/spritesheet_characters.png",
     },
     {
       key: "stev_happy",
       path: "assets/entities/animated/characters/man1.png",
       type: "image",
-      required: true,
-      priority: "critical",
+      required: false,
+      priority: "high",
       category: "character",
+      fallback: "assets/Spritesheet/spritesheet_characters.png",
     },
     {
       key: "stev_sad",
       path: "assets/entities/animated/characters/man1.png",
       type: "image",
-      required: true,
-      priority: "critical",
+      required: false,
+      priority: "high",
       category: "character",
+      fallback: "assets/Spritesheet/spritesheet_characters.png",
     },
     {
       key: "woman",
       path: "assets/entities/animated/characters/whomen1.png",
       type: "image",
-      required: true,
-      priority: "critical",
+      required: false,
+      priority: "high",
       category: "character",
+      fallback: "assets/Spritesheet/spritesheet_characters.png",
     },
     {
       key: "woman_walk",
       path: "assets/entities/animated/characters/whomen1.png",
       type: "image",
-      required: true,
-      priority: "critical",
+      required: false,
+      priority: "high",
       category: "character",
+      fallback: "assets/Spritesheet/spritesheet_characters.png",
     },
     {
       key: "man",
       path: "assets/entities/animated/characters/man1.png",
       type: "image",
-      required: true,
-      priority: "critical",
+      required: false,
+      priority: "high",
       category: "character",
+      fallback: "assets/Spritesheet/spritesheet_characters.png",
     },
     {
       key: "man_walk",
       path: "assets/entities/animated/characters/man1.png",
       type: "image",
-      required: true,
-      priority: "critical",
+      required: false,
+      priority: "high",
       category: "character",
+      fallback: "assets/Spritesheet/spritesheet_characters.png",
     },
 
     // SPRITES DE WALKING PARA ANIMACIONES
@@ -139,17 +147,19 @@ export class UnifiedAssetManager {
       key: "isa_walking",
       path: "assets/entities/animated/characters/whomen1.png",
       type: "image",
-      required: true,
-      priority: "critical",
+      required: false,
+      priority: "high",
       category: "character",
+      fallback: "assets/Spritesheet/spritesheet_characters.png",
     },
     {
       key: "stev_walking",
       path: "assets/entities/animated/characters/man1.png",
       type: "image",
-      required: true,
-      priority: "critical",
+      required: false,
+      priority: "high",
       category: "character",
+      fallback: "assets/Spritesheet/spritesheet_characters.png",
     },
     {
       key: "grass_middle",
@@ -224,35 +234,35 @@ export class UnifiedAssetManager {
       frameConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
     {
-      key: "tree_emerald_1",
+      key: "tree_emerald1",
       path: "assets/foliage/trees/tree_emerald_1.png",
       type: "image",
       priority: "medium",
       category: "decoration",
     },
     {
-      key: "tree_emerald_2",
+      key: "tree_emerald2",
       path: "assets/foliage/trees/tree_emerald_2.png",
       type: "image",
       priority: "medium",
       category: "decoration",
     },
     {
-      key: "tree_emerald_3",
+      key: "tree_emerald3",
       path: "assets/foliage/trees/tree_emerald_3.png",
       type: "image",
       priority: "medium",
       category: "decoration",
     },
     {
-      key: "tree_emerald_4",
+      key: "tree_emerald4",
       path: "assets/foliage/trees/tree_emerald_4.png",
       type: "image",
       priority: "medium",
       category: "decoration",
     },
     {
-      key: "oak_tree",
+      key: "oak_tree1",
       path: "assets/foliage/trees/oak_tree.png",
       type: "image",
       priority: "medium",
@@ -306,6 +316,56 @@ export class UnifiedAssetManager {
       type: "image",
       priority: "medium",
       category: "food",
+    },
+    // Assets faltantes de biomas
+    {
+      key: "blue_green_balls_tree1",
+      path: "assets/foliage/trees/blue-green_balls_tree1.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "blue_green_balls_tree2",
+      path: "assets/foliage/trees/blue-green_balls_tree2.png",
+      type: "image",
+      priority: "medium", 
+      category: "decoration",
+    },
+    {
+      key: "blue_green_balls_tree3",
+      path: "assets/foliage/trees/blue-green_balls_tree3.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "tree_idol_deer1",
+      path: "assets/foliage/trees/tree_idol_deer.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "tree_idol_dragon1",
+      path: "assets/foliage/trees/tree_idol_dragon.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "tree_idol_human1",
+      path: "assets/foliage/trees/tree_idol_human.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
+    },
+    {
+      key: "tree_idol_wolf1",
+      path: "assets/foliage/trees/tree_idol_wolf.png",
+      type: "image",
+      priority: "medium",
+      category: "decoration",
     },
     // Audio assets
     {
@@ -500,6 +560,12 @@ export class UnifiedAssetManager {
     try {
       return new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
+          if (config.required !== true && config.priority !== "critical") {
+            this.failedAssets.add(config.key);
+            logAutopoiesis.warn(`Asset opcional timeout: ${config.key}`);
+            resolve();
+            return;
+          }
           reject(new Error(`Asset load timeout: ${config.key}`));
         }, this.LOAD_TIMEOUT);
 
@@ -522,7 +588,18 @@ export class UnifiedAssetManager {
           this.loadingAssets.delete(config.key);
           this.currentLoads--;
 
-          logAutopoiesis.error(`Error cargando asset: ${config.key}`, {
+          // Si el asset no es crítico, fallamos silenciosamente
+          if (config.required !== true && config.priority !== "critical") {
+            this.failedAssets.add(config.key);
+            logAutopoiesis.warn(`Asset opcional falló al cargar: ${config.key}`, {
+              error: String(error),
+              path: config.path,
+            });
+            resolve(); // Continuar en lugar de fallar
+            return;
+          }
+
+          logAutopoiesis.error(`Error cargando asset crítico: ${config.key}`, {
             error: String(error),
             path: config.path,
           });

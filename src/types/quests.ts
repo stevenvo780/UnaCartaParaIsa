@@ -27,6 +27,7 @@ export type QuestObjectiveType =
   | "achieve_stats"
   | "complete_activity"
   | "interact_with_entity"
+  | "survive_emergency"
   | "custom";
 
 /**
@@ -75,6 +76,10 @@ export interface QuestRequirement {
   timeRequired?: number;
   locationId?: string;
   itemId?: string;
+  entityId?: string;
+  stat?: string;
+  value?: number;
+  duration?: number;
 }
 
 /**
@@ -105,6 +110,7 @@ export interface QuestObjective {
   isOptional: boolean;
   hints?: string[];
   targetEntity?: string;
+  completedAt?: number;
   requirements?: {
     stats?: { [key: string]: number };
     items?: { [key: string]: number };

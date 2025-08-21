@@ -76,28 +76,54 @@ export class UIScene extends Phaser.Scene {
   }
 
   create() {
-    logAutopoiesis.info("🎨 Creating Modern Game UI");
+    console.log("🚀 UIScene.create() STARTED");
+    logAutopoiesis.info("🚀 UIScene.create() STARTED");
+    try {
+      // TEMPORAL: Crear indicador visual de debug INMEDIATAMENTE
+      this.createDebugIndicator();
+      logAutopoiesis.info("✅ Debug indicator created");
+      
+      logAutopoiesis.info("🎨 Creating Modern Game UI");
 
-    // Configurar como overlay sobre MainScene
-    this.scene.bringToTop();
+      // Configurar como overlay sobre MainScene
+      this.scene.bringToTop();
+      logAutopoiesis.info("✅ Scene brought to top");
 
-    this.initializePools();
+      this.initializePools();
+      logAutopoiesis.info("✅ Pools initialized");
 
-    // Crear ResonanceBar primero (parte superior)
-    this.createResonanceBar();
+      // Crear ResonanceBar primero (parte superior)
+      this.createResonanceBar();
+      logAutopoiesis.info("✅ ResonanceBar created");
 
-    // Create modern modular UI
-    this.createTopBar();
-    this.createBottomBar();
-    // Instanciar gestor de modales
-    this.modalManager = new ModalManager(this);
-    // Colocar los diálogos en la UIScene para que no dependan del zoom
-    this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
-    this.createFoodUI();
-    this.createExplorationUI();
+      // Create modern modular UI
+      this.createTopBar();
+      logAutopoiesis.info("✅ TopBar created");
+      
+      this.createBottomBar();
+      logAutopoiesis.info("✅ BottomBar created");
+      
+      // Instanciar gestor de modales
+      this.modalManager = new ModalManager(this);
+      logAutopoiesis.info("✅ ModalManager created");
+      
+      // Colocar los diálogos en la UIScene para que no dependan del zoom
+      this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
+      logAutopoiesis.info("✅ DialogueCardUI created");
+      
+      this.createFoodUI();
+      logAutopoiesis.info("✅ FoodUI created");
+      
+      this.createExplorationUI();
+      logAutopoiesis.info("✅ ExplorationUI created");
 
-    // Setup modern navigation
-    this.setupModernNavigation();
+      // Setup modern navigation
+      this.setupModernNavigation();
+      logAutopoiesis.info("✅ Modern navigation setup complete");
+      
+    } catch (error) {
+      logAutopoiesis.error("❌ Error in UIScene.create():", error);
+    }
 
     // (Sin toggles de borde; usar atajos en top bar)
 
@@ -766,7 +792,7 @@ export class UIScene extends Phaser.Scene {
 
   private isPointerOverAnyUI(pointer: Phaser.Input.Pointer): boolean {
     const containers: Phaser.GameObjects.Container[] = [];
-    if (this.topBar) containers.push(this.topBar);
+    if (this.topBar && this.topBar.getContainer) containers.push(this.topBar.getContainer());
     if (this.bottomBar) containers.push(this.bottomBar);
     // Paneles/minimapa independientes ya no se usan
     // Modales visibles
@@ -864,7 +890,7 @@ export class UIScene extends Phaser.Scene {
     visibleIds.forEach((id) => {
       const modal = this.modalRegistry.get(id)!;
       const g = modal.list[0] as Phaser.GameObjects.Graphics;
-      const b = g.getBounds();
+      const b = g.getBounds ? g.getBounds() : { x: 0, y: 0, width: 200, height: 150 };
       const w = b.width;
       const h = b.height;
       // Wrap si no cabe
@@ -1231,6 +1257,19 @@ export class UIScene extends Phaser.Scene {
     }
 
     logAutopoiesis.debug("UIScene destroyed - pools cleaned up");
+  }
+
+  private createDebugIndicator(): void {
+    // Crear indicador visual temporal para confirmar que UIScene está funcionando
+    const graphics = this.add.graphics();
+    graphics.fillStyle(0x00ff00, 0.9); // Verde brillante para confirmación
+    graphics.fillRect(10, 10, 100, 50);
+    graphics.fillStyle(0xffffff, 1.0);
+    graphics.fillRect(15, 15, 90, 40);
+    graphics.fillStyle(0x000000, 1.0);
+    graphics.fillRect(20, 20, 80, 30);
+    
+    logAutopoiesis.info("🔍 Debug indicator created - UIScene is active (green box visible)");
   }
 
   /**

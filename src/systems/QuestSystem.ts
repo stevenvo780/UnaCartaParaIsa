@@ -47,7 +47,7 @@ export class QuestSystem {
 
     this._setupEventListeners();
     this._initializeQuests();
-    
+
     // Inicializar QuestUI
     this._questUI = new QuestUI(scene);
   }
@@ -289,8 +289,17 @@ export class QuestSystem {
 
         case "achieve_stats":
           if (objective.requirements?.stats) {
-            const targetEntity = entities.find((e: EntityEventData) => e.id === (objective.targetEntity || "isa"));
-            if (targetEntity?.stats && this._checkStatsRequirements(targetEntity.stats, objective.requirements.stats)) {
+            const targetEntity = entities.find(
+              (e: EntityEventData) =>
+                e.id === (objective.targetEntity || "isa"),
+            );
+            if (
+              targetEntity?.stats &&
+              this._checkStatsRequirements(
+                targetEntity.stats,
+                objective.requirements.stats,
+              )
+            ) {
               this.updateObjectiveProgress(quest.id, objective.id);
             }
           }
@@ -586,17 +595,21 @@ export class QuestSystem {
             : false;
         case "stats_threshold":
           if (req.entityId && req.stat && req.value) {
-            const gameLogicManager = this._scene.registry.get("gameLogicManager");
+            const gameLogicManager =
+              this._scene.registry.get("gameLogicManager");
             if (gameLogicManager) {
               const entities = gameLogicManager.getEntities();
-              const entity = entities.find((e: EntityEventData) => e.id === req.entityId);
+              const entity = entities.find(
+                (e: EntityEventData) => e.id === req.entityId,
+              );
               return entity?.stats[req.stat] >= req.value;
             }
           }
           return false;
         case "time_elapsed":
           if (req.duration) {
-            const gameStartTime = this._scene.registry.get("gameStartTime") || Date.now();
+            const gameStartTime =
+              this._scene.registry.get("gameStartTime") || Date.now();
             const elapsed = Date.now() - gameStartTime;
             return elapsed >= req.duration;
           }
@@ -675,7 +688,12 @@ export class QuestSystem {
   /**
    * Manejar eventos externos para progreso de misiones
    */
-  public handleEvent(eventData: { type: string; entityId: string; timestamp: number; data: any }): void {
+  public handleEvent(eventData: {
+    type: string;
+    entityId: string;
+    timestamp: number;
+    data: any;
+  }): void {
     switch (eventData.type) {
       case "dialogue_completed":
         this._onDialogueCompleted({
@@ -683,15 +701,18 @@ export class QuestSystem {
           choiceId: eventData.data.choice?.id,
           participants: [eventData.entityId],
           outcome: eventData.data.choice?.outcome,
-          effects: eventData.data.choice?.effects
+          effects: eventData.data.choice?.effects,
         });
         break;
-      
+
       case "emergency_resolved":
         // Buscar misiones relacionadas con emergencias
         this._questProgress.activeQuests.forEach((quest) => {
           quest.objectives.forEach((objective) => {
-            if (objective.type === "survive_emergency" && !objective.isCompleted) {
+            if (
+              objective.type === "survive_emergency" &&
+              !objective.isCompleted
+            ) {
               objective.isCompleted = true;
               objective.completedAt = eventData.timestamp;
               this._checkQuestCompletion(quest.id);
@@ -699,9 +720,11 @@ export class QuestSystem {
           });
         });
         break;
-        
+
       default:
-        logAutopoiesis.debug(`Evento desconocido en QuestSystem: ${eventData.type}`);
+        logAutopoiesis.debug(
+          `Evento desconocido en QuestSystem: ${eventData.type}`,
+        );
         break;
     }
   }
@@ -709,10 +732,16 @@ export class QuestSystem {
   /**
    * Verifica si las estadísticas cumplen con los requisitos
    */
-  private _checkStatsRequirements(entityStats: any, requiredStats: any): boolean {
+  private _checkStatsRequirements(
+    entityStats: any,
+    requiredStats: any,
+  ): boolean {
     for (const [statName, requiredValue] of Object.entries(requiredStats)) {
       const currentValue = entityStats[statName];
-      if (typeof currentValue !== 'number' || currentValue < (requiredValue as number)) {
+      if (
+        typeof currentValue !== "number" ||
+        currentValue < (requiredValue as number)
+      ) {
         return false;
       }
     }

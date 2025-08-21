@@ -86,7 +86,7 @@ export class CardDialogueSystem {
 
   // Callback para cuando se genera una carta
   public onCardGenerated?: (card: DialogueCard) => void;
-  
+
   // Timer tracking for cleanup
   private activeTimers = new Set<NodeJS.Timeout>();
 
@@ -576,7 +576,7 @@ export class CardDialogueSystem {
       }
       this.activeTimers.delete(timer);
     }, card.duration);
-    
+
     this.activeTimers.add(timer);
   }
 
@@ -586,12 +586,18 @@ export class CardDialogueSystem {
   private expireCard(cardId: string): void {
     const card = this.activeCards.get(cardId);
     if (card) {
+      // Limpiar UI container si existe
+      if (card.container) {
+        card.container.destroy();
+        card.container = undefined;
+      }
+
       this.activeCards.delete(cardId);
       this.addToHistory(card);
 
       // Notificar que la carta expiró
       this.scene.events.emit("cardExpired", cardId);
-      
+
       // Emitir evento para DialogueCardUI
       this.scene.events.emit("hideDialogueCard", cardId);
 
@@ -628,22 +634,28 @@ export class CardDialogueSystem {
     // Aplicar efectos de la elección
     this.applyChoiceEffects(card, choice);
 
+    // Limpiar UI container si existe
+    if (card.container) {
+      card.container.destroy();
+      card.container = undefined;
+    }
+
     // Remover carta activa
     this.activeCards.delete(cardId);
     this.addToHistory(card);
 
     // Emitir evento de respuesta
     this.scene.events.emit("cardResponded", { card, choice });
-    
+
     // Emitir evento para QuestSystem
-    this.scene.events.emit("dialogue_completed", { 
-      cardId, 
-      choiceId, 
+    this.scene.events.emit("dialogue_completed", {
+      cardId,
+      choiceId,
       participants: card.participants,
       outcome: choice.outcome,
-      effects: choice.effects
+      effects: choice.effects,
     });
-    
+
     // Emitir evento para DialogueCardUI (ocultar carta respondida)
     this.scene.events.emit("hideDialogueCard", cardId);
 
@@ -810,6 +822,12 @@ export class CardDialogueSystem {
 
     // Si la carta debe cerrarse después de la elección
     if (choice.outcome !== "neutral" || card.type !== "reflection") {
+      // Limpiar UI container si existe
+      if (card.container) {
+        card.container.destroy();
+        card.container = undefined;
+      }
+
       this.activeCards.delete(cardId);
       this.addToHistory(card);
     }
@@ -1047,15 +1065,15 @@ export class CardDialogueSystem {
             id: "find_food",
             text: "Buscar comida",
             outcome: "search_food",
-            effects: { needs: { hunger: 30 } }
+            effects: { needs: { hunger: 30 } },
           },
           {
             id: "ignore",
             text: "Ignorar",
             outcome: "ignored",
-            effects: {}
-          }
-        ]
+            effects: {},
+          },
+        ],
       },
       thirst: {
         title: "¡Sed crítica!",
@@ -1068,15 +1086,15 @@ export class CardDialogueSystem {
             id: "find_water",
             text: "Buscar agua",
             outcome: "search_water",
-            effects: { needs: { thirst: 40 } }
+            effects: { needs: { thirst: 40 } },
           },
           {
             id: "rest",
             text: "Descansar un poco",
             outcome: "rest",
-            effects: { needs: { energy: 10 } }
-          }
-        ]
+            effects: { needs: { energy: 10 } },
+          },
+        ],
       },
       energy: {
         title: "Agotamiento extremo",
@@ -1089,10 +1107,10 @@ export class CardDialogueSystem {
             id: "rest_now",
             text: "Descansar ahora",
             outcome: "emergency_rest",
-            effects: { needs: { energy: 50 } }
-          }
-        ]
-      }
+            effects: { needs: { energy: 50 } },
+          },
+        ],
+      },
     };
 
     const cardTemplate = emergencyCards[needType];
@@ -1104,15 +1122,15 @@ export class CardDialogueSystem {
       participants: [entityId],
       timestamp: Date.now(),
       duration: 30000,
-      sourceEntityId: entityId
+      sourceEntityId: entityId,
     };
 
     this.addCardToQueue(emergencyCard);
-    
+
     logAutopoiesis.warn("🚨 Carta de emergencia generada", {
       entityId,
       needType,
-      cardId: emergencyCard.id
+      cardId: emergencyCard.id,
     });
   }
 
@@ -1121,13 +1139,28 @@ export class CardDialogueSystem {
    */
   public cleanup(): void {
     // Limpiar todos los timers activos
-    this.activeTimers.forEach(timer => {
+    this.activeTimers.forEach((timer) => {
       clearTimeout(timer);
     });
     this.activeTimers.clear();
-    
+
+    // Limpiar tarjetas activas
+    this.activeCards.forEach((card) => {
+      if (card.container) {
+        card.container.destroy();
+      }
+    });
     this.activeCards.clear();
+
+    // Limpiar cola
     this.cardQueue = [];
     this.cardHistory = [];
+
+    // Remover listeners
+    this.scene.events.off("cardDialogue:show");
+    this.scene.events.off("cardDialogue:dismiss");
+    this.scene.events.off("dialogueChoiceSelected");
+
+    logAutopoiesis.info("🧹 CardDialogueSystem limpiado");
   }
 }

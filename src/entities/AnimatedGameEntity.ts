@@ -68,7 +68,8 @@ export class AnimatedGameEntity extends GameEntity {
 
     if (this.animationManager) {
       // Start with appropriate initial animation using new multi-frame sprites
-      const initialAnimation = entityId === "isa" ? "isa_happy_new" : "stev_happy_new";
+      const initialAnimation =
+        entityId === "isa" ? "isa_happy_new" : "stev_happy_new";
 
       // Validate animation exists before playing
       if (this.animationManager.hasAnimation(initialAnimation)) {
@@ -84,7 +85,8 @@ export class AnimatedGameEntity extends GameEntity {
         );
       } else {
         // Fallback to basic row animation
-        const fallbackAnimation = entityId === "isa" ? "whomen1:row0" : "man1:row0";
+        const fallbackAnimation =
+          entityId === "isa" ? "whomen1:row0" : "man1:row0";
         if (this.animationManager.hasAnimation(fallbackAnimation)) {
           this.currentAnimationKey = fallbackAnimation;
           this.animationManager.playAnimation(this, fallbackAnimation);
@@ -95,6 +97,9 @@ export class AnimatedGameEntity extends GameEntity {
           logAutopoiesis.warn(
             `All animations failed for ${entityId}, using static sprite`,
           );
+          // Final fallback: make entity visible with static texture
+          this.setTexture(initialSpriteKey);
+          this.setVisible(true);
         }
       }
     } else {
@@ -164,8 +169,11 @@ export class AnimatedGameEntity extends GameEntity {
     console.log(`[${entityId}] Animation debug:`, {
       avgStat,
       isMoving,
-      velocity: this.body && 'velocity' in this.body ? this.body.velocity : 'no velocity',
-      currentAnimation: this.currentAnimationKey
+      velocity:
+        this.body && "velocity" in this.body
+          ? this.body.velocity
+          : "no velocity",
+      currentAnimation: this.currentAnimationKey,
     });
 
     // Actualizar la textura según el movimiento ANTES de devolver la animación
@@ -194,9 +202,13 @@ export class AnimatedGameEntity extends GameEntity {
   /**
    * Actualiza la textura del sprite según el movimiento
    */
-  private updateTextureForMovement(entityId: string, isMoving: boolean, avgStat: number): void {
+  private updateTextureForMovement(
+    entityId: string,
+    isMoving: boolean,
+    avgStat: number,
+  ): void {
     let animationKey: string;
-    
+
     // Usar las nuevas animaciones multi-frame
     if (avgStat < 40) {
       // Sad state - usar row1 (fila media) para estado triste
@@ -205,16 +217,19 @@ export class AnimatedGameEntity extends GameEntity {
       // Happy state - choose between idle and walking
       if (isMoving) {
         // Usar animaciones de caminar específicas
-        animationKey = entityId === "isa" ? "isa_walking_new" : "stev_walking_new";
+        animationKey =
+          entityId === "isa" ? "isa_walking_new" : "stev_walking_new";
       } else {
-        // Usar animaciones de idle 
+        // Usar animaciones de idle
         animationKey = entityId === "isa" ? "isa_happy_new" : "stev_happy_new";
       }
     }
 
     // Cambiar animación si es diferente
     if (this.currentAnimationKey !== animationKey) {
-      console.log(`[${entityId}] Changing animation from ${this.currentAnimationKey} to ${animationKey}`);
+      console.log(
+        `[${entityId}] Changing animation from ${this.currentAnimationKey} to ${animationKey}`,
+      );
       if (this.animationManager?.hasAnimation(animationKey)) {
         this.playAnimation(animationKey);
       } else {
@@ -227,17 +242,24 @@ export class AnimatedGameEntity extends GameEntity {
    * Check if entity is currently moving (has significant velocity)
    */
   private isEntityMoving(): boolean {
-    if (!this.body || !('velocity' in this.body)) {
-      console.log('No body or velocity available');
+    if (!this.body || !("velocity" in this.body)) {
+      console.log("No body or velocity available");
       return false;
     }
 
     const velocity = this.body.velocity as { x: number; y: number };
     const speedThreshold = 1; // Minimum speed to consider "moving" (lowered for easier detection)
-    const currentSpeed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-    
-    console.log('Movement check:', { velocity, currentSpeed, threshold: speedThreshold, isMoving: currentSpeed > speedThreshold });
-    
+    const currentSpeed = Math.sqrt(
+      velocity.x * velocity.x + velocity.y * velocity.y,
+    );
+
+    console.log("Movement check:", {
+      velocity,
+      currentSpeed,
+      threshold: speedThreshold,
+      isMoving: currentSpeed > speedThreshold,
+    });
+
     return currentSpeed > speedThreshold;
   }
 
@@ -259,7 +281,7 @@ export class AnimatedGameEntity extends GameEntity {
     ); // Reduce precision to avoid too frequent changes
 
     const healthTier = Math.floor(stats.health / 20);
-    const movingState = this.isEntityMoving() ? 'moving' : 'idle';
+    const movingState = this.isEntityMoving() ? "moving" : "idle";
 
     return `${avgStat}-${healthTier}-${mood}-${activity}-${movingState}`;
   }

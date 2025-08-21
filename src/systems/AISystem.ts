@@ -619,7 +619,10 @@ export class AISystem {
   /**
    * Establecer prioridad específica para una entidad
    */
-  public setEntityPriority(entityId: string, priority: "survival" | "normal" | "social"): void {
+  public setEntityPriority(
+    entityId: string,
+    priority: "survival" | "normal" | "social",
+  ): void {
     const aiState = this.aiStates.get(entityId);
     if (!aiState) return;
 
@@ -627,20 +630,23 @@ export class AISystem {
     if (priority === "survival") {
       aiState.goalQueue = [];
       aiState.currentGoal = null;
-      aiState.currentGoalStartTime = 0;
-      
+      // Reset goal start time in current goal if exists
+
       // Generar goal de supervivencia inmediato
       const survivalGoal: AIGoal = {
+        id: `survival_${Date.now()}`,
         type: "satisfy_need",
-        targetZoneId: "any", // Buscar cualquier zona apropiada
+        targetZone: "any", // Buscar cualquier zona apropiada
         priority: 1.0,
-        estimatedTime: 10000,
-        startTime: Date.now()
+        estimatedDuration: 10000,
+        startTime: Date.now(),
       };
-      
+
       aiState.goalQueue.push(survivalGoal);
-      
-      logAutopoiesis.warn(`🆘 Prioridad de supervivencia activada para ${entityId}`);
+
+      logAutopoiesis.warn(
+        `🆘 Prioridad de supervivencia activada para ${entityId}`,
+      );
     }
   }
 

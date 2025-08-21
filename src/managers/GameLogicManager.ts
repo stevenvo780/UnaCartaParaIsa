@@ -18,15 +18,18 @@ import type {
   GameLogicUpdateData,
   GameState,
   IGameLogicManager,
+  Zone,
 } from "../types";
 import { logAutopoiesis } from "../utils/logger";
 import { EntityManager } from "./EntityManager";
+import { EntityStateManager } from "./EntityStateManager";
 
 export class GameLogicManager implements IGameLogicManager {
   private _scene: Phaser.Scene;
   private _gameState: GameState;
   private _gameLoopTimer?: Phaser.Time.TimerEvent;
   private _entityManager: EntityManager;
+  private _entityStateManager: EntityStateManager;
   private _eventEmitter: Phaser.Events.EventEmitter;
   private _needsSystem: NeedsSystem;
   private _aiSystem: AISystem;
@@ -40,16 +43,21 @@ export class GameLogicManager implements IGameLogicManager {
     this._scene = scene;
     this._gameState = initialGameState;
     this._entityManager = new EntityManager();
+    this._entityStateManager = new EntityStateManager(scene);
     this._eventEmitter = new Phaser.Events.EventEmitter();
+
+    // FASE 1: Crear sistemas básicos sin dependencias cruzadas
     this._needsSystem = new NeedsSystem(scene, initialGameState);
     this._movementSystem = new MovementSystem(scene, initialGameState);
-    this._aiSystem = new AISystem(scene, initialGameState, this._needsSystem);
-    this._cardDialogueSystem = new CardDialogueSystem(
+    this._dayNightSystem = new DayNightSystem(
       scene,
       initialGameState,
       this._needsSystem,
     );
-    this._dayNightSystem = new DayNightSystem(
+    
+    // FASE 2: Crear sistemas con dependencias (será completado en initialize())
+    this._aiSystem = new AISystem(scene, initialGameState, this._needsSystem);
+    this._cardDialogueSystem = new CardDialogueSystem(
       scene,
       initialGameState,
       this._needsSystem,
@@ -59,62 +67,43 @@ export class GameLogicManager implements IGameLogicManager {
       initialGameState,
       this._needsSystem,
       this._aiSystem,
+      this._dayNightSystem,
     );
     this._questSystem = new QuestSystem(scene);
 
-    // Conectar sistemas entre sí para coordinación
-    this._aiSystem.setMovementSystem(this._movementSystem);
-    
-    // Conectar sistema de cartas con sistema de misiones
-    this._scene.events.on("cardResponded", (data: any) => {
-      this._questSystem.handleEvent({
-        type: "dialogue_completed",
-        entityId: data.card.sourceEntityId || "unknown",
-        timestamp: Date.now(),
-        data: { cardId: data.card.id, choice: data.choice }
-      });
-    });
-    
-    // Conectar emergencias con sistema de cartas
-    this._scene.events.on("emergenceDetected", (data: any) => {
-      if (data.type === "critical_need") {
-        // Generar carta de diálogo relacionada con la emergencia
-        this._cardDialogueSystem.triggerEmergencyCard(data.entityId, data.needType);
-      }
-    });
-    
-    // Conectar sistema de necesidades con AI para prioridades
-    this._needsSystem.on("emergencyLevelChanged", (data: any) => {
-      if (data.currentLevel === "critical" || data.currentLevel === "dying") {
-        this._aiSystem.setEntityPriority(data.entityId, "survival");
-      }
-    });
+    logAutopoiesis.info("🏗️ Fase 1 de inicialización completada - sistemas básicos creados");
   }
 
   /**
-   * Initialize the game logic system
+   * Initialize the game logic system - FASE 2 de inicialización
    */
   public initialize(): void {
+    logAutopoiesis.info("🔧 Iniciando FASE 2: conectando dependencias entre sistemas");
+
+    // FASE 2A: Conectar referencias entre sistemas (después de que todos existan)
+    this._aiSystem.setMovementSystem(this._movementSystem);
+    
+    // Solo conectar CardDialogueSystem con AISystem si ambos están listos
+    if (this._cardDialogueSystem && this._aiSystem) {
+      try {
+        this._cardDialogueSystem.setAISystem?.(this._aiSystem);
+      } catch (error) {
+        logAutopoiesis.warn("No se pudo conectar CardDialogueSystem con AISystem:", error);
+      }
+    }
+
+    // FASE 2B: Configurar eventos entre sistemas
+    this._setupSystemEvents();
+
+    // FASE 2C: Inicializar después de que el mundo esté listo (con delay para rendering)
+    this._scene.time.delayedCall(200, () => {
+      this._initializeAfterWorldReady();
+    });
+
+    // Configurar game loop principal
     this._setupGameLoop();
 
-    // Inicializar sistemas para entidades existentes
-    this._entityManager.getAllEntities().forEach((_, entityId) => {
-      // Posición inicial por defecto
-      const initialPosition = {
-        x: 400 + Math.random() * 800,
-        y: 300 + Math.random() * 600,
-      };
-
-      this._needsSystem.initializeEntityNeeds(entityId);
-      this._aiSystem.initializeEntityAI(entityId);
-      this._movementSystem.initializeEntityMovement(entityId, initialPosition);
-    });
-
-    logAutopoiesis.info("GameLogicManager initialized", {
-      entities: this._gameState.entities.length,
-      zones: this._gameState.zones.length,
-      needsSystemActive: true,
-    });
+    logAutopoiesis.info("🏗️ FASE 2 iniciada - conexiones configuradas");
   }
 
   /**
@@ -145,8 +134,58 @@ export class GameLogicManager implements IGameLogicManager {
    * Main game logic update - separated from rendering
    */
   private _updateGameLogic(): void {
+    const now = Date.now();
+    const rawDelta = now - (this._lastUpdateTime || now);
+    this._lastUpdateTime = now;
+    
+    // Validación y limitación de deltaTime para prevenir espirales de muerte
+    const deltaTimeSeconds = this._validateDeltaTime(rawDelta / 1000);
+    const deltaTimeMs = deltaTimeSeconds * 1000;
+    
     this._gameState.cycles++;
 
+    // Si hay lag excesivo, procesar en pasos más pequeños
+    if (deltaTimeSeconds > 0.1) { // Más de 100ms
+      const steps = Math.ceil(deltaTimeSeconds / 0.016); // Dividir en pasos de ~60fps
+      const stepDelta = deltaTimeSeconds / steps;
+      const stepDeltaMs = stepDelta * 1000;
+      
+      logAutopoiesis.warn(`🐌 Lag detectado: ${deltaTimeSeconds.toFixed(3)}s - dividiendo en ${steps} pasos`);
+      
+      for (let i = 0; i < Math.min(steps, 5); i++) { // Máximo 5 pasos para evitar bucles
+        this._updateGameLogicStep(stepDeltaMs, stepDelta);
+      }
+    } else {
+      this._updateGameLogicStep(deltaTimeMs, deltaTimeSeconds);
+    }
+  }
+
+  private _lastUpdateTime: number = Date.now();
+
+  /**
+   * Validar y limitar deltaTime para prevenir valores extremos
+   */
+  private _validateDeltaTime(deltaTimeSeconds: number): number {
+    // Límites de seguridad
+    const MIN_DELTA = 0.001; // 1ms mínimo
+    const MAX_DELTA = 0.1;   // 100ms máximo por actualización
+    
+    if (deltaTimeSeconds < MIN_DELTA) {
+      return MIN_DELTA;
+    }
+    
+    if (deltaTimeSeconds > MAX_DELTA) {
+      logAutopoiesis.warn(`⚠️ DeltaTime excesivo: ${deltaTimeSeconds.toFixed(3)}s - limitando a ${MAX_DELTA}s`);
+      return MAX_DELTA;
+    }
+    
+    return deltaTimeSeconds;
+  }
+
+  /**
+   * Paso individual de actualización de lógica de juego
+   */
+  private _updateGameLogicStep(deltaTimeMs: number, deltaTimeSeconds: number): void {
     this._entityManager.getAllEntities().forEach((entity) => {
       // Check if entity has updateEntity method (AnimatedGameEntity)
       if (
@@ -155,13 +194,21 @@ export class GameLogicManager implements IGameLogicManager {
         "updateEntity" in entity &&
         typeof entity.updateEntity === "function"
       ) {
-        entity.updateEntity(gameConfig.timing.mainGameLogic);
+        try {
+          entity.updateEntity(deltaTimeMs);
+        } catch (error) {
+          logAutopoiesis.error(`Error actualizando entidad:`, error);
+        }
       }
     });
 
-    // Actualizar sistema de necesidades y emitir evento de UI
-    this._needsSystem.update();
-    
+    // Actualizar sistema de necesidades
+    try {
+      this._needsSystem.update();
+    } catch (error) {
+      logAutopoiesis.error("Error en NeedsSystem.update:", error);
+    }
+
     // Emitir actualización de necesidades para UI
     for (const entityId of ["isa", "stev"]) {
       const entityData = this._needsSystem.getEntityNeeds(entityId);
@@ -170,26 +217,49 @@ export class GameLogicManager implements IGameLogicManager {
       }
     }
 
-    // Actualizar sistema de movimiento
-    this._movementSystem.update();
+    // Actualizar otros sistemas con manejo de errores
+    try {
+      this._movementSystem.update();
+    } catch (error) {
+      logAutopoiesis.error("Error en MovementSystem.update:", error);
+    }
 
-    // Actualizar sistema de IA
-    this._aiSystem.update();
+    try {
+      this._aiSystem.update();
+    } catch (error) {
+      logAutopoiesis.error("Error en AISystem.update:", error);
+    }
 
-    // Actualizar sistema de cartas de diálogo
-    this._cardDialogueSystem.update();
+    try {
+      this._cardDialogueSystem.update();
+    } catch (error) {
+      logAutopoiesis.error("Error en CardDialogueSystem.update:", error);
+    }
 
-    // Actualizar sistema día/noche
-    this._dayNightSystem.update();
+    try {
+      this._dayNightSystem.update();
+    } catch (error) {
+      logAutopoiesis.error("Error en DayNightSystem.update:", error);
+    }
 
-    // Actualizar sistema de emergencia
-    this._emergenceSystem.update();
-    
-    // Actualizar sistema de misiones
-    this._questSystem.update(deltaTime);
+    try {
+      this._emergenceSystem.update();
+    } catch (error) {
+      logAutopoiesis.error("Error en EmergenceSystem.update:", error);
+    }
 
+    // Actualizar estados del juego
     this._updateResonance();
+    this.synchronizeZones();
 
+    // Actualizar tiempo juntos si ambas entidades están cerca
+    this._updateTogetherTime();
+  }
+
+  /**
+   * Actualizar tiempo juntos entre entidades principales
+   */
+  private _updateTogetherTime(): void {
     const isaEntity = this._entityManager.getEntity("isa");
     const stevEntity = this._entityManager.getEntity("stev");
 
@@ -203,13 +273,25 @@ export class GameLogicManager implements IGameLogicManager {
       ) {
         return entity.getEntityData();
       }
-      // Assume it's already Entity data
       return entity as Entity;
     };
 
     const isaData = getEntityData(isaEntity);
     const stevData = getEntityData(stevEntity);
 
+    if (isaData && stevData) {
+      // Calcular distancia entre entidades
+      const dx = isaData.position.x - stevData.position.x;
+      const dy = isaData.position.y - stevData.position.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Si están cerca (menos de 100 píxeles), incrementar tiempo juntos
+      if (distance < 100) {
+        this._gameState.togetherTime += gameConfig.timing.mainGameLogic;
+      }
+    }
+
+    // Emitir datos de actualización para la UI
     const entityArray = Array.from(
       this._entityManager.getAllEntities().values(),
     )
@@ -277,22 +359,62 @@ export class GameLogicManager implements IGameLogicManager {
   }
 
   /**
+   * Sincronizar zonas estáticas con dinámicas
+   */
+  private synchronizeZones(): void {
+    const worldRenderer = this._scene.registry.get("worldRenderer");
+    const dynamicZones = worldRenderer?.getZones() || [];
+
+    // Fusionar zonas estáticas con dinámicas
+    const mergedZones = new Map<string, Zone>();
+
+    // Primero agregar las estáticas
+    this._gameState.zones.forEach((zone) => {
+      mergedZones.set(zone.id, zone);
+    });
+
+    // Luego agregar/actualizar con las dinámicas
+    dynamicZones.forEach((dynZone: any) => {
+      if (mergedZones.has(dynZone.id)) {
+        // Actualizar zona existente
+        const existing = mergedZones.get(dynZone.id)!;
+        existing.bounds = dynZone.bounds;
+        existing.properties = { ...existing.properties, ...dynZone.properties };
+      } else {
+        // Agregar nueva zona dinámica
+        mergedZones.set(dynZone.id, dynZone);
+      }
+    });
+
+    // Actualizar gameState con zonas sincronizadas
+    this._gameState.zones = Array.from(mergedZones.values());
+
+    // Notificar a sistemas dependientes
+    this._scene.events.emit("zones:synchronized", this._gameState.zones);
+  }
+
+  /**
    * Register an entity for game logic updates
    */
   public registerEntity(entityId: string, entity: any): void {
     this._entityManager.registerEntity(entityId, entity);
 
-    // Posición inicial por defecto
-    const initialPosition = {
-      x: 400 + Math.random() * 800,
-      y: 300 + Math.random() * 600,
-    };
+    // Inicializar en el gestor centralizado
+    this._entityStateManager.initializeEntity(entityId);
+    
+    // Obtener estado desde fuente única
+    const entityState = this._entityStateManager.getEntityState(entityId);
+    if (!entityState) {
+      logAutopoiesis.error(`No se pudo obtener estado para entidad ${entityId}`);
+      return;
+    }
 
-    this._needsSystem.initializeEntityNeeds(entityId);
+    // Inicializar sistemas usando el estado centralizado
+    this._needsSystem.initializeEntityNeeds(entityId, entityState.needs);
     this._aiSystem.initializeEntityAI(entityId);
-    this._movementSystem.initializeEntityMovement(entityId, initialPosition);
+    this._movementSystem.initializeEntityMovement(entityId, entityState.position);
 
-    logAutopoiesis.info(`Entidad ${entityId} registrada en sistemas`);
+    logAutopoiesis.info(`Entidad ${entityId} registrada en sistemas con estado centralizado`);
   }
 
   /**
@@ -530,10 +652,152 @@ export class GameLogicManager implements IGameLogicManager {
   }
 
   /**
+   * Obtener gestor centralizado de estado de entidades
+   */
+  public getEntityStateManager(): EntityStateManager {
+    return this._entityStateManager;
+  }
+
+  /**
    * Establecer control manual de entidad
    */
   public setEntityPlayerControl(entityId: string, controlled: boolean): void {
     this._aiSystem.setPlayerControl(entityId, controlled);
+  }
+
+  /**
+   * FASE 2B: Configurar eventos entre sistemas
+   */
+  private _setupSystemEvents(): void {
+    logAutopoiesis.info("🔗 Configurando eventos entre sistemas");
+
+    // Conectar sistema de cartas con sistema de misiones
+    this._scene.events.on("cardResponded", (data: any) => {
+      this._questSystem.handleEvent({
+        type: "dialogue_completed",
+        entityId: data.card.sourceEntityId || "unknown",
+        timestamp: Date.now(),
+        data: { cardId: data.card.id, choice: data.choice },
+      });
+    });
+
+    // Conectar emergencias con sistema de cartas
+    this._scene.events.on("emergenceDetected", (data: any) => {
+      if (data.type === "critical_need") {
+        // Generar carta de diálogo relacionada con la emergencia
+        this._cardDialogueSystem.triggerEmergencyCard?.(
+          data.entityId,
+          data.needType,
+        );
+      }
+    });
+
+    // Conectar sistema de necesidades con AI para prioridades
+    this._needsSystem.on("emergencyLevelChanged", (data: any) => {
+      if (data.currentLevel === "critical" || data.currentLevel === "dying") {
+        this._aiSystem.setEntityPriority?.(data.entityId, "survival");
+      }
+    });
+
+    // Eventos adicionales para conectar consumo de comida con quest system
+    this._scene.events.on("food_consumed", (data: any) => {
+      this._questSystem.handleEvent({
+        type: "food_consumed", 
+        entityId: data.entityId,
+        timestamp: Date.now(),
+        data: { foodType: data.foodType, amount: data.amount },
+      });
+    });
+
+    // Conectar compra de comida
+    this._scene.events.on("buyFood", (data: any) => {
+      this._questSystem.handleEvent({
+        type: "food_purchased",
+        entityId: data.entityId || "player",
+        timestamp: Date.now(),
+        data: { foodType: data.foodType, cost: data.cost },
+      });
+    });
+
+    // Conectar actualizaciones de necesidades con el quest system
+    this._needsSystem.on("needsSatisfied", (data: any) => {
+      this._questSystem.handleEvent({
+        type: "needs_satisfied",
+        entityId: data.entityId,
+        timestamp: Date.now(),
+        data: { needType: data.needType, amount: data.amount },
+      });
+    });
+
+    // Conectar movimiento con quest system
+    this._scene.events.on("entityArrivedAtZone", (data: any) => {
+      this._questSystem.handleEvent({
+        type: "movement_completed",
+        entityId: data.entityId,
+        timestamp: Date.now(),
+        data: { destination: data.position, zone: data.zoneId },
+      });
+    });
+
+    // Conectar actividades completadas
+    this._scene.events.on("entityActivityCompleted", (data: any) => {
+      this._questSystem.handleEvent({
+        type: "activity_completed",
+        entityId: data.entityId,
+        timestamp: Date.now(),
+        data: { activity: data.activity, position: data.position },
+      });
+    });
+
+    logAutopoiesis.info("✅ Eventos entre sistemas configurados");
+  }
+
+  /**
+   * FASE 2C: Inicializar después de que el mundo esté listo
+   */
+  private _initializeAfterWorldReady(): void {
+    logAutopoiesis.info("🌍 Inicializando después de que el mundo esté listo");
+
+    // Refrescar obstáculos para movimiento (ahora que el mundo existe)
+    try {
+      if (typeof this._movementSystem.refreshObstacles === 'function') {
+        this._movementSystem.refreshObstacles();
+        logAutopoiesis.info("✅ Obstáculos de movimiento actualizados");
+      }
+    } catch (error) {
+      logAutopoiesis.warn("⚠️ No se pudieron actualizar obstáculos:", error);
+    }
+
+    // Precomputar distancias entre zonas (ahora que las zonas existen)
+    try {
+      if (typeof this._movementSystem.precomputeZoneDistances === 'function') {
+        this._movementSystem.precomputeZoneDistances();
+        logAutopoiesis.info("✅ Distancias de zonas precomputadas");
+      }
+    } catch (error) {
+      logAutopoiesis.warn("⚠️ No se pudieron precomputar distancias de zonas:", error);
+    }
+
+    // Inicializar sistemas para entidades existentes usando estado centralizado
+    this._entityManager.getAllEntities().forEach((_, entityId) => {
+      // Inicializar en el gestor centralizado primero
+      this._entityStateManager.initializeEntity(entityId);
+      
+      // Obtener estado desde fuente única
+      const entityState = this._entityStateManager.getEntityState(entityId);
+      if (!entityState) return;
+
+      // Inicializar sistemas usando el estado centralizado
+      this._needsSystem.initializeEntityNeeds(entityId, entityState.needs);
+      this._aiSystem.initializeEntityAI(entityId);
+      this._movementSystem.initializeEntityMovement(entityId, entityState.position);
+    });
+
+    logAutopoiesis.info("🎯 Inicialización completa", {
+      entities: this._gameState.entities.length,
+      zones: this._gameState.zones.length,
+      needsSystemActive: true,
+    });
   }
 
   /**
@@ -545,6 +809,7 @@ export class GameLogicManager implements IGameLogicManager {
     }
 
     this._entityManager.clearAllEntities();
+    this._entityStateManager.cleanup();
     this._needsSystem.cleanup();
     this._aiSystem.cleanup();
     this._movementSystem.cleanup();

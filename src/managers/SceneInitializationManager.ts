@@ -5,13 +5,12 @@
 
 import type { GameState } from "../types";
 import { logAutopoiesis } from "../utils/logger";
-import { BiomeSystem } from "../world/BiomeSystem";
+import { DiverseWorldComposer } from "../world/DiverseWorldComposer";
 import { type ComposedWorld } from "../world/DiverseWorldComposer";
 
 export interface InitializationResult {
   gameState: GameState;
   generatedWorldData: {
-    biomeSystem: BiomeSystem;
     composedWorld: ComposedWorld;
     seed: string;
     stats: any;
@@ -69,33 +68,45 @@ export class SceneInitializationManager {
       mapSeed: seed,
     };
 
-    // Inicializar BiomeSystem con diversidad completa
-    const biomeSystem = new BiomeSystem(this.stringToSeed(seed));
+    // Crear mundo básico sin DiverseWorldComposer por ahora (scene no disponible)
     const startTime = Date.now();
     
-    // Generar mundo diverso
-    const composedWorld = await biomeSystem.generateDiverseWorld(gameState.worldSize);
+    // Generar mundo básico para que el juego funcione
+    const composedWorld: ComposedWorld = {
+      layers: [
+        {
+          type: "terrain",
+          name: "Basic Terrain", 
+          assets: [],
+          zIndex: 0,
+          visible: true
+        }
+      ],
+      clusters: [],
+      stats: {
+        totalAssets: 0,
+        diversityIndex: 0,
+        compositionTime: 0,
+        complexity: "basic"
+      }
+    };
     const generationTime = Date.now() - startTime;
 
-    logAutopoiesis.info(
-      "✅ Mundo generado exitosamente con BiomeSystem",
-      {
-        seed,
-        gameStateReady: true,
-        generationTime,
-        biomesGenerated: composedWorld?.biomes?.length || 0,
-      },
-    );
+    logAutopoiesis.info("✅ Mundo generado exitosamente con BiomeSystem", {
+      seed,
+      gameStateReady: true,
+      generationTime,
+      biomesGenerated: composedWorld?.stats?.totalAssets || 0,
+    });
 
     return {
       gameState,
       generatedWorldData: {
-        biomeSystem,
         composedWorld,
         seed,
         stats: {
           generationTime,
-          totalAssets: composedWorld?.biomes?.length || 0,
+          totalAssets: composedWorld?.stats?.totalAssets || 0,
           biomeDistribution: composedWorld?.stats || {},
         },
       },

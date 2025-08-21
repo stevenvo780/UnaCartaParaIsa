@@ -426,7 +426,7 @@ export const gamePresets = {
   },
 } as const;
 
-let activeConfig: GameConfig = gamePresets.production;
+let activeConfig: GameConfig = gamePresets.development;
 
 export const getGameConfig = (): GameConfig => ({
   ...activeConfig,

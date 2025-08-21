@@ -22,7 +22,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private currentSprite = "";
   private services: IEntityServices;
   private colorHue: number;
-  
+
   // Componentes modulares
   private statsComponent: EntityStatsComponent;
   private visualsComponent: EntityVisualsComponent;
@@ -81,7 +81,11 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
     // Inicializar componentes modulares
     this.statsComponent = new EntityStatsComponent(this.entityData.stats);
-    this.visualsComponent = new EntityVisualsComponent(this, entityId, initialSprite);
+    this.visualsComponent = new EntityVisualsComponent(
+      this,
+      entityId,
+      initialSprite,
+    );
 
     this.createVisuals();
 

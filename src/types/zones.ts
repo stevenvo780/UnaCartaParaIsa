@@ -19,7 +19,10 @@ export type ZoneType =
   | "play"
   | "comfort"
   | "work"
-  | "energy";
+  | "energy"
+  | "hygiene"
+  | "entertainment"
+  | "fun";
 
 export interface Zone {
   id: string;
@@ -36,6 +39,13 @@ export interface Zone {
   };
   color: number;
   interactionRadius: number;
+  bounds?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  properties?: Record<string, any>;
   benefits?: {
     energy?: number;
     happiness?: number;

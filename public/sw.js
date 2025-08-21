@@ -93,20 +93,43 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Estrategia según tipo de recurso
-  if (isCriticalAsset(url.pathname)) {
-    event.respondWith(handleCriticalAsset(request));
-  } else if (isLargeAsset(url.pathname)) {
-    event.respondWith(handleLargeAsset(request));
-  } else if (isCacheableAsset(url.pathname)) {
-    event.respondWith(handleCacheableAsset(request));
+  // Estrategia optimizada según tipo de recurso
+  if (shouldCache(request.url)) {
+    if (isCriticalAsset(url.pathname)) {
+      event.respondWith(handleCriticalAsset(request));
+    } else if (isLargeAsset(url.pathname)) {
+      event.respondWith(handleLargeAsset(request));
+    } else if (isCacheableAsset(url.pathname)) {
+      event.respondWith(handleCacheableAsset(request));
+    } else {
+      event.respondWith(handleNetworkFirst(request));
+    }
   } else if (isDialogueChunk(url.pathname)) {
     event.respondWith(handleDialogueChunk(request));
   } else {
-    // Network first para otros recursos
-    event.respondWith(handleNetworkFirst(request));
+    // Network first para contenido dinámico
+    event.respondWith(fetch(request));
   }
 });
+
+// Excluir JSONs dinámicos del cache
+const DYNAMIC_PATTERNS = [
+    /\/api\//,
+    /\.json$/,
+    /\/dialogues\//,
+    /\/quests\//
+];
+
+function shouldCache(url) {
+    const pathname = new URL(url).pathname;
+    
+    // No cachear contenido dinámico
+    if (DYNAMIC_PATTERNS.some(pattern => pattern.test(pathname))) {
+        return false;
+    }
+    
+    return isCriticalAsset(pathname);
+}
 
 /**
  * Verificar si es asset crítico

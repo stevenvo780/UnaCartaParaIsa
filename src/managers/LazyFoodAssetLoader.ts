@@ -16,10 +16,10 @@ export class LazyFoodAssetLoader {
   // Cache de assets que se cargan frecuentemente
   private preloadQueue = [
     "assets/consumable_items/food/05_apple_pie.png",
-    "assets/consumable_items/food/88_salmon.png", 
+    "assets/consumable_items/food/88_salmon.png",
     "assets/consumable_items/food/40_eggsalad.png",
     "assets/consumable_items/food/52_burger.png",
-    "assets/consumable_items/food/79_pizza.png"
+    "assets/consumable_items/food/79_pizza.png",
   ];
 
   constructor(scene: Phaser.Scene) {
@@ -32,11 +32,11 @@ export class LazyFoodAssetLoader {
    */
   private async preloadEssentialAssets(): Promise<void> {
     logAutopoiesis.info("🍎 Precargando assets esenciales de comida...");
-    
+
     for (const assetPath of this.preloadQueue) {
       this.queueAssetLoad(assetPath);
     }
-    
+
     this.processLoadQueue();
   }
 
@@ -71,7 +71,10 @@ export class LazyFoodAssetLoader {
    * Añade asset a la cola de carga
    */
   private queueAssetLoad(assetPath: string): void {
-    if (!this.loadedAssets.has(assetPath) && !this.loadQueue.includes(assetPath)) {
+    if (
+      !this.loadedAssets.has(assetPath) &&
+      !this.loadQueue.includes(assetPath)
+    ) {
       this.loadQueue.push(assetPath);
     }
   }
@@ -88,12 +91,12 @@ export class LazyFoodAssetLoader {
 
     while (this.loadQueue.length > 0) {
       const assetPath = this.loadQueue.shift()!;
-      
+
       if (!this.loadedAssets.has(assetPath)) {
         try {
           await this.performAssetLoad(assetPath);
           // Pequeña pausa para no bloquear el hilo principal
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
         } catch (error) {
           logAutopoiesis.warn(`Background load failed: ${assetPath}`, error);
         }
@@ -109,7 +112,7 @@ export class LazyFoodAssetLoader {
   private async performAssetLoad(assetPath: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const assetKey = this.getAssetKeyFromPath(assetPath);
-      
+
       // Verificar si ya está cargado en Phaser
       if (this.scene.textures.exists(assetKey)) {
         this.loadedAssets.add(assetPath);
@@ -118,7 +121,7 @@ export class LazyFoodAssetLoader {
       }
 
       // Verificar si el archivo existe
-      this.checkAssetExists(assetPath).then(exists => {
+      this.checkAssetExists(assetPath).then((exists) => {
         if (!exists) {
           logAutopoiesis.debug(`Asset not found: ${assetPath}`);
           reject(new Error(`Asset not found: ${assetPath}`));
@@ -127,14 +130,14 @@ export class LazyFoodAssetLoader {
 
         // Cargar el asset
         this.scene.load.image(assetKey, assetPath);
-        
-        this.scene.load.once('filecomplete-image-' + assetKey, () => {
+
+        this.scene.load.once("filecomplete-image-" + assetKey, () => {
           this.loadedAssets.add(assetPath);
           logAutopoiesis.debug(`✅ Loaded food asset: ${assetKey}`);
           resolve();
         });
 
-        this.scene.load.once('loaderror', () => {
+        this.scene.load.once("loaderror", () => {
           logAutopoiesis.warn(`❌ Failed to load: ${assetPath}`);
           reject(new Error(`Failed to load: ${assetPath}`));
         });
@@ -151,7 +154,7 @@ export class LazyFoodAssetLoader {
    */
   private async checkAssetExists(assetPath: string): Promise<boolean> {
     try {
-      const response = await fetch(assetPath, { method: 'HEAD' });
+      const response = await fetch(assetPath, { method: "HEAD" });
       return response.ok;
     } catch {
       return false;
@@ -163,9 +166,9 @@ export class LazyFoodAssetLoader {
    */
   private getAssetKeyFromPath(assetPath: string): string {
     return assetPath
-      .replace('assets/consumable_items/food/', '')
-      .replace('.png', '')
-      .replace(/[^a-zA-Z0-9_]/g, '_');
+      .replace("assets/consumable_items/food/", "")
+      .replace(".png", "")
+      .replace(/[^a-zA-Z0-9_]/g, "_");
   }
 
   /**
@@ -186,7 +189,7 @@ export class LazyFoodAssetLoader {
    * Precarga una lista de assets de comida
    */
   public preloadFoodAssets(assetPaths: string[]): void {
-    assetPaths.forEach(path => this.queueAssetLoad(path));
+    assetPaths.forEach((path) => this.queueAssetLoad(path));
     this.processLoadQueue();
   }
 
@@ -201,7 +204,7 @@ export class LazyFoodAssetLoader {
     return {
       loaded: this.loadedAssets.size,
       loading: this.loadingPromises.size,
-      queued: this.loadQueue.length
+      queued: this.loadQueue.length,
     };
   }
 
@@ -212,7 +215,10 @@ export class LazyFoodAssetLoader {
     this.loadQueue.length = 0;
     this.loadingPromises.clear();
     this.isProcessingQueue = false;
-    
-    logAutopoiesis.info("🧹 LazyFoodAssetLoader destroyed", this.getLoadStats());
+
+    logAutopoiesis.info(
+      "🧹 LazyFoodAssetLoader destroyed",
+      this.getLoadStats(),
+    );
   }
 }

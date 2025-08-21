@@ -202,13 +202,30 @@ export class QuestUI {
       this,
     );
 
-    // Actualizar cada cierto tiempo
-    this._scene.time.addEvent({
-      delay: 2000,
-      callback: this._updateQuestDisplay,
-      callbackScope: this,
-      loop: true,
-    });
+    // Escuchar eventos del QuestSystem en lugar de polling
+    this._scene.events.on(
+      "quest:started",
+      () => this._updateQuestDisplay(),
+      this,
+    );
+    this._scene.events.on(
+      "quest:completed",
+      () => this._updateQuestDisplay(),
+      this,
+    );
+    this._scene.events.on(
+      "quest:failed",
+      () => this._updateQuestDisplay(),
+      this,
+    );
+    this._scene.events.on(
+      "quest:progress",
+      () => this._updateQuestDisplay(),
+      this,
+    );
+
+    // Actualización inicial
+    this._updateQuestDisplay();
   }
 
   /**
@@ -1054,54 +1071,70 @@ export class QuestUI {
 
     // Crear overlay semi-transparente
     const overlay = this._scene.add.rectangle(
-      0, 0,
+      0,
+      0,
       this._scene.cameras.main.width * 2,
       this._scene.cameras.main.height * 2,
-      0x000000, 0.7
+      0x000000,
+      0.7,
     );
     overlay.setInteractive();
-    overlay.on('pointerdown', () => this._closeQuestDetailModal());
+    overlay.on("pointerdown", () => this._closeQuestDetailModal());
 
     // Crear panel de detalle
-    const modalPanel = this._scene.add.rectangle(0, 0, 400, 500, 0x1a1a2e, 0.95);
+    const modalPanel = this._scene.add.rectangle(
+      0,
+      0,
+      400,
+      500,
+      0x1a1a2e,
+      0.95,
+    );
     modalPanel.setStrokeStyle(2, 0x4a9eff);
 
     // Título de la quest
-    const title = this._scene.add.text(0, -200, quest.title, {
-      fontSize: '20px',
-      fontFamily: 'Arial',
-      color: '#ffffff',
-      fontStyle: 'bold'
-    }).setOrigin(0.5);
+    const title = this._scene.add
+      .text(0, -200, quest.title, {
+        fontSize: "20px",
+        fontFamily: "Arial",
+        color: "#ffffff",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
 
     // Descripción
-    const description = this._scene.add.text(0, -160, quest.description, {
-      fontSize: '14px',
-      color: '#cccccc',
-      wordWrap: { width: 350 }
-    }).setOrigin(0.5, 0);
+    const description = this._scene.add
+      .text(0, -160, quest.description, {
+        fontSize: "14px",
+        color: "#cccccc",
+        wordWrap: { width: 350 },
+      })
+      .setOrigin(0.5, 0);
 
     // Objetivos
     let objectiveY = -100;
     quest.objectives.forEach((objective, index) => {
-      const status = objective.isCompleted ? '✅' : '⏳';
-      const objText = this._scene.add.text(-150, objectiveY, 
-        `${status} ${objective.description}`, {
-        fontSize: '12px',
-        color: objective.isCompleted ? '#2ecc71' : '#f39c12'
-      }).setOrigin(0, 0.5);
-      
+      const status = objective.isCompleted ? "✅" : "⏳";
+      const objText = this._scene.add
+        .text(-150, objectiveY, `${status} ${objective.description}`, {
+          fontSize: "12px",
+          color: objective.isCompleted ? "#2ecc71" : "#f39c12",
+        })
+        .setOrigin(0, 0.5);
+
       this._detailModal.add(objText);
       objectiveY += 25;
     });
 
     // Botón cerrar
-    const closeBtn = this._scene.add.text(150, -200, '✕', {
-      fontSize: '18px',
-      color: '#ff6b6b'
-    }).setOrigin(0.5)
-    .setInteractive()
-    .on('pointerdown', () => this._closeQuestDetailModal());
+    const closeBtn = this._scene.add
+      .text(150, -200, "✕", {
+        fontSize: "18px",
+        color: "#ff6b6b",
+      })
+      .setOrigin(0.5)
+      .setInteractive()
+      .on("pointerdown", () => this._closeQuestDetailModal());
 
     this._detailModal.add([overlay, modalPanel, title, description, closeBtn]);
     this._detailModal.setDepth(2000);
@@ -1120,6 +1153,7 @@ export class QuestUI {
    * Limpieza del componente
    */
   public cleanup(): void {
+    // Limpiar eventos originales
     this._scene.events.off("quest_started", this._onQuestStarted, this);
     this._scene.events.off("quest_completed", this._onQuestCompleted, this);
     this._scene.events.off(
@@ -1127,6 +1161,12 @@ export class QuestUI {
       this._onObjectiveCompleted,
       this,
     );
+
+    // Limpiar nuevos eventos reactivos
+    this._scene.events.off("quest:started", this._updateQuestDisplay, this);
+    this._scene.events.off("quest:completed", this._updateQuestDisplay, this);
+    this._scene.events.off("quest:failed", this._updateQuestDisplay, this);
+    this._scene.events.off("quest:progress", this._updateQuestDisplay, this);
 
     this._container.destroy();
   }

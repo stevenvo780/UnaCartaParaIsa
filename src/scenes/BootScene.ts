@@ -10,7 +10,7 @@ export default class BootScene extends Phaser.Scene {
     super({ key: "BootScene" });
   }
 
-  async preload() {
+  preload() {
     logAutopoiesis.info("🚀 BootScene iniciando carga completa de assets...");
 
     // Crear progress bar de carga
@@ -19,8 +19,8 @@ export default class BootScene extends Phaser.Scene {
     // Registrar pipelines WebGL
     this.registerCustomPipelines();
 
-    // Cargar assets esenciales para el juego
-    await this.loadEssentialAssets();
+    // Cargar assets esenciales para el juego de forma sincrónica
+    this.loadEssentialAssetsSync();
 
     this.hideLoadingScreen();
     logAutopoiesis.info("✅ BootScene carga completada");
@@ -77,17 +77,15 @@ export default class BootScene extends Phaser.Scene {
     });
   }
 
-  private async loadEssentialAssets(): Promise<void> {
+  private loadEssentialAssetsSync(): void {
     // Cargar placeholder/basic assets para desarrollo
     this.loadPlaceholderAssets();
 
-    // Crear y inicializar UnifiedAssetManager
+    // Crear UnifiedAssetManager (sin await)
     this.unifiedAssetManager = new UnifiedAssetManager(this);
-    await this.unifiedAssetManager.loadCriticalAssets();
-
-    logAutopoiesis.info("📦 Assets esenciales cargados", {
-      loadingStats: this.unifiedAssetManager.getLoadingStats(),
-    });
+    
+    // Los assets críticos se cargarán en create() 
+    logAutopoiesis.info("📦 Preparando carga de assets esenciales");
   }
 
   private loadPlaceholderAssets(): void {
@@ -96,10 +94,9 @@ export default class BootScene extends Phaser.Scene {
       "placeholder-terrain",
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
     );
-    this.load.image(
-      "placeholder-character",
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
-    );
+    
+    // Crear sprites temporales para entidades
+    this.createTemporaryEntitySprites();
     this.load.image(
       "placeholder-ui",
       "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
@@ -160,19 +157,57 @@ export default class BootScene extends Phaser.Scene {
     }
   }
 
+  private createTemporaryEntitySprites(): void {
+    // Crear sprites temporales de 24x24 para Isa (rosa)
+    const isaCanvas = document.createElement('canvas');
+    isaCanvas.width = 24;
+    isaCanvas.height = 24;
+    const isaCtx = isaCanvas.getContext('2d')!;
+    isaCtx.fillStyle = '#ff69b4'; // Rosa para Isa
+    isaCtx.fillRect(0, 0, 24, 24);
+    isaCtx.fillStyle = '#ffffff';
+    isaCtx.fillRect(2, 2, 20, 20);
+    isaCtx.fillStyle = '#ff69b4';
+    isaCtx.fillRect(4, 4, 16, 16);
+    
+    // Crear sprites temporales de 32x32 para Stev (azul)
+    const stevCanvas = document.createElement('canvas');
+    stevCanvas.width = 32;
+    stevCanvas.height = 32;
+    const stevCtx = stevCanvas.getContext('2d')!;
+    stevCtx.fillStyle = '#4169e1'; // Azul para Stev
+    stevCtx.fillRect(0, 0, 32, 32);
+    stevCtx.fillStyle = '#ffffff';
+    stevCtx.fillRect(2, 2, 28, 28);
+    stevCtx.fillStyle = '#4169e1';
+    stevCtx.fillRect(4, 4, 24, 24);
+    
+    // Cargar como texturas en Phaser
+    this.load.image('whomen1', isaCanvas.toDataURL());
+    this.load.image('man1', stevCanvas.toDataURL());
+    this.load.image('isa_happy', isaCanvas.toDataURL());
+    this.load.image('stev_happy', stevCanvas.toDataURL());
+    
+    logAutopoiesis.info("🎨 Sprites temporales de entidades creados");
+  }
+
   create() {
+    console.log("🎯 BootScene.create() STARTED");
     logAutopoiesis.info(
       "🔄 Registrando UnifiedAssetManager y cambiando a MainScene...",
     );
 
-    // Registrar el asset manager cargado
+    // Solo registrar el asset manager, no cargar assets críticos aquí
     this.registry.set("unifiedAssetManager", this.unifiedAssetManager);
 
+    // Ir directamente a MainScene y que cargue lo que necesite
+    console.log("🎯 BootScene: About to start MainScene");
     this.scene.start("MainScene");
+    console.log("🎯 BootScene: MainScene start called");
   }
 
   private hideLoadingScreen() {
-    const loadingElement = document.getElementById("loading-screen");
+    const loadingElement = document.getElementById("loading");
     if (loadingElement) {
       loadingElement.style.display = "none";
     }

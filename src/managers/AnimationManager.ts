@@ -37,7 +37,7 @@ export class AnimationManager {
       totalFrames: 24, // 8 frames × 3 filas (192×72 = grid 8×3)
     },
     {
-      key: "man1", 
+      key: "man1",
       path: "assets/entities/animated/characters/man1.png",
       frameWidth: 32,
       frameHeight: 32,
@@ -159,7 +159,7 @@ export class AnimationManager {
       repeat: -1,
     },
     {
-      key: "whomen1:row1", 
+      key: "whomen1:row1",
       spriteSheetKey: "whomen1",
       frames: [8, 9, 10, 11, 12, 13, 14, 15], // Fila 1: frames 8-15
       frameRate: 10,
@@ -167,7 +167,7 @@ export class AnimationManager {
     },
     {
       key: "whomen1:row2",
-      spriteSheetKey: "whomen1", 
+      spriteSheetKey: "whomen1",
       frames: [16, 17, 18, 19, 20, 21, 22, 23], // Fila 2: frames 16-23
       frameRate: 10,
       repeat: -1,
@@ -183,7 +183,7 @@ export class AnimationManager {
     },
     {
       key: "man1:row1",
-      spriteSheetKey: "man1", 
+      spriteSheetKey: "man1",
       frames: [4, 5, 6, 7], // Fila 1: frames 4-7
       frameRate: 10,
       repeat: -1,
@@ -191,7 +191,7 @@ export class AnimationManager {
     {
       key: "man1:row2",
       spriteSheetKey: "man1",
-      frames: [8, 9, 10, 11], // Fila 2: frames 8-11  
+      frames: [8, 9, 10, 11], // Fila 2: frames 8-11
       frameRate: 10,
       repeat: -1,
     },

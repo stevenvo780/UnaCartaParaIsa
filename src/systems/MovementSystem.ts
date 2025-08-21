@@ -58,9 +58,18 @@ export class MovementSystem {
   // Cache de distancias entre zonas
   private zoneDistanceCache = new Map<string, ZoneDistance>();
 
-  // Sistema de pathfinding simple
+  // Sistema de pathfinding simple optimizado
   private readonly GRID_SIZE = 32;
+  private readonly gridSize = 32; // Mismo valor que GRID_SIZE para pathfinding
+  private readonly gridWidth = 40; // 1280px / 32px = 40 tiles
+  private readonly gridHeight = 30; // 960px / 32px = 30 tiles
   private occupiedTiles = new Set<string>();
+  private cachedGrid: number[][] | null = null;
+  private gridCacheTime: number = 0;
+  private pathCache = new Map<string, { result: PathfindingResult; timestamp: number }>();
+  private readonly GRID_CACHE_DURATION = 5000; // 5 segundos
+  private readonly PATH_CACHE_DURATION = 10000; // 10 segundos
+  private lastCacheCleanup: number = 0;
 
   constructor(scene: Phaser.Scene, gameState: GameState) {
     this.scene = scene;
@@ -75,11 +84,17 @@ export class MovementSystem {
     this.precomputeZoneDistances();
     this.initializeObstacles();
 
+    // Escuchar cambios en el mundo para actualizar obstáculos
+    this.scene.events.on("world:changed", () => {
+      this.initializeObstacles();
+    });
+
     logAutopoiesis.info("🚶 Sistema de Movimiento inicializado", {
       baseSpeed: this.BASE_MOVEMENT_SPEED,
       zoneDistances: this.zoneDistanceCache.size,
       gridSize: this.GRID_SIZE,
       pathfinder: "EasyStar.js",
+      obstacles: this.occupiedTiles.size,
     });
   }
 
@@ -109,7 +124,7 @@ export class MovementSystem {
   /**
    * Precomputar distancias entre todas las zonas
    */
-  private precomputeZoneDistances(): void {
+  public precomputeZoneDistances(): void {
     const zones = this.gameState.zones;
 
     for (let i = 0; i < zones.length; i++) {
@@ -191,18 +206,53 @@ export class MovementSystem {
    * Inicializar obstáculos del mundo
    */
   private initializeObstacles(): void {
-    // Por ahora usar el sistema simple, después se puede integrar con el WorldRenderer
-    // Los obstáculos serían elementos del mapa que bloquean el paso
+    // Obtener obstáculos del LayeredWorldRenderer
+    const worldRenderer = this.scene.registry.get("worldRenderer");
+    if (!worldRenderer) return;
 
+    // Limpiar tiles ocupados previos
+    this.occupiedTiles.clear();
+
+    // Registrar tiles de colisión desde las capas del mundo
+    const collisionLayers = ["rocks", "trees", "buildings", "water"];
+
+    collisionLayers.forEach((layerName) => {
+      const layer = worldRenderer.getLayer?.(layerName);
+      if (layer && layer.forEachTile) {
+        layer.forEachTile((tile: Phaser.Tilemaps.Tile) => {
+          if (tile.index !== -1 && tile.properties?.collides) {
+            const tileX = tile.x;
+            const tileY = tile.y;
+            this.occupiedTiles.add(`${tileX},${tileY}`);
+          }
+        });
+      }
+    });
+
+    // Agregar elementos del mapa como obstáculos
     this.gameState.mapElements
-      .filter(
-        (element) => element.type === "decoration" && this.isObstacle(element),
-      )
+      .filter((element) => this.isObstacle(element))
       .forEach((obstacle) => {
         const tileX = Math.floor(obstacle.position.x / this.GRID_SIZE);
         const tileY = Math.floor(obstacle.position.y / this.GRID_SIZE);
-        this.occupiedTiles.add(`${tileX},${tileY}`);
+
+        // Ocupar múltiples tiles según el tamaño del objeto
+        const width = obstacle.width || this.GRID_SIZE;
+        const height = obstacle.height || this.GRID_SIZE;
+        const tilesWide = Math.ceil(width / this.GRID_SIZE);
+        const tilesHigh = Math.ceil(height / this.GRID_SIZE);
+
+        for (let dx = 0; dx < tilesWide; dx++) {
+          for (let dy = 0; dy < tilesHigh; dy++) {
+            this.occupiedTiles.add(`${tileX + dx},${tileY + dy}`);
+          }
+        }
       });
+
+    // Invalidar cache después de actualizar obstáculos
+    this.invalidatePathfindingCache();
+    
+    logAutopoiesis.info(`🗺️ Obstáculos inicializados: ${this.occupiedTiles.size} tiles ocupados`);
   }
 
   /**
@@ -210,8 +260,48 @@ export class MovementSystem {
    */
   private isObstacle(element: any): boolean {
     // Elementos que bloquean el paso
-    const obstacles = ["tree", "rock", "building", "wall"];
-    return obstacles.some((type) => element.assetKey?.includes(type));
+    const obstacles = [
+      "tree",
+      "rock",
+      "building",
+      "wall",
+      "water",
+      "fence",
+      "boulder",
+    ];
+    return (
+      obstacles.some((type) => element.assetKey?.includes(type)) ||
+      element.collides === true
+    );
+  }
+
+  /**
+   * Agregar método de verificación de colisión por bounding box
+   */
+  private checkCollisionBox(
+    position: { x: number; y: number },
+    size: { width: number; height: number },
+  ): boolean {
+    const startX = Math.floor(position.x / this.GRID_SIZE);
+    const startY = Math.floor(position.y / this.GRID_SIZE);
+    const endX = Math.floor((position.x + size.width) / this.GRID_SIZE);
+    const endY = Math.floor((position.y + size.height) / this.GRID_SIZE);
+
+    for (let x = startX; x <= endX; x++) {
+      for (let y = startY; y <= endY; y++) {
+        if (this.isTileOccupied(x, y)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Verificar si un tile está ocupado
+   */
+  private isTileOccupied(x: number, y: number): boolean {
+    return this.occupiedTiles.has(`${x},${y}`);
   }
 
   /**
@@ -225,6 +315,12 @@ export class MovementSystem {
       this.updateEntityActivity(state, now);
       this.updateEntityFatigue(state);
     });
+
+    // Limpieza periódica de cache viejo (cada 30 segundos)
+    if (now - this.lastCacheCleanup > 30000) {
+      this.cleanupOldCache(now);
+      this.lastCacheCleanup = now;
+    }
   }
 
   /**
@@ -325,6 +421,18 @@ export class MovementSystem {
       return false;
     }
 
+    // Verificar colisiones en la posición destino
+    const targetPos = pathResult.path[pathResult.path.length - 1];
+    if (
+      this.checkCollisionBox(targetPos, {
+        width: this.GRID_SIZE,
+        height: this.GRID_SIZE,
+      })
+    ) {
+      logAutopoiesis.warn(`Destino ${targetZoneId} bloqueado por obstáculos`);
+      return false;
+    }
+
     // Iniciar movimiento
     const now = Date.now();
     const travelTime = this.estimateTravelTime(
@@ -334,7 +442,7 @@ export class MovementSystem {
 
     state.isMoving = true;
     state.targetZone = targetZoneId;
-    state.targetPosition = pathResult.path[pathResult.path.length - 1];
+    state.targetPosition = targetPos;
     state.currentPath = pathResult.path;
     state.movementStartTime = now;
     state.estimatedArrivalTime = now + travelTime;
@@ -377,35 +485,45 @@ export class MovementSystem {
       y: targetZone.bounds.y + targetZone.bounds.height / 2,
     };
 
-    // Crear grid simplificado para pathfinding
-    const gridSize = 32;
-    const gridWidth = Math.ceil(3200 / gridSize);
-    const gridHeight = Math.ceil(3200 / gridSize);
-
-    const grid: number[][] = [];
-    for (let y = 0; y < gridHeight; y++) {
-      grid[y] = [];
-      for (let x = 0; x < gridWidth; x++) {
-        // Verificar si esta celda está ocupada por un obstáculo
-        const tileKey = `${x},${y}`;
-        grid[y][x] = this.occupiedTiles.has(tileKey) ? 1 : 0; // 1 = obstáculo, 0 = transitable
-      }
+    // Crear cache key para rutas
+    const pathKey = `${Math.round(from.x/32)},${Math.round(from.y/32)}->${targetZone.id}`;
+    
+    // Verificar cache de rutas primero
+    const now = Date.now();
+    const cachedPath = this.pathCache.get(pathKey);
+    if (cachedPath && (now - cachedPath.timestamp) < this.PATH_CACHE_DURATION) {
+      logAutopoiesis.debug(`🚀 Usando ruta cacheada para ${pathKey}`);
+      return cachedPath.result;
     }
 
-    // Configurar EasyStar
-    this.pathfinder.setGrid(grid);
+    // Obtener o crear grid optimizado
+    const grid = this.getOptimizedGrid();
 
-    const startX = Math.floor(from.x / gridSize);
-    const startY = Math.floor(from.y / gridSize);
-    let endX = Math.floor(to.x / gridSize);
-    let endY = Math.floor(to.y / gridSize);
+    // Configurar EasyStar solo si es necesario
+    if (this.cachedGrid !== grid) {
+      this.pathfinder.setGrid(grid);
+      this.cachedGrid = grid;
+      this.gridCacheTime = now;
+    }
+
+    const startX = Math.floor(from.x / this.gridSize);
+    const startY = Math.floor(from.y / this.gridSize);
+    let endX = Math.floor(to.x / this.gridSize);
+    let endY = Math.floor(to.y / this.gridSize);
 
     // Intentar pathfinding real con fallback
     try {
       // Validar coordenadas dentro del grid
-      if (startX < 0 || startY < 0 || endX < 0 || endY < 0 ||
-          startX >= gridWidth || startY >= gridHeight ||
-          endX >= gridWidth || endY >= gridHeight) {
+      if (
+        startX < 0 ||
+        startY < 0 ||
+        endX < 0 ||
+        endY < 0 ||
+        startX >= this.gridWidth ||
+        startY >= this.gridHeight ||
+        endX >= this.gridWidth ||
+        endY >= this.gridHeight
+      ) {
         throw new Error("Coordenadas fuera del grid");
       }
 
@@ -417,12 +535,17 @@ export class MovementSystem {
             for (let dx = -radius; dx <= radius; dx++) {
               const newX = endX + dx;
               const newY = endY + dy;
-              if (newX >= 0 && newY >= 0 && newX < gridWidth && newY < gridHeight &&
-                  grid[newY][newX] === 0) {
+              if (
+                newX >= 0 &&
+                newY >= 0 &&
+                newX < this.gridWidth &&
+                newY < this.gridHeight &&
+                grid[newY][newX] === 0
+              ) {
                 endX = newX;
                 endY = newY;
-                to.x = endX * gridSize;
-                to.y = endY * gridSize;
+                to.x = endX * this.gridSize;
+                to.y = endY * this.gridSize;
                 break;
               }
             }
@@ -433,31 +556,101 @@ export class MovementSystem {
       }
 
       const distance = Math.hypot(to.x - from.x, to.y - from.y);
-      
+
       logAutopoiesis.info("🗺️ Pathfinding con colisiones", {
         from: { x: startX, y: startY },
         to: { x: endX, y: endY },
         distance: Math.round(distance),
-        obstacles: this.occupiedTiles.size
+        obstacles: this.occupiedTiles.size,
       });
 
       // Por simplicidad, devolver ruta directa pero validada
-      return {
+      const result = {
         success: true,
         path: [from, to],
         estimatedTime: this.estimateTravelTime(distance, 0),
         distance,
       };
-
+      
+      // Cachear resultado exitoso
+      this.pathCache.set(pathKey, { result, timestamp: now });
+      return result;
     } catch (error) {
       logAutopoiesis.warn("⚠️ Pathfinding error, usando fallback", error);
       const distance = Math.hypot(to.x - from.x, to.y - from.y);
-      return {
+      const fallbackResult = {
         success: false,
         path: [from, to],
         estimatedTime: this.estimateTravelTime(distance, 0),
         distance,
       };
+      
+      // No cachear resultados fallidos
+      return fallbackResult;
+    }
+  }
+
+  /**
+   * Obtener grid optimizado con cache
+   */
+  private getOptimizedGrid(): number[][] {
+    const now = Date.now();
+    
+    // Usar cache si está disponible y válido
+    if (this.cachedGrid && (now - this.gridCacheTime) < this.GRID_CACHE_DURATION) {
+      return this.cachedGrid;
+    }
+
+    // Regenerar grid basado en obstáculos actuales
+    const grid: number[][] = Array(this.gridHeight)
+      .fill(null)
+      .map(() => Array(this.gridWidth).fill(0));
+
+    // Marcar tiles ocupados como bloqueados (1)
+    this.occupiedTiles.forEach((value, key) => {
+      const [x, y] = key.split(",").map(Number);
+      if (x >= 0 && x < this.gridWidth && y >= 0 && y < this.gridHeight) {
+        grid[y][x] = 1;
+      }
+    });
+
+    // Actualizar cache
+    this.gridCacheTime = now;
+    return grid;
+  }
+
+  /**
+   * Invalidar cache de pathfinding cuando cambien los obstáculos
+   */
+  private invalidatePathfindingCache(): void {
+    this.cachedGrid = null;
+    this.gridCacheTime = 0;
+    this.pathCache.clear();
+    logAutopoiesis.debug("🗑️ Cache de pathfinding invalidado por cambio de obstáculos");
+  }
+
+  /**
+   * Limpiar entradas de cache viejas periódicamente
+   */
+  private cleanupOldCache(now: number): void {
+    let removedPaths = 0;
+    
+    // Limpiar rutas cacheadas viejas
+    for (const [key, cached] of this.pathCache.entries()) {
+      if (now - cached.timestamp > this.PATH_CACHE_DURATION) {
+        this.pathCache.delete(key);
+        removedPaths++;
+      }
+    }
+
+    // Invalidar grid cache si es muy viejo
+    if (this.cachedGrid && (now - this.gridCacheTime) > this.GRID_CACHE_DURATION * 2) {
+      this.cachedGrid = null;
+      this.gridCacheTime = 0;
+    }
+
+    if (removedPaths > 0) {
+      logAutopoiesis.debug(`🧹 Limpieza de cache: ${removedPaths} rutas eliminadas`);
     }
   }
 
@@ -642,9 +835,20 @@ export class MovementSystem {
   }
 
   /**
+   * Actualizar obstáculos del mundo (método público)
+   */
+  public refreshObstacles(): void {
+    this.initializeObstacles();
+    logAutopoiesis.info("🗭 Obstáculos actualizados", {
+      totalObstacles: this.occupiedTiles.size,
+    });
+  }
+
+  /**
    * Limpiar sistema
    */
   public cleanup(): void {
+    this.scene.events.off("world:changed");
     this.movementStates.clear();
     this.zoneDistanceCache.clear();
     this.occupiedTiles.clear();

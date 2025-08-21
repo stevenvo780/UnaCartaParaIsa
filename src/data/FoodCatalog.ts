@@ -297,16 +297,18 @@ export class FoodCatalog {
   /**
    * Prepara assets de comida para carga lazy
    */
-  public static async prepareAssets(scene: Phaser.Scene): Promise<LazyFoodAssetLoader> {
+  public static async prepareAssets(
+    scene: Phaser.Scene,
+  ): Promise<LazyFoodAssetLoader> {
     const loader = new LazyFoodAssetLoader(scene);
-    
+
     // Precargar assets de comidas más comunes
     const commonFoodAssets = this.foods
-      .filter(food => food.price <= 10) // Comidas baratas = más usadas
-      .map(food => food.sprite);
-    
+      .filter((food) => food.price <= 10) // Comidas baratas = más usadas
+      .map((food) => food.sprite);
+
     loader.preloadFoodAssets(commonFoodAssets);
-    
+
     return loader;
   }
 
@@ -314,32 +316,38 @@ export class FoodCatalog {
    * Carga el asset de una comida específica
    */
   public static async loadFoodAsset(
-    loader: LazyFoodAssetLoader, 
-    foodId: string
+    loader: LazyFoodAssetLoader,
+    foodId: string,
   ): Promise<boolean> {
-    const food = this.foods.find(f => f.id === foodId);
+    const food = this.foods.find((f) => f.id === foodId);
     if (!food) return false;
-    
+
     return await loader.loadFoodAsset(food.sprite);
   }
 
   /**
    * Obtiene la clave del asset para usar en Phaser
    */
-  public static getFoodAssetKey(loader: LazyFoodAssetLoader, foodId: string): string | null {
-    const food = this.foods.find(f => f.id === foodId);
+  public static getFoodAssetKey(
+    loader: LazyFoodAssetLoader,
+    foodId: string,
+  ): string | null {
+    const food = this.foods.find((f) => f.id === foodId);
     if (!food) return null;
-    
+
     return loader.getAssetKey(food.sprite);
   }
 
   /**
    * Verifica si el asset de una comida está cargado
    */
-  public static isFoodAssetLoaded(loader: LazyFoodAssetLoader, foodId: string): boolean {
-    const food = this.foods.find(f => f.id === foodId);
+  public static isFoodAssetLoaded(
+    loader: LazyFoodAssetLoader,
+    foodId: string,
+  ): boolean {
+    const food = this.foods.find((f) => f.id === foodId);
     if (!food) return false;
-    
+
     return loader.isAssetLoaded(food.sprite);
   }
 }

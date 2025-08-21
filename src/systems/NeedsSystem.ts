@@ -10,6 +10,9 @@ export interface NeedsState {
   hunger: number; // 0-100 (100 = completamente satisfecho)
   thirst: number; // 0-100
   energy: number; // 0-100
+  hygiene: number; // 0-100
+  social: number; // 0-100
+  fun: number; // 0-100
   mentalHealth: number; // 0-100
   lastUpdate: number;
 }
@@ -30,6 +33,8 @@ export interface EntityNeedsData {
   currentZone?: string;
   satisfactionSources: Record<string, number>;
   emergencyLevel: "none" | "warning" | "critical" | "dying";
+  isDead?: boolean;
+  deathTime?: number;
 }
 
 export class NeedsSystem {
@@ -66,13 +71,16 @@ export class NeedsSystem {
   /**
    * Inicializar necesidades para una entidad
    */
-  public initializeEntityNeeds(entityId: string): void {
+  public initializeEntityNeeds(entityId: string, initialNeeds?: NeedsState): void {
     const needsData: EntityNeedsData = {
       entityId,
-      needs: {
+      needs: initialNeeds || {
         hunger: 80 + Math.random() * 20, // Empezar entre 80-100
         thirst: 75 + Math.random() * 25,
         energy: 85 + Math.random() * 15,
+        hygiene: 70 + Math.random() * 30,
+        social: 50 + Math.random() * 50,
+        fun: 60 + Math.random() * 40,
         mentalHealth: 90 + Math.random() * 10,
         lastUpdate: Date.now(),
       },
@@ -100,7 +108,11 @@ export class NeedsSystem {
     const deltaTime = (now - this.lastUpdateTime) / 1000; // En segundos
 
     this.entityNeeds.forEach((entityData, entityId) => {
+      // Saltar entidades muertas
+      if (entityData.isDead) return;
+
       this.updateEntityNeeds(entityData, deltaTime);
+      this.checkEntityDeath(entityId, entityData.needs);
       this.checkEmergencyLevels(entityData);
       this.handleZoneBenefits(entityData);
     });
@@ -136,6 +148,20 @@ export class NeedsSystem {
       needs.mentalHealth - config.mentalHealthDecayRate * deltaTime,
     );
 
+    // Decaimiento de nuevas necesidades
+    needs.hygiene = Math.max(
+      0,
+      needs.hygiene - config.hungerDecayRate * 0.8 * deltaTime,
+    );
+    needs.social = Math.max(
+      0,
+      needs.social - config.mentalHealthDecayRate * 0.5 * deltaTime,
+    );
+    needs.fun = Math.max(
+      0,
+      needs.fun - config.mentalHealthDecayRate * 0.7 * deltaTime,
+    );
+
     // Efectos cruzados entre necesidades
     this.applyNeedsCrossEffects(needs, deltaTime);
 
@@ -148,17 +174,23 @@ export class NeedsSystem {
   private applyNeedsCrossEffects(needs: NeedsState, deltaTime: number): void {
     // Límites de seguridad mínimos para evitar espirales de muerte
     const SAFETY_THRESHOLD = 10;
-    
+
     // Hambre crítica afecta energía y salud mental (con límites duros)
     if (needs.hunger < 20) {
       needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.3 * deltaTime);
-      needs.mentalHealth = Math.max(SAFETY_THRESHOLD, needs.mentalHealth - 0.2 * deltaTime);
+      needs.mentalHealth = Math.max(
+        SAFETY_THRESHOLD,
+        needs.mentalHealth - 0.2 * deltaTime,
+      );
     }
 
     // Sed crítica afecta energía principalmente (con límites duros)
     if (needs.thirst < 15) {
       needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.4 * deltaTime);
-      needs.mentalHealth = Math.max(SAFETY_THRESHOLD, needs.mentalHealth - 0.2 * deltaTime);
+      needs.mentalHealth = Math.max(
+        SAFETY_THRESHOLD,
+        needs.mentalHealth - 0.2 * deltaTime,
+      );
     }
 
     // Energía baja afecta menos agresivamente (con límites duros)
@@ -169,9 +201,160 @@ export class NeedsSystem {
 
     // Salud mental baja tiene efectos reducidos (con límites duros)
     if (needs.mentalHealth < 30) {
-      needs.hunger = Math.max(SAFETY_THRESHOLD, needs.hunger - 0.05 * deltaTime);
+      needs.hunger = Math.max(
+        SAFETY_THRESHOLD,
+        needs.hunger - 0.05 * deltaTime,
+      );
       needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.1 * deltaTime);
     }
+
+    // Higiene baja afecta salud mental
+    if (needs.hygiene < 20) {
+      needs.mentalHealth = Math.max(
+        SAFETY_THRESHOLD,
+        needs.mentalHealth - 0.1 * deltaTime,
+      );
+    }
+
+    // Falta de diversión afecta salud mental
+    if (needs.fun < 15) {
+      needs.mentalHealth = Math.max(
+        SAFETY_THRESHOLD,
+        needs.mentalHealth - 0.15 * deltaTime,
+      );
+    }
+
+    // Aislamiento social afecta salud mental
+    if (needs.social < 10) {
+      needs.mentalHealth = Math.max(
+        SAFETY_THRESHOLD,
+        needs.mentalHealth - 0.2 * deltaTime,
+      );
+    }
+
+    // ✅ VALIDACIÓN FINAL DE SEGURIDAD - prevenir espirales de muerte
+    this.applySafetyValidation(needs, deltaTime);
+  }
+
+  /**
+   * Aplicar validaciones de seguridad para prevenir espirales de muerte
+   */
+  private applySafetyValidation(needs: NeedsState, deltaTime: number): void {
+    const CRITICAL_THRESHOLD = 3; // Umbral crítico absoluto
+    const SAFETY_MULTIPLIER = 0.1; // Ralentizar cambios extremos
+    
+    // Si deltaTime es muy alto (lag/tabs), limitar efectos negativos
+    if (deltaTime > 5) { // Más de 5 segundos es sospechoso
+      logAutopoiesis.warn(`⚠️ DeltaTime sospechoso en NeedsSystem: ${deltaTime}s - aplicando compensación`);
+      
+      // Revertir efectos excesivos aplicando recuperación parcial
+      Object.keys(needs).forEach(key => {
+        const need = needs[key as keyof NeedsState];
+        if (typeof need === 'number' && need < CRITICAL_THRESHOLD) {
+          (needs as any)[key] = Math.min(CRITICAL_THRESHOLD + 5, need + 2);
+          logAutopoiesis.info(`🛡️ Recuperación de emergencia aplicada a ${key}: ${need} -> ${(needs as any)[key]}`);
+        }
+      });
+    }
+
+    // Aplicar límites absolutos mínimos
+    Object.keys(needs).forEach(key => {
+      const need = needs[key as keyof NeedsState];
+      if (typeof need === 'number' && need < CRITICAL_THRESHOLD) {
+        (needs as any)[key] = CRITICAL_THRESHOLD;
+      }
+    });
+
+    // Límites máximos también (prevenir valores extremos)
+    Object.keys(needs).forEach(key => {
+      const need = needs[key as keyof NeedsState];
+      if (typeof need === 'number' && need > 100) {
+        (needs as any)[key] = 100;
+      }
+    });
+  }
+
+  /**
+   * Verificar muerte de entidad
+   */
+  private checkEntityDeath(entityId: string, needs: NeedsState): void {
+    const DEATH_THRESHOLD = 5;
+    const criticalNeeds = [needs.hunger, needs.energy, needs.mentalHealth];
+    const criticalCount = criticalNeeds.filter(
+      (need) => need <= DEATH_THRESHOLD,
+    ).length;
+
+    if (criticalCount >= 2) {
+      // Entidad en estado crítico - iniciar muerte
+      this.handleEntityDeath(entityId);
+    }
+  }
+
+  private handleEntityDeath(entityId: string): void {
+    const entityData = this.entityNeeds.get(entityId);
+    if (!entityData || entityData.isDead) return;
+
+    // Marcar como muerto
+    entityData.isDead = true;
+    entityData.deathTime = Date.now();
+
+    // Emitir evento de muerte
+    this.scene.events.emit("entity:death", {
+      entityId,
+      cause: "needs_failure",
+      needs: { ...entityData.needs },
+    });
+
+    logAutopoiesis.warn(`💀 ${entityId} ha muerto por necesidades críticas`, {
+      needs: entityData.needs,
+    });
+
+    // Programar respawn
+    this.scene.time.delayedCall(5000, () => {
+      this.respawnEntity(entityId);
+    });
+  }
+
+  private respawnEntity(entityId: string): void {
+    const entityData = this.entityNeeds.get(entityId);
+    if (!entityData) return;
+
+    // Resetear estado
+    entityData.isDead = false;
+    entityData.deathTime = undefined;
+
+    // Restaurar necesidades al 70%
+    entityData.needs.hunger = 70;
+    entityData.needs.energy = 70;
+    entityData.needs.hygiene = 70;
+    entityData.needs.mentalHealth = 70;
+    entityData.needs.social = 50;
+    entityData.needs.fun = 50;
+
+    // Obtener punto de spawn
+    const spawnPoint = this.getSpawnPoint(entityId);
+
+    // Emitir evento de respawn
+    this.scene.events.emit("entity:respawn", {
+      entityId,
+      position: spawnPoint,
+      restoredNeeds: { ...entityData.needs },
+    });
+
+    logAutopoiesis.info(`✨ ${entityId} ha respawneado`, {
+      spawnPoint,
+      restoredNeeds: entityData.needs,
+    });
+  }
+
+  private getSpawnPoint(entityId: string): { x: number; y: number } {
+    // Definir puntos de spawn por entidad
+    const spawnPoints: Record<string, { x: number; y: number }> = {
+      isa: { x: 400, y: 300 },
+      stev: { x: 450, y: 300 },
+    };
+
+    return spawnPoints[entityId] || { x: 400, y: 400 };
   }
 
   /**
@@ -227,6 +410,9 @@ export class NeedsSystem {
     if (needs.hunger < threshold) critical.push("hunger");
     if (needs.thirst < threshold) critical.push("thirst");
     if (needs.energy < threshold) critical.push("energy");
+    if (needs.hygiene < threshold) critical.push("hygiene");
+    if (needs.social < threshold) critical.push("social");
+    if (needs.fun < threshold) critical.push("fun");
     if (needs.mentalHealth < threshold) critical.push("mentalHealth");
 
     return critical;
@@ -256,6 +442,24 @@ export class NeedsSystem {
       needs.energy >= this.needsConfig.criticalThreshold
     ) {
       warning.push("energy");
+    }
+    if (
+      needs.hygiene < threshold &&
+      needs.hygiene >= this.needsConfig.criticalThreshold
+    ) {
+      warning.push("hygiene");
+    }
+    if (
+      needs.social < threshold &&
+      needs.social >= this.needsConfig.criticalThreshold
+    ) {
+      warning.push("social");
+    }
+    if (
+      needs.fun < threshold &&
+      needs.fun >= this.needsConfig.criticalThreshold
+    ) {
+      warning.push("fun");
     }
     if (
       needs.mentalHealth < threshold &&
@@ -311,9 +515,34 @@ export class NeedsSystem {
         break;
 
       case "social":
-        this.satisfyNeed(entityData, "mentalHealth", recoveryRate * deltaTime);
+        this.satisfyNeed(entityData, "social", recoveryRate * deltaTime);
+        this.satisfyNeed(
+          entityData,
+          "mentalHealth",
+          recoveryRate * 0.8 * deltaTime,
+        );
+        this.satisfyNeed(entityData, "fun", recoveryRate * 0.5 * deltaTime);
         // Beneficio menor en otras necesidades por socialización
         this.satisfyNeed(entityData, "energy", recoveryRate * 0.3 * deltaTime);
+        break;
+
+      case "hygiene":
+        this.satisfyNeed(entityData, "hygiene", recoveryRate * deltaTime);
+        this.satisfyNeed(
+          entityData,
+          "mentalHealth",
+          recoveryRate * 0.3 * deltaTime,
+        );
+        break;
+
+      case "entertainment":
+      case "fun":
+        this.satisfyNeed(entityData, "fun", recoveryRate * deltaTime);
+        this.satisfyNeed(
+          entityData,
+          "mentalHealth",
+          recoveryRate * 0.4 * deltaTime,
+        );
         break;
 
       case "work":
@@ -351,6 +580,23 @@ export class NeedsSystem {
       const sourceKey = entityData.currentZone || "unknown";
       entityData.satisfactionSources[sourceKey] =
         (entityData.satisfactionSources[sourceKey] || 0) + amount;
+
+      // Emitir evento para QuestSystem
+      this.emit("needsSatisfied", {
+        entityId: entityData.entityId,
+        needType,
+        amount,
+        currentValue: newValue,
+      });
+
+      // Si se satisfizo hambre, emitir evento de comida consumida
+      if (needType === "hunger" && amount > 5) {
+        this.scene.events.emit("food_consumed", {
+          entityId: entityData.entityId,
+          foodType: this.deduceFoodType(amount),
+          amount,
+        });
+      }
 
       logAutopoiesis.debug(
         `💫 ${needType} satisfecho para ${entityData.entityId}`,
@@ -401,7 +647,15 @@ export class NeedsSystem {
     }
 
     const needs = entityData.needs;
-    const validNeeds = ["hunger", "thirst", "energy", "mentalHealth"];
+    const validNeeds = [
+      "hunger",
+      "thirst",
+      "energy",
+      "hygiene",
+      "social",
+      "fun",
+      "mentalHealth",
+    ];
 
     if (!validNeeds.includes(needType)) {
       logAutopoiesis.warn(`❌ Tipo de necesidad inválido: ${needType}`);
@@ -426,6 +680,17 @@ export class NeedsSystem {
     );
 
     return true;
+  }
+
+  /**
+   * Método público para modificar necesidades (alias más simple)
+   */
+  public modifyNeed(
+    entityId: string,
+    needType: string,
+    amount: number,
+  ): boolean {
+    return this.modifyEntityNeed(entityId, needType, amount);
   }
 
   /**
@@ -495,7 +760,15 @@ export class NeedsSystem {
    */
   private calculateAverageNeeds(entities: EntityNeedsData[]) {
     if (entities.length === 0) {
-      return { hunger: 0, thirst: 0, energy: 0, mentalHealth: 0 };
+      return {
+        hunger: 0,
+        thirst: 0,
+        energy: 0,
+        hygiene: 0,
+        social: 0,
+        fun: 0,
+        mentalHealth: 0,
+      };
     }
 
     const totals = entities.reduce(
@@ -503,16 +776,30 @@ export class NeedsSystem {
         acc.hunger += entity.needs.hunger;
         acc.thirst += entity.needs.thirst;
         acc.energy += entity.needs.energy;
+        acc.hygiene += entity.needs.hygiene;
+        acc.social += entity.needs.social;
+        acc.fun += entity.needs.fun;
         acc.mentalHealth += entity.needs.mentalHealth;
         return acc;
       },
-      { hunger: 0, thirst: 0, energy: 0, mentalHealth: 0 },
+      {
+        hunger: 0,
+        thirst: 0,
+        energy: 0,
+        hygiene: 0,
+        social: 0,
+        fun: 0,
+        mentalHealth: 0,
+      },
     );
 
     return {
       hunger: Math.round(totals.hunger / entities.length),
       thirst: Math.round(totals.thirst / entities.length),
       energy: Math.round(totals.energy / entities.length),
+      hygiene: Math.round(totals.hygiene / entities.length),
+      social: Math.round(totals.social / entities.length),
+      fun: Math.round(totals.fun / entities.length),
       mentalHealth: Math.round(totals.mentalHealth / entities.length),
     };
   }
@@ -522,6 +809,16 @@ export class NeedsSystem {
    */
   public on(event: string, callback: (...args: any[]) => void): void {
     this.needsEvents.on(event, callback);
+  }
+
+  /**
+   * Deducir tipo de comida basado en la cantidad consumida
+   */
+  private deduceFoodType(amount: number): string {
+    if (amount <= 10) return "snack";
+    if (amount <= 20) return "light_meal";
+    if (amount <= 35) return "normal_meal";
+    return "feast";
   }
 
   /**
