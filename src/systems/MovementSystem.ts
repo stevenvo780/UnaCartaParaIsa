@@ -381,7 +381,7 @@ export class MovementSystem {
     const gridSize = 32;
     const gridWidth = Math.ceil(3200 / gridSize);
     const gridHeight = Math.ceil(3200 / gridSize);
-    
+
     const grid: number[][] = [];
     for (let y = 0; y < gridHeight; y++) {
       grid[y] = [];
@@ -393,7 +393,7 @@ export class MovementSystem {
 
     // Configurar EasyStar
     this.pathfinder.setGrid(grid);
-    
+
     const startX = Math.floor(from.x / gridSize);
     const startY = Math.floor(from.y / gridSize);
     const endX = Math.floor(to.x / gridSize);
@@ -401,7 +401,7 @@ export class MovementSystem {
 
     // Fallback inmediato - pathfinding asíncrono vendría en siguiente versión
     const distance = Math.hypot(to.x - from.x, to.y - from.y);
-    
+
     logAutopoiesis.info("🗺️ Pathfinding EasyStar configurado", {
       from: { x: startX, y: startY },
       to: { x: endX, y: endY },
