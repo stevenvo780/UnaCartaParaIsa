@@ -673,6 +673,40 @@ export class QuestSystem {
   }
 
   /**
+   * Manejar eventos externos para progreso de misiones
+   */
+  public handleEvent(eventData: { type: string; entityId: string; timestamp: number; data: any }): void {
+    switch (eventData.type) {
+      case "dialogue_completed":
+        this._onDialogueCompleted({
+          cardId: eventData.data.cardId,
+          choiceId: eventData.data.choice?.id,
+          participants: [eventData.entityId],
+          outcome: eventData.data.choice?.outcome,
+          effects: eventData.data.choice?.effects
+        });
+        break;
+      
+      case "emergency_resolved":
+        // Buscar misiones relacionadas con emergencias
+        this._questProgress.activeQuests.forEach((quest) => {
+          quest.objectives.forEach((objective) => {
+            if (objective.type === "survive_emergency" && !objective.isCompleted) {
+              objective.isCompleted = true;
+              objective.completedAt = eventData.timestamp;
+              this._checkQuestCompletion(quest.id);
+            }
+          });
+        });
+        break;
+        
+      default:
+        logAutopoiesis.debug(`Evento desconocido en QuestSystem: ${eventData.type}`);
+        break;
+    }
+  }
+
+  /**
    * Verifica si las estadísticas cumplen con los requisitos
    */
   private _checkStatsRequirements(entityStats: any, requiredStats: any): boolean {

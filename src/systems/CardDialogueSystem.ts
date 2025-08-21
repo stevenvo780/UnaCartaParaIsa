@@ -1032,6 +1032,91 @@ export class CardDialogueSystem {
   }
 
   /**
+   * Generar carta de emergencia basada en necesidades críticas
+   */
+  public triggerEmergencyCard(entityId: string, needType: string): void {
+    const emergencyCards: Record<string, any> = {
+      hunger: {
+        title: "¡Hambre crítica!",
+        content: `${entityId} tiene hambre extrema y necesita comida urgentemente.`,
+        type: "event" as const,
+        priority: "urgent" as const,
+        emotionalTone: "worried" as const,
+        choices: [
+          {
+            id: "find_food",
+            text: "Buscar comida",
+            outcome: "search_food",
+            effects: { needs: { hunger: 30 } }
+          },
+          {
+            id: "ignore",
+            text: "Ignorar",
+            outcome: "ignored",
+            effects: {}
+          }
+        ]
+      },
+      thirst: {
+        title: "¡Sed crítica!",
+        content: `${entityId} está deshidratado y necesita agua inmediatamente.`,
+        type: "event" as const,
+        priority: "urgent" as const,
+        emotionalTone: "worried" as const,
+        choices: [
+          {
+            id: "find_water",
+            text: "Buscar agua",
+            outcome: "search_water",
+            effects: { needs: { thirst: 40 } }
+          },
+          {
+            id: "rest",
+            text: "Descansar un poco",
+            outcome: "rest",
+            effects: { needs: { energy: 10 } }
+          }
+        ]
+      },
+      energy: {
+        title: "Agotamiento extremo",
+        content: `${entityId} está completamente agotado y no puede continuar.`,
+        type: "event" as const,
+        priority: "high" as const,
+        emotionalTone: "sad" as const,
+        choices: [
+          {
+            id: "rest_now",
+            text: "Descansar ahora",
+            outcome: "emergency_rest",
+            effects: { needs: { energy: 50 } }
+          }
+        ]
+      }
+    };
+
+    const cardTemplate = emergencyCards[needType];
+    if (!cardTemplate) return;
+
+    const emergencyCard: DialogueCard = {
+      id: `emergency_${needType}_${Date.now()}`,
+      ...cardTemplate,
+      participants: [entityId],
+      timestamp: Date.now(),
+      duration: 30000,
+      sourceEntityId: entityId
+    };
+
+    this.addCardToQueue(emergencyCard);
+    
+    logAutopoiesis.warn("🚨 Carta de emergencia generada", {
+      entityId,
+      needType,
+      cardId: emergencyCard.id
+    });
+  }
+
+  /**
    * Limpiar sistema
    */
   public cleanup(): void {

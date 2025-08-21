@@ -207,6 +207,7 @@ export interface GameEvents {
   playerInteraction: PlayerInteractionData;
   uiUpdate: GameLogicUpdateData;
   wheelScroll: { deltaX: number; deltaY: number };
+  needsUpdated: { entityId: string; entityData: any };
 }
 
 /**

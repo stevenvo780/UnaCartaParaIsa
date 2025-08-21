@@ -46,9 +46,10 @@ export class QuestUI {
     this._setupModernQuestPanel();
     this._setupEventListeners();
 
-    // Inicialmente oculto
-    this._container.setVisible(false);
-    this._container.setAlpha(0);
+    // Mostrar por defecto con quests iniciales
+    this._container.setVisible(true);
+    this._container.setAlpha(1);
+    this._isVisible = true;
   }
 
   /**

@@ -10,6 +10,7 @@ import { DayNightSystem } from "../systems/DayNightSystem";
 import { EmergenceSystem } from "../systems/EmergenceSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { NeedsSystem } from "../systems/NeedsSystem";
+import { QuestSystem } from "../systems/QuestSystem";
 import type {
   Entity,
   EntityStats,
@@ -33,6 +34,7 @@ export class GameLogicManager implements IGameLogicManager {
   private _cardDialogueSystem: CardDialogueSystem;
   private _dayNightSystem: DayNightSystem;
   private _emergenceSystem: EmergenceSystem;
+  private _questSystem: QuestSystem;
 
   public constructor(scene: Phaser.Scene, initialGameState: GameState) {
     this._scene = scene;
@@ -57,11 +59,36 @@ export class GameLogicManager implements IGameLogicManager {
       initialGameState,
       this._needsSystem,
       this._aiSystem,
-      this._dayNightSystem,
     );
+    this._questSystem = new QuestSystem(scene);
 
-    // Conectar sistemas
+    // Conectar sistemas entre sí para coordinación
     this._aiSystem.setMovementSystem(this._movementSystem);
+    
+    // Conectar sistema de cartas con sistema de misiones
+    this._scene.events.on("cardResponded", (data: any) => {
+      this._questSystem.handleEvent({
+        type: "dialogue_completed",
+        entityId: data.card.sourceEntityId || "unknown",
+        timestamp: Date.now(),
+        data: { cardId: data.card.id, choice: data.choice }
+      });
+    });
+    
+    // Conectar emergencias con sistema de cartas
+    this._scene.events.on("emergenceDetected", (data: any) => {
+      if (data.type === "critical_need") {
+        // Generar carta de diálogo relacionada con la emergencia
+        this._cardDialogueSystem.triggerEmergencyCard(data.entityId, data.needType);
+      }
+    });
+    
+    // Conectar sistema de necesidades con AI para prioridades
+    this._needsSystem.on("emergencyLevelChanged", (data: any) => {
+      if (data.currentLevel === "critical" || data.currentLevel === "dying") {
+        this._aiSystem.setEntityPriority(data.entityId, "survival");
+      }
+    });
   }
 
   /**
@@ -132,8 +159,16 @@ export class GameLogicManager implements IGameLogicManager {
       }
     });
 
-    // Actualizar sistema de necesidades
+    // Actualizar sistema de necesidades y emitir evento de UI
     this._needsSystem.update();
+    
+    // Emitir actualización de necesidades para UI
+    for (const entityId of ["isa", "stev"]) {
+      const entityData = this._needsSystem.getEntityNeeds(entityId);
+      if (entityData) {
+        this.emit("needsUpdated", { entityId, entityData });
+      }
+    }
 
     // Actualizar sistema de movimiento
     this._movementSystem.update();
@@ -149,6 +184,9 @@ export class GameLogicManager implements IGameLogicManager {
 
     // Actualizar sistema de emergencia
     this._emergenceSystem.update();
+    
+    // Actualizar sistema de misiones
+    this._questSystem.update(deltaTime);
 
     this._updateResonance();
 

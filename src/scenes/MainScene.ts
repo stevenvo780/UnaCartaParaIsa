@@ -4,6 +4,9 @@ import { GameLogicManager } from "../managers/GameLogicManager";
 import { InputManager } from "../managers/InputManager";
 import { SceneInitializationManager } from "../managers/SceneInitializationManager";
 import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
+import { DialogueCardUI } from "../components/DialogueCardUI";
+import { NeedsUI } from "../ui/NeedsUI";
+import { SystemStatusUI } from "../ui/SystemStatusUI";
 import { logAutopoiesis } from "../utils/logger";
 import { DiverseWorldComposer } from "../world/DiverseWorldComposer";
 import { LayeredWorldRenderer } from "../world/LayeredWorldRenderer";
@@ -27,6 +30,11 @@ export default class MainScene extends Phaser.Scene {
   private worldComposer!: DiverseWorldComposer;
   private worldRenderer!: LayeredWorldRenderer;
   private performanceMode = true;
+  
+  // UI de necesidades, cartas de diálogo y estado de sistemas
+  private needsUI!: NeedsUI;
+  private dialogueCardUI!: DialogueCardUI;
+  private systemStatusUI!: SystemStatusUI;
 
   constructor() {
     super({ key: "MainScene" });
@@ -88,9 +96,9 @@ export default class MainScene extends Phaser.Scene {
       this.gameLogicManager.registerEntity("isa", isaEntity);
       this.gameLogicManager.registerEntity("stev", stevEntity);
 
-      // 7. Configurar InputManager
+      // 7. Configurar InputManager para controlar entidades del jugador
       this.inputManager.setGameLogicManager(this.gameLogicManager);
-      this.inputManager.setControlledEntity("none"); // IA controla inicialmente
+      this.inputManager.setControlledEntity("stev"); // Jugador controla a Stev inicialmente
 
       // 8. Componer mundo diverso
       this.worldComposer = new DiverseWorldComposer(this, `seed_${Date.now()}`);
@@ -119,7 +127,28 @@ export default class MainScene extends Phaser.Scene {
       // 12. Configurar controles
       this.setupControls();
 
-      // 13. Iniciar UI Scene
+      // 13. Crear UI de necesidades, cartas de diálogo y estado de sistemas
+      this.needsUI = new NeedsUI(this);
+      this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
+      this.systemStatusUI = new SystemStatusUI(this);
+      
+      // 14. Configurar actualización de UI de necesidades
+      this.gameLogicManager.on("needsUpdated", (data: any) => {
+        if (data.entityId === "stev" || data.entityId === "isa") {
+          this.needsUI.updateNeeds(data.entityData);
+          
+          // Actualizar estado del sistema de necesidades
+          const needsData = data.entityData;
+          const criticalCount = Object.entries(needsData.needs).filter(([key, value]) => 
+            key !== 'lastUpdate' && (value as number) < 20).length;
+          const warningCount = Object.entries(needsData.needs).filter(([key, value]) => 
+            key !== 'lastUpdate' && (value as number) < 40 && (value as number) >= 20).length;
+          
+          this.systemStatusUI.updateNeedsStatus(criticalCount, warningCount);
+        }
+      });
+
+      // 15. Iniciar UI Scene
       this.scene.launch("UIScene");
 
       // 6. Configurar cámara

@@ -69,24 +69,34 @@ export class SceneInitializationManager {
       mapSeed: seed,
     };
 
+    // Inicializar BiomeSystem con diversidad completa
+    const biomeSystem = new BiomeSystem(this.stringToSeed(seed));
+    const startTime = Date.now();
+    
+    // Generar mundo diverso
+    const composedWorld = await biomeSystem.generateDiverseWorld(gameState.worldSize);
+    const generationTime = Date.now() - startTime;
+
     logAutopoiesis.info(
-      "✅ Inicialización básica completada (BiomeSystem deshabilitado temporalmente)",
+      "✅ Mundo generado exitosamente con BiomeSystem",
       {
         seed,
         gameStateReady: true,
+        generationTime,
+        biomesGenerated: composedWorld?.biomes?.length || 0,
       },
     );
 
     return {
       gameState,
       generatedWorldData: {
-        biomeSystem: null, // Temporalmente deshabilitado
-        composedWorld: null, // Se creará después de cargar assets
+        biomeSystem,
+        composedWorld,
         seed,
         stats: {
-          generationTime: 0,
-          totalAssets: 0,
-          biomeDistribution: {},
+          generationTime,
+          totalAssets: composedWorld?.biomes?.length || 0,
+          biomeDistribution: composedWorld?.stats || {},
         },
       },
     };
