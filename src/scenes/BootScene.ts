@@ -3,14 +3,6 @@ import { AnimationManager } from "../managers/AnimationManager";
 import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
 import { WaterRipplePipeline } from "../plugins/WaterRipplePipeline";
 import { logAutopoiesis } from "../utils/logger";
-
-/*
- * Documentación científica (resumen):
- * - Sistema unificado de assets con lazy loading integrado
- * - Carga validada con fallbacks programáticos para estabilidad
- * - Spritesheets + creación de animaciones tras la fase de carga
- * - Flujo: validar → cargar críticos → cargar todo → crear animaciones → cambiar escena
- */
 export class BootScene extends Phaser.Scene {
   private unifiedAssetManager!: UnifiedAssetManager;
   private animationManager!: AnimationManager;
@@ -20,11 +12,9 @@ export class BootScene extends Phaser.Scene {
   }
 
   async preload() {
-    // Inicializar manager unificado
     this.unifiedAssetManager = new UnifiedAssetManager(this);
     this.animationManager = new AnimationManager(this);
 
-    // Registrar pipeline de agua (plugin visual)
     try {
       const renderer = this.game
         .renderer as Phaser.Renderer.WebGL.WebGLRenderer;
@@ -32,7 +22,6 @@ export class BootScene extends Phaser.Scene {
       if (!pm.has("WaterRipple")) {
         pm.add("WaterRipple", new WaterRipplePipeline(this.game));
       }
-      // Guardar referencia en registry
       this.registry.set("waterPipelineKey", "WaterRipple");
     } catch (e: unknown) {
       logAutopoiesis.warn("No se pudo registrar WaterRipplePipeline", {
@@ -40,16 +29,11 @@ export class BootScene extends Phaser.Scene {
       });
     }
 
-    // Ocultar pantalla de carga inicial
     this.hideLoadingScreen();
 
     try {
       logAutopoiesis.info("🚀 Iniciando carga unificada de assets...");
-
-      // FASE 1: Cargar assets críticos para iniciar rápido
       await this.unifiedAssetManager.loadCriticalAssets();
-
-      // FASE 2: Cargar todos los assets base
       const assetResult = await this.unifiedAssetManager.loadAllAssets();
       if (!assetResult.success) {
         logAutopoiesis.warn("Algunos assets fallaron, usando fallbacks", {
@@ -57,18 +41,12 @@ export class BootScene extends Phaser.Scene {
           fallbacks: assetResult.fallbacksUsed.length,
         });
       }
-
-      // FASE 3: Crear animaciones básicas
       this.animationManager.createAllAnimations();
-
-      // FASE 4: Cargar assets esenciales de comida
       await this.unifiedAssetManager.loadEssentialFoodAssets();
 
-      // Guardar managers globalmente
       this.registry.set("animationManager", this.animationManager);
       this.registry.set("unifiedAssetManager", this.unifiedAssetManager);
 
-      // Obtener stats de carga inicial
       const stats = this.unifiedAssetManager.getLoadingStats();
 
       logAutopoiesis.info("Boot unificado completado", {
@@ -78,11 +56,8 @@ export class BootScene extends Phaser.Scene {
         pendingAssets: stats.pendingAssets,
       });
 
-      // Cambiar a escenas principales inmediatamente
       this.scene.start("MainScene");
       this.scene.launch("UIScene");
-
-      // FASE 5: Cargar assets adicionales en background
       this.startBackgroundLoading();
     } catch (error: unknown) {
       logAutopoiesis.error("Error crítico en BootScene unificado", {
@@ -93,16 +68,10 @@ export class BootScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Cargar assets adicionales en background sin bloquear el juego
-   */
   private startBackgroundLoading(): void {
-    // Cargar assets por biomas en background
     setTimeout(async () => {
       try {
         logAutopoiesis.info("🔄 Iniciando carga de biomas en background...");
-
-        // Cargar assets de biomas específicos
         await this.unifiedAssetManager.loadBiomeAssets("forest");
         await this.unifiedAssetManager.loadBiomeAssets("village");
 
@@ -116,7 +85,7 @@ export class BootScene extends Phaser.Scene {
           error: String(error),
         });
       }
-    }, 1000); // Empezar carga background después de 1 segundo
+    }, 1000);
   }
 
   create() {
@@ -135,7 +104,6 @@ export class BootScene extends Phaser.Scene {
     }
   }
 
-  // Ocultar pantalla de carga con efecto
   private hideLoadingScreen(): void {
     const loadingElement = document.getElementById("loading");
     if (loadingElement) {
@@ -146,7 +114,6 @@ export class BootScene extends Phaser.Scene {
     }
   }
 
-  // Mostrar error de carga no crítica
   private showAssetError(failedAssets: string[]): void {
     const lines = [
       "⚠️ Error cargando algunos recursos",
@@ -172,7 +139,6 @@ export class BootScene extends Phaser.Scene {
     });
   }
 
-  // Mostrar error crítico que impide iniciar
   private showCriticalError(error: unknown): void {
     const message = error instanceof Error ? error.message : String(error);
     this.add
@@ -197,7 +163,6 @@ export class BootScene extends Phaser.Scene {
       .setOrigin(0.5);
   }
 
-  // Estadísticas de boot
   public getBootStats() {
     return {
       assets: this.unifiedAssetManager?.getLoadingStats() || {

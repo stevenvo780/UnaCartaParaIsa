@@ -18,6 +18,8 @@ export type EntityType =
   | "campfire"
   | "woman"
   | "man"
+  | "woman_walk"
+  | "man_walk"
   | "store"
   | "food_store"
   | "structure"

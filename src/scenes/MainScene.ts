@@ -22,13 +22,12 @@ import type {
 import { logAutopoiesis } from "../utils/logger";
 
 export class MainScene extends Phaser.Scene {
-  // 🚀 MEGA-OPTIMIZACIONES de rendimiento para 60 FPS
-  private readonly uiUpdateInterval = 500; // ⚡ AUMENTADO: de 200ms a 500ms
-  private readonly foodUpdateInterval = 300; // ⚡ AUMENTADO: de 100ms a 300ms
+  private readonly uiUpdateInterval = 500;
+  private readonly foodUpdateInterval = 300;
   private lastUIUpdate = 0;
   private lastFoodUpdate = 0;
-  private lastWorldUpdate = 0; // NUEVO: Para throttling de WorldRenderer
-  private cachedEntityData: Record<string, unknown> | null = null; // Cache para evitar recrear objetos
+  private lastWorldUpdate = 0;
+  private cachedEntityData: Record<string, unknown> | null = null;
   private gameState!: GameState;
   private dialogueSystem!: DialogueSystem;
   private questSystem!: QuestSystem;
@@ -67,14 +66,12 @@ export class MainScene extends Phaser.Scene {
   async create() {
     logAutopoiesis.info("Creating main game world");
 
-    // Obtener el manager unificado del registry
     this.unifiedAssetManager = this.registry.get("unifiedAssetManager");
     if (!this.unifiedAssetManager) {
       logAutopoiesis.error("UnifiedAssetManager no encontrado en registry");
       return;
     }
 
-    // Initialize managers and systems
     this.entityManager = new EntityManager(this);
     this.inputManager = new InputManager(this);
     this.foodSystem = new FoodSystem(this);
@@ -95,41 +92,30 @@ export class MainScene extends Phaser.Scene {
     // Create entities using EntityManager (pass scene for real entity creation)
     const { isaEntity, stevEntity } = this.entityManager.createEntities({});
 
-    // Store entity references for game stats
     this.isaEntity = isaEntity;
     this.stevEntity = stevEntity;
     this.entities = this.entityManager.getEntitiesGroup();
 
-    // Setup partner relationships and register with GameLogicManager
     isaEntity.setPartnerEntity(stevEntity);
     stevEntity.setPartnerEntity(isaEntity);
-    // Register the entity instances directly - they have updateEntity methods
     this.gameLogicManager.registerEntity("isa", isaEntity);
     this.gameLogicManager.registerEntity("stev", stevEntity);
 
-    // Conectar InputManager con GameLogicManager para control dual
     this.inputManager.setGameLogicManager(this.gameLogicManager);
 
-    // Set default controlled entity to Isa for eating system
-    this.inputManager.setControlledEntity("isa");
+    // CORREGIDO: Iniciar con ambas entidades bajo control de IA
+    // El jugador puede tomar control cuando presione TAB
+    this.inputManager.setControlledEntity("none");
 
-    // Setup spacebar action for current controlled entity
     this.input.keyboard?.on("keydown-SPACE", () => {
       this.handleEntityAction();
     });
 
-    // Setup quest system controls
     this.input.keyboard?.on("keydown-Q", () => {
       this.questUI.toggleQuestPanel();
     });
 
-    // Setup dialogue card system controls (M key handled by DialogueCardUI)
-    // Day/Night UI controls (T key handled by DayNightUI)
-    // System Status UI controls (E key handled by SystemStatusUI)
-
-    // Controles adicionales para el control dual
     this.input.keyboard?.on("keydown-H", () => {
-      // Ayuda rápida - mostrar qué entidad está controlada por IA
       const aiControlled = this.inputManager.getAIControlledEntity();
       const playerControlled = this.inputManager.getControlledEntity();
 
@@ -141,7 +127,6 @@ export class MainScene extends Phaser.Scene {
       });
     });
 
-    // Seguir con cámara a la entidad controlada
     this.input.keyboard?.on("keydown-C", () => {
       const controlled = this.inputManager.getControlledEntity();
       if (controlled !== "none") {
@@ -154,7 +139,6 @@ export class MainScene extends Phaser.Scene {
       }
     });
 
-    // Auto-start first quest when entities meet
     this.time.delayedCall(2000, () => {
       this.questSystem.startQuest("main_awakening");
     });
@@ -180,7 +164,6 @@ export class MainScene extends Phaser.Scene {
     this.worldRenderer = new WorldRenderer(this, this.gameState);
     await this.worldRenderer.renderWorld();
 
-    // Register systems in registry for cross-component access
     this.registry.set("gameLogicManager", this.gameLogicManager);
     this.registry.set("questSystem", this.questSystem);
     this.registry.set("dialogueSystem", this.dialogueSystem);
@@ -204,19 +187,13 @@ export class MainScene extends Phaser.Scene {
       this.events.emit("gameLogicUpdate", data);
     });
 
-    // Setup dialogue card event handlers
     this.setupDialogueCardEventHandlers();
 
     logAutopoiesis.debug("All managers initialized");
   }
 
-  /**
-   * Setup dialogue card event handlers
-   */
   private setupDialogueCardEventHandlers(): void {
     const cardDialogueSystem = this.gameLogicManager.getCardDialogueSystem();
-
-    // Connect card generation to UI display
     cardDialogueSystem.onCardGenerated = (card) => {
       this.events.emit("showDialogueCard", card);
       logAutopoiesis.info("🃏 Dialogue card generated", {
@@ -226,12 +203,8 @@ export class MainScene extends Phaser.Scene {
         participants: card.participants,
       });
     };
-
-    // Handle card choice selections
     this.events.on("dialogueChoiceSelected", (data: any) => {
       cardDialogueSystem.handleChoice(data.cardId, data.choice);
-
-      // Apply choice effects immediately
       this.applyDialogueChoiceEffects(data.choice);
 
       logAutopoiesis.info("🎯 Dialogue choice selected", {
@@ -241,17 +214,12 @@ export class MainScene extends Phaser.Scene {
       });
     });
 
-    // Generate initial greeting cards when entities meet
     this.time.delayedCall(3000, () => {
       cardDialogueSystem.triggerEventCard("first_meeting", ["isa", "stev"]);
     });
-
-    // Generate cards based on critical needs
     this.events.on("gameLogicUpdate", (data: GameLogicUpdateData) => {
       this.checkForCriticalNeedsCards(data);
     });
-
-    // Generate cards when entities are close together
     this.events.on(
       "entitiesMeet",
       (data: { entities: string[]; distance: number }) => {
@@ -263,8 +231,6 @@ export class MainScene extends Phaser.Scene {
         }
       },
     );
-
-    // Generate cards on player interactions
     this.gameLogicManager.on("playerInteraction", (data: any) => {
       if (Math.random() < 0.4) {
         cardDialogueSystem.triggerEventCard("player_action", [data.entityId]);
@@ -274,9 +240,6 @@ export class MainScene extends Phaser.Scene {
     logAutopoiesis.info("📋 Dialogue card event handlers configured");
   }
 
-  /**
-   * Check for critical needs and generate appropriate cards
-   */
   private checkForCriticalNeedsCards(data: GameLogicUpdateData): void {
     const cardDialogueSystem = this.gameLogicManager.getCardDialogueSystem();
     const needsSystem = this.gameLogicManager.getNeedsSystem();
@@ -285,7 +248,6 @@ export class MainScene extends Phaser.Scene {
       const needs = needsSystem.getEntityNeeds(entityId);
       if (!needs) return;
 
-      // Generate urgent cards for critical needs
       if (needs.needs.hunger < 20 && Math.random() < 0.2) {
         cardDialogueSystem.triggerEventCard("hunger_crisis", [entityId]);
       }
@@ -304,7 +266,6 @@ export class MainScene extends Phaser.Scene {
         ]);
       }
 
-      // Generate positive cards for good conditions
       if (
         needs.needs.hunger > 80 &&
         needs.needs.energy > 70 &&
@@ -315,49 +276,35 @@ export class MainScene extends Phaser.Scene {
     });
   }
 
-  /**
-   * Apply effects from dialogue choice to game entities
-   */
   private applyDialogueChoiceEffects(choice: any): void {
     if (!choice.effects) return;
 
     const needsSystem = this.gameLogicManager.getNeedsSystem();
 
-    // Apply needs changes
     if (choice.effects.needs) {
       Object.entries(choice.effects.needs).forEach(([needType, value]) => {
-        // Apply to both entities or determine target entity contextually
         ["isa", "stev"].forEach((entityId) => {
           needsSystem.modifyEntityNeed(entityId, needType, value as number);
         });
       });
     }
-
-    // Handle movement effects
     if (choice.effects.moveTo) {
       const controlledEntity = this.inputManager.getControlledEntity();
       if (controlledEntity !== "none") {
-        // Find nearest resource or specific location
         this.handleMovementCommand(controlledEntity, choice.effects.moveTo);
       }
     }
-
-    // Handle mission unlocks
     if (choice.effects.unlocksMission) {
       this.questSystem.startQuest(choice.effects.unlocksMission);
     }
   }
 
-  /**
-   * Handle movement commands from dialogue choices
-   */
   private handleMovementCommand(entityId: string, destination: string): void {
     const entity = this.entityManager.getEntity(entityId);
     if (!entity) return;
 
     switch (destination) {
       case "nearest_resource":
-        // Find nearest food store or resource
         const nearestStore = this.findNearestResourceLocation(
           entity.getPosition(),
         );
@@ -366,7 +313,6 @@ export class MainScene extends Phaser.Scene {
             `🏃 ${entityId} moving to nearest resource`,
             nearestStore,
           );
-          // Move entity toward resource (simplified)
           entity.setVelocity(
             nearestStore.x > entity.getPosition().x ? 50 : -50,
             nearestStore.y > entity.getPosition().y ? 50 : -50,
@@ -374,11 +320,9 @@ export class MainScene extends Phaser.Scene {
         }
         break;
       case "safe_place":
-        // Move to a safe zone
         logAutopoiesis.info(`🏠 ${entityId} seeking safety`);
         break;
       case "partner_location":
-        // Move toward partner
         const partner = entityId === "isa" ? "stev" : "isa";
         const partnerEntity = this.entityManager.getEntity(partner);
         if (partnerEntity) {
@@ -392,14 +336,10 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Find nearest resource location
-   */
   private findNearestResourceLocation(position: {
     x: number;
     y: number;
   }): { x: number; y: number } | null {
-    // Simplified: return position of first food store
     const storePositions = [
       { x: 600, y: 300 },
       { x: 900, y: 500 },
@@ -430,9 +370,6 @@ export class MainScene extends Phaser.Scene {
     return nearest;
   }
 
-  /**
-   * Setup camera bounds and zoom
-   */
   private setupCamera(): void {
     this.cameras.main.setBounds(
       0,
@@ -447,11 +384,6 @@ export class MainScene extends Phaser.Scene {
     });
   }
 
-  // Método obsoleto - ahora manejado por EntityManager
-
-  /**
-   * Maneja interacciones del jugador
-   */
   public handlePlayerInteraction(entityId: string, interactionType: string) {
     this.gameLogicManager.handlePlayerInteraction(entityId, interactionType);
 
@@ -465,32 +397,26 @@ export class MainScene extends Phaser.Scene {
 
   update() {
     const now = Date.now();
-
-    // ULTRA-OPTIMIZACIÓN: Reducir frecuencia dramáticamente para 60 FPS
-
-    // Input handling - SOLO este debe ser cada frame
     this.handleManualControl();
 
-    // WorldRenderer - REDUCIR de cada frame a cada 200ms (era updateVisuals() cada frame)
+    // Actualizar posiciones de burbujas de diálogo para que sigan a los agentes
+    if (this.dialogueSystem) {
+      this.dialogueSystem.update();
+    }
+
     if (this.worldRenderer && now - this.lastWorldUpdate > 200) {
       this.worldRenderer.updateVisuals();
       this.lastWorldUpdate = now;
     }
-
-    // Food system - MANTENER throttling (ya optimizado)
     if (now - this.lastFoodUpdate > this.foodUpdateInterval) {
       this.updateFoodSystem();
       this.lastFoodUpdate = now;
     }
-
-    // UI updates - MANTENER throttling (ya optimizado)
     if (now - this.lastUIUpdate > this.uiUpdateInterval) {
       this.updateUI();
       this.lastUIUpdate = now;
     }
   }
-
-  // Método obsoleto - ahora manejado por InputManager
 
   private setupUIEvents() {
     this.events.on("changeEntityControl", (entity: ControlledEntity) => {
@@ -717,9 +643,6 @@ export class MainScene extends Phaser.Scene {
     });
   }
 
-  /**
-   * Get game statistics for debugging
-   */
   public getGameStats() {
     return {
       logic: this.gameLogicManager?.getStats(),
@@ -744,9 +667,6 @@ export class MainScene extends Phaser.Scene {
     };
   }
 
-  /**
-   * Cleanup when scene is destroyed
-   */
   destroy(): void {
     if (this.gameLogicManager) {
       this.gameLogicManager.destroy();

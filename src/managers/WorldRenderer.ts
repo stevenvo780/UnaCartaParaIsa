@@ -14,22 +14,16 @@ import { logAutopoiesis } from "../utils/logger";
 export class WorldRenderer {
   private scene: Phaser.Scene;
   private gameState: GameState;
-
-  // Capas de renderizado
   private terrainLayer?: Phaser.GameObjects.Group;
   private decorationLayer?: Phaser.GameObjects.Group;
   private zoneLayer?: Phaser.GameObjects.Group;
   private roadLayer?: Phaser.GameObjects.Group;
-
-  // Cache para optimización
   private renderedTiles = new Map<string, Phaser.GameObjects.GameObject>();
   private renderedDecorations = new Map<
     string,
     Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle
   >();
   private zoneGraphics: Phaser.GameObjects.Graphics[] = [];
-
-  // Configuración de renderizado
   private readonly CHUNK_SIZE = 256;
   private readonly RENDER_DISTANCE = 800;
   private lastCameraPosition = { x: 0, y: 0 };
@@ -47,9 +41,6 @@ export class WorldRenderer {
     });
   }
 
-  /**
-   * Inicializar capas de renderizado
-   */
   private initializeLayers(): void {
     this.terrainLayer = this.scene.add.group({ name: "terrain" });
     this.decorationLayer = this.scene.add.group({ name: "decorations" });
@@ -57,25 +48,15 @@ export class WorldRenderer {
     this.roadLayer = this.scene.add.group({ name: "roads" });
   }
 
-  /**
-   * Renderizar mundo completo
-   */
   public async renderWorld(): Promise<void> {
     logAutopoiesis.info("🌍 Iniciando renderizado del mundo procedural...");
 
     const startTime = Date.now();
 
     try {
-      // FASE 1: Renderizar terreno base
       await this.renderTerrain();
-
-      // FASE 2: Renderizar zonas
       this.renderZones();
-
-      // FASE 3: Renderizar caminos
       this.renderRoads();
-
-      // FASE 4: Renderizar decoraciones y recursos
       await this.renderDecorations();
 
       const renderTime = Date.now() - startTime;
@@ -93,9 +74,6 @@ export class WorldRenderer {
     }
   }
 
-  /**
-   * Renderizar terreno usando tiles procedurales
-   */
   private async renderTerrain(): Promise<void> {
     if (
       !this.gameState.terrainTiles ||
@@ -108,7 +86,6 @@ export class WorldRenderer {
     let tilesRendered = 0;
     const totalTiles = this.gameState.terrainTiles.length;
 
-    // Renderizar tiles en chunks para no bloquear
     for (let i = 0; i < totalTiles; i += 100) {
       const chunk = this.gameState.terrainTiles.slice(i, i + 100);
 
@@ -125,7 +102,6 @@ export class WorldRenderer {
         }
       });
 
-      // Yield control para mantener 60 FPS
       if (i % 500 === 0) {
         await new Promise((resolve) => setTimeout(resolve, 1));
       }
@@ -134,9 +110,6 @@ export class WorldRenderer {
     logAutopoiesis.info(`🌱 Terreno renderizado: ${tilesRendered} tiles`);
   }
 
-  /**
-   * Crear tile de terreno individual
-   */
   private createTerrainTile(
     tile: TerrainTile,
   ): Phaser.GameObjects.GameObject | null {
@@ -144,11 +117,9 @@ export class WorldRenderer {
       | { isAssetLoaded: (k: string) => boolean }
       | undefined;
 
-    // Resolver clave de asset desde ProceduralWorldGenerator (assetId)
     let key: string | undefined = tile.assetId;
 
     if (!key || !assetManager?.isAssetLoaded(key)) {
-      // Usar fallback por tipo de terreno
       const fallbackKey = this.getFallbackTerrainAssetByType(
         tile.type as string,
       );
@@ -165,7 +136,6 @@ export class WorldRenderer {
     sprite.setDepth(0);
     sprite.name = `terrain_${tile.x}_${tile.y}`;
 
-    // Aplicar plugin/pipeline de agua para tiles de tipo "water"
     if (tile.type === "water") {
       const pipelineKey = this.scene.registry.get("waterPipelineKey") as
         | string
@@ -178,9 +148,6 @@ export class WorldRenderer {
     return sprite;
   }
 
-  /**
-   * Obtener asset fallback por tipo de terreno (procedural)
-   */
   private getFallbackTerrainAssetByType(type: string): string {
     const fallbacks: Record<string, string> = {
       grass: "grass_middle",
@@ -191,9 +158,6 @@ export class WorldRenderer {
     return fallbacks[type] || "grass_middle";
   }
 
-  /**
-   * Crear tile de terreno fallback
-   */
   private createFallbackTerrainTile(
     tile: TerrainTile,
   ): Phaser.GameObjects.Rectangle {
@@ -211,14 +175,10 @@ export class WorldRenderer {
     return rect;
   }
 
-  /**
-   * Renderizar zonas funcionales
-   */
   private renderZones(): void {
     this.gameState.zones.forEach((zone) => {
       const graphics = this.scene.add.graphics();
 
-      // Color de zona con transparencia
       const color = this.parseColorString(zone.color);
       graphics.fillStyle(color.hex, color.alpha);
       graphics.fillRect(
@@ -228,7 +188,6 @@ export class WorldRenderer {
         zone.bounds.height,
       );
 
-      // Borde de zona
       graphics.lineStyle(2, color.hex, 0.8);
       graphics.strokeRect(
         zone.bounds.x,
@@ -240,7 +199,6 @@ export class WorldRenderer {
       graphics.setDepth(-1);
       graphics.name = `zone_${zone.id}`;
 
-      // Texto de zona
       const centerX = zone.bounds.x + zone.bounds.width / 2;
       const centerY = zone.bounds.y + zone.bounds.height / 2;
 
@@ -265,9 +223,6 @@ export class WorldRenderer {
     );
   }
 
-  /**
-   * Renderizar caminos
-   */
   private renderRoads(): void {
     const roads = this.gameState.roads || [];
 
@@ -283,13 +238,9 @@ export class WorldRenderer {
     }
   }
 
-  /**
-   * Crear tile de camino (polyline)
-   */
   private createRoadTile(
     road: RoadPolyline,
   ): Phaser.GameObjects.GameObject | null {
-    // Dibujar línea con Graphics a partir de polyline
     if (!road.points || road.points.length === 0) return null;
 
     const gfx = this.scene.add.graphics();
@@ -307,16 +258,12 @@ export class WorldRenderer {
     return gfx;
   }
 
-  /**
-   * Renderizar decoraciones y recursos
-   */
   private async renderDecorations(): Promise<void> {
     const decorations = this.gameState.mapElements.filter(
       (e) => e.type === "decoration",
     );
     let decorationsRendered = 0;
 
-    // Renderizar en chunks
     for (let i = 0; i < decorations.length; i += 50) {
       const chunk = decorations.slice(i, i + 50);
 
@@ -329,7 +276,6 @@ export class WorldRenderer {
         }
       });
 
-      // Yield control
       if (i % 200 === 0) {
         await new Promise((resolve) => setTimeout(resolve, 1));
       }
@@ -338,9 +284,6 @@ export class WorldRenderer {
     logAutopoiesis.info(`🌳 Decoraciones renderizadas: ${decorationsRendered}`);
   }
 
-  /**
-   * Crear sprite de decoración
-   */
   private createDecorationSprite(
     decoration: MapElement & { assetKey?: string; biome?: string },
   ): Phaser.GameObjects.Sprite | Phaser.GameObjects.Rectangle | null {
@@ -348,7 +291,6 @@ export class WorldRenderer {
       | { isAssetLoaded: (k: string) => boolean }
       | undefined;
 
-    // Resolver asset desde metadata si no viene en assetKey
     let assetKey = decoration.assetKey as string | undefined;
     const meta = decoration.metadata || {};
     if (!assetKey && (meta as { assetId?: string }).assetId) {
@@ -371,11 +313,8 @@ export class WorldRenderer {
       assetKey,
     );
 
-    // Dimensiones por defecto (para props pequeños)
     let width = decoration.size.width;
     let height = decoration.size.height;
-
-    // Si es árbol, hacerlo más grande y ajustar origen
     if (assetKey.includes("tree")) {
       width = 64;
       height = 96;
@@ -390,16 +329,11 @@ export class WorldRenderer {
 
     sprite.setDisplaySize(width, height);
 
-    // Depth suave por Y para orden de pintado natural
     sprite.setDepth(2 + sprite.y * 0.001);
     sprite.name = `decoration_${decoration.id}`;
-
-    // Variación visual ligera
     const variation = Math.random();
     if (variation < 0.08) sprite.setTint(0xdddddd);
     else if (variation < 0.16) sprite.setAlpha(0.92);
-
-    // Aplicar pipeline de agua a decoraciones acuáticas
     if (assetKey.includes("water")) {
       const pipelineKey = this.scene.registry.get("waterPipelineKey") as
         | string
@@ -412,9 +346,6 @@ export class WorldRenderer {
     return sprite;
   }
 
-  /**
-   * Crear decoración fallback
-   */
   private createFallbackDecoration(
     decoration: MapElement,
   ): Phaser.GameObjects.Rectangle {
@@ -434,14 +365,10 @@ export class WorldRenderer {
     return rect;
   }
 
-  /**
-   * Actualizar renderizado (culling, LOD)
-   */
   public updateVisuals(): void {
     const camera = this.scene.cameras.main;
     const currentPos = { x: camera.scrollX, y: camera.scrollY };
 
-    // Solo actualizar si la cámara se movió significativamente
     const distance = Math.hypot(
       currentPos.x - this.lastCameraPosition.x,
       currentPos.y - this.lastCameraPosition.y,
@@ -453,9 +380,6 @@ export class WorldRenderer {
     }
   }
 
-  /**
-   * Realizar culling de objetos fuera de vista
-   */
   private performCulling(camera: Phaser.Cameras.Scene2D.Camera): void {
     const bounds = {
       left: camera.scrollX - this.RENDER_DISTANCE,
@@ -464,7 +388,6 @@ export class WorldRenderer {
       bottom: camera.scrollY + camera.height + this.RENDER_DISTANCE,
     };
 
-    // Culling de decoraciones
     this.renderedDecorations.forEach((sprite) => {
       const inBounds =
         sprite.x >= bounds.left &&
@@ -534,9 +457,6 @@ export class WorldRenderer {
     return { hex: 0x4caf50, alpha: 0.3 };
   }
 
-  /**
-   * Limpiar recursos de renderizado
-   */
   public cleanup(): void {
     this.renderedTiles.clear();
     this.renderedDecorations.clear();
@@ -549,9 +469,6 @@ export class WorldRenderer {
     this.roadLayer?.clear(true, true);
   }
 
-  /**
-   * Obtener estadísticas de renderizado
-   */
   public getRenderStats() {
     return {
       terrainTiles: this.renderedTiles.size,

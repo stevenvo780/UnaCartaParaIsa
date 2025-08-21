@@ -67,11 +67,8 @@ export class UnifiedAssetManager {
   private readonly MAX_CONCURRENT_LOADS = 4;
   private readonly LOAD_TIMEOUT = 10000;
 
-  // Asset definitions consolidadas
   private static readonly CORE_ASSETS: AssetDefinition[] = [
-    // ==========================================
-    // PERSONAJES CRÍTICOS
-    // ==========================================
+    
     {
       key: "isa_happy",
       path: "assets/entities/animated/characters/whomen1.png",
@@ -109,10 +106,18 @@ export class UnifiedAssetManager {
       frameConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
 
-    // Fallback static character sprites
+    
     {
       key: "woman",
-      path: "assets/entities/ent_woman.png",
+      path: "assets/entities/new_woman_idle.png",
+      type: "image",
+      required: true,
+      priority: "critical",
+      category: "character",
+    },
+    {
+      key: "woman_walk",
+      path: "assets/entities/new_woman_walk.png",
       type: "image",
       required: true,
       priority: "critical",
@@ -120,16 +125,22 @@ export class UnifiedAssetManager {
     },
     {
       key: "man",
-      path: "assets/entities/ent_man.png",
+      path: "assets/entities/new_man_idle.png",
+      type: "image",
+      required: true,
+      priority: "critical",
+      category: "character",
+    },
+    {
+      key: "man_walk",
+      path: "assets/entities/new_man_walk.png",
       type: "image",
       required: true,
       priority: "critical",
       category: "character",
     },
 
-    // ==========================================
-    // TERRENO BÁSICO
-    // ==========================================
+    
     {
       key: "grass_middle",
       path: "assets/terrain/base/Grass_Middle.png",
@@ -164,7 +175,7 @@ export class UnifiedAssetManager {
       fallback: "grass_middle",
     },
 
-    // AGUA Y TERRENOS ESPECIALES
+    
     {
       key: "water_middle",
       path: "assets/water/Water_Middle.png",
@@ -182,9 +193,7 @@ export class UnifiedAssetManager {
       fallback: "water_middle",
     },
 
-    // ==========================================
-    // DATOS DEL JUEGO
-    // ==========================================
+    
     {
       key: "dialogues",
       path: "dialogs/dialogos_chat_isa.lite.censored_plus.json",
@@ -193,9 +202,7 @@ export class UnifiedAssetManager {
       priority: "critical",
     },
 
-    // ==========================================
-    // ANIMACIONES BÁSICAS
-    // ==========================================
+    
     {
       key: "campfire_anim",
       path: "assets/animated_entities/campfire.png",
@@ -213,7 +220,7 @@ export class UnifiedAssetManager {
       frameConfig: { frameWidth: 32, frameHeight: 32, endFrame: 3 },
     },
 
-    // DECORACIONES Y RECURSOS
+    
     {
       key: "tree_emerald_1",
       path: "assets/foliage/trees/tree_emerald_1.png",
@@ -228,7 +235,6 @@ export class UnifiedAssetManager {
       priority: "medium",
       category: "decoration",
     },
-    // Árboles adicionales para mayor variedad
     {
       key: "tree_emerald_3",
       path: "assets/foliage/trees/tree_emerald_3.png",
@@ -286,7 +292,7 @@ export class UnifiedAssetManager {
       category: "decoration",
     },
 
-    // COMIDA BÁSICA
+    
     {
       key: "apple_pie",
       path: "assets/consumable_items/food/05_apple_pie.png",
@@ -308,26 +314,16 @@ export class UnifiedAssetManager {
     this.setupAssetGroups();
     this.initializeFallbacks();
   }
-
-  // ==========================================
-  // INICIALIZACIÓN Y CONFIGURACIÓN
-  // ==========================================
-
   private setupAssetGroups(): void {
-    // Grupo crítico
     this.defineAssetGroup(
       "critical",
       UnifiedAssetManager.CORE_ASSETS.filter((a) => a.priority === "critical"),
       true,
     );
-
-    // Grupo de terreno
     this.defineAssetGroup(
       "terrain",
       UnifiedAssetManager.CORE_ASSETS.filter((a) => a.category === "terrain"),
     );
-
-    // Grupo de animaciones
     this.defineAssetGroup(
       "animations",
       UnifiedAssetManager.CORE_ASSETS.filter((a) => a.category === "animation"),
@@ -365,10 +361,6 @@ export class UnifiedAssetManager {
     });
   }
 
-  // ==========================================
-  // CARGA DE ASSETS CRÍTICOS
-  // ==========================================
-
   public async loadCriticalAssets(): Promise<void> {
     logAutopoiesis.info("Cargando assets críticos...");
 
@@ -390,7 +382,6 @@ export class UnifiedAssetManager {
       fallbacksUsed: [],
     };
 
-    // Configurar event handlers
     this.scene.load.on("filecomplete", (key: string) => {
       this.loadedAssets.add(key);
       result.loadedAssets.push(key);
@@ -403,7 +394,6 @@ export class UnifiedAssetManager {
       this.handleAssetError(asset, result);
     });
 
-    // Cargar todos los assets core
     for (const asset of UnifiedAssetManager.CORE_ASSETS) {
       this.loadAssetSafely(asset);
     }
@@ -437,10 +427,6 @@ export class UnifiedAssetManager {
       this.scene.load.start();
     });
   }
-
-  // ==========================================
-  // CARGA BAJO DEMANDA
-  // ==========================================
 
   public async loadAssetGroup(groupName: string): Promise<void> {
     const group = this.assetGroups.get(groupName);
@@ -487,7 +473,6 @@ export class UnifiedAssetManager {
   }
 
   private async doLoadAsset(config: AssetDefinition): Promise<void> {
-    // Control de concurrencia
     while (this.currentLoads >= this.MAX_CONCURRENT_LOADS) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
@@ -566,12 +551,7 @@ export class UnifiedAssetManager {
     }
   }
 
-  // ==========================================
-  // SISTEMA DE COMIDA (Food Assets)
-  // ==========================================
-
   public async loadEssentialFoodAssets(): Promise<void> {
-    // Mapeo de nombres lógicos a archivos reales
     const essentialFoods = [
       { key: "bread", file: "07_bread.png" },
       { key: "burger", file: "15_burger.png" },
@@ -585,7 +565,6 @@ export class UnifiedAssetManager {
       count: essentialFoods.length,
     });
 
-    // Generar definiciones dinámicas para comida
     const foodAssets = essentialFoods.map(({ key, file }) => ({
       key,
       path: `assets/consumable_items/food/${file}`,
@@ -595,7 +574,6 @@ export class UnifiedAssetManager {
       fallback: "default-food",
     }));
 
-    // Cargar assets de comida
     const loadPromises = foodAssets.map((asset) => {
       this.loadQueue.set(asset.key, asset);
       return this.loadAsset(asset.key);
@@ -606,7 +584,6 @@ export class UnifiedAssetManager {
   }
 
   public async loadFoodCategory(category: string): Promise<void> {
-    // Tipar contra catálogo conocido si es posible
     const categoryFoods = FoodCatalog.getFoodsByCategory(
       category as Parameters<typeof FoodCatalog.getFoodsByCategory>[0],
     );
@@ -632,10 +609,6 @@ export class UnifiedAssetManager {
     await Promise.all(loadPromises);
   }
 
-  // ==========================================
-  // SISTEMA CREATIVO (Dynamic Assets)
-  // ==========================================
-
   public async loadBiomeAssets(biome: string): Promise<AssetInfo[]> {
     const biomeAssets: AssetInfo[] = [];
 
@@ -653,7 +626,6 @@ export class UnifiedAssetManager {
         break;
     }
 
-    // Cargar assets generados
     const loadPromises = biomeAssets.map((asset) => {
       const assetDef: AssetDefinition = {
         key: asset.key,
@@ -994,9 +966,9 @@ export class UnifiedAssetManager {
       "isa_happy",
       "stev_happy",
       "isa_sad",
-      "stev_sad", // críticos
+      "stev_sad",
       "grass_middle",
-      "dialogues", // esenciales
+      "dialogues",
     ]);
 
     this.loadedAssets.forEach((key) => {

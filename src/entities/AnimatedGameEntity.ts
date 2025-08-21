@@ -54,7 +54,7 @@ export class AnimatedGameEntity extends GameEntity {
         this.animationManager = undefined;
       }
     } else {
-      // Fallback to basic texture if spritesheet not loaded
+      // Fallback to basic texture from UnifiedAssetManager
       const fallbackKey = entityId === "isa" ? "woman" : "man";
       if (scene.textures.exists(fallbackKey)) {
         this.setTexture(fallbackKey);

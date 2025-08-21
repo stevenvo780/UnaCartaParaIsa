@@ -272,9 +272,10 @@ export class InputManager {
 
     // Notificar al sistema de IA sobre el cambio de control
     if (this.gameLogicManager) {
-      // Liberar control de la entidad anterior
+      // Liberar control de la entidad anterior Y restaurar control de IA
       if (prevEntity !== "none") {
         this.gameLogicManager.setEntityPlayerControl(prevEntity, false);
+        logAutopoiesis.info(`🤖 Restaurando control de IA para ${prevEntity}`);
       }
 
       // Tomar control de la nueva entidad

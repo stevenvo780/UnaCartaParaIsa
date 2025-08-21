@@ -146,7 +146,7 @@ export class DialogueSystem {
       if (mainScene.isaEntity?.active) {
         const position = mainScene.isaEntity.getPosition();
         entities.push({
-          id: "isa_entity",
+          id: "isa", // CORREGIDO: ID correcto
           x: position.x,
           y: position.y,
           activity: mainScene.isaEntity.getCurrentActivity() || "SOCIALIZING",
@@ -158,7 +158,7 @@ export class DialogueSystem {
       if (mainScene.stevEntity?.active) {
         const position = mainScene.stevEntity.getPosition();
         entities.push({
-          id: "stev_entity",
+          id: "stev", // CORREGIDO: ID correcto
           x: position.x,
           y: position.y,
           activity: mainScene.stevEntity.getCurrentActivity() || "SOCIALIZING",
@@ -171,14 +171,14 @@ export class DialogueSystem {
     if (entities.length === 0) {
       return [
         {
-          id: "isa_entity",
+          id: "isa", // CORREGIDO: ID correcto
           x: 100,
           y: 100,
           activity: "SOCIALIZING",
           emotion: "NEUTRAL",
         },
         {
-          id: "stev_entity",
+          id: "stev", // CORREGIDO: ID correcto
           x: 200,
           y: 150,
           activity: "SOCIALIZING",
@@ -260,14 +260,34 @@ export class DialogueSystem {
   public showDialogue(entityId: string, dialogue: DialogueEntry): void {
     this.removeDialogueBubble(entityId);
 
-    const entity = this.getAvailableEntities().find((e) => e.id === entityId);
-    if (!entity) return;
+    // CORREGIDO: Obtener posición actual en tiempo real directamente de la entidad
+    let entityPosition: { x: number; y: number } | null = null;
+
+    const mainScene = this.scene.scene.get("MainScene") as Phaser.Scene & {
+      isaEntity?: { getPosition(): { x: number; y: number } };
+      stevEntity?: { getPosition(): { x: number; y: number } };
+    };
+
+    if (mainScene) {
+      if (entityId === "isa" && mainScene.isaEntity) {
+        entityPosition = mainScene.isaEntity.getPosition();
+      } else if (entityId === "stev" && mainScene.stevEntity) {
+        entityPosition = mainScene.stevEntity.getPosition();
+      }
+    }
+
+    // Fallback si no se puede obtener posición actual
+    if (!entityPosition) {
+      const entity = this.getAvailableEntities().find((e) => e.id === entityId);
+      if (!entity) return;
+      entityPosition = { x: entity.x, y: entity.y };
+    }
 
     // Posicionar burbuja sobre la entidad con un offset hacia arriba
     const bubbleOffsetY = -80; // Más arriba para mejor visibilidad
     const bubbleContainer = this.scene.add.container(
-      entity.x,
-      entity.y + bubbleOffsetY,
+      entityPosition.x,
+      entityPosition.y + bubbleOffsetY,
     );
 
     // Ajustar tamaño de burbuja basado en el texto
@@ -396,7 +416,7 @@ export class DialogueSystem {
       emotion: dialogue.emotion,
       activity: dialogue.activity,
       textLength: dialogue.text.length,
-      position: { x: entity.x, y: entity.y },
+      position: entityPosition, // CORREGIDO: usar entityPosition en lugar de entity
     });
 
     logAutopoiesis.info(`💬 ${dialogue.speaker}: ${dialogue.text}`);
@@ -473,6 +493,36 @@ export class DialogueSystem {
 
     logAutopoiesis.info("Conversación finalizada", {
       duration: Date.now() - this.conversationState.startTime,
+    });
+  }
+
+  /**
+   * Actualizar posiciones de burbujas de diálogo para que sigan a las entidades
+   */
+  public update(): void {
+    if (this.dialogueBubbles.size === 0) return;
+
+    const mainScene = this.scene.scene.get("MainScene") as Phaser.Scene & {
+      isaEntity?: { getPosition(): { x: number; y: number } };
+      stevEntity?: { getPosition(): { x: number; y: number } };
+    };
+
+    if (!mainScene) return;
+
+    // Actualizar posición de cada burbuja activa
+    this.dialogueBubbles.forEach((bubble, entityId) => {
+      let entityPosition: { x: number; y: number } | null = null;
+
+      if (entityId === "isa" && mainScene.isaEntity) {
+        entityPosition = mainScene.isaEntity.getPosition();
+      } else if (entityId === "stev" && mainScene.stevEntity) {
+        entityPosition = mainScene.stevEntity.getPosition();
+      }
+
+      if (entityPosition) {
+        const bubbleOffsetY = -80; // Misma offset que en showDialogue()
+        bubble.setPosition(entityPosition.x, entityPosition.y + bubbleOffsetY);
+      }
     });
   }
 

@@ -26,7 +26,13 @@ export class UIScene extends Phaser.Scene {
   private bottomBar!: Phaser.GameObjects.Container;
   private leftPanel!: Phaser.GameObjects.Container;
   private rightPanel!: Phaser.GameObjects.Container;
+  private leftEdgeToggle?: Phaser.GameObjects.Container;
+  private rightEdgeToggle?: Phaser.GameObjects.Container;
   private minimapContainer!: Phaser.GameObjects.Container;
+  private minimapContent?: Phaser.GameObjects.Graphics;
+  private minimapIsaDot?: Phaser.GameObjects.Arc;
+  private minimapStevDot?: Phaser.GameObjects.Arc;
+  private minimapToggleBtn?: Phaser.GameObjects.Container;
   private foodUI!: FoodUI;
   private explorationUI!: ExplorationUI;
 
@@ -38,7 +44,7 @@ export class UIScene extends Phaser.Scene {
   // UI state
   private leftPanelExpanded = false;
   private rightPanelExpanded = false;
-  private showMinimap = true;
+  private showMinimap = false;
 
   constructor() {
     super({ key: "UIScene" });
@@ -60,6 +66,9 @@ export class UIScene extends Phaser.Scene {
 
     // Setup modern navigation
     this.setupModernNavigation();
+
+    // Edge toggles to reopen minimized panels
+    this.createEdgeToggles();
 
     // Connect to game logic
     const mainScene = this.scene.get("MainScene");
@@ -149,6 +158,7 @@ export class UIScene extends Phaser.Scene {
     topBg.fillRect(0, 70, this.cameras.main.width, 4);
 
     this.topBar.add(topBg);
+    this.topBar.setData("bg", topBg);
 
     // Modern game title with better typography
     const titleContainer = this.add.container(25, 35);
@@ -434,6 +444,7 @@ export class UIScene extends Phaser.Scene {
     bottomBg.lineStyle(2, 0x1abc9c, 0.8);
     bottomBg.lineBetween(0, 2, this.cameras.main.width, 2);
     this.bottomBar.add(bottomBg);
+    this.bottomBar.setData("bg", bottomBg);
 
     // Control buttons
     this.createControlButtons();
@@ -623,7 +634,9 @@ export class UIScene extends Phaser.Scene {
     const panelWidth = 300;
     const panelHeight = this.cameras.main.height - 140;
 
-    this.leftPanel = this.add.container(10, 70);
+    // Start minimized by default
+    const initialX = this.leftPanelExpanded ? 10 : -250;
+    this.leftPanel = this.add.container(initialX, 70);
     this.leftPanel.setScrollFactor(0);
 
     // Enhanced panel background with shadow effect
@@ -700,7 +713,10 @@ export class UIScene extends Phaser.Scene {
   private createRightPanel() {
     const panelWidth = 220;
     const panelHeight = this.cameras.main.height - 140;
-    const panelX = this.cameras.main.width - panelWidth - 10;
+    // Start minimized by default
+    const panelX = this.rightPanelExpanded
+      ? this.cameras.main.width - panelWidth - 10
+      : this.cameras.main.width + 10;
 
     this.rightPanel = this.add.container(panelX, 70);
     this.rightPanel.setScrollFactor(0);
@@ -869,7 +885,7 @@ export class UIScene extends Phaser.Scene {
 
     // Improved minimap content representation
     const mapContent = this.add.graphics();
-
+    
     // Base terrain
     mapContent.fillStyle(0x27ae60, 0.4);
     mapContent.fillRoundedRect(8, 28, minimapSize - 16, minimapSize - 40, 4);
@@ -898,6 +914,7 @@ export class UIScene extends Phaser.Scene {
     mapContent.fillCircle(85, 55, 3);
 
     this.minimapContainer.add(mapContent);
+    this.minimapContent = mapContent;
 
     // Improved toggle button
     const toggleBtn = this.createModernButton(
@@ -912,6 +929,44 @@ export class UIScene extends Phaser.Scene {
       },
     );
     this.minimapContainer.add(toggleBtn);
+
+    // Also add a small floating reopen button when minimap is hidden
+    const reopenBtn = this.createModernButton(
+      this.cameras.main.width - 45,
+      this.cameras.main.height - 45,
+      28,
+      28,
+      "🗺️",
+      "#3498db",
+      () => this.toggleMinimap(),
+    );
+    reopenBtn.setScrollFactor(0);
+    reopenBtn.setDepth(1002);
+    this.minimapToggleBtn = reopenBtn;
+    // Hidden button is visible only when minimap is hidden
+    this.minimapToggleBtn.setVisible(!this.showMinimap);
+
+    // Apply initial visibility state
+    this.minimapContainer.setVisible(this.showMinimap);
+  }
+
+  private createEdgeToggles() {
+    // Left edge toggle (open/close left panel)
+    const leftBtn = this.createModernButton(5, 90, 22, 40, "▶", "#95a5a6", () => {
+      this.toggleLeftPanel();
+    });
+    leftBtn.setScrollFactor(0);
+    leftBtn.setDepth(1001);
+    this.leftEdgeToggle = leftBtn;
+
+    // Right edge toggle
+    const rightX = this.cameras.main.width - 27;
+    const rightBtn = this.createModernButton(rightX, 90, 22, 40, "◀", "#95a5a6", () => {
+      this.toggleRightPanel();
+    });
+    rightBtn.setScrollFactor(0);
+    rightBtn.setDepth(1001);
+    this.rightEdgeToggle = rightBtn;
   }
 
   private setupModernNavigation() {
@@ -1537,9 +1592,64 @@ export class UIScene extends Phaser.Scene {
     // Could highlight active control buttons based on current mode
   }
 
-  private updateMinimap(_data: GameLogicUpdateData) {
-    // Update minimap with entity positions if needed
-    // This is a placeholder for future minimap functionality
+  private updateMinimap(data: GameLogicUpdateData) {
+    if (!this.minimapContainer || !this.minimapContent) return;
+    // Obtain world size from registry to scale positions
+    const gameState = this.registry.get("gameState") as any;
+    const worldSize = gameState?.worldSize || { width: 1200, height: 800 };
+
+    const minimapSize = 140;
+    const contentX = 8;
+    const contentY = 28;
+    const contentW = minimapSize - 16;
+    const contentH = minimapSize - 40;
+
+    const scaleX = contentW / worldSize.width;
+    const scaleY = contentH / worldSize.height;
+
+    // Clear and redraw base terrain area
+    this.minimapContent.clear();
+    this.minimapContent.fillStyle(0x27ae60, 0.4);
+    this.minimapContent.fillRoundedRect(contentX, contentY, contentW, contentH, 4);
+
+    // Optional: draw a few zones from game state for orientation
+    const zones = gameState?.zones || [];
+    zones.slice(0, 4).forEach((z: any, idx: number) => {
+      const colrs = [0xe74c3c, 0xf39c12, 0x9b59b6, 0x1abc9c];
+      const c = colrs[idx % colrs.length];
+      const zx = contentX + z.bounds.x * scaleX;
+      const zy = contentY + z.bounds.y * scaleY;
+      const zw = Math.max(2, z.bounds.width * scaleX);
+      const zh = Math.max(2, z.bounds.height * scaleY);
+      this.minimapContent.fillStyle(c, 0.6);
+      this.minimapContent.fillRoundedRect(zx, zy, zw, zh, 2);
+    });
+
+    // Ensure dots exist
+    if (!this.minimapIsaDot) {
+      this.minimapIsaDot = this.add.circle(0, 0, 3, 0xff1744, 1);
+      this.minimapContainer.add(this.minimapIsaDot);
+    }
+    if (!this.minimapStevDot) {
+      this.minimapStevDot = this.add.circle(0, 0, 3, 0x00bcd4, 1);
+      this.minimapContainer.add(this.minimapStevDot);
+    }
+
+    // Update entity markers
+    const isa = data.entities?.find((e) => e.id === "isa");
+    const stev = data.entities?.find((e) => e.id === "stev");
+    if (isa) {
+      this.minimapIsaDot.setPosition(
+        contentX + isa.position.x * scaleX,
+        contentY + isa.position.y * scaleY,
+      );
+    }
+    if (stev) {
+      this.minimapStevDot.setPosition(
+        contentX + stev.position.x * scaleX,
+        contentY + stev.position.y * scaleY,
+      );
+    }
   }
 
   // =================== CONTROL METHODS ===================
@@ -1703,7 +1813,7 @@ export class UIScene extends Phaser.Scene {
 
   private toggleRightPanel() {
     this.rightPanelExpanded = !this.rightPanelExpanded;
-    const panelWidth = 200;
+    const panelWidth = 220;
     const targetX = this.rightPanelExpanded
       ? this.cameras.main.width - panelWidth - 10
       : this.cameras.main.width + 10;
@@ -1719,6 +1829,9 @@ export class UIScene extends Phaser.Scene {
   private toggleMinimap() {
     this.showMinimap = !this.showMinimap;
     this.minimapContainer.setVisible(this.showMinimap);
+    if (this.minimapToggleBtn) {
+      this.minimapToggleBtn.setVisible(!this.showMinimap);
+    }
   }
 
   /**
@@ -1729,19 +1842,59 @@ export class UIScene extends Phaser.Scene {
 
     // Reposition panels based on new screen size
     if (this.leftPanel) {
-      this.leftPanel.setPosition(20, 20);
+      // Keep aligned below top bar, same as initial layout
+      this.leftPanel.setPosition(10, 70);
     }
 
     if (this.rightPanel) {
-      this.rightPanel.setPosition(width - 300, 20);
+      // Keep aligned below top bar; panel width is 220
+      this.rightPanel.setPosition(width - 220 - 10, 70);
     }
 
     if (this.minimapContainer) {
-      this.minimapContainer.setPosition(width - 200, height - 200);
+      // Use same offsets as initial creation
+      const minimapSize = 140;
+      this.minimapContainer.setPosition(
+        width - minimapSize - 15,
+        height - minimapSize - 90,
+      );
+    }
+
+    if (this.minimapToggleBtn) {
+      this.minimapToggleBtn.setPosition(width - 45, height - 45);
+    }
+
+    // Reposition edge toggles
+    if (this.leftEdgeToggle) {
+      this.leftEdgeToggle.setPosition(5, 90);
+    }
+    if (this.rightEdgeToggle) {
+      this.rightEdgeToggle.setPosition(width - 27, 90);
     }
 
     if (this.bottomBar) {
-      this.bottomBar.setPosition(width / 2, height - 50);
+      // Anchor to bottom-left consistent with initial creation
+      const barHeight = 80;
+      this.bottomBar.setPosition(0, height - barHeight);
+
+      // Resize bottom bar background to fit width
+      const bg = this.bottomBar.getData("bg") as Phaser.GameObjects.Graphics;
+      if (bg) {
+        bg.clear();
+        bg.fillGradientStyle(
+          0x34495e,
+          0x34495e,
+          0x2c3e50,
+          0x2c3e50,
+          0.9,
+          0.9,
+          1,
+          1,
+        );
+        bg.fillRect(0, 0, width, barHeight);
+        bg.lineStyle(2, 0x1abc9c, 0.8);
+        bg.lineBetween(0, 2, width, 2);
+      }
     }
 
     if (this.foodUI) {

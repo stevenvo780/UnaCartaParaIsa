@@ -284,7 +284,12 @@ export class QuestSystem {
           break;
 
         case "achieve_stats":
-          // TODO: Implement stats verification when requirements are defined
+          if (objective.requirements?.stats) {
+            const entityStats = data.entities?.[objective.targetEntity || "isa"]?.stats;
+            if (entityStats && this._checkStatsRequirements(entityStats, objective.requirements.stats)) {
+              this.updateObjectiveProgress(quest.id, objective.id);
+            }
+          }
           break;
       }
     });
@@ -650,6 +655,19 @@ export class QuestSystem {
    */
   public getCompletedQuests(): Quest[] {
     return Array.from(this._questProgress.completedQuests.values());
+  }
+
+  /**
+   * Verifica si las estadísticas cumplen con los requisitos
+   */
+  private _checkStatsRequirements(entityStats: any, requiredStats: any): boolean {
+    for (const [statName, requiredValue] of Object.entries(requiredStats)) {
+      const currentValue = entityStats[statName];
+      if (typeof currentValue !== 'number' || currentValue < (requiredValue as number)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**

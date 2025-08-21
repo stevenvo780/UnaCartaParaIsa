@@ -28,7 +28,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     entityId: "isa" | "stev",
     services?: IEntityServices,
   ) {
-    // Use fallback sprites since main entity sprites are now handled by AnimatedGameEntity
+    // Use sprites from UnifiedAssetManager (now pointing to new Kenney sprites)
     const initialSprite = entityId === "isa" ? "woman" : "man";
     super(scene, x, y, initialSprite);
 
@@ -392,7 +392,7 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
         (100 - this.entityData.stats.boredom)) /
       4;
 
-    // For base GameEntity, just use simple fallback sprites
+    // For base GameEntity, use sprites from UnifiedAssetManager
     const newSprite = this.entityData.id === "isa" ? "woman" : "man";
 
     if (newSprite !== this.currentSprite) {
