@@ -40,28 +40,10 @@ export class DialogueCardUI {
     };
 
     this.container = this.scene.add.container(x, y);
-    this.container.setScrollFactor(0); // UI should not scroll with camera
-    this.container.setDepth(1000); // Always on top
-
-    // Área de click para cerrar todas con botón derecho
-    const invisibleBg = this.scene.add.rectangle(
-      0,
-      0,
-      this.scene.scale.width,
-      this.scene.scale.height,
-      0x000000,
-      0,
-    );
-    invisibleBg.setOrigin(0, 0);
-    invisibleBg.setScrollFactor(0);
-    invisibleBg.setDepth(999); // debajo de las cartas (1000)
-    invisibleBg.setInteractive();
-    invisibleBg.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-      if (pointer.rightButtonDown()) {
-        this.clearAllCards();
-      }
-    });
-    this.container.add(invisibleBg);
+    // Asegurar que NO se escale con el zoom de la cámara
+    this.container.setScrollFactor(0);
+    // Colocar por encima de las barras para máxima prioridad visual y de input
+    this.container.setDepth(1002);
 
     // Subscribe to card system events
     this.setupEventListeners();
@@ -70,6 +52,11 @@ export class DialogueCardUI {
       position: { x, y },
       config: this.config,
     });
+  }
+
+  // Exponer el contenedor para cálculo de bounds y control de input en la UIScene
+  public getContainer(): Phaser.GameObjects.Container {
+    return this.container;
   }
 
   /**

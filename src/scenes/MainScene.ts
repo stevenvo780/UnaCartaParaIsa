@@ -83,7 +83,6 @@ export class MainScene extends Phaser.Scene {
       this.dialogueSystem,
     );
     this.questUI = new QuestUI(this);
-    this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
     this.dayNightUI = new DayNightUI(this, 20, 20);
     this.systemStatusUI = new SystemStatusUI(this, 20, 160);
 
@@ -171,7 +170,7 @@ export class MainScene extends Phaser.Scene {
       "cardDialogueSystem",
       this.gameLogicManager.getCardDialogueSystem(),
     );
-    this.registry.set("dialogueCardUI", this.dialogueCardUI);
+    // DialogueCardUI vive en la UIScene para no escalar con el zoom
     this.registry.set(
       "dayNightSystem",
       this.gameLogicManager.getDayNightSystem(),
@@ -195,7 +194,8 @@ export class MainScene extends Phaser.Scene {
   private setupDialogueCardEventHandlers(): void {
     const cardDialogueSystem = this.gameLogicManager.getCardDialogueSystem();
     cardDialogueSystem.onCardGenerated = (card) => {
-      this.events.emit("showDialogueCard", card);
+      const uiScene = this.scene.get("UIScene");
+      uiScene.events.emit("showDialogueCard", card);
       logAutopoiesis.info("🃏 Dialogue card generated", {
         cardId: card.id,
         type: card.type,
@@ -203,7 +203,8 @@ export class MainScene extends Phaser.Scene {
         participants: card.participants,
       });
     };
-    this.events.on("dialogueChoiceSelected", (data: any) => {
+    const uiScene = this.scene.get("UIScene");
+    uiScene.events.on("dialogueChoiceSelected", (data: any) => {
       cardDialogueSystem.handleChoice(data.cardId, data.choice);
       this.applyDialogueChoiceEffects(data.choice);
 

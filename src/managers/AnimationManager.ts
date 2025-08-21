@@ -29,34 +29,34 @@ export class AnimationManager {
   private createdSprites = new Set<Phaser.GameObjects.Sprite>();
 
   private static readonly SPRITE_SHEET_CONFIGS: SpriteSheetConfig[] = [
-    // PERSONAJES PRINCIPALES
+    // PERSONAJES PRINCIPALES - NUEVOS SPRITES KENNEY
     {
       key: "isa_happy",
-      path: "assets/entities/animated/characters/whomen1.png",
-      frameWidth: 32,
-      frameHeight: 32,
-      totalFrames: 4,
+      path: "assets/entities/new_woman_idle.png",
+      frameWidth: 18,
+      frameHeight: 18,
+      totalFrames: 1,
     },
     {
       key: "isa_sad",
-      path: "assets/entities/animated/characters/whomen1.png",
-      frameWidth: 32,
-      frameHeight: 32,
-      totalFrames: 4,
+      path: "assets/entities/new_woman_idle.png",
+      frameWidth: 18,
+      frameHeight: 18,
+      totalFrames: 1,
     },
     {
       key: "stev_happy",
-      path: "assets/entities/animated/characters/man1.png",
-      frameWidth: 32,
-      frameHeight: 32,
-      totalFrames: 4,
+      path: "assets/entities/new_man_idle.png",
+      frameWidth: 18,
+      frameHeight: 18,
+      totalFrames: 1,
     },
     {
       key: "stev_sad",
-      path: "assets/entities/animated/characters/man1.png",
-      frameWidth: 32,
-      frameHeight: 32,
-      totalFrames: 4,
+      path: "assets/entities/new_man_idle.png",
+      frameWidth: 18,
+      frameHeight: 18,
+      totalFrames: 1,
     },
 
     // ANIMACIONES DE AMBIENTE
@@ -119,64 +119,64 @@ export class AnimationManager {
   ];
 
   private static readonly ANIMATION_CONFIGS: AnimationConfig[] = [
-    // PERSONAJES - ISA
+    // PERSONAJES - ISA (NUEVOS SPRITES ESTÁTICOS)
     {
       key: "isa_happy_idle",
       spriteSheetKey: "isa_happy",
-      frames: [0, 1, 2, 1],
-      frameRate: 4,
-      repeat: -1,
+      frames: [0],
+      frameRate: 1,
+      repeat: 0,
     },
     {
       key: "isa_happy_walk",
       spriteSheetKey: "isa_happy",
-      frames: [0, 1, 2, 3],
-      frameRate: 6,
-      repeat: -1,
+      frames: [0],
+      frameRate: 1,
+      repeat: 0,
     },
     {
       key: "isa_sad_idle",
       spriteSheetKey: "isa_sad",
       frames: [0],
-      frameRate: 2,
-      repeat: -1,
+      frameRate: 1,
+      repeat: 0,
     },
     {
       key: "isa_sad_walk",
       spriteSheetKey: "isa_sad",
-      frames: [0, 1, 2, 1],
-      frameRate: 3,
-      repeat: -1,
+      frames: [0],
+      frameRate: 1,
+      repeat: 0,
     },
 
-    // PERSONAJES - STEV
+    // PERSONAJES - STEV (NUEVOS SPRITES ESTÁTICOS)
     {
       key: "stev_happy_idle",
       spriteSheetKey: "stev_happy",
-      frames: [0, 1, 2, 1],
-      frameRate: 4,
-      repeat: -1,
+      frames: [0],
+      frameRate: 1,
+      repeat: 0,
     },
     {
       key: "stev_happy_walk",
       spriteSheetKey: "stev_happy",
-      frames: [0, 1, 2, 3],
-      frameRate: 6,
-      repeat: -1,
+      frames: [0],
+      frameRate: 1,
+      repeat: 0,
     },
     {
       key: "stev_sad_idle",
       spriteSheetKey: "stev_sad",
       frames: [0],
-      frameRate: 2,
-      repeat: -1,
+      frameRate: 1,
+      repeat: 0,
     },
     {
       key: "stev_sad_walk",
       spriteSheetKey: "stev_sad",
-      frames: [0, 1, 2, 1],
-      frameRate: 3,
-      repeat: -1,
+      frames: [0],
+      frameRate: 1,
+      repeat: 0,
     },
 
     // ANIMACIONES DE AMBIENTE

@@ -5,6 +5,7 @@ import {
 } from "../components/ExplorationUI";
 import { FoodUI } from "../components/FoodUI";
 import { ResonanceLabel, UIElementPool } from "../managers/UIElementPool";
+import { DialogueCardUI } from "../components/DialogueCardUI";
 import type { Entity, GameLogicUpdateData } from "../types";
 import { randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
@@ -35,6 +36,7 @@ export class UIScene extends Phaser.Scene {
   private minimapToggleBtn?: Phaser.GameObjects.Container;
   private foodUI!: FoodUI;
   private explorationUI!: ExplorationUI;
+  private dialogueCardUI!: DialogueCardUI;
 
   // Navigation and control
   private isDraggingCamera = false;
@@ -61,6 +63,8 @@ export class UIScene extends Phaser.Scene {
     this.createLeftPanel();
     this.createRightPanel();
     this.createMinimap();
+    // Colocar los diálogos en la UIScene para que no dependan del zoom
+    this.dialogueCardUI = new DialogueCardUI(this, 50, 50);
     this.createFoodUI();
     this.createExplorationUI();
 
@@ -979,11 +983,13 @@ export class UIScene extends Phaser.Scene {
       const rightPanelWidth = this.rightPanelExpanded ? 220 : 50;
 
       // Check if clicking within navigable area (not on UI elements)
+      // Excluir áreas de UI (barras, paneles, minimapa y cartas de diálogo)
       const isInNavigableArea =
         pointer.x > leftPanelWidth &&
         pointer.x < this.cameras.main.width - rightPanelWidth &&
         pointer.y > topBarHeight &&
-        pointer.y < this.cameras.main.height - bottomBarHeight;
+        pointer.y < this.cameras.main.height - bottomBarHeight &&
+        !this.isPointerOverDialogueUI(pointer);
 
       if (isInNavigableArea) {
         this.isDraggingCamera = true;
@@ -1094,6 +1100,18 @@ export class UIScene extends Phaser.Scene {
           camera.setZoom(Phaser.Math.Clamp(newZoom, 0.5, 2.0));
         }
       },
+    );
+  }
+
+  private isPointerOverDialogueUI(pointer: Phaser.Input.Pointer): boolean {
+    if (!this.dialogueCardUI) return false;
+    const container = this.dialogueCardUI.getContainer();
+    const bounds = container.getBounds();
+    return (
+      pointer.x >= bounds.x &&
+      pointer.x <= bounds.x + bounds.width &&
+      pointer.y >= bounds.y &&
+      pointer.y <= bounds.y + bounds.height
     );
   }
 
