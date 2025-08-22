@@ -4,13 +4,13 @@
 
 // Tipos principales
 export type {
-  BiomeDefinition,
-  BiomeTransition,
-  GeneratedWorld,
-  NoiseOptions,
-  TerrainTile,
-  WorldGenConfig,
-  WorldLayer,
+    BiomeDefinition,
+    BiomeTransition,
+    GeneratedWorld,
+    NoiseOptions,
+    TerrainTile,
+    WorldGenConfig,
+    WorldLayer,
 } from "./types";
 
 // Enum principal
@@ -25,20 +25,20 @@ export { TerrainGenerator } from "./TerrainGenerator";
 
 // Configuración y definiciones
 export {
-  BIOME_DEFINITIONS,
-  DEFAULT_WORLD_CONFIG,
-  calculateBiomeFitness,
-  canBiomeSpawn,
-  getAllBiomes,
-  getBiomeDefinition,
+    BIOME_DEFINITIONS,
+    DEFAULT_WORLD_CONFIG,
+    calculateBiomeFitness,
+    canBiomeSpawn,
+    getAllBiomes,
+    getBiomeDefinition,
 } from "./BiomeDefinitions";
 
 export {
-  DENSITY_CONFIGS,
-  WORLD_PRESETS,
-  applyDensityConfig,
-  createCustomWorldConfig,
-  getAvailablePresets,
-  getWorldPreset,
-  validateWorldConfig,
+    DENSITY_CONFIGS,
+    WORLD_PRESETS,
+    applyDensityConfig,
+    createCustomWorldConfig,
+    getAvailablePresets,
+    getWorldPreset,
+    validateWorldConfig,
 } from "./WorldConfig";

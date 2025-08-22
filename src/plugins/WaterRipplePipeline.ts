@@ -6,11 +6,11 @@ import Phaser from "phaser";
  * No afecta toda la escena; solo los sprites con setPipeline('WaterRipple').
  */
 export class WaterRipplePipeline extends Phaser.Renderer.WebGL.Pipelines
-  .SinglePipeline {
-  constructor(game: Phaser.Game) {
-    super({
-      game,
-      fragShader: `
+    .SinglePipeline {
+    constructor(game: Phaser.Game) {
+        super({
+            game,
+            fragShader: `
       precision mediump float;
       uniform sampler2D uMainSampler;
       uniform float uTime;
@@ -42,19 +42,19 @@ export class WaterRipplePipeline extends Phaser.Renderer.WebGL.Pipelines
         gl_FragColor = color;
       }
       `,
-    });
-  }
+        });
+    }
 
-  onPreRender(): void {
+    onPreRender(): void {
     // Actualizar uniforms cada frame
-    const time = (this.game.loop?.time || 0) / 1000;
-    this.set1f("uTime", time);
+        const time = (this.game.loop?.time || 0) / 1000;
+        this.set1f("uTime", time);
 
-    // Usar resolución del escalado de Phaser (tipado correcto)
-    const w: number = this.game.scale.width;
-    const h: number = this.game.scale.height;
-    this.set2f("uResolution", w, h);
-  }
+        // Usar resolución del escalado de Phaser (tipado correcto)
+        const w: number = this.game.scale.width;
+        const h: number = this.game.scale.height;
+        this.set2f("uResolution", w, h);
+    }
 }
 
 export default WaterRipplePipeline;

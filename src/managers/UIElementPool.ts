@@ -13,121 +13,121 @@ export interface PoolableUIElement {
 }
 
 export class ResonanceLabel implements PoolableUIElement {
-  public gameObject: Phaser.GameObjects.Text;
-  public isActive = false;
+    public gameObject: Phaser.GameObjects.Text;
+    public isActive = false;
 
-  constructor(scene: Phaser.Scene) {
-    this.gameObject = scene.add.text(0, 0, "", {
-      fontSize: "12px",
-      color: "#ffffff",
-      fontFamily: "Arial",
-    });
-    this.gameObject.setScrollFactor(0);
-    this.gameObject.setVisible(false);
-  }
+    constructor(scene: Phaser.Scene) {
+        this.gameObject = scene.add.text(0, 0, "", {
+            fontSize: "12px",
+            color: "#ffffff",
+            fontFamily: "Arial",
+        });
+        this.gameObject.setScrollFactor(0);
+        this.gameObject.setVisible(false);
+    }
 
-  setup(x: number, y: number, text: string): void {
-    this.gameObject.setPosition(x, y);
-    this.gameObject.setText(text);
-    this.gameObject.setVisible(true);
-    this.isActive = true;
-  }
+    setup(x: number, y: number, text: string): void {
+        this.gameObject.setPosition(x, y);
+        this.gameObject.setText(text);
+        this.gameObject.setVisible(true);
+        this.isActive = true;
+    }
 
-  reset(): void {
-    this.gameObject.setVisible(false);
-    this.isActive = false;
-  }
+    reset(): void {
+        this.gameObject.setVisible(false);
+        this.isActive = false;
+    }
 }
 
 export class UIElementPool<T extends PoolableUIElement> {
-  private pool: T[] = [];
-  private activeElements = new Set<T>();
-  private createElementFn: () => T;
-  private poolName: string;
+    private pool: T[] = [];
+    private activeElements = new Set<T>();
+    private createElementFn: () => T;
+    private poolName: string;
 
-  constructor(createElementFn: () => T, poolName: string, initialSize = 5) {
-    this.createElementFn = createElementFn;
-    this.poolName = poolName;
+    constructor(createElementFn: () => T, poolName: string, initialSize = 5) {
+        this.createElementFn = createElementFn;
+        this.poolName = poolName;
 
-    for (let i = 0; i < initialSize; i++) {
-      this.pool.push(this.createElementFn());
+        for (let i = 0; i < initialSize; i++) {
+            this.pool.push(this.createElementFn());
+        }
+
+        logAutopoiesis.debug(`UIElementPool '${poolName}' initialized`, {
+            initialSize,
+        });
     }
 
-    logAutopoiesis.debug(`UIElementPool '${poolName}' initialized`, {
-      initialSize,
-    });
-  }
-
-  /**
+    /**
    * Obtiene un elemento del pool
    */
-  public acquire(): T {
-    let element = this.pool.pop();
+    public acquire(): T {
+        let element = this.pool.pop();
 
-    if (!element) {
-      element = this.createElementFn();
-      logAutopoiesis.debug(
-        `Pool '${this.poolName}' expanded - new element created`,
-      );
+        if (!element) {
+            element = this.createElementFn();
+            logAutopoiesis.debug(
+                `Pool '${this.poolName}' expanded - new element created`,
+            );
+        }
+
+        this.activeElements.add(element);
+        return element;
     }
 
-    this.activeElements.add(element);
-    return element;
-  }
-
-  /**
+    /**
    * Devuelve un elemento al pool
    */
-  public release(element: T): void {
-    if (!this.activeElements.has(element)) {
-      logAutopoiesis.warn(
-        `Attempting to release element not from this pool: ${this.poolName}`,
-      );
-      return;
+    public release(element: T): void {
+        if (!this.activeElements.has(element)) {
+            logAutopoiesis.warn(
+                `Attempting to release element not from this pool: ${this.poolName}`,
+            );
+            return;
+        }
+
+        element.reset();
+        this.activeElements.delete(element);
+        this.pool.push(element);
     }
 
-    element.reset();
-    this.activeElements.delete(element);
-    this.pool.push(element);
-  }
-
-  /**
+    /**
    * Libera todos los elementos activos
    */
-  public releaseAll(): void {
-    this.activeElements.forEach((element) => {
-      element.reset();
-      this.pool.push(element);
-    });
-    this.activeElements.clear();
+    public releaseAll(): void {
+        this.activeElements.forEach((element) => {
+            element.reset();
+            this.pool.push(element);
+        });
+        this.activeElements.clear();
 
-    logAutopoiesis.debug(`Pool '${this.poolName}' - all elements released`);
-  }
+        logAutopoiesis.debug(`Pool '${this.poolName}' - all elements released`);
+    }
 
-  /**
+    /**
    * Destruye el pool y todos sus elementos
    */
-  public destroy(): void {
-    [...this.activeElements, ...this.pool].forEach((element) => {
-      if (element.gameObject && element.gameObject.destroy) {
-        element.gameObject.destroy();
-      }
-    });
+    public destroy(): void {
+        [...this.activeElements, ...this.pool].forEach((element) => {
+            if (element.gameObject && element.gameObject.destroy) {
+                element.gameObject.destroy();
+            }
+        });
 
-    this.activeElements.clear();
-    this.pool.length = 0;
+        this.activeElements.clear();
+        this.pool.length = 0;
 
-    logAutopoiesis.debug(`UIElementPool '${this.poolName}' destroyed`);
-  }
+        logAutopoiesis.debug(`UIElementPool '${this.poolName}' destroyed`);
+    }
 
-  /**
+    /**
    * Obtiene estadísticas del pool
    */
-  public getStats(): { active: number; pooled: number; total: number } {
-    return {
-      active: this.activeElements.size,
-      pooled: this.pool.length,
-      total: this.activeElements.size + this.pool.length,
-    };
-  }
+    public getStats(): { active: number; pooled: number; total: number } {
+        return {
+            active: this.activeElements.size,
+            pooled: this.pool.length,
+            total: this.activeElements.size + this.pool.length,
+        };
+    }
 }
