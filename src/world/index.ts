@@ -40,5 +40,4 @@ export {
     createCustomWorldConfig,
     getAvailablePresets,
     getWorldPreset,
-    validateWorldConfig,
 } from "./WorldConfig";

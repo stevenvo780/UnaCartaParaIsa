@@ -5,7 +5,6 @@
 
 import type { GameState } from "../types";
 import { logAutopoiesis } from "../utils/logger";
-import { DiverseWorldComposer } from "../world/DiverseWorldComposer";
 import { type ComposedWorld } from "../world/DiverseWorldComposer";
 
 export interface InitializationResult {
@@ -18,18 +17,6 @@ export interface InitializationResult {
 }
 
 export class SceneInitializationManager {
-    /**
-   * Convierte un string seed a número
-   */
-    private static stringToSeed(str: string): number {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = (hash << 5) - hash + char;
-            hash = hash & hash; // Convertir a 32-bit integer
-        }
-        return Math.abs(hash);
-    }
 
     /**
    * Inicializa el estado del juego usando el nuevo sistema de biomas diverso
@@ -63,7 +50,7 @@ export class SceneInitializationManager {
             terrainTiles: [],
             roads: [],
             objectLayers: [],
-            worldSize: { width: 2400, height: 1600 },
+            worldSize: { width: 2400, height: 2400 },
             generatorVersion: "2.0.0-diverse",
             mapSeed: seed,
         };

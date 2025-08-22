@@ -490,24 +490,24 @@ export class CreativeAssetLoader {
             let loadedCount = 0;
             const totalAssets = this.loadedAssets.size;
 
-            console.log(`🎯 loadAssetsInPhaser: Found ${totalAssets} assets to load`);
-            console.log(
+            logAutopoiesis.debug(`🎯 loadAssetsInPhaser: Found ${totalAssets} assets to load`);
+            logAutopoiesis.debug(
                 "🎯 Assets to load:",
                 Array.from(this.loadedAssets.keys()).slice(0, 10),
             );
 
             if (totalAssets === 0) {
                 logAutopoiesis.warn("⚠️ No assets found to load, using fallbacks");
-                console.log("🎯 loadAssetsInPhaser: No assets, resolving immediately");
+                logAutopoiesis.debug("🎯 loadAssetsInPhaser: No assets, resolving immediately");
                 resolve();
                 return;
             }
 
             this.scene.load.on("filecomplete", (key: string) => {
                 loadedCount++;
-                console.log(`✅ Loaded ${loadedCount}/${totalAssets}: ${key}`);
+                logAutopoiesis.debug(`✅ Loaded ${loadedCount}/${totalAssets}: ${key}`);
                 if (loadedCount >= totalAssets) {
-                    console.log("🎉 All assets loaded successfully!");
+                    logAutopoiesis.debug("🎉 All assets loaded successfully!");
                     clearTimeout(timeoutId);
                     resolve();
                 }
@@ -515,12 +515,12 @@ export class CreativeAssetLoader {
 
             this.scene.load.on("loaderror", (file: { key: string }) => {
                 logAutopoiesis.warn(`Failed to load asset: ${file.key}`);
-                console.log(
+                logAutopoiesis.debug(
                     `❌ Error loading ${loadedCount + 1}/${totalAssets}: ${file.key}`,
                 );
                 loadedCount++;
                 if (loadedCount >= totalAssets) {
-                    console.log("🎯 Asset loading completed (with some errors)");
+                    logAutopoiesis.debug("🎯 Asset loading completed (with some errors)");
                     clearTimeout(timeoutId);
                     resolve();
                 }
@@ -528,7 +528,7 @@ export class CreativeAssetLoader {
 
             // Add timeout to prevent infinite hanging
             const timeoutId = setTimeout(() => {
-                console.warn(
+                logAutopoiesis.warn(
                     `⏰ Asset loading timeout after 30s. Loaded ${loadedCount}/${totalAssets}`,
                 );
                 resolve();
@@ -544,7 +544,7 @@ export class CreativeAssetLoader {
             // Original code commented out to prevent hanging:
             // if (totalAssets === 0) {
             //   logAutopoiesis.warn("⚠️ No assets found to load, skipping Phaser loading");
-            //   console.log("🎯 loadAssetsInPhaser: No assets, resolving immediately");
+            //   logAutopoiesis.debug("🎯 loadAssetsInPhaser: No assets, resolving immediately");
             //   resolve();
             //   return;
             // }
@@ -1083,15 +1083,38 @@ export class CreativeAssetLoader {
         // Assets básicos siempre disponibles
         worldAssets.push(...this.getAssetsByRarity("common", playerLevel));
 
-        // Assets desbloqueables por nivel
+        // Aplicar diversidad de bioma - más diversidad = más variedad de assets
+        const diversityMultiplier = Math.max(0.3, Math.min(2.0, biomeDiversity));
+        const extraAssetCount = Math.floor(diversityMultiplier * 3);
+
+        // Assets desbloqueables por nivel con variación por diversidad
         if (playerLevel >= 5) {
-            worldAssets.push(...this.getAssetsByRarity("uncommon", playerLevel));
+            const uncommonAssets = this.getAssetsByRarity("uncommon", playerLevel);
+            worldAssets.push(...uncommonAssets.slice(0, uncommonAssets.length + extraAssetCount));
         }
         if (playerLevel >= 15) {
-            worldAssets.push(...this.getAssetsByRarity("rare", playerLevel));
+            const rareAssets = this.getAssetsByRarity("rare", playerLevel);
+            const rareCount = Math.floor(rareAssets.length * diversityMultiplier);
+            worldAssets.push(...rareAssets.slice(0, Math.min(rareAssets.length, rareCount)));
         }
         if (playerLevel >= 30) {
-            worldAssets.push(...this.getAssetsByRarity("epic", playerLevel));
+            const epicAssets = this.getAssetsByRarity("epic", playerLevel);
+            // Alta diversidad permite más assets épicos
+            if (biomeDiversity > 0.7) {
+                worldAssets.push(...epicAssets);
+            } else {
+                worldAssets.push(...epicAssets.slice(0, Math.max(1, Math.floor(epicAssets.length / 2))));
+            }
+        }
+
+        // Agregar assets únicos épicos basados en alta diversidad
+        if (biomeDiversity > 0.8 && playerLevel >= 20) {
+            const extraEpicAssets = this.getAssetsByRarity("epic", playerLevel);
+            if (extraEpicAssets.length > 0) {
+                // Solo agregar uno adicional para alta diversidad
+                const additionalEpic = extraEpicAssets.slice(-1); // Tomar el último (más raro)
+                worldAssets.push(...additionalEpic);
+            }
         }
 
         return worldAssets;

@@ -147,7 +147,7 @@ export class SaveSystem {
 
             return saveData;
         } catch (error) {
-            console.error("Error al guardar:", error);
+            logAutopoiesis.error("Error al guardar:", error);
             this.showSaveNotification("Error al guardar", true);
             throw error;
         }
@@ -179,7 +179,7 @@ export class SaveSystem {
 
             return saveData;
         } catch (error) {
-            console.error("Error al cargar:", error);
+            logAutopoiesis.error("Error al cargar:", error);
             this.showSaveNotification("Error al cargar", true);
             return null;
         }

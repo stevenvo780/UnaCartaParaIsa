@@ -1,0 +1,43 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "Autopoiesis",
+    "stev",
+    "Stev",
+    "whomen",
+    "spritesheet",
+    "spritesheets",
+    "anims",
+    "lacunarity",
+    "lacunaridad",
+    "renderizar",
+    "renderizado",
+    "Renderizar",
+    "sanitizar",
+    "sanitización",
+    "Sanitizar",
+    "Reemitir",
+    "logear",
+    "xlarge",
+    "WASD"
+  ],
+  "flagWords": [],
+  "ignorePaths": [
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    "*.log",
+    "package-lock.json"
+  ],
+  "overrides": [
+    {
+      "filename": "**/*.ts",
+      "language": "en"
+    },
+    {
+      "filename": "**/*.js",
+      "language": "en"
+    }
+  ]
+}

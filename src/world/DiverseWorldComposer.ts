@@ -80,13 +80,13 @@ export class DiverseWorldComposer {
         this.world = world;
 
         logAutopoiesis.info("🎨 Iniciando composición de mundo diverso...");
-        console.log("🎯 Starting world composition...");
+        logAutopoiesis.debug("🎯 Starting world composition...");
         const startTime = Date.now();
 
         // Cargar y organizar todos los assets disponibles
-        console.log("🎯 About to load and organize assets...");
+        logAutopoiesis.debug("🎯 About to load and organize assets...");
         await this.loadAndOrganizeAssets();
-        console.log("🎯 Assets loaded and organized!");
+        logAutopoiesis.debug("🎯 Assets loaded and organized!");
 
         const layers: RenderLayer[] = [];
 
@@ -114,8 +114,6 @@ export class DiverseWorldComposer {
         const clusters = this.generateClusterPoints(50); // 50 clusters únicos
         const stats = this.calculateDiversityStats(layers);
 
-        const compositionTime = Date.now() - startTime;
-
         const totalCompositionTime = Date.now() - startTime;
 
         logAutopoiesis.info("✅ Composición de mundo completada", {
@@ -138,9 +136,9 @@ export class DiverseWorldComposer {
    * Carga y organiza todos los assets por tipo y rareza
    */
     private async loadAndOrganizeAssets(): Promise<void> {
-        console.log("🎯 Calling assetLoader.loadAllAssets()...");
+        logAutopoiesis.debug("🎯 Calling assetLoader.loadAllAssets()...");
         await this.assetLoader.loadAllAssets();
-        console.log("🎯 assetLoader.loadAllAssets() completed!");
+        logAutopoiesis.debug("🎯 assetLoader.loadAllAssets() completed!");
 
         // Organizar assets por categorías amplias
         const categories = [
@@ -806,7 +804,7 @@ export class DiverseWorldComposer {
     private async generateTerrainLayerStreaming(
         terrainAssets: AssetInfo[],
         tileSize: number,
-    ): Promise<LayerData> {
+    ): Promise<RenderLayer> {
         const assets: PlacedAsset[] = [];
 
         // Crear generador para procesar tiles en chunks
@@ -868,9 +866,9 @@ export class DiverseWorldComposer {
         );
 
         // Aplanar resultados
-        for (const chunkAssets of results) {
+        results.forEach((chunkAssets) => {
             assets.push(...chunkAssets);
-        }
+        });
 
         logAutopoiesis.info("Terrain layer generado con streaming", {
             totalAssets: assets.length,

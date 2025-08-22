@@ -6,6 +6,8 @@
 import * as EasyStar from "easystarjs";
 import type { GameState, Zone } from "../types";
 import { logAutopoiesis } from "../utils/logger";
+import { lerp, calculateZoneDistance, worldToGrid } from "../utils/mathUtils";
+import { PHYSICS } from "../constants";
 
 export interface MovementState {
   entityId: string;
@@ -64,8 +66,8 @@ export class MovementSystem {
     private zoneDistanceCache = new Map<string, ZoneDistance>();
 
     // Sistema de pathfinding simple optimizado
-    private readonly GRID_SIZE = 32;
-    private readonly gridSize = 32; // Mismo valor que GRID_SIZE para pathfinding
+    private readonly GRID_SIZE = PHYSICS.PATHFINDING.GRID_SIZE;
+    private readonly gridSize = PHYSICS.PATHFINDING.GRID_SIZE;
     private readonly gridWidth = 40; // 1280px / 32px = 40 tiles
     private readonly gridHeight = 30; // 960px / 32px = 30 tiles
     private occupiedTiles = new Set<string>();
@@ -142,7 +144,7 @@ export class MovementSystem {
                 const zoneA = zones[i];
                 const zoneB = zones[j];
 
-                const distance = this.calculateZoneDistance(zoneA, zoneB);
+                const distance = calculateZoneDistance(zoneA, zoneB);
                 const travelTime = this.estimateTravelTime(distance, 0); // Sin fatiga inicial
                 const difficulty = this.assessRouteDifficulty(zoneA, zoneB);
 
@@ -169,22 +171,6 @@ export class MovementSystem {
         );
     }
 
-    /**
-   * Calcular distancia euclidiana entre dos zonas
-   */
-    private calculateZoneDistance(zoneA: Zone, zoneB: Zone): number {
-        const centerA = {
-            x: zoneA.bounds.x + zoneA.bounds.width / 2,
-            y: zoneA.bounds.y + zoneA.bounds.height / 2,
-        };
-
-        const centerB = {
-            x: zoneB.bounds.x + zoneB.bounds.width / 2,
-            y: zoneB.bounds.y + zoneB.bounds.height / 2,
-        };
-
-        return Math.hypot(centerB.x - centerA.x, centerB.y - centerA.y);
-    }
 
     /**
    * Estimar tiempo de viaje basado en distancia y fatiga
@@ -204,7 +190,7 @@ export class MovementSystem {
         zoneA: Zone,
         zoneB: Zone,
     ): "easy" | "medium" | "hard" {
-        const distance = this.calculateZoneDistance(zoneA, zoneB);
+        const distance = calculateZoneDistance(zoneA, zoneB);
 
         // Clasificar por distancia y tipo de zonas
         if (distance < 200) return "easy";
@@ -243,8 +229,11 @@ export class MovementSystem {
         this.gameState.mapElements
             .filter((element) => this.isObstacle(element))
             .forEach((obstacle) => {
-                const tileX = Math.floor(obstacle.position.x / this.GRID_SIZE);
-                const tileY = Math.floor(obstacle.position.y / this.GRID_SIZE);
+                const { x: tileX, y: tileY } = worldToGrid(
+                    obstacle.position.x,
+                    obstacle.position.y,
+                    this.GRID_SIZE,
+                );
 
                 // Ocupar múltiples tiles según el tamaño del objeto
                 const width = obstacle.width || this.GRID_SIZE;
@@ -294,10 +283,12 @@ export class MovementSystem {
         position: { x: number; y: number },
         size: { width: number; height: number },
     ): boolean {
-        const startX = Math.floor(position.x / this.GRID_SIZE);
-        const startY = Math.floor(position.y / this.GRID_SIZE);
-        const endX = Math.floor((position.x + size.width) / this.GRID_SIZE);
-        const endY = Math.floor((position.y + size.height) / this.GRID_SIZE);
+        const { x: startX, y: startY } = worldToGrid(position.x, position.y, this.GRID_SIZE);
+        const { x: endX, y: endY } = worldToGrid(
+            position.x + size.width,
+            position.y + size.height,
+            this.GRID_SIZE,
+        );
 
         for (let x = startX; x <= endX; x++) {
             for (let y = startY; y <= endY; y++) {
@@ -354,13 +345,13 @@ export class MovementSystem {
         (state.estimatedArrivalTime - state.movementStartTime);
             const clampedProgress = Math.min(1, Math.max(0, progress));
 
-            state.currentPosition.x = this.lerp(
+            state.currentPosition.x = lerp(
                 state.currentPosition.x,
                 state.targetPosition.x,
                 clampedProgress,
             );
 
-            state.currentPosition.y = this.lerp(
+            state.currentPosition.y = lerp(
                 state.currentPosition.y,
                 state.targetPosition.y,
                 clampedProgress,
@@ -545,10 +536,8 @@ export class MovementSystem {
             this.gridCacheTime = now;
         }
 
-        const startX = Math.floor(from.x / this.gridSize);
-        const startY = Math.floor(from.y / this.gridSize);
-        let endX = Math.floor(to.x / this.gridSize);
-        let endY = Math.floor(to.y / this.gridSize);
+        const { x: startX, y: startY } = worldToGrid(from.x, from.y, this.gridSize);
+        let { x: endX, y: endY } = worldToGrid(to.x, to.y, this.gridSize);
 
         // Validar coordenadas dentro del grid
         if (
@@ -931,12 +920,6 @@ export class MovementSystem {
         return this.movementStates.get(entityId);
     }
 
-    /**
-   * Interpolación lineal
-   */
-    private lerp(a: number, b: number, t: number): number {
-        return a + (b - a) * t;
-    }
 
     /**
    * Obtener estadísticas del sistema

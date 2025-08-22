@@ -76,27 +76,25 @@ export class AnimatedGameEntity extends GameEntity {
             throw error; // Re-throw para que el EntityManager pueda manejarlo
         }
 
-        console.log(
-            `🎭 AnimatedGameEntity: About to setup animation manager for ${entityId}`,
-        );
+        logAutopoiesis.debug(`🎭 AnimatedGameEntity: About to setup animation manager for ${entityId}`);
 
         // Type-safe assignment of animation manager
         this.animationManager =
       animManager instanceof AnimationManager ? animManager : undefined;
 
-        console.log("🎭 AnimationManager available:", !!this.animationManager);
+        logAutopoiesis.debug("🎭 AnimationManager available", { available: !!this.animationManager });
 
         if (this.animationManager) {
             // Start with appropriate initial animation using new multi-frame sprites
             const initialAnimation =
         entityId === "isa" ? "whomen1:row0" : "man1:row0";
 
-            console.log(`🎭 Checking animation: ${initialAnimation}`);
+            logAutopoiesis.debug(`🎭 Checking animation: ${initialAnimation}`);
 
             // Validate animation exists before playing
             if (this.animationManager.hasAnimation(initialAnimation)) {
                 this.currentAnimationKey = initialAnimation;
-                console.log(`🎭 Playing animation: ${initialAnimation}`);
+                logAutopoiesis.debug(`🎭 Playing animation: ${initialAnimation}`);
                 this.animationManager.playAnimation(this, initialAnimation);
 
                 logAutopoiesis.info(
@@ -107,15 +105,13 @@ export class AnimatedGameEntity extends GameEntity {
                     },
                 );
             } else {
-                console.log(
-                    `🎭 Animation ${initialAnimation} not found, trying fallback`,
-                );
+                logAutopoiesis.debug(`🎭 Animation ${initialAnimation} not found, trying fallback`);
                 // Fallback to basic row animation
                 const fallbackAnimation =
           entityId === "isa" ? "whomen1:row0" : "man1:row0";
 
-                console.log(`🎭 Trying fallback animation: ${fallbackAnimation}`);
-                console.log(
+                logAutopoiesis.debug(`🎭 Trying fallback animation: ${fallbackAnimation}`);
+                logAutopoiesis.debug(
                     "🎭 AnimationManager has hasAnimation method:",
                     typeof this.animationManager?.hasAnimation,
                 );
@@ -124,10 +120,10 @@ export class AnimatedGameEntity extends GameEntity {
                     this.animationManager &&
           this.animationManager.hasAnimation(fallbackAnimation)
                 ) {
-                    console.log(`🎭 Fallback animation found: ${fallbackAnimation}`);
+                    logAutopoiesis.debug(`🎭 Fallback animation found: ${fallbackAnimation}`);
                     this.currentAnimationKey = fallbackAnimation;
 
-                    console.log("🎭 About to call playAnimation with:", {
+                    logAutopoiesis.debug("🎭 About to call playAnimation with:", {
                         entityId,
                         fallbackAnimation,
                         thisType: this.constructor.name,
@@ -136,7 +132,7 @@ export class AnimatedGameEntity extends GameEntity {
 
                     try {
                         this.animationManager.playAnimation(this, fallbackAnimation);
-                        console.log(
+                        logAutopoiesis.debug(
                             `🎭 playAnimation completed successfully for ${fallbackAnimation}`,
                         );
 
@@ -144,7 +140,7 @@ export class AnimatedGameEntity extends GameEntity {
                             `Using fallback row animation for ${entityId}: ${fallbackAnimation}`,
                         );
                     } catch (playError) {
-                        console.log("🎭 Error in playAnimation:", playError);
+                        logAutopoiesis.debug("🎭 Error in playAnimation:", playError);
                         logAutopoiesis.error(
                             `playAnimation failed for ${entityId}:`,
                             playError,
@@ -153,42 +149,42 @@ export class AnimatedGameEntity extends GameEntity {
                         // Try the final fallback
                         const safeTexture =
               entityId === "isa" ? "isa_spritesheet" : "stev_spritesheet";
-                        console.log(
+                        logAutopoiesis.debug(
                             `🎭 Using safe texture as final fallback: ${safeTexture}`,
                         );
                         this.setTexture(safeTexture);
                         this.setVisible(true);
                     }
                 } else {
-                    console.log(
+                    logAutopoiesis.debug(
                         `🎭 Fallback animation ${fallbackAnimation} also not found, using static`,
                     );
-                    console.log(`🎭 All animations failed for ${entityId}, using static`);
+                    logAutopoiesis.debug(`🎭 All animations failed for ${entityId}, using static`);
                     logAutopoiesis.warn(
                         `All animations failed for ${entityId}, using static sprite`,
                     );
                     // Final fallback: make entity visible with static texture - use safe texture
                     const safeTexture =
             entityId === "isa" ? "isa_spritesheet" : "stev_spritesheet";
-                    console.log(`🎭 Setting safe texture: ${safeTexture}`);
+                    logAutopoiesis.debug(`🎭 Setting safe texture: ${safeTexture}`);
                     this.setTexture(safeTexture);
                     this.setVisible(true);
                 }
             }
         } else {
-            console.log(`🎭 No animation manager available for ${entityId}`);
+            logAutopoiesis.debug(`🎭 No animation manager available for ${entityId}`);
             logAutopoiesis.warn(
                 `No AnimationManager found for entity ${entityId}. Using static sprite.`,
             );
             // Static sprite fallback when no animation manager
             const staticTexture =
         entityId === "isa" ? "isa_spritesheet" : "stev_spritesheet";
-            console.log(`🎭 Using static texture: ${staticTexture}`);
+            logAutopoiesis.debug(`🎭 Using static texture: ${staticTexture}`);
             this.setTexture(staticTexture);
             this.setVisible(true);
         }
 
-        console.log(`🎭 AnimatedGameEntity constructor completed for ${entityId}`);
+        logAutopoiesis.debug(`🎭 AnimatedGameEntity constructor completed for ${entityId}`);
     }
 
     /**

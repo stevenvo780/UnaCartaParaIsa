@@ -2,7 +2,7 @@
  * Configuración específica del mundo y sus parámetros
  */
 
-import type { WorldGenConfig, BiomeType } from "./types";
+import type { BiomeType, WorldGenConfig } from "./types";
 
 export interface WorldPreset {
   name: string;
@@ -416,52 +416,3 @@ export function createCustomWorldConfig(params: {
     };
 }
 
-/**
- * Valida una configuración de mundo
- */
-export function validateWorldConfig(config: WorldGenConfig): {
-  valid: boolean;
-  errors: string[];
-} {
-    const errors: string[] = [];
-
-    if (config.width < 16 || config.width > 128) {
-        errors.push("Width debe estar entre 16 y 128");
-    }
-
-    if (config.height < 16 || config.height > 128) {
-        errors.push("Height debe estar entre 16 y 128");
-    }
-
-    if (config.tileSize < 16 || config.tileSize > 64) {
-        errors.push("TileSize debe estar entre 16 y 64");
-    }
-
-    if (config.biomes.enabled.length === 0) {
-        errors.push("Debe haber al menos un bioma habilitado");
-    }
-
-    // Validar configuraciones de ruido
-    const noiseValidation = [
-        config.noise.temperature,
-        config.noise.moisture,
-        config.noise.elevation,
-    ];
-
-    for (const noise of noiseValidation) {
-        if (noise.scale <= 0 || noise.scale > 1) {
-            errors.push("Noise scale debe estar entre 0 y 1");
-        }
-        if (noise.octaves < 1 || noise.octaves > 8) {
-            errors.push("Noise octaves debe estar entre 1 y 8");
-        }
-        if (noise.persistence <= 0 || noise.persistence > 1) {
-            errors.push("Noise persistence debe estar entre 0 y 1");
-        }
-    }
-
-    return {
-        valid: errors.length === 0,
-        errors,
-    };
-}

@@ -7,6 +7,7 @@ import type Phaser from "phaser";
 import { FoodCatalog } from "../data/FoodCatalog";
 import { randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
+import { createColorCanvas, createCanvasWithContext } from "../utils/canvasHelpers";
 
 export interface AssetDefinition {
   key: string;
@@ -974,11 +975,9 @@ export class UnifiedAssetManager {
     // ==========================================
 
     private createDefaultTerrain(): HTMLCanvasElement {
-        const canvas = document.createElement("canvas");
-        canvas.width = 32;
-        canvas.height = 32;
-        const ctx = canvas.getContext("2d")!;
-
+        const { canvas, ctx } = createCanvasWithContext(32, 32);
+        
+        // Fondo verde césped
         ctx.fillStyle = "#4CAF50";
         ctx.fillRect(0, 0, 32, 32);
 
@@ -994,10 +993,7 @@ export class UnifiedAssetManager {
     }
 
     private createDefaultEntity(): HTMLCanvasElement {
-        const canvas = document.createElement("canvas");
-        canvas.width = 32;
-        canvas.height = 32;
-        const ctx = canvas.getContext("2d")!;
+        const { canvas, ctx } = createCanvasWithContext(32, 32);
 
         ctx.fillStyle = "#95a5a6";
         ctx.beginPath();
@@ -1008,10 +1004,7 @@ export class UnifiedAssetManager {
     }
 
     private createDefaultDecoration(): HTMLCanvasElement {
-        const canvas = document.createElement("canvas");
-        canvas.width = 32;
-        canvas.height = 32;
-        const ctx = canvas.getContext("2d")!;
+        const { canvas, ctx } = createCanvasWithContext(32, 32);
 
         ctx.fillStyle = "#9C27B0";
         ctx.beginPath();
@@ -1025,10 +1018,7 @@ export class UnifiedAssetManager {
         color: string,
         emoji: string,
     ): HTMLCanvasElement {
-        const canvas = document.createElement("canvas");
-        canvas.width = 32;
-        canvas.height = 32;
-        const ctx = canvas.getContext("2d")!;
+        const { canvas, ctx } = createCanvasWithContext(32, 32);
 
         ctx.fillStyle = color;
         ctx.beginPath();
@@ -1052,10 +1042,10 @@ export class UnifiedAssetManager {
         const cols = frameWidth === 24 ? 8 : 4; // whomen1 = 8 cols, man1 = 4 cols
         const rows = Math.ceil(totalFrames / cols);
 
-        const canvas = document.createElement("canvas");
-        canvas.width = frameWidth * cols;
-        canvas.height = frameHeight * rows;
-        const ctx = canvas.getContext("2d")!;
+        const { canvas, ctx } = createCanvasWithContext(
+            frameWidth * cols,
+            frameHeight * rows,
+        );
 
         // Create each frame
         for (let i = 0; i < totalFrames; i++) {

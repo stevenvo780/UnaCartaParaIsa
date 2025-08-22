@@ -716,7 +716,7 @@ export class QuestSystem {
                     ) {
                         objective.isCompleted = true;
                         objective.completedAt = eventData.timestamp;
-                        objective.progress = objective.requiredCount || 1;
+                        objective.currentAmount = objective.requiredAmount || 1;
                         
                         logAutopoiesis.info("Quest objective completed through dialogue", {
                             questId: quest.id,

@@ -8,10 +8,10 @@ import { logAutopoiesis } from "../utils/logger";
 import { DiverseWorldComposer } from "../world/DiverseWorldComposer";
 import { LayeredWorldRenderer } from "../world/LayeredWorldRenderer";
 import {
-    BiomeType,
-    GeneratedWorld,
-    TerrainTile,
-    WorldGenConfig,
+  BiomeType,
+  GeneratedWorld,
+  TerrainTile,
+  WorldGenConfig,
 } from "../world/types";
 
 export default class MainScene extends Phaser.Scene {
@@ -285,7 +285,7 @@ export default class MainScene extends Phaser.Scene {
    */
     private generateBasicWorld(): GeneratedWorld {
     // Configuración para un mundo perfectamente cuadrado
-        const worldSize = 50; // 50x50 tiles = mundo cuadrado
+        const worldSize = 500; // 50x50 tiles = mundo cuadrado
         const tileSize = 32; // 32 píxeles por tile
 
         const config: WorldGenConfig = {
@@ -429,6 +429,20 @@ export default class MainScene extends Phaser.Scene {
                 camera.scrollX + camera.width / 2,
                 camera.scrollY + camera.height / 2,
             );
+        }
+
+        // Usar tiempo absoluto para sincronización (ejemplo futuro: 
+        // sincronizar animaciones globales, efectos de día/noche, etc.)
+        // TODO: Implementar efectos basados en tiempo absoluto cuando sea necesario
+        this.updateTimeBasedEffects(time);
+    }
+
+    private updateTimeBasedEffects(time: number): void {
+        // Placeholder para efectos basados en tiempo absoluto
+        // Ejemplo: animaciones de ambiente, cambios de iluminación, etc.
+        // Por ahora solo registramos el tiempo para uso futuro
+        if (time % 10000 < 16) { // Cada 10 segundos aprox
+            logAutopoiesis.debug("Game time checkpoint", { time });
         }
     }
 

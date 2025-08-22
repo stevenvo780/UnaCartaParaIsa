@@ -8,7 +8,7 @@ import type { Position } from "./core";
 import type { Entity, EntityStats } from "./entities";
 import type { FoodItem } from "./food";
 import type { GameState } from "./index";
-import type { Zone } from "./zones";
+import type { ZoneDefinition } from "./zones";
 
 export interface MapElement {
   id: string;
@@ -171,7 +171,7 @@ export interface QuestEventData {
  * Datos generados del mundo
  */
 export interface GeneratedWorldData {
-  zones: Zone[];
+  zones: ZoneDefinition[];
   mapElements: MapElement[];
   generatedWorld?: GeneratedWorld;
   terrainTiles: any[];

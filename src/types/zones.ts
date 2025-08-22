@@ -24,7 +24,7 @@ export type ZoneType =
   | "entertainment"
   | "fun";
 
-export interface Zone {
+export interface ZoneDefinition {
   id: string;
   type: ZoneType;
   name: string;

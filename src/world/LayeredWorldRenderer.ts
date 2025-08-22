@@ -28,7 +28,6 @@ export class LayeredWorldRenderer {
     private scene: Phaser.Scene;
     private config: LayeredWorldConfig;
     private composer: DiverseWorldComposer;
-    private renderGroups: Map<string, Phaser.GameObjects.Group>;
     private composedWorld: ComposedWorld | null = null;
     private isInitialized = false;
     private layerGroups: Map<string, Phaser.GameObjects.Group> = new Map();
@@ -45,7 +44,6 @@ export class LayeredWorldRenderer {
             maxVisibleAssets: 5000,
             ...config,
         };
-        this.renderGroups = new Map();
         this.container = scene.add.container(0, 0);
         this.composer = new DiverseWorldComposer(scene, `seed_${Date.now()}`);
 
@@ -125,11 +123,11 @@ export class LayeredWorldRenderer {
    */
     private async renderAllLayers(): Promise<void> {
         if (!this.composedWorld) {
-            console.log("🚨 LayeredWorldRenderer: No composedWorld to render");
+            logAutopoiesis.debug("🚨 LayeredWorldRenderer: No composedWorld to render");
             return;
         }
 
-        console.log(
+        logAutopoiesis.debug(
             `🎨 LayeredWorldRenderer: Starting to render ${this.composedWorld.layers.length} layers`,
         );
         this.clearLayers();
@@ -138,24 +136,24 @@ export class LayeredWorldRenderer {
             (a, b) => a.zIndex - b.zIndex,
         );
 
-        console.log(
+        logAutopoiesis.debug(
             "🎨 Layers to render:",
             sortedLayers.map((l) => `${l.name} (${l.assets.length} assets)`),
         );
 
         for (const layer of sortedLayers) {
             if (layer.visible) {
-                console.log(`🎨 About to render layer: ${layer.name}`);
+                logAutopoiesis.debug(`🎨 About to render layer: ${layer.name}`);
                 await this.renderLayer(layer);
 
                 // Permitir que el navegador respire entre capas
                 await this.yieldControl();
             } else {
-                console.log(`🚫 Skipping invisible layer: ${layer.name}`);
+                logAutopoiesis.debug(`🚫 Skipping invisible layer: ${layer.name}`);
             }
         }
 
-        console.log(
+        logAutopoiesis.debug(
             `✅ LayeredWorldRenderer: Finished rendering all layers. Total sprites: ${this.totalSprites}`,
         );
     }
@@ -219,18 +217,18 @@ export class LayeredWorldRenderer {
         try {
             // Verificar si la textura existe
             if (!this.scene.textures.exists(placedAsset.asset.key)) {
-                console.log(
+                logAutopoiesis.debug(
                     `⚠️ Texture ${placedAsset.asset.key} does not exist, trying fallback`,
                 );
                 // Usar fallback asset si no existe
                 const fallbackKey = this.getFallbackAsset(placedAsset.asset.type);
 
                 if (!this.scene.textures.exists(fallbackKey)) {
-                    console.log(`❌ Fallback texture ${fallbackKey} also doesn't exist`);
+                    logAutopoiesis.debug(`❌ Fallback texture ${fallbackKey} also doesn't exist`);
                     return null; // No se puede crear el sprite
                 }
                 placedAsset.asset.key = fallbackKey;
-                console.log(`✅ Using fallback texture: ${fallbackKey}`);
+                logAutopoiesis.debug(`✅ Using fallback texture: ${fallbackKey}`);
             }
 
             const sprite = this.scene.add.sprite(
@@ -257,7 +255,7 @@ export class LayeredWorldRenderer {
                 sprite.setData("metadata", placedAsset.metadata);
             }
 
-            console.log(
+            logAutopoiesis.debug(
                 `✅ Created sprite for ${placedAsset.asset.key} at (${placedAsset.x}, ${placedAsset.y})`,
             );
             return sprite;
@@ -266,7 +264,7 @@ export class LayeredWorldRenderer {
                 `Error creando sprite para asset: ${placedAsset.asset.key}`,
                 error,
             );
-            console.log(
+            logAutopoiesis.debug(
                 `❌ Error creating sprite for ${placedAsset.asset.key}:`,
                 error,
             );
@@ -528,7 +526,7 @@ export class LayeredWorldRenderer {
             this.toggleLayer("transition", false);
         } else {
             // Mostrar todas las capas
-            this.layerGroups.forEach((group, type) => {
+            this.layerGroups.forEach((_, type) => {
                 this.toggleLayer(type, true);
             });
         }
@@ -618,111 +616,5 @@ export class LayeredWorldRenderer {
         this.container.destroy();
 
         logAutopoiesis.info("🧹 LayeredWorldRenderer destruido");
-    }
-
-    /**
-   * Crea un tilemap base para el terreno usando Phaser Tilemap
-   */
-    private createTerrainTilemap(
-        composedWorld: ComposedWorld,
-    ): Phaser.Tilemaps.Tilemap | null {
-        try {
-            const terrainLayers = composedWorld.layers.filter(
-                (layer) => layer.type === "terrain",
-            );
-            if (!terrainLayers || terrainLayers.length === 0) return null;
-
-            // Configuración del tilemap
-            const tileWidth = 32;
-            const tileHeight = 32;
-            const mapWidth = Math.ceil(1200 / tileWidth);
-            const mapHeight = Math.ceil(800 / tileHeight);
-
-            // Crear tilemap vacío
-            const map = this.scene.make.tilemap({
-                key: "terrain-map",
-                tileWidth,
-                tileHeight,
-                width: mapWidth,
-                height: mapHeight,
-            });
-
-            // Añadir tilesets (necesita tilesheet preloaded)
-            const terrainTileset = map.addTilesetImage(
-                "terrain-tiles",
-                "terrain-tilesheet",
-            );
-            if (!terrainTileset) {
-                logAutopoiesis.warn("No se pudo cargar tileset de terreno");
-                return null;
-            }
-
-            // Crear capa de terreno
-            const terrainLayer = map.createLayer("terrain", terrainTileset, 0, 0);
-            if (!terrainLayer) {
-                logAutopoiesis.warn("No se pudo crear capa de terreno");
-                return null;
-            }
-
-            // Llenar tilemap con tiles basados en el terrain generado
-            terrainLayers.forEach((layer) => {
-                layer.assets.forEach((placedAsset) => {
-                    const tileX = Math.floor(placedAsset.x / tileWidth);
-                    const tileY = Math.floor(placedAsset.y / tileHeight);
-
-                    // Mapear tipo de bioma a índice de tile
-                    const tileIndex = this.getBiomeTileIndex(
-                        (placedAsset.metadata?.biome as string) || "grassland",
-                    );
-
-                    if (
-                        tileX >= 0 &&
-            tileX < mapWidth &&
-            tileY >= 0 &&
-            tileY < mapHeight
-                    ) {
-                        terrainLayer.putTileAt(tileIndex, tileX, tileY);
-                    }
-                });
-            });
-
-            // Configurar culling del tilemap
-            terrainLayer.setCullPadding(2, 2);
-
-            // Asignar al layer group correspondiente
-            const terrainGroup = this.layerGroups.get("terrain");
-            if (terrainGroup) {
-                terrainGroup.add(terrainLayer);
-            }
-
-            logAutopoiesis.info("🗺️ Tilemap de terreno creado", {
-                mapSize: { width: mapWidth, height: mapHeight },
-                tileSize: { width: tileWidth, height: tileHeight },
-                tilesCount: mapWidth * mapHeight,
-            });
-
-            return map;
-        } catch (error) {
-            logAutopoiesis.error("Error creando tilemap de terreno", error);
-            return null;
-        }
-    }
-
-    /**
-   * Mapea tipos de bioma a índices de tiles
-   */
-    private getBiomeTileIndex(biome?: string): number {
-        const biomeToTile: Record<string, number> = {
-            GRASSLAND: 1,
-            FOREST: 2,
-            DESERT: 3,
-            MOUNTAINOUS: 4,
-            WETLAND: 5,
-            COASTAL: 6,
-            VILLAGE: 7,
-            WASTELAND: 8,
-        };
-
-        return biomeToTile[biome || "GRASSLAND"] || 1;
     }
 }

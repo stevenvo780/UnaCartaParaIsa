@@ -45,7 +45,7 @@ export type {
     QuestSystemConfig,
     RewardType,
 } from "./quests";
-export type { Zone as ZoneDefinition, ZoneType } from "./zones";
+export type { ZoneDefinition, ZoneType } from "./zones";
 
 // Event system types
 export type {

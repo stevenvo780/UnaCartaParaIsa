@@ -2,8 +2,8 @@
  * Validadores para configuración de mundo y límites de seguridad
  */
 
-import { logAutopoiesis } from "./logger";
 import type { WorldGenConfig } from "../world/types";
+import { logAutopoiesis } from "./logger";
 
 export interface WorldLimits {
   readonly MAX_WORLD_WIDTH: number;
@@ -16,8 +16,8 @@ export interface WorldLimits {
 }
 
 export const WORLD_LIMITS: WorldLimits = {
-    MAX_WORLD_WIDTH: 1000,
-    MAX_WORLD_HEIGHT: 1000,
+    MAX_WORLD_WIDTH: 10000,
+    MAX_WORLD_HEIGHT: 10000,
     MAX_TOTAL_TILES: 500000, // 500k tiles máximo
     MIN_WORLD_SIZE: 16,
     MAX_BIOMES: 10,

@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
 import { WaterRipplePipeline } from "../plugins/WaterRipplePipeline";
 import { logAutopoiesis } from "../utils/logger";
+import { createCanvasWithContext } from "../utils/canvasHelpers";
 
 export default class BootScene extends Phaser.Scene {
     private unifiedAssetManager!: UnifiedAssetManager;
@@ -296,10 +297,10 @@ export default class BootScene extends Phaser.Scene {
         const frameCount = 4; // Animation frames
 
         // Create Isa's animated spritesheet
-        const isaCanvas = document.createElement("canvas");
-        isaCanvas.width = spriteSize * frameCount;
-        isaCanvas.height = spriteSize;
-        const isaCtx = isaCanvas.getContext("2d")!;
+        const { canvas: isaCanvas, ctx: isaCtx } = createCanvasWithContext(
+            spriteSize * frameCount,
+            spriteSize,
+        );
 
         // Create 4 frames for Isa (walking animation)
         for (let frame = 0; frame < frameCount; frame++) {
@@ -327,10 +328,10 @@ export default class BootScene extends Phaser.Scene {
         }
 
         // Create Stev's animated spritesheet
-        const stevCanvas = document.createElement("canvas");
-        stevCanvas.width = spriteSize * frameCount;
-        stevCanvas.height = spriteSize;
-        const stevCtx = stevCanvas.getContext("2d")!;
+        const { canvas: stevCanvas, ctx: stevCtx } = createCanvasWithContext(
+            spriteSize * frameCount,
+            spriteSize,
+        );
 
         // Create 4 frames for Stev (walking animation)
         for (let frame = 0; frame < frameCount; frame++) {
