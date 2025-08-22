@@ -7,7 +7,7 @@ import type Phaser from "phaser";
 import { FoodCatalog } from "../data/FoodCatalog";
 import { randomInt } from "../utils/deterministicRandom";
 import { logAutopoiesis } from "../utils/logger";
-import { createColorCanvas, createCanvasWithContext } from "../utils/canvasHelpers";
+import { createCanvasWithContext } from "../utils/canvasHelpers";
 
 export interface AssetDefinition {
   key: string;
@@ -1032,41 +1032,6 @@ export class UnifiedAssetManager {
         return canvas;
     }
 
-    private createSpritesheetFallback(
-        color: string,
-        emoji: string,
-        frameWidth: number,
-        frameHeight: number,
-        totalFrames: number,
-    ): HTMLCanvasElement {
-        const cols = frameWidth === 24 ? 8 : 4; // whomen1 = 8 cols, man1 = 4 cols
-        const rows = Math.ceil(totalFrames / cols);
-
-        const { canvas, ctx } = createCanvasWithContext(
-            frameWidth * cols,
-            frameHeight * rows,
-        );
-
-        // Create each frame
-        for (let i = 0; i < totalFrames; i++) {
-            const col = i % cols;
-            const row = Math.floor(i / cols);
-            const x = col * frameWidth;
-            const y = row * frameHeight;
-
-            // Frame background
-            ctx.fillStyle = color;
-            ctx.fillRect(x + 2, y + 2, frameWidth - 4, frameHeight - 4);
-
-            // Add emoji
-            ctx.font = `${Math.floor(frameWidth * 0.6)}px Arial`;
-            ctx.fillStyle = "#ffffff";
-            ctx.textAlign = "center";
-            ctx.fillText(emoji, x + frameWidth / 2, y + frameHeight * 0.7);
-        }
-
-        return canvas;
-    }
 
     // ==========================================
     // ESTADÍSTICAS Y LIMPIEZA

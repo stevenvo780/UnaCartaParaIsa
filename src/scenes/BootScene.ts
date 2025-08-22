@@ -89,54 +89,6 @@ export default class BootScene extends Phaser.Scene {
         logAutopoiesis.info("📦 Preparando carga de assets esenciales");
     }
 
-    private loadRealGameAssets(): void {
-    // Cargar césped (tiles de terreno)
-        for (let i = 1; i <= 31; i++) {
-            this.load.image(`cesped${i}`, `assets/terrain/base/cesped${i}.png`);
-        }
-
-        // Cargar assets de agua
-        this.load.image("Water_Middle", "assets/water/Water_Middle.png");
-        this.load.image("tile_01_00", "assets/water/tile_01_00.png");
-
-        // Cargar árboles principales
-        this.load.image("oak_tree1", "assets/foliage/trees/oak_tree.png");
-        this.load.image("mega_tree1", "assets/foliage/trees/mega_tree1.png");
-        this.load.image("willow1", "assets/foliage/trees/willow1.png");
-
-        // Cargar rocas
-        this.load.image("rock1_1", "assets/rocks/rock1_1.png");
-        this.load.image("rock2_1", "assets/rocks/rock2_1.png");
-        this.load.image("rock3_1", "assets/rocks/rock3_1.png");
-
-        // Cargar props básicos
-        this.load.image("Chest", "assets/props/Chest.png");
-        this.load.image(
-            "Barrel_Small_Empty",
-            "assets/props/Barrel_Small_Empty.png",
-        );
-
-        // Cargar estructuras
-        this.load.image(
-            "House",
-            "assets/structures/estructuras_completas/House.png",
-        );
-
-        // Cargar vegetación adicional
-        this.load.image(
-            "bush_emerald_1",
-            "assets/foliage/shrubs/bush_emerald_1.png",
-        );
-        this.load.image(
-            "beige_green_mushroom1",
-            "assets/mushrooms/beige_green_mushroom1.png",
-        );
-        this.load.image("blue-gray_ruins1", "assets/ruins/blue-gray_ruins1.png");
-
-        logAutopoiesis.info(
-            "🌱 Cargando assets reales: terreno, agua, árboles, rocas, props",
-        );
-    }
 
     private loadPlaceholderAssets(): void {
     // Cargar spritesheets críticos para animaciones

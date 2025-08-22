@@ -71,19 +71,6 @@ export function positionToTile(position: { x: number; y: number }, tileSize: num
     return worldToGrid(position.x, position.y, tileSize);
 }
 
-/**
- * Número aleatorio en un rango
- */
-export function randomRange(min: number, max: number): number {
-    return Math.random() * (max - min) + min;
-}
-
-/**
- * Número aleatorio entero en un rango
- */
-export function randomInt(min: number, max: number): number {
-    return Math.floor(randomRange(min, max + 1));
-}
 
 /**
  * Redondea un número a N decimales
