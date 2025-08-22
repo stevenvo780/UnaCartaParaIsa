@@ -487,21 +487,59 @@ export class CreativeAssetLoader {
    */
   private async loadAssetsInPhaser(): Promise<void> {
     return new Promise((resolve) => {
-      const loadedCount = 0;
+      let loadedCount = 0;
       const totalAssets = this.loadedAssets.size;
 
       console.log(`🎯 loadAssetsInPhaser: Found ${totalAssets} assets to load`);
-
-      // Skip asset loading entirely - we'll use fallback sprites from BootScene
-      // This prevents hanging on non-existent asset files
-      logAutopoiesis.warn(
-        "⚠️ Skipping asset file loading, using procedural fallbacks instead",
-      );
       console.log(
-        "🎯 loadAssetsInPhaser: Skipping file loading, using fallbacks",
+        "🎯 Assets to load:",
+        Array.from(this.loadedAssets.keys()).slice(0, 10),
       );
-      resolve();
-      return;
+
+      if (totalAssets === 0) {
+        logAutopoiesis.warn("⚠️ No assets found to load, using fallbacks");
+        console.log("🎯 loadAssetsInPhaser: No assets, resolving immediately");
+        resolve();
+        return;
+      }
+
+      this.scene.load.on("filecomplete", (key: string) => {
+        loadedCount++;
+        console.log(`✅ Loaded ${loadedCount}/${totalAssets}: ${key}`);
+        if (loadedCount >= totalAssets) {
+          console.log("🎉 All assets loaded successfully!");
+          clearTimeout(timeoutId);
+          resolve();
+        }
+      });
+
+      this.scene.load.on("loaderror", (file: { key: string }) => {
+        logAutopoiesis.warn(`Failed to load asset: ${file.key}`);
+        console.log(
+          `❌ Error loading ${loadedCount + 1}/${totalAssets}: ${file.key}`,
+        );
+        loadedCount++;
+        if (loadedCount >= totalAssets) {
+          console.log("🎯 Asset loading completed (with some errors)");
+          clearTimeout(timeoutId);
+          resolve();
+        }
+      });
+
+      // Add timeout to prevent infinite hanging
+      const timeoutId = setTimeout(() => {
+        console.warn(
+          `⏰ Asset loading timeout after 30s. Loaded ${loadedCount}/${totalAssets}`,
+        );
+        resolve();
+      }, 30000);
+
+      // Load assets in Phaser
+      for (const asset of this.loadedAssets.values()) {
+        this.scene.load.image(asset.key, asset.path);
+      }
+
+      this.scene.load.start();
 
       // Original code commented out to prevent hanging:
       // if (totalAssets === 0) {

@@ -138,6 +138,9 @@ export default class BootScene extends Phaser.Scene {
   }
 
   private loadPlaceholderAssets(): void {
+    // Cargar spritesheets críticos para animaciones
+    this.loadCriticalSpritesheets();
+
     // Crear texturas básicas procedurales para desarrollo
     this.load.image(
       "placeholder-terrain",
@@ -155,6 +158,31 @@ export default class BootScene extends Phaser.Scene {
     this.load.on("complete", () => {
       this.createBasicSprites();
     });
+  }
+
+  private loadCriticalSpritesheets(): void {
+    // Only load if not already loaded to avoid duplicates
+    if (!this.textures.exists("whomen1")) {
+      this.load.spritesheet(
+        "whomen1",
+        "assets/entities/animated/characters/whomen1.png",
+        {
+          frameWidth: 24,
+          frameHeight: 24,
+        },
+      );
+    }
+
+    if (!this.textures.exists("man1")) {
+      this.load.spritesheet(
+        "man1",
+        "assets/entities/animated/characters/man1.png",
+        {
+          frameWidth: 32,
+          frameHeight: 32,
+        },
+      );
+    }
   }
 
   private createBasicSprites(): void {
@@ -330,8 +358,8 @@ export default class BootScene extends Phaser.Scene {
     }
 
     // Load as textures and spritesheets in Phaser
-    this.load.image("whomen1", isaCanvas.toDataURL());
-    this.load.image("man1", stevCanvas.toDataURL());
+    // this.load.image("whomen1", isaCanvas.toDataURL()); // Skipped to avoid conflict with spritesheet
+    // this.load.image("man1", stevCanvas.toDataURL()); // Skipped to avoid conflict with spritesheet
 
     // Load as spritesheets for animations
     this.load.spritesheet("isa_spritesheet", isaCanvas.toDataURL(), {

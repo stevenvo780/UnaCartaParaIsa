@@ -124,22 +124,40 @@ export class LayeredWorldRenderer {
    * Renderiza todas las capas del mundo
    */
   private async renderAllLayers(): Promise<void> {
-    if (!this.composedWorld) return;
+    if (!this.composedWorld) {
+      console.log("🚨 LayeredWorldRenderer: No composedWorld to render");
+      return;
+    }
 
+    console.log(
+      `🎨 LayeredWorldRenderer: Starting to render ${this.composedWorld.layers.length} layers`,
+    );
     this.clearLayers();
 
     const sortedLayers = this.composedWorld.layers.sort(
       (a, b) => a.zIndex - b.zIndex,
     );
 
+    console.log(
+      "🎨 Layers to render:",
+      sortedLayers.map((l) => `${l.name} (${l.assets.length} assets)`),
+    );
+
     for (const layer of sortedLayers) {
       if (layer.visible) {
+        console.log(`🎨 About to render layer: ${layer.name}`);
         await this.renderLayer(layer);
 
         // Permitir que el navegador respire entre capas
         await this.yieldControl();
+      } else {
+        console.log(`🚫 Skipping invisible layer: ${layer.name}`);
       }
     }
+
+    console.log(
+      `✅ LayeredWorldRenderer: Finished rendering all layers. Total sprites: ${this.totalSprites}`,
+    );
   }
 
   /**
@@ -201,13 +219,18 @@ export class LayeredWorldRenderer {
     try {
       // Verificar si la textura existe
       if (!this.scene.textures.exists(placedAsset.asset.key)) {
+        console.log(
+          `⚠️ Texture ${placedAsset.asset.key} does not exist, trying fallback`,
+        );
         // Usar fallback asset si no existe
         const fallbackKey = this.getFallbackAsset(placedAsset.asset.type);
 
         if (!this.scene.textures.exists(fallbackKey)) {
+          console.log(`❌ Fallback texture ${fallbackKey} also doesn't exist`);
           return null; // No se puede crear el sprite
         }
         placedAsset.asset.key = fallbackKey;
+        console.log(`✅ Using fallback texture: ${fallbackKey}`);
       }
 
       const sprite = this.scene.add.sprite(
@@ -234,10 +257,17 @@ export class LayeredWorldRenderer {
         sprite.setData("metadata", placedAsset.metadata);
       }
 
+      console.log(
+        `✅ Created sprite for ${placedAsset.asset.key} at (${placedAsset.x}, ${placedAsset.y})`,
+      );
       return sprite;
     } catch (error) {
       logAutopoiesis.warn(
         `Error creando sprite para asset: ${placedAsset.asset.key}`,
+        error,
+      );
+      console.log(
+        `❌ Error creating sprite for ${placedAsset.asset.key}:`,
         error,
       );
       return null;
@@ -572,7 +602,9 @@ export class LayeredWorldRenderer {
     composedWorld: ComposedWorld,
   ): Phaser.Tilemaps.Tilemap | null {
     try {
-      const terrainLayers = composedWorld.layers.filter(layer => layer.type === "terrain");
+      const terrainLayers = composedWorld.layers.filter(
+        (layer) => layer.type === "terrain",
+      );
       if (!terrainLayers || terrainLayers.length === 0) return null;
 
       // Configuración del tilemap
@@ -608,17 +640,24 @@ export class LayeredWorldRenderer {
       }
 
       // Llenar tilemap con tiles basados en el terrain generado
-      terrainLayers.forEach(layer => {
+      terrainLayers.forEach((layer) => {
         layer.assets.forEach((placedAsset) => {
-        const tileX = Math.floor(placedAsset.x / tileWidth);
-        const tileY = Math.floor(placedAsset.y / tileHeight);
+          const tileX = Math.floor(placedAsset.x / tileWidth);
+          const tileY = Math.floor(placedAsset.y / tileHeight);
 
-        // Mapear tipo de bioma a índice de tile
-        const tileIndex = this.getBiomeTileIndex(placedAsset.metadata?.biome as string || "grassland");
+          // Mapear tipo de bioma a índice de tile
+          const tileIndex = this.getBiomeTileIndex(
+            (placedAsset.metadata?.biome as string) || "grassland",
+          );
 
-        if (tileX >= 0 && tileX < mapWidth && tileY >= 0 && tileY < mapHeight) {
-          terrainLayer.putTileAt(tileIndex, tileX, tileY);
-        }
+          if (
+            tileX >= 0 &&
+            tileX < mapWidth &&
+            tileY >= 0 &&
+            tileY < mapHeight
+          ) {
+            terrainLayer.putTileAt(tileIndex, tileX, tileY);
+          }
         });
       });
 

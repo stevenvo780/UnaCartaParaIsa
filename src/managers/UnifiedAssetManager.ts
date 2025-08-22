@@ -942,19 +942,31 @@ export class UnifiedAssetManager {
   }
 
   private createProgrammaticFallback(assetKey: string): void {
+    // Skip if texture already exists
+    if (this.scene.textures.exists(assetKey)) {
+      return;
+    }
+
+    // Skip spritesheet fallbacks since they should be loaded in BootScene
+    if (assetKey === "whomen1" || assetKey === "man1") {
+      return;
+    }
+
     let canvas: HTMLCanvasElement;
 
     if (assetKey.includes("isa")) {
       canvas = this.createCharacterFallback("#e91e63", "👩");
+      this.scene.textures.addCanvas(assetKey, canvas);
     } else if (assetKey.includes("stev")) {
       canvas = this.createCharacterFallback("#2196f3", "👨");
+      this.scene.textures.addCanvas(assetKey, canvas);
     } else if (assetKey.includes("grass")) {
       canvas = this.createDefaultTerrain();
+      this.scene.textures.addCanvas(assetKey, canvas);
     } else {
       canvas = this.createDefaultEntity();
+      this.scene.textures.addCanvas(assetKey, canvas);
     }
-
-    this.scene.textures.addCanvas(assetKey, canvas);
   }
 
   // ==========================================
@@ -1026,6 +1038,42 @@ export class UnifiedAssetManager {
     ctx.font = "16px Arial";
     ctx.textAlign = "center";
     ctx.fillText(emoji, 16, 20);
+
+    return canvas;
+  }
+
+  private createSpritesheetFallback(
+    color: string,
+    emoji: string,
+    frameWidth: number,
+    frameHeight: number,
+    totalFrames: number,
+  ): HTMLCanvasElement {
+    const cols = frameWidth === 24 ? 8 : 4; // whomen1 = 8 cols, man1 = 4 cols
+    const rows = Math.ceil(totalFrames / cols);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = frameWidth * cols;
+    canvas.height = frameHeight * rows;
+    const ctx = canvas.getContext("2d")!;
+
+    // Create each frame
+    for (let i = 0; i < totalFrames; i++) {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = col * frameWidth;
+      const y = row * frameHeight;
+
+      // Frame background
+      ctx.fillStyle = color;
+      ctx.fillRect(x + 2, y + 2, frameWidth - 4, frameHeight - 4);
+
+      // Add emoji
+      ctx.font = `${Math.floor(frameWidth * 0.6)}px Arial`;
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      ctx.fillText(emoji, x + frameWidth / 2, y + frameHeight * 0.7);
+    }
 
     return canvas;
   }
