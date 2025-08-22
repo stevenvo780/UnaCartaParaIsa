@@ -5,7 +5,7 @@
 
 import { logAutopoiesis } from "./logger";
 
-export class SecureRandomGenerator {
+class SecureRandomGenerator {
     private static instance: SecureRandomGenerator;
     private cryptoAvailable: boolean;
 

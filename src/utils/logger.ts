@@ -10,7 +10,7 @@ export type LogData =
   | Error;
 
 /** Niveles de logging y configuración */
-export enum LogLevel {
+enum LogLevel {
   DEBUG = 0,
   INFO = 1,
   WARN = 2,
@@ -114,20 +114,3 @@ export const logAutopoiesis = {
     },
 };
 
-/** Cambia el nivel de logging en runtime */
-export function setLogLevel(level: LogLevel): void {
-    CONFIG.level = level;
-    console.info(`🔧 Log level changed to: ${LogLevel[level]}`);
-}
-
-/** Devuelve estadísticas de throttling para debugging */
-export function getLogStats(): Record<
-  string,
-  { count: number; lastLog: number }
-  > {
-    const stats: Record<string, { count: number; lastLog: number }> = {};
-    logThrottle.forEach((value, key) => {
-        stats[key] = value;
-    });
-    return stats;
-}

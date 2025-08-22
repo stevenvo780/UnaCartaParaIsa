@@ -564,17 +564,42 @@ export class LayeredWorldRenderer {
    * Actualiza culling basado en posición de cámara
    */
     public updateCulling(cameraX: number, cameraY: number): void {
-    // TEMPORALMENTE DESACTIVADO: Hacer todos los sprites visibles para debugging
-        this.renderedAssets.forEach((sprite) => {
-            sprite.setVisible(true);
-        });
-
-    // TODO: Implementar culling básico si es necesario para performance
-    // const renderDistance = 2400; // Aumentar distancia de renderizado
-    // this.renderedAssets.forEach((sprite) => {
-    //   const distance = Math.hypot(sprite.x - cameraX, sprite.y - cameraY);
-    //   sprite.setVisible(distance < renderDistance);
-    // });
+        if (this.config.enablePerformanceMode) {
+            // Implementar culling básico para mejorar performance
+            const renderDistance = 2400; // Distancia de renderizado
+            let visibleCount = 0;
+            let culledCount = 0;
+            
+            this.renderedAssets.forEach((sprite) => {
+                const distance = Math.hypot(sprite.x - cameraX, sprite.y - cameraY);
+                const shouldBeVisible = distance < renderDistance;
+                
+                if (sprite.visible !== shouldBeVisible) {
+                    sprite.setVisible(shouldBeVisible);
+                }
+                
+                if (shouldBeVisible) {
+                    visibleCount++;
+                } else {
+                    culledCount++;
+                }
+            });
+            
+            // Log culling stats occasionally for performance monitoring
+            if (Math.random() < 0.001) { // ~0.1% chance to log
+                logAutopoiesis.debug("Culling stats", {
+                    visible: visibleCount,
+                    culled: culledCount,
+                    total: this.renderedAssets.size,
+                    cameraPos: { x: cameraX, y: cameraY }
+                });
+            }
+        } else {
+            // Modo debugging: hacer todos los sprites visibles
+            this.renderedAssets.forEach((sprite) => {
+                sprite.setVisible(true);
+            });
+        }
     }
 
     /**

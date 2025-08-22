@@ -5,7 +5,7 @@
 
 import { logAutopoiesis } from "./logger";
 
-export interface MemoryLimits {
+interface MemoryLimits {
   readonly MAX_CACHE_SIZE_MB: number;
   readonly MAX_ARRAYS_LENGTH: number;
   readonly MAX_CONCURRENT_OPERATIONS: number;
@@ -13,7 +13,7 @@ export interface MemoryLimits {
   readonly LOW_MEMORY_THRESHOLD_MB: number;
 }
 
-export const MEMORY_LIMITS: MemoryLimits = {
+const MEMORY_LIMITS: MemoryLimits = {
     MAX_CACHE_SIZE_MB: 50, // 50MB máximo en cache
     MAX_ARRAYS_LENGTH: 10000, // 10k elementos máximo por array
     MAX_CONCURRENT_OPERATIONS: 5, // 5 operaciones concurrentes máximo
@@ -21,7 +21,7 @@ export const MEMORY_LIMITS: MemoryLimits = {
     LOW_MEMORY_THRESHOLD_MB: 100, // Alerta si queda menos de 100MB
 } as const;
 
-export interface CacheEntry<T = any> {
+interface CacheEntry<T = any> {
   data: T;
   timestamp: number;
   size: number; // Tamaño estimado en bytes

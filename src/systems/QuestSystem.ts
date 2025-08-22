@@ -696,13 +696,38 @@ export class QuestSystem {
   }): void {
         switch (eventData.type) {
         case "dialogue_completed":
-        // TODO: Implementar _onDialogueCompleted method
             logAutopoiesis.info("Dialogue completed event received", {
                 cardId: eventData.data.cardId,
                 choiceId: eventData.data.choice?.id,
                 entityId: eventData.entityId,
                 outcome: eventData.data.choice?.outcome,
                 effects: eventData.data.choice?.effects,
+            });
+            
+            // Buscar misiones relacionadas con diálogos
+            this._questProgress.activeQuests.forEach((quest) => {
+                quest.objectives.forEach((objective) => {
+                    if (
+                        objective.type === "talk_to_npc" &&
+                        !objective.isCompleted &&
+                        (objective.target === eventData.entityId || 
+                         objective.target === eventData.data.cardId ||
+                         objective.target === "any")
+                    ) {
+                        objective.isCompleted = true;
+                        objective.completedAt = eventData.timestamp;
+                        objective.progress = objective.requiredCount || 1;
+                        
+                        logAutopoiesis.info("Quest objective completed through dialogue", {
+                            questId: quest.id,
+                            objectiveId: objective.id,
+                            target: objective.target,
+                            entityId: eventData.entityId
+                        });
+                        
+                        this._checkQuestCompletion(quest.id);
+                    }
+                });
             });
             break;
 
