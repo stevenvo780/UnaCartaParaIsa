@@ -86,8 +86,9 @@ export class SceneInitializationManager {
       stats: {
         totalAssets: 0,
         diversityIndex: 0,
+        clusterCount: 0,
+        layerCount: 0,
         compositionTime: 0,
-        complexity: "basic",
       },
     };
     const generationTime = Date.now() - startTime;

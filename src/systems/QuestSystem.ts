@@ -696,10 +696,11 @@ export class QuestSystem {
   }): void {
     switch (eventData.type) {
       case "dialogue_completed":
-        this._onDialogueCompleted({
+        // TODO: Implementar _onDialogueCompleted method
+        logAutopoiesis.info("Dialogue completed event received", {
           cardId: eventData.data.cardId,
           choiceId: eventData.data.choice?.id,
-          participants: [eventData.entityId],
+          entityId: eventData.entityId,
           outcome: eventData.data.choice?.outcome,
           effects: eventData.data.choice?.effects,
         });

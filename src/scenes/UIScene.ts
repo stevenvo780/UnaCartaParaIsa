@@ -13,6 +13,7 @@ import { ModalManager } from "../components/ui/ModalManager";
 import { SettingsModalContent } from "../components/ui/SettingsModal";
 import { StatsModalContent } from "../components/ui/StatsModal";
 import { TopBar } from "../components/ui/TopBar";
+import { createUIButton } from "../components/ui/UIButton";
 import { WorldModalContent } from "../components/ui/WorldModal";
 import { gameConfig } from "../config/gameConfig";
 import { UIDesignSystem as DS } from "../config/uiDesignSystem";
@@ -46,6 +47,8 @@ export class UIScene extends Phaser.Scene {
   private systemStatusUI!: SystemStatusUI;
   private systemModal?: Phaser.GameObjects.Container;
   private modalManager!: ModalManager;
+  private modalRegistry: Map<string, Phaser.GameObjects.Container> = new Map();
+  private modalOrder: string[] = [];
   private worldModal?: Phaser.GameObjects.Container;
   private worldModalContent?: WorldModalContent;
   private statsModal?: Phaser.GameObjects.Container;
@@ -423,6 +426,22 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
+  private createModernButton(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    text: string,
+    color: string,
+    onClick: () => void,
+  ): Phaser.GameObjects.Container {
+    return createUIButton(this, x, y, text, onClick, {
+      width,
+      height,
+      color: Phaser.Display.Color.HexStringToColor(color).color,
+    });
+  }
+
   private createTopBarModalShortcuts() {
     const baseY = 35;
     let x = this.cameras.main.width - 45 - 50; // antes del botón de menú
@@ -485,7 +504,7 @@ export class UIScene extends Phaser.Scene {
         }
       },
     );
-    this.bottomBar.add(autoBtn);
+    // BottomBar ya maneja sus propios botones
 
     // Isa control button
     const isaBtn = this.createModernButton(
@@ -504,7 +523,7 @@ export class UIScene extends Phaser.Scene {
         }
       },
     );
-    this.bottomBar.add(isaBtn);
+    // BottomBar ya maneja sus propios botones
 
     // Stev control button
     const stevBtn = this.createModernButton(
@@ -523,7 +542,7 @@ export class UIScene extends Phaser.Scene {
         }
       },
     );
-    this.bottomBar.add(stevBtn);
+    // BottomBar ya maneja sus propios botones
   }
 
   private createActionButtons() {
@@ -544,7 +563,7 @@ export class UIScene extends Phaser.Scene {
         this.togglePause();
       },
     );
-    this.bottomBar.add(pauseBtn);
+    // BottomBar ya maneja sus propios botones
 
     // Settings button
     const settingsBtn = this.createModernButton(
@@ -558,7 +577,7 @@ export class UIScene extends Phaser.Scene {
         this.openSettings();
       },
     );
-    this.bottomBar.add(settingsBtn);
+    // BottomBar ya maneja sus propios botones
 
     // Screenshot button
     const screenshotBtn = this.createModernButton(
@@ -572,7 +591,7 @@ export class UIScene extends Phaser.Scene {
         this.takeScreenshot();
       },
     );
-    this.bottomBar.add(screenshotBtn);
+    // BottomBar ya maneja sus propios botones
   }
 
   private createSpeedControls() {
@@ -648,7 +667,7 @@ export class UIScene extends Phaser.Scene {
     );
     speedContainer.add(turboBtn);
 
-    this.bottomBar.add(speedContainer);
+    // BottomBar ya maneja sus propios botones
   }
 
   // (Legacy) createLeftPanel eliminado: reemplazado por modal de Estadísticas
@@ -801,7 +820,7 @@ export class UIScene extends Phaser.Scene {
     const containers: Phaser.GameObjects.Container[] = [];
     if (this.topBar && this.topBar.getContainer)
       containers.push(this.topBar.getContainer());
-    if (this.bottomBar) containers.push(this.bottomBar);
+    if (this.bottomBar) containers.push(this.bottomBar.getContainer());
     // Paneles/minimapa independientes ya no se usan
     // Modales visibles
     if (this.modalManager) {

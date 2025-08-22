@@ -101,7 +101,7 @@ export class AnimatedGameEntity extends GameEntity {
           `AnimatedGameEntity ${entityId} created with new multi-frame animation`,
           {
             initialAnimation,
-            spriteKey: initialSpriteKey,
+            spriteKey: entityId === "isa" ? "whomen1" : "man1",
           },
         );
       } else {

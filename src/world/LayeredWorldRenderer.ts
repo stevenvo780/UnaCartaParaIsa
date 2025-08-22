@@ -466,7 +466,7 @@ export class LayeredWorldRenderer {
         type,
         name: layer?.name || type,
         assets: group.children.size,
-        visible: group.visible,
+        visible: group.active,
       });
     });
 
@@ -572,14 +572,14 @@ export class LayeredWorldRenderer {
     composedWorld: ComposedWorld,
   ): Phaser.Tilemaps.Tilemap | null {
     try {
-      const { terrain } = composedWorld.layers;
-      if (!terrain || terrain.length === 0) return null;
+      const terrainLayers = composedWorld.layers.filter(layer => layer.type === "terrain");
+      if (!terrainLayers || terrainLayers.length === 0) return null;
 
       // Configuración del tilemap
       const tileWidth = 32;
       const tileHeight = 32;
-      const mapWidth = Math.ceil(this.worldConfig.width / tileWidth);
-      const mapHeight = Math.ceil(this.worldConfig.height / tileHeight);
+      const mapWidth = Math.ceil(1200 / tileWidth);
+      const mapHeight = Math.ceil(800 / tileHeight);
 
       // Crear tilemap vacío
       const map = this.scene.make.tilemap({
@@ -608,24 +608,27 @@ export class LayeredWorldRenderer {
       }
 
       // Llenar tilemap con tiles basados en el terrain generado
-      terrain.forEach((placedAsset) => {
+      terrainLayers.forEach(layer => {
+        layer.assets.forEach((placedAsset) => {
         const tileX = Math.floor(placedAsset.x / tileWidth);
         const tileY = Math.floor(placedAsset.y / tileHeight);
 
         // Mapear tipo de bioma a índice de tile
-        const tileIndex = this.getBiomeTileIndex(placedAsset.metadata?.biome);
+        const tileIndex = this.getBiomeTileIndex(placedAsset.metadata?.biome as string || "grassland");
 
         if (tileX >= 0 && tileX < mapWidth && tileY >= 0 && tileY < mapHeight) {
           terrainLayer.putTileAt(tileIndex, tileX, tileY);
         }
+        });
       });
 
       // Configurar culling del tilemap
       terrainLayer.setCullPadding(2, 2);
 
       // Asignar al layer group correspondiente
-      if (this.layerGroups.terrain) {
-        this.layerGroups.terrain.add(terrainLayer);
+      const terrainGroup = this.layerGroups.get("terrain");
+      if (terrainGroup) {
+        terrainGroup.add(terrainLayer);
       }
 
       logAutopoiesis.info("🗺️ Tilemap de terreno creado", {

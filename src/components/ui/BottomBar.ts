@@ -29,7 +29,7 @@ export class BottomBar {
     this.build();
   }
 
-  getContainer() {
+  getContainer(): Phaser.GameObjects.Container {
     return this.container;
   }
 
