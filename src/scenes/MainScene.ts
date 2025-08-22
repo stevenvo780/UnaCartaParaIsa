@@ -5,6 +5,7 @@ import { InputManager } from "../managers/InputManager";
 import { SceneInitializationManager } from "../managers/SceneInitializationManager";
 import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
 import { logAutopoiesis } from "../utils/logger";
+import { LoadingProgressManager } from "../utils/LoadingProgressManager";
 import { DiverseWorldComposer } from "../world/DiverseWorldComposer";
 import { LayeredWorldRenderer } from "../world/LayeredWorldRenderer";
 import {
@@ -28,6 +29,9 @@ export default class MainScene extends Phaser.Scene {
   private worldRenderer!: LayeredWorldRenderer;
   private performanceMode = true;
 
+  // Manager de progreso de carga
+  private progressManager?: LoadingProgressManager;
+
   // UI principal (cartas, necesidades, estado) se gestiona en UIScene
   // UI principal (cartas y estado de sistema) se gestiona en UIScene
 
@@ -49,6 +53,18 @@ export default class MainScene extends Phaser.Scene {
   async create() {
     logAutopoiesis.info("🎯 MainScene.create() iniciado");
     logAutopoiesis.info("🌍 Creating complete game world with entities...");
+
+    // PRIMERO: Mostrar barra de progreso inmediatamente
+    const progressManager = this.registry.get("progressManager") as LoadingProgressManager;
+    if (progressManager) {
+      setTimeout(() => {
+        try {
+          progressManager.showProgressBar();
+        } catch (error) {
+          logAutopoiesis.error("❌ Error mostrando barra de progreso:", error);
+        }
+      }, 100); // Muy pequeño delay para que Phaser esté listo
+    }
 
     // 1. Verificar asset manager
     const unifiedAssetManager = this.registry.get(
@@ -75,20 +91,70 @@ export default class MainScene extends Phaser.Scene {
     // 4. Registrar AnimationManager en registry para que las entidades lo encuentren
     this.registry.set("animationManager", this.animationManager);
 
+    // Obtener LoadingProgressManager desde registry
+    this.progressManager = this.registry.get(
+      "progressManager",
+    ) as LoadingProgressManager;
+    
+    // Si no hay progressManager, crear uno temporal para evitar errores
+    if (!this.progressManager) {
+      logAutopoiesis.warn("⚠️ No se encontró progressManager, creando uno temporal");
+      try {
+        this.progressManager = new LoadingProgressManager(this);
+        logAutopoiesis.info("✅ LoadingProgressManager creado exitosamente");
+      } catch (error) {
+        logAutopoiesis.error("❌ Error creando LoadingProgressManager:", error);
+        // Crear un mock para evitar bloqueos
+        this.progressManager = {
+          startPhase: () => {},
+          updatePhase: () => {},
+          completePhase: () => {},
+          isComplete: () => true,
+          hideProgressBar: () => {},
+          showProgressBar: () => {}
+        } as any;
+      }
+    }
+
+    // La barra de progreso ya se mostró en BootScene, solo asegurar que esté visible
+    if (this.progressManager && !this.progressManager.isVisible) {
+      try {
+        this.progressManager.showProgressBar();
+      } catch (error) {
+        logAutopoiesis.error("❌ Error mostrando barra de progreso:", error);
+      }
+    }
+
     try {
       // 5. Generar mundo base simple primero
+      this.progressManager?.startPhase(
+        "world_generation",
+        "Generando terreno 64x64...",
+      );
       const baseWorld = this.generateBasicWorld();
+      this.progressManager?.completePhase(
+        "world_generation",
+        "Mundo base generado",
+      );
 
       // 6. Inicializar GameState
       const init = await SceneInitializationManager.initialize();
       const gameState = init.gameState;
 
       // 7. Componer y renderizar mundo diverso
+      this.progressManager?.startPhase(
+        "world_composition",
+        "Componiendo biomas y assets...",
+      );
       logAutopoiesis.info("🎨 Iniciando composición de mundo diverso...");
       this.worldComposer = new DiverseWorldComposer(this, `seed_${Date.now()}`);
 
       // Componer el mundo CON assets reales
       const composedWorld = await this.worldComposer.composeWorld(baseWorld);
+      this.progressManager?.completePhase(
+        "world_composition",
+        "Mundo compuesto con assets",
+      );
 
       logAutopoiesis.info("✅ Mundo compuesto", {
         layers: composedWorld.layers.length,
@@ -96,20 +162,35 @@ export default class MainScene extends Phaser.Scene {
         diversityIndex: composedWorld.stats.diversityIndex,
       });
 
-      // 8. Renderizar el mundo compuesto
+      // 9. Renderizar el mundo compuesto
+      this.progressManager?.startPhase(
+        "world_rendering",
+        "Renderizando 1200+ assets...",
+      );
       this.worldRenderer = new LayeredWorldRenderer(this, {
         enablePerformanceMode: this.performanceMode,
         maxVisibleAssets: 3000,
       });
 
-      await this.worldRenderer.renderComposedWorld(composedWorld);
+      await this.worldRenderer.renderComposedWorld(
+        composedWorld,
+        this.progressManager,
+      );
+      this.progressManager?.completePhase(
+        "world_rendering",
+        "Mundo renderizado exitosamente",
+      );
       logAutopoiesis.info("🎮 Mundo renderizado exitosamente");
 
       // Activar modo performance por defecto
       this.worldRenderer.setPerformanceMode(true);
       this.performanceMode = true;
 
-      // 9. Crear entidades DESPUÉS del mundo
+      // 10. Crear entidades y lógica del juego
+      this.progressManager?.startPhase(
+        "entities",
+        "Inicializando entidades y lógica...",
+      );
       const { isaEntity, stevEntity } = this.entityManager.createEntities({
         scene: this,
       });
@@ -189,7 +270,18 @@ export default class MainScene extends Phaser.Scene {
         }
       });
 
-      // 17. Iniciar UI Scene
+      // 17. Completar carga de entidades y ocultar barra de progreso
+      this.progressManager?.completePhase(
+        "entities",
+        "Entidades inicializadas",
+      );
+
+      // Ocultar barra de progreso cuando todo esté completado
+      if (this.progressManager?.isComplete()) {
+        this.progressManager.hideProgressBar();
+      }
+
+      // 18. Iniciar UI Scene
       logAutopoiesis.debug("🎯 MainScene: About to launch UIScene");
       this.scene.launch("UIScene");
       logAutopoiesis.debug("🎯 MainScene: UIScene launch called");
@@ -284,8 +376,8 @@ export default class MainScene extends Phaser.Scene {
    * Genera un mundo básico cuadrado para testing
    */
   private generateBasicWorld(): GeneratedWorld {
-    // Configuración para un mundo perfectamente cuadrado (reducido para testing)
-    const worldSize = 32; // 32x32 tiles = mundo cuadrado pequeño para pruebas
+    // Configuración para un mundo perfectamente cuadrado (aumentado para mayor diversidad)
+    const worldSize = 64; // 64x64 tiles = mundo cuadrado más grande para mayor diversidad de assets
     const tileSize = 32; // 32 píxeles por tile
 
     const config: WorldGenConfig = {

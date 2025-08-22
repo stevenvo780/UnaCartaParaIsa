@@ -199,11 +199,6 @@ export class RegistryValidator {
 
     // Validar propiedades opcionales
     const color = this.sanitizeNumber(zone.color, 0, 0xffffff).toString();
-    const interactionRadius = this.sanitizeNumber(
-      zone.interactionRadius,
-      10,
-      200,
-    );
 
     // Crear zona sanitizada
     const sanitizedZone: Zone = {
@@ -501,34 +496,6 @@ export class RegistryValidator {
     return arr
       .slice(0, maxLength)
       .filter((item) => item !== null && item !== undefined);
-  }
-
-  /**
-   * Sanitizar beneficios de zona
-   */
-  private static sanitizeBenefits(benefits: any): {
-    energy?: number;
-    happiness?: number;
-    comfort?: number;
-  } {
-    if (!benefits || typeof benefits !== "object") {
-      return {};
-    }
-
-    return {
-      energy:
-        benefits.energy !== undefined
-          ? this.sanitizeNumber(benefits.energy, -100, 100)
-          : undefined,
-      happiness:
-        benefits.happiness !== undefined
-          ? this.sanitizeNumber(benefits.happiness, -100, 100)
-          : undefined,
-      comfort:
-        benefits.comfort !== undefined
-          ? this.sanitizeNumber(benefits.comfort, -100, 100)
-          : undefined,
-    };
   }
 }
 

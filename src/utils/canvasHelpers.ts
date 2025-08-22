@@ -23,7 +23,10 @@ export function createCanvasWithContext(
   ctx: CanvasRenderingContext2D;
 } {
   const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Failed to get 2D context from canvas");
+  }
   return { canvas, ctx };
 }
 
@@ -34,7 +37,10 @@ export function fillCanvas(
   canvas: HTMLCanvasElement,
   color: string,
 ): HTMLCanvasElement {
-  const ctx = canvas.getContext("2d")!;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Failed to get 2D context from canvas");
+  }
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   return canvas;

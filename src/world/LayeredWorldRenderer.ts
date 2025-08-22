@@ -5,6 +5,7 @@
 
 import type Phaser from "phaser";
 import { logAutopoiesis } from "../utils/logger";
+import { LoadingProgressManager } from "../utils/LoadingProgressManager";
 import {
   DiverseWorldComposer,
   type ClusterPoint,
@@ -106,9 +107,12 @@ export class LayeredWorldRenderer {
   /**
    * Renderiza un mundo compuesto completo
    */
-  async renderComposedWorld(composedWorld: ComposedWorld): Promise<void> {
+  async renderComposedWorld(
+    composedWorld: ComposedWorld,
+    progressManager?: LoadingProgressManager,
+  ): Promise<void> {
     this.composedWorld = composedWorld;
-    await this.renderAllLayers();
+    await this.renderAllLayers(progressManager);
     this.renderClusters(composedWorld.clusters);
 
     logAutopoiesis.info("🌍 Mundo renderizado", {
@@ -121,7 +125,9 @@ export class LayeredWorldRenderer {
   /**
    * Renderiza todas las capas del mundo
    */
-  private async renderAllLayers(): Promise<void> {
+  private async renderAllLayers(
+    progressManager?: LoadingProgressManager,
+  ): Promise<void> {
     if (!this.composedWorld) {
       logAutopoiesis.debug(
         "🚨 LayeredWorldRenderer: No composedWorld to render",
@@ -143,10 +149,20 @@ export class LayeredWorldRenderer {
       sortedLayers.map((l) => `${l.name} (${l.assets.length} assets)`),
     );
 
-    for (const layer of sortedLayers) {
+    for (let i = 0; i < sortedLayers.length; i++) {
+      const layer = sortedLayers[i];
       if (layer.visible) {
         logAutopoiesis.debug(`🎨 About to render layer: ${layer.name}`);
-        await this.renderLayer(layer);
+
+        // Actualizar progreso por capa
+        const layerProgress = (i + 0.5) / sortedLayers.length;
+        progressManager?.updatePhase(
+          "world_rendering",
+          layerProgress,
+          `Renderizando capa: ${layer.name} (${layer.assets.length} assets)`,
+        );
+
+        await this.renderLayer(layer, progressManager, i, sortedLayers.length);
 
         // Permitir que el navegador respire entre capas
         await this.yieldControl();
@@ -163,7 +179,12 @@ export class LayeredWorldRenderer {
   /**
    * Renderiza una capa específica
    */
-  private async renderLayer(layer: RenderLayer): Promise<number> {
+  private async renderLayer(
+    layer: RenderLayer,
+    progressManager?: LoadingProgressManager,
+    layerIndex?: number,
+    totalLayers?: number,
+  ): Promise<number> {
     let renderedCount = 0;
     const group = this.layerGroups.get(layer.type);
 
@@ -182,7 +203,8 @@ export class LayeredWorldRenderer {
       ? layer.assets.slice(0, Math.min(1000, layer.assets.length))
       : layer.assets;
 
-    for (const placedAsset of assetsToRender) {
+    for (let i = 0; i < assetsToRender.length; i++) {
+      const placedAsset = assetsToRender[i];
       const sprite = this.createSpriteFromPlacedAsset(placedAsset);
 
       if (sprite) {
@@ -194,6 +216,21 @@ export class LayeredWorldRenderer {
 
         renderedCount++;
         this.totalSprites++;
+
+        // Actualizar progreso dentro de la capa
+        if (
+          progressManager &&
+          layerIndex !== undefined &&
+          totalLayers !== undefined
+        ) {
+          const assetProgress = i / assetsToRender.length;
+          const layerProgress = (layerIndex + assetProgress) / totalLayers;
+          progressManager.updatePhase(
+            "world_rendering",
+            layerProgress,
+            `Renderizando ${layer.name}: ${renderedCount}/${assetsToRender.length} assets`,
+          );
+        }
 
         // Yield cada 50 sprites para performance
         if (renderedCount % 50 === 0) {
@@ -289,8 +326,10 @@ export class LayeredWorldRenderer {
         sprite.setOrigin(0.5, 1); // Bottom center para trees y estructuras
         break;
       case "terrain":
-        sprite.setOrigin(0, 0); // Top-left para terrain tiles
-        sprite.setDisplaySize(32, 32); // Forzar tamaño exacto de 32x32 para eliminar espacios
+        sprite.setOrigin(0.5, 0.5); // Centro para más naturalidad
+        // Eliminar setDisplaySize forzado y añadir variación sutil
+        const scaleVariation = 0.95 + Math.random() * 0.1; // 95%-105% variación
+        sprite.setScale(scaleVariation);
         break;
       case "water":
         sprite.setOrigin(0.5, 0.5); // Centro para agua

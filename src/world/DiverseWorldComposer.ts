@@ -214,9 +214,17 @@ export class DiverseWorldComposer {
           const tile = this.world.terrain[tileY][tileX];
           const biome = tile.biome;
 
-          // Posición en píxeles
-          const x = tileX * tileSize;
-          const y = tileY * tileSize;
+          // Posición en píxeles con variación orgánica para romper la grilla
+          const baseX = tileX * tileSize;
+          const baseY = tileY * tileSize;
+
+          // Añadir ligera variación de posición usando ruido para mantener coherencia
+          const positionNoise = this.noise.noise2D(baseX * 0.05, baseY * 0.05);
+          const offsetX = positionNoise * 8; // ±8 píxeles de variación
+          const offsetY = positionNoise * 8;
+
+          const x = baseX + offsetX;
+          const y = baseY + offsetY;
 
           // Seleccionar asset usando ruido orgánico
           const assetIndex = this.getOrganicIndex(x, y, terrainAssets.length);
@@ -255,7 +263,7 @@ export class DiverseWorldComposer {
    */
   private async createVegetationLayer(): Promise<RenderLayer> {
     const assets: PlacedAsset[] = [];
-    const clusters = this.generateVegetationClusters(200);
+    const clusters = this.generateVegetationClusters(400); // Duplicado de 200 a 400 clusters
 
     const treeAssets = this.assetPool.get("tree") || [];
     const foliageAssets = this.assetPool.get("foliage") || [];
@@ -345,8 +353,8 @@ export class DiverseWorldComposer {
       ];
     }
 
-    // Generar estructuras en ubicaciones estratégicas
-    const structureClusters = this.generateStructureClusters(50);
+    // Generar estructuras en ubicaciones estratégicas (aumentado para más diversidad)
+    const structureClusters = this.generateStructureClusters(100); // Duplicado de 50 a 100
 
     for (const cluster of structureClusters) {
       const clusterAssets = this.getClusterAssets(cluster.type, allStructures);
@@ -415,8 +423,8 @@ export class DiverseWorldComposer {
       );
     }
 
-    // Distribución orgánica de detalles
-    const detailDensity = 0.02; // 2% de tiles
+    // Distribución orgánica de detalles (aumentada para más diversidad)
+    const detailDensity = 0.08; // 8% de tiles (4x más assets)
     const totalTiles =
       (this.world.config.width / 32) * (this.world.config.height / 32);
     const targetCount = Math.floor(totalTiles * detailDensity);
@@ -551,9 +559,9 @@ export class DiverseWorldComposer {
       };
     }
 
-    // Props dispersos por el mundo basado en biomas
+    // Props dispersos por el mundo basado en biomas (aumentado para más diversidad)
     const scatteredCount = Math.floor(
-      (this.world.config.width * this.world.config.height) / 500,
+      (this.world.config.width * this.world.config.height) / 150, // Cambió de 500 a 150 para más props
     );
 
     for (let i = 0; i < scatteredCount; i++) {
@@ -832,9 +840,17 @@ export class DiverseWorldComposer {
           const tile = this.world.terrain[tileY][tileX];
           const biome = tile.biome;
 
-          // Posición en píxeles
-          const x = tileX * tileSize;
-          const y = tileY * tileSize;
+          // Posición en píxeles con variación orgánica para romper la grilla (versión streaming)
+          const baseX = tileX * tileSize;
+          const baseY = tileY * tileSize;
+
+          // Añadir ligera variación de posición usando ruido para mantener coherencia
+          const positionNoise = this.noise.noise2D(baseX * 0.05, baseY * 0.05);
+          const offsetX = positionNoise * 8; // ±8 píxeles de variación
+          const offsetY = positionNoise * 8;
+
+          const x = baseX + offsetX;
+          const y = baseY + offsetY;
 
           // Seleccionar asset usando ruido orgánico
           const assetIndex = this.getOrganicIndex(x, y, terrainAssets.length);

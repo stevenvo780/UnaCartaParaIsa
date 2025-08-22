@@ -698,6 +698,10 @@ export class CreativeAssetLoader {
           assetPath = `assets/foliage/trees/${treeDef.name}.png`;
         } else if (treeDef.name === "oak_tree") {
           assetPath = "assets/foliage/trees/oak_tree.png";
+        } else if (treeDef.name === "tree_willow") {
+          assetPath = `assets/foliage/trees/willow${i}.png`; // Corregir path para willows
+        } else if (treeDef.name === "tree_white") {
+          assetPath = `assets/foliage/trees/white_tree${i}.png`; // Corregir path para white trees
         } else {
           assetPath = `assets/foliage/trees/${treeDef.name}${i}.png`;
         }
@@ -876,7 +880,9 @@ export class CreativeAssetLoader {
     const propAssets: AssetInfo[] = [];
 
     const propCategories = [
-      // Sillas y mobiliario - REMOVED: assets not found
+      // Sillas (existen muchas variaciones)
+      { prefix: "sillas", count: 6, biome: "village" },
+      { prefix: "sillas_de_calle", count: 4, biome: "city" },
 
       // Ventanas
       { prefix: "ventana", count: 13, biome: "city" },
@@ -1166,44 +1172,55 @@ export class CreativeAssetLoader {
   private createFallbackAssets(): void {
     logAutopoiesis.info("🎨 Creando assets de fallback procedurales...");
 
-    const graphics = this.scene.add.graphics();
+    try {
+      // Verificar que Phaser esté completamente inicializado
+      if (!this.scene.add || !this.scene.cameras.main) {
+        logAutopoiesis.warn("⚠️ Scene no está lista para crear fallback assets");
+        return;
+      }
 
-    // Terreno básico
-    graphics.fillStyle(0x4a7c4a);
-    graphics.fillRect(0, 0, 32, 32);
-    graphics.generateTexture("fallback_grass", 32, 32);
+      const graphics = this.scene.add.graphics();
 
-    // Árbol básico
-    graphics.clear();
-    graphics.fillStyle(0x228b22);
-    graphics.fillCircle(16, 12, 10);
-    graphics.fillStyle(0x8b4513);
-    graphics.fillRect(14, 18, 4, 10);
-    graphics.generateTexture("fallback_tree", 32, 32);
+      // Terreno básico
+      graphics.fillStyle(0x4a7c4a);
+      graphics.fillRect(0, 0, 32, 32);
+      graphics.generateTexture("fallback_grass", 32, 32);
 
-    // Roca básica
-    graphics.clear();
-    graphics.fillStyle(0x696969);
-    graphics.fillCircle(16, 20, 8);
-    graphics.fillStyle(0x808080);
-    graphics.fillCircle(16, 18, 6);
-    graphics.generateTexture("fallback_rock", 32, 32);
+      // Árbol básico
+      graphics.clear();
+      graphics.fillStyle(0x228b22);
+      graphics.fillCircle(16, 12, 10);
+      graphics.fillStyle(0x8b4513);
+      graphics.fillRect(14, 18, 4, 10);
+      graphics.generateTexture("fallback_tree", 32, 32);
 
-    // Agua básica
-    graphics.clear();
-    graphics.fillStyle(0x4169e1);
-    graphics.fillRect(0, 0, 32, 32);
-    graphics.generateTexture("fallback_water", 32, 32);
+      // Roca básica
+      graphics.clear();
+      graphics.fillStyle(0x696969);
+      graphics.fillCircle(16, 20, 8);
+      graphics.fillStyle(0x808080);
+      graphics.fillCircle(16, 18, 6);
+      graphics.generateTexture("fallback_rock", 32, 32);
 
-    // Estructura básica
-    graphics.clear();
-    graphics.fillStyle(0x8b4513);
-    graphics.fillRect(0, 16, 32, 16);
-    graphics.fillStyle(0xdc143c);
-    graphics.fillTriangle(16, 0, 0, 16, 32, 16);
-    graphics.generateTexture("fallback_house", 32, 32);
+      // Agua básica
+      graphics.clear();
+      graphics.fillStyle(0x4169e1);
+      graphics.fillRect(0, 0, 32, 32);
+      graphics.generateTexture("fallback_water", 32, 32);
 
-    graphics.destroy();
+      // Estructura básica
+      graphics.clear();
+      graphics.fillStyle(0x8b4513);
+      graphics.fillRect(0, 16, 32, 16);
+      graphics.fillStyle(0xdc143c);
+      graphics.fillTriangle(16, 0, 0, 16, 32, 16);
+      graphics.generateTexture("fallback_house", 32, 32);
+
+      graphics.destroy();
+      
+    } catch (error) {
+      logAutopoiesis.error("❌ Error creando fallback assets:", error);
+    }
 
     // Registrar como assets disponibles
     const fallbackAssets: AssetInfo[] = [
