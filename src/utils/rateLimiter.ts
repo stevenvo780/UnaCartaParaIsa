@@ -51,14 +51,14 @@ export class RateLimiter {
   public isAllowed(
     key: string,
     config: RateLimitConfig,
-    context?: any
+    context?: any,
   ): RateLimitResult {
     const now = Date.now();
     const limitKey = config.keyGenerator ? config.keyGenerator(context) : key;
-    
+
     // Obtener o crear registro de requests
     let record = this.requestCounts.get(limitKey);
-    
+
     if (!record) {
       record = {
         count: 0,
@@ -112,13 +112,13 @@ export class RateLimiter {
     key: string,
     config: RateLimitConfig,
     success: boolean = true,
-    context?: any
+    context?: any,
   ): RateLimitResult {
     // Solo contar según configuración
     if (config.skipSuccessfulRequests && success) {
       return this.getStatus(key, config, context);
     }
-    
+
     if (config.skipFailedRequests && !success) {
       return this.getStatus(key, config, context);
     }
@@ -132,11 +132,11 @@ export class RateLimiter {
   public getStatus(
     key: string,
     config: RateLimitConfig,
-    context?: any
+    context?: any,
   ): RateLimitResult {
     const limitKey = config.keyGenerator ? config.keyGenerator(context) : key;
     const record = this.requestCounts.get(limitKey);
-    
+
     if (!record) {
       return {
         allowed: true,
@@ -148,7 +148,7 @@ export class RateLimiter {
 
     const now = Date.now();
     const windowExpired = now - record.windowStart >= config.windowMs;
-    
+
     if (windowExpired) {
       return {
         allowed: true,
@@ -216,7 +216,7 @@ export class RateLimiter {
     return {
       totalKeys: this.requestCounts.size,
       activeWindows: Array.from(this.requestCounts.values()).filter(
-        record => Date.now() - record.windowStart < 3600000
+        (record) => Date.now() - record.windowStart < 3600000,
       ).length,
     };
   }
@@ -274,7 +274,7 @@ export const RATE_LIMIT_CONFIGS = {
 export function checkRateLimit(
   operation: string,
   config: RateLimitConfig,
-  context?: any
+  context?: any,
 ): RateLimitResult {
   const rateLimiter = RateLimiter.getInstance();
   return rateLimiter.isAllowed(operation, config, context);
@@ -287,33 +287,35 @@ export function RateLimit(config: RateLimitConfig, keyPrefix?: string) {
   return function (
     target: any,
     propertyKey: string,
-    descriptor: PropertyDescriptor
+    descriptor: PropertyDescriptor,
   ) {
     const originalMethod = descriptor.value;
 
     descriptor.value = function (...args: any[]) {
       const rateLimiter = RateLimiter.getInstance();
       const key = keyPrefix ? `${keyPrefix}:${propertyKey}` : propertyKey;
-      
+
       const result = rateLimiter.isAllowed(key, config, this);
-      
+
       if (!result.allowed) {
-        const error = new Error(`Rate limit exceeded for ${key}. Try again at ${new Date(result.resetTime).toISOString()}`);
+        const error = new Error(
+          `Rate limit exceeded for ${key}. Try again at ${new Date(result.resetTime).toISOString()}`,
+        );
         (error as any).rateLimitInfo = result;
         throw error;
       }
 
       try {
         const methodResult = originalMethod.apply(this, args);
-        
+
         // Si es una Promise, manejar éxito/fallo
-        if (methodResult && typeof methodResult.then === 'function') {
+        if (methodResult && typeof methodResult.then === "function") {
           return methodResult.catch((error: any) => {
             rateLimiter.consume(key, config, false, this);
             throw error;
           });
         }
-        
+
         return methodResult;
       } catch (error) {
         rateLimiter.consume(key, config, false, this);

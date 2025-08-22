@@ -1,295 +1,314 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Una Carta Para Isa - Offline</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Arial", sans-serif;
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .offline-container {
+        max-width: 600px;
+        padding: 2rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .heart-icon {
+        font-size: 4rem;
+        color: #e74c3c;
+        margin-bottom: 1rem;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
         }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+        50% {
+          transform: scale(1.1);
         }
-        
-        .offline-container {
-            max-width: 600px;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        100% {
+          transform: scale(1);
         }
-        
-        .heart-icon {
-            font-size: 4rem;
-            color: #e74c3c;
-            margin-bottom: 1rem;
-            animation: pulse 2s infinite;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #ecf0f1;
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        color: #bdc3c7;
+      }
+
+      .message {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        color: #ecf0f1;
+      }
+
+      .retry-btn {
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        color: white;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 10px;
+      }
+
+      .retry-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+      }
+
+      .cache-btn {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        color: white;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 10px;
+      }
+
+      .cache-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+      }
+
+      .connection-status {
+        margin-top: 2rem;
+        padding: 1rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+      }
+
+      .online {
+        background: rgba(46, 204, 113, 0.2);
+        border: 1px solid #2ecc71;
+      }
+
+      .offline {
+        background: rgba(231, 76, 60, 0.2);
+        border: 1px solid #e74c3c;
+      }
+
+      .footer {
+        margin-top: 3rem;
+        font-size: 0.9rem;
+        color: #95a5a6;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #bdc3c7;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        100% {
+          transform: rotate(360deg);
         }
-        
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: #ecf0f1;
-        }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            color: #bdc3c7;
-        }
-        
-        .message {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-            color: #ecf0f1;
-        }
-        
-        .retry-btn {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
-            border: none;
-            padding: 12px 30px;
-            font-size: 1.1rem;
-            color: white;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 10px;
-        }
-        
-        .retry-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
-        }
-        
-        .cache-btn {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            border: none;
-            padding: 12px 30px;
-            font-size: 1.1rem;
-            color: white;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 10px;
-        }
-        
-        .cache-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-        }
-        
-        .connection-status {
-            margin-top: 2rem;
-            padding: 1rem;
-            border-radius: 10px;
-            font-size: 0.9rem;
-        }
-        
-        .online {
-            background: rgba(46, 204, 113, 0.2);
-            border: 1px solid #2ecc71;
-        }
-        
-        .offline {
-            background: rgba(231, 76, 60, 0.2);
-            border: 1px solid #e74c3c;
-        }
-        
-        .footer {
-            margin-top: 3rem;
-            font-size: 0.9rem;
-            color: #95a5a6;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #bdc3c7;
-            border-top: 2px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="offline-container">
-        <div class="heart-icon">💝</div>
-        <h1>Una Carta Para Isa</h1>
-        <div class="subtitle">Conexión Perdida</div>
-        
-        <div class="message">
-            <p>Parece que no hay conexión a internet en este momento.</p>
-            <p>Pero no te preocupes, el amor trasciende las conexiones digitales. ✨</p>
-        </div>
-        
-        <div class="actions">
-            <button class="retry-btn" onclick="retryConnection()">
-                <span id="retry-text">Reintentar Conexión</span>
-            </button>
-            <button class="cache-btn" onclick="clearCacheAndReload()">
-                Limpiar Cache y Recargar
-            </button>
-        </div>
-        
-        <div class="connection-status offline" id="connection-status">
-            🔴 Sin conexión a internet
-        </div>
-        
-        <div class="footer">
-            💫 Mientras esperas, recuerda que cada momento sin conexión<br>
-            es una oportunidad para conectar contigo mismo/a
-        </div>
+      <div class="heart-icon">💝</div>
+      <h1>Una Carta Para Isa</h1>
+      <div class="subtitle">Conexión Perdida</div>
+
+      <div class="message">
+        <p>Parece que no hay conexión a internet en este momento.</p>
+        <p>
+          Pero no te preocupes, el amor trasciende las conexiones digitales. ✨
+        </p>
+      </div>
+
+      <div class="actions">
+        <button class="retry-btn" onclick="retryConnection()">
+          <span id="retry-text">Reintentar Conexión</span>
+        </button>
+        <button class="cache-btn" onclick="clearCacheAndReload()">
+          Limpiar Cache y Recargar
+        </button>
+      </div>
+
+      <div class="connection-status offline" id="connection-status">
+        🔴 Sin conexión a internet
+      </div>
+
+      <div class="footer">
+        💫 Mientras esperas, recuerda que cada momento sin conexión<br />
+        es una oportunidad para conectar contigo mismo/a
+      </div>
     </div>
 
     <script>
-        // Monitorear estado de conexión
-        function updateConnectionStatus() {
-            const statusElement = document.getElementById('connection-status');
-            
-            if (navigator.onLine) {
-                statusElement.className = 'connection-status online';
-                statusElement.innerHTML = '🟢 Conexión restaurada - Puedes reintentar';
-            } else {
-                statusElement.className = 'connection-status offline';
-                statusElement.innerHTML = '🔴 Sin conexión a internet';
-            }
-        }
+      // Monitorear estado de conexión
+      function updateConnectionStatus() {
+        const statusElement = document.getElementById("connection-status");
 
-        // Reintentar conexión
-        function retryConnection() {
-            const retryBtn = document.querySelector('.retry-btn');
-            const retryText = document.getElementById('retry-text');
-            
-            // Mostrar loading
-            retryText.innerHTML = 'Conectando... <div class="loading"></div>';
-            retryBtn.disabled = true;
-            
-            // Intentar recargar después de un momento
+        if (navigator.onLine) {
+          statusElement.className = "connection-status online";
+          statusElement.innerHTML =
+            "🟢 Conexión restaurada - Puedes reintentar";
+        } else {
+          statusElement.className = "connection-status offline";
+          statusElement.innerHTML = "🔴 Sin conexión a internet";
+        }
+      }
+
+      // Reintentar conexión
+      function retryConnection() {
+        const retryBtn = document.querySelector(".retry-btn");
+        const retryText = document.getElementById("retry-text");
+
+        // Mostrar loading
+        retryText.innerHTML = 'Conectando... <div class="loading"></div>';
+        retryBtn.disabled = true;
+
+        // Intentar recargar después de un momento
+        setTimeout(() => {
+          if (navigator.onLine) {
+            // Si hay conexión, recargar
+            window.location.reload();
+          } else {
+            // Si no hay conexión, restaurar botón
+            retryText.textContent = "Reintentar Conexión";
+            retryBtn.disabled = false;
+
+            // Mostrar mensaje temporal
+            const tempMessage = document.createElement("div");
+            tempMessage.textContent = "⚠️ Aún sin conexión, intenta de nuevo";
+            tempMessage.style.color = "#f39c12";
+            tempMessage.style.marginTop = "1rem";
+            tempMessage.style.fontSize = "0.9rem";
+
+            document.querySelector(".actions").appendChild(tempMessage);
+
             setTimeout(() => {
-                if (navigator.onLine) {
-                    // Si hay conexión, recargar
-                    window.location.reload();
-                } else {
-                    // Si no hay conexión, restaurar botón
-                    retryText.textContent = 'Reintentar Conexión';
-                    retryBtn.disabled = false;
-                    
-                    // Mostrar mensaje temporal
-                    const tempMessage = document.createElement('div');
-                    tempMessage.textContent = '⚠️ Aún sin conexión, intenta de nuevo';
-                    tempMessage.style.color = '#f39c12';
-                    tempMessage.style.marginTop = '1rem';
-                    tempMessage.style.fontSize = '0.9rem';
-                    
-                    document.querySelector('.actions').appendChild(tempMessage);
-                    
-                    setTimeout(() => {
-                        tempMessage.remove();
-                    }, 3000);
-                }
-            }, 2000);
-        }
+              tempMessage.remove();
+            }, 3000);
+          }
+        }, 2000);
+      }
 
-        // Limpiar cache y recargar
-        async function clearCacheAndReload() {
-            const cacheBtn = document.querySelector('.cache-btn');
-            cacheBtn.textContent = 'Limpiando cache...';
-            cacheBtn.disabled = true;
-            
-            try {
-                // Intentar limpiar cache via service worker
-                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                    const channel = new MessageChannel();
-                    
-                    channel.port1.onmessage = (event) => {
-                        console.log('Cache cleared:', event.data);
-                        window.location.reload();
-                    };
-                    
-                    navigator.serviceWorker.controller.postMessage({
-                        type: 'CLEAR_CACHE'
-                    }, [channel.port2]);
-                } else {
-                    // Fallback: limpiar cache del navegador
-                    if ('caches' in window) {
-                        const cacheNames = await caches.keys();
-                        await Promise.all(
-                            cacheNames.map(cacheName => caches.delete(cacheName))
-                        );
-                    }
-                    window.location.reload();
-                }
-            } catch (error) {
-                console.error('Error clearing cache:', error);
-                cacheBtn.textContent = 'Error - Recarga manual';
-                
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
+      // Limpiar cache y recargar
+      async function clearCacheAndReload() {
+        const cacheBtn = document.querySelector(".cache-btn");
+        cacheBtn.textContent = "Limpiando cache...";
+        cacheBtn.disabled = true;
+
+        try {
+          // Intentar limpiar cache via service worker
+          if (
+            "serviceWorker" in navigator &&
+            navigator.serviceWorker.controller
+          ) {
+            const channel = new MessageChannel();
+
+            channel.port1.onmessage = (event) => {
+              console.log("Cache cleared:", event.data);
+              window.location.reload();
+            };
+
+            navigator.serviceWorker.controller.postMessage(
+              {
+                type: "CLEAR_CACHE",
+              },
+              [channel.port2],
+            );
+          } else {
+            // Fallback: limpiar cache del navegador
+            if ("caches" in window) {
+              const cacheNames = await caches.keys();
+              await Promise.all(
+                cacheNames.map((cacheName) => caches.delete(cacheName)),
+              );
             }
+            window.location.reload();
+          }
+        } catch (error) {
+          console.error("Error clearing cache:", error);
+          cacheBtn.textContent = "Error - Recarga manual";
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
         }
+      }
 
-        // Event listeners para cambios de conexión
-        window.addEventListener('online', () => {
-            updateConnectionStatus();
-            
-            // Auto-retry cuando se restaura conexión
-            setTimeout(() => {
-                if (navigator.onLine) {
-                    retryConnection();
-                }
-            }, 1000);
-        });
-        
-        window.addEventListener('offline', updateConnectionStatus);
-
-        // Inicializar estado
+      // Event listeners para cambios de conexión
+      window.addEventListener("online", () => {
         updateConnectionStatus();
 
-        // Verificar conexión periódicamente
-        setInterval(() => {
-            // Ping simple para verificar conectividad real
-            fetch('/', { method: 'HEAD', cache: 'no-cache' })
-                .then(() => {
-                    if (!navigator.onLine) {
-                        // Forzar evento online si detectamos conectividad
-                        window.dispatchEvent(new Event('online'));
-                    }
-                })
-                .catch(() => {
-                    if (navigator.onLine) {
-                        // Forzar evento offline si no hay conectividad real
-                        window.dispatchEvent(new Event('offline'));
-                    }
-                });
-        }, 10000); // Check every 10 seconds
+        // Auto-retry cuando se restaura conexión
+        setTimeout(() => {
+          if (navigator.onLine) {
+            retryConnection();
+          }
+        }, 1000);
+      });
+
+      window.addEventListener("offline", updateConnectionStatus);
+
+      // Inicializar estado
+      updateConnectionStatus();
+
+      // Verificar conexión periódicamente
+      setInterval(() => {
+        // Ping simple para verificar conectividad real
+        fetch("/", { method: "HEAD", cache: "no-cache" })
+          .then(() => {
+            if (!navigator.onLine) {
+              // Forzar evento online si detectamos conectividad
+              window.dispatchEvent(new Event("online"));
+            }
+          })
+          .catch(() => {
+            if (navigator.onLine) {
+              // Forzar evento offline si no hay conectividad real
+              window.dispatchEvent(new Event("offline"));
+            }
+          });
+      }, 10000); // Check every 10 seconds
     </script>
-</body>
+  </body>
 </html>

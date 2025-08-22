@@ -52,6 +52,11 @@
     "allowUnusedLabels": true,
     "allowUnreachableCode": true
   },
-  "include": ["src/**/*", "vite.config.ts", "eslint.config.mjs", "scripts/**/*"],
+  "include": [
+    "src/**/*",
+    "vite.config.ts",
+    "eslint.config.mjs",
+    "scripts/**/*"
+  ],
   "exclude": ["node_modules", "dist", "build", "coverage"]
 }

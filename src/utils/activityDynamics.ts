@@ -10,62 +10,62 @@ interface TimeOfDayModifiers {
 }
 
 const ACTIVITY_OPTIMAL_DURATIONS = {
-    WANDERING: 120000,
-    MEDITATING: 300000,
-    WRITING: 600000,
-    RESTING: 180000,
-    SOCIALIZING: 360000,
-    EXPLORING: 300000,
-    CONTEMPLATING: 480000,
-    DANCING: 180000,
-    HIDING: 240000,
-    WORKING: 1200000,
-    SHOPPING: 120000,
-    EXERCISING: 240000,
-    COOKING: 180000,
-    EATING: 60000,
-    SLEEPING: 480000,
-    PLAYING: 240000,
+  WANDERING: 120000,
+  MEDITATING: 300000,
+  WRITING: 600000,
+  RESTING: 180000,
+  SOCIALIZING: 360000,
+  EXPLORING: 300000,
+  CONTEMPLATING: 480000,
+  DANCING: 180000,
+  HIDING: 240000,
+  WORKING: 1200000,
+  SHOPPING: 120000,
+  EXERCISING: 240000,
+  COOKING: 180000,
+  EATING: 60000,
+  SLEEPING: 480000,
+  PLAYING: 240000,
 };
 
 const HYBRID_DECAY_RATES = {
-    base: {
-        hunger: -0.08,
-        energy: -0.05,
-        happiness: -0.03,
-        sleepiness: 0.04,
-        boredom: 0.06,
-        loneliness: 0.02,
-        health: -0.01,
-    },
+  base: {
+    hunger: -0.08,
+    energy: -0.05,
+    happiness: -0.03,
+    sleepiness: 0.04,
+    boredom: 0.06,
+    loneliness: 0.02,
+    health: -0.01,
+  },
 };
 
 const ACTIVITY_DECAY_MULTIPLIERS: Record<ActivityType, number> = {
-    RESTING: 0.3,
-    MEDITATING: 0.4,
-    SOCIALIZING: 0.9,
-    WORKING: 1.3,
-    EXERCISING: 1.8,
-    WANDERING: 0.7,
-    WRITING: 1.0,
-    EXPLORING: 1.2,
-    CONTEMPLATING: 0.5,
-    DANCING: 1.4,
-    HIDING: 0.6,
-    SHOPPING: 1.1,
-    COOKING: 1.0,
-    EATING: 0.8,
-    SLEEPING: 0.2,
-    PLAYING: 1.2,
+  RESTING: 0.3,
+  MEDITATING: 0.4,
+  SOCIALIZING: 0.9,
+  WORKING: 1.3,
+  EXERCISING: 1.8,
+  WANDERING: 0.7,
+  WRITING: 1.0,
+  EXPLORING: 1.2,
+  CONTEMPLATING: 0.5,
+  DANCING: 1.4,
+  HIDING: 0.6,
+  SHOPPING: 1.1,
+  COOKING: 1.0,
+  EATING: 0.8,
+  SLEEPING: 0.2,
+  PLAYING: 1.2,
 };
 
 const SURVIVAL_COSTS = {
-    LIVING_COST: 1.5,
-    CRITICAL_MONEY: 10,
+  LIVING_COST: 1.5,
+  CRITICAL_MONEY: 10,
 };
 
 const DECAY_CONFIG = {
-    GENERAL_MULTIPLIER: 1.0,
+  GENERAL_MULTIPLIER: 1.0,
 };
 
 interface EfficiencyParams {
@@ -77,203 +77,203 @@ interface EfficiencyParams {
 }
 
 const ACTIVITY_EFFICIENCY_PARAMS: Record<ActivityType, EfficiencyParams> = {
-    WORKING: {
-        rampUpFactor: 0.5,
-        baseEfficiency: 0.5,
-        peakEfficiency: 1.0,
-        degradationRate: 0.8,
-        minEfficiency: 0.2,
-    },
-    RESTING: {
-        rampUpFactor: 0.3,
-        baseEfficiency: 0.4,
-        peakEfficiency: 1.0,
-        degradationRate: 0.7,
-        minEfficiency: 0.3,
-    },
-    SOCIALIZING: {
-        rampUpFactor: 0.2,
-        baseEfficiency: 0.6,
-        peakEfficiency: 1.0,
-        degradationRate: 0.6,
-        minEfficiency: 0.4,
-    },
-    DANCING: {
-        rampUpFactor: 0.4,
-        baseEfficiency: 0.7,
-        peakEfficiency: 1.0,
-        degradationRate: 0.7,
-        minEfficiency: 0.3,
-    },
-    SHOPPING: {
-        rampUpFactor: 0.0,
-        baseEfficiency: 1.0,
-        peakEfficiency: 1.0,
-        degradationRate: 0.8,
-        minEfficiency: 0.2,
-    },
-    COOKING: {
-        rampUpFactor: 0.3,
-        baseEfficiency: 0.5,
-        peakEfficiency: 1.0,
-        degradationRate: 0.6,
-        minEfficiency: 0.4,
-    },
-    EXERCISING: {
-        rampUpFactor: 0.5,
-        baseEfficiency: 0.6,
-        peakEfficiency: 1.0,
-        degradationRate: 0.8,
-        minEfficiency: 0.2,
-    },
-    MEDITATING: {
-        rampUpFactor: 0.6,
-        baseEfficiency: 0.4,
-        peakEfficiency: 1.0,
-        degradationRate: 0.5,
-        minEfficiency: 0.5,
-    },
-    WRITING: {
-        rampUpFactor: 0.4,
-        baseEfficiency: 0.5,
-        peakEfficiency: 1.0,
-        degradationRate: 0.6,
-        minEfficiency: 0.4,
-    },
-    WANDERING: {
-        rampUpFactor: 0.0,
-        baseEfficiency: 1.0,
-        peakEfficiency: 1.0,
-        degradationRate: 0.5,
-        minEfficiency: 0.5,
-    },
-    EXPLORING: {
-        rampUpFactor: 0.3,
-        baseEfficiency: 0.6,
-        peakEfficiency: 1.0,
-        degradationRate: 0.7,
-        minEfficiency: 0.3,
-    },
-    CONTEMPLATING: {
-        rampUpFactor: 0.7,
-        baseEfficiency: 0.3,
-        peakEfficiency: 1.0,
-        degradationRate: 0.6,
-        minEfficiency: 0.4,
-    },
-    HIDING: {
-        rampUpFactor: 0.5,
-        baseEfficiency: 0.7,
-        peakEfficiency: 0.9,
-        degradationRate: 0.6,
-        minEfficiency: 0.3,
-    },
-    EATING: {
-        rampUpFactor: 0.4,
-        baseEfficiency: 0.8,
-        peakEfficiency: 1.0,
-        degradationRate: 0.5,
-        minEfficiency: 0.5,
-    },
-    SLEEPING: {
-        rampUpFactor: 0.6,
-        baseEfficiency: 0.4,
-        peakEfficiency: 1.0,
-        degradationRate: 0.3,
-        minEfficiency: 0.7,
-    },
-    PLAYING: {
-        rampUpFactor: 0.3,
-        baseEfficiency: 0.7,
-        peakEfficiency: 1.0,
-        degradationRate: 0.6,
-        minEfficiency: 0.4,
-    },
+  WORKING: {
+    rampUpFactor: 0.5,
+    baseEfficiency: 0.5,
+    peakEfficiency: 1.0,
+    degradationRate: 0.8,
+    minEfficiency: 0.2,
+  },
+  RESTING: {
+    rampUpFactor: 0.3,
+    baseEfficiency: 0.4,
+    peakEfficiency: 1.0,
+    degradationRate: 0.7,
+    minEfficiency: 0.3,
+  },
+  SOCIALIZING: {
+    rampUpFactor: 0.2,
+    baseEfficiency: 0.6,
+    peakEfficiency: 1.0,
+    degradationRate: 0.6,
+    minEfficiency: 0.4,
+  },
+  DANCING: {
+    rampUpFactor: 0.4,
+    baseEfficiency: 0.7,
+    peakEfficiency: 1.0,
+    degradationRate: 0.7,
+    minEfficiency: 0.3,
+  },
+  SHOPPING: {
+    rampUpFactor: 0.0,
+    baseEfficiency: 1.0,
+    peakEfficiency: 1.0,
+    degradationRate: 0.8,
+    minEfficiency: 0.2,
+  },
+  COOKING: {
+    rampUpFactor: 0.3,
+    baseEfficiency: 0.5,
+    peakEfficiency: 1.0,
+    degradationRate: 0.6,
+    minEfficiency: 0.4,
+  },
+  EXERCISING: {
+    rampUpFactor: 0.5,
+    baseEfficiency: 0.6,
+    peakEfficiency: 1.0,
+    degradationRate: 0.8,
+    minEfficiency: 0.2,
+  },
+  MEDITATING: {
+    rampUpFactor: 0.6,
+    baseEfficiency: 0.4,
+    peakEfficiency: 1.0,
+    degradationRate: 0.5,
+    minEfficiency: 0.5,
+  },
+  WRITING: {
+    rampUpFactor: 0.4,
+    baseEfficiency: 0.5,
+    peakEfficiency: 1.0,
+    degradationRate: 0.6,
+    minEfficiency: 0.4,
+  },
+  WANDERING: {
+    rampUpFactor: 0.0,
+    baseEfficiency: 1.0,
+    peakEfficiency: 1.0,
+    degradationRate: 0.5,
+    minEfficiency: 0.5,
+  },
+  EXPLORING: {
+    rampUpFactor: 0.3,
+    baseEfficiency: 0.6,
+    peakEfficiency: 1.0,
+    degradationRate: 0.7,
+    minEfficiency: 0.3,
+  },
+  CONTEMPLATING: {
+    rampUpFactor: 0.7,
+    baseEfficiency: 0.3,
+    peakEfficiency: 1.0,
+    degradationRate: 0.6,
+    minEfficiency: 0.4,
+  },
+  HIDING: {
+    rampUpFactor: 0.5,
+    baseEfficiency: 0.7,
+    peakEfficiency: 0.9,
+    degradationRate: 0.6,
+    minEfficiency: 0.3,
+  },
+  EATING: {
+    rampUpFactor: 0.4,
+    baseEfficiency: 0.8,
+    peakEfficiency: 1.0,
+    degradationRate: 0.5,
+    minEfficiency: 0.5,
+  },
+  SLEEPING: {
+    rampUpFactor: 0.6,
+    baseEfficiency: 0.4,
+    peakEfficiency: 1.0,
+    degradationRate: 0.3,
+    minEfficiency: 0.7,
+  },
+  PLAYING: {
+    rampUpFactor: 0.3,
+    baseEfficiency: 0.7,
+    peakEfficiency: 1.0,
+    degradationRate: 0.6,
+    minEfficiency: 0.4,
+  },
 };
 
 const createEfficiencyFunction =
   (params: EfficiencyParams, optimal: number) =>
-      (timeSpent: number): number => {
-          const {
-              rampUpFactor,
-              baseEfficiency,
-              peakEfficiency,
-              degradationRate,
-              minEfficiency,
-          } = params;
+  (timeSpent: number): number => {
+    const {
+      rampUpFactor,
+      baseEfficiency,
+      peakEfficiency,
+      degradationRate,
+      minEfficiency,
+    } = params;
 
-          if (timeSpent < optimal * rampUpFactor) {
-              return (
-                  baseEfficiency +
+    if (timeSpent < optimal * rampUpFactor) {
+      return (
+        baseEfficiency +
         (timeSpent / (optimal * rampUpFactor)) *
           (peakEfficiency - baseEfficiency)
-              );
-          }
-          if (timeSpent <= optimal) {
-              const rampDownStart = optimal * rampUpFactor;
-              const rampDownRange = optimal - rampDownStart;
-              return (
-                  peakEfficiency -
+      );
+    }
+    if (timeSpent <= optimal) {
+      const rampDownStart = optimal * rampUpFactor;
+      const rampDownRange = optimal - rampDownStart;
+      return (
+        peakEfficiency -
         ((timeSpent - rampDownStart) / rampDownRange) *
           (peakEfficiency - baseEfficiency) *
           0.2
-              );
-          }
-          return Math.max(
-              minEfficiency,
-              peakEfficiency - ((timeSpent - optimal) / optimal) * degradationRate,
-          );
-      };
+      );
+    }
+    return Math.max(
+      minEfficiency,
+      peakEfficiency - ((timeSpent - optimal) / optimal) * degradationRate,
+    );
+  };
 
 const EFFICIENCY_FUNCTIONS = Object.fromEntries(
-    Object.entries(ACTIVITY_EFFICIENCY_PARAMS).map(([activity, params]) => [
-        activity,
-        createEfficiencyFunction(
-            params,
-            ACTIVITY_OPTIMAL_DURATIONS[activity as ActivityType],
-        ),
-    ]),
+  Object.entries(ACTIVITY_EFFICIENCY_PARAMS).map(([activity, params]) => [
+    activity,
+    createEfficiencyFunction(
+      params,
+      ACTIVITY_OPTIMAL_DURATIONS[activity as ActivityType],
+    ),
+  ]),
 ) as Record<ActivityType, (timeSpent: number) => number>;
 
 export const getActivityDynamics = () => ({
-    WANDERING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WANDERING },
-    MEDITATING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.MEDITATING },
-    WRITING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WRITING },
-    RESTING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.RESTING },
-    SOCIALIZING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.SOCIALIZING },
-    EXPLORING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.EXPLORING },
-    CONTEMPLATING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.CONTEMPLATING },
-    DANCING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.DANCING },
-    HIDING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.HIDING },
-    WORKING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WORKING },
-    SHOPPING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.SHOPPING },
-    EXERCISING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.EXERCISING },
-    COOKING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.COOKING },
+  WANDERING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WANDERING },
+  MEDITATING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.MEDITATING },
+  WRITING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WRITING },
+  RESTING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.RESTING },
+  SOCIALIZING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.SOCIALIZING },
+  EXPLORING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.EXPLORING },
+  CONTEMPLATING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.CONTEMPLATING },
+  DANCING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.DANCING },
+  HIDING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.HIDING },
+  WORKING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WORKING },
+  SHOPPING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.SHOPPING },
+  EXERCISING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.EXERCISING },
+  COOKING: { optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.COOKING },
 });
 
 export const getTimeOfDayActivityModifiers = (
-    timeOfDay: TimeOfDayModifiers,
+  timeOfDay: TimeOfDayModifiers,
 ) => {
-    const { isNight, phase, hour } = timeOfDay;
+  const { isNight, phase, hour } = timeOfDay;
 
-    return {
-        RESTING: {
-            efficiencyMultiplier: isNight ? 1.8 : 1.0,
-            energyRecoveryBonus: isNight ? 1.5 : 1.0,
-            sleepinessRecoveryBonus: isNight ? 2.0 : 0.8,
-            deepSleepBonus: hour >= 1 && hour <= 5 ? 1.3 : 1.0,
-        },
-        SOCIALIZING: {
-            efficiencyMultiplier: isNight ? 1.2 : 1.0,
-            moodBonus: isNight ? 1.3 : 1.0,
-        },
-        MEDITATING: {
-            efficiencyMultiplier: phase === "night" || phase === "dawn" ? 1.4 : 1.0,
-        },
-        CONTEMPLATING: {
-            efficiencyMultiplier: isNight ? 1.5 : 1.0,
-        },
-    };
+  return {
+    RESTING: {
+      efficiencyMultiplier: isNight ? 1.8 : 1.0,
+      energyRecoveryBonus: isNight ? 1.5 : 1.0,
+      sleepinessRecoveryBonus: isNight ? 2.0 : 0.8,
+      deepSleepBonus: hour >= 1 && hour <= 5 ? 1.3 : 1.0,
+    },
+    SOCIALIZING: {
+      efficiencyMultiplier: isNight ? 1.2 : 1.0,
+      moodBonus: isNight ? 1.3 : 1.0,
+    },
+    MEDITATING: {
+      efficiencyMultiplier: phase === "night" || phase === "dawn" ? 1.4 : 1.0,
+    },
+    CONTEMPLATING: {
+      efficiencyMultiplier: isNight ? 1.5 : 1.0,
+    },
+  };
 };
 
 export const ACTIVITY_EFFECTS: Record<
@@ -288,417 +288,417 @@ export const ACTIVITY_EFFECTS: Record<
     resultingMood: string;
   }
 > = {
-    WORKING: {
-        immediate: { money: 10, energy: -0.3 },
-        perMinute: { money: 5, energy: -2, boredom: -3, hunger: -1 },
-        minDuration: 60000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WORKING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.WORKING,
-        resultingMood: "TIRED",
-    },
+  WORKING: {
+    immediate: { money: 10, energy: -0.3 },
+    perMinute: { money: 5, energy: -2, boredom: -3, hunger: -1 },
+    minDuration: 60000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WORKING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.WORKING,
+    resultingMood: "TIRED",
+  },
 
-    RESTING: {
-        immediate: { sleepiness: -0.2, energy: 0.15 },
-        perMinute: { sleepiness: -15, energy: 8, hunger: -1 },
-        minDuration: 45000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.RESTING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.RESTING,
-        resultingMood: "CALM",
-    },
+  RESTING: {
+    immediate: { sleepiness: -0.2, energy: 0.15 },
+    perMinute: { sleepiness: -15, energy: 8, hunger: -1 },
+    minDuration: 45000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.RESTING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.RESTING,
+    resultingMood: "CALM",
+  },
 
-    SOCIALIZING: {
-        immediate: { loneliness: 0.2, happiness: 0.1 },
-        perMinute: { loneliness: 20, happiness: 8, energy: -3, hunger: -2 },
-        minDuration: 20000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.SOCIALIZING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.SOCIALIZING,
-        resultingMood: "HAPPY",
-    },
+  SOCIALIZING: {
+    immediate: { loneliness: 0.2, happiness: 0.1 },
+    perMinute: { loneliness: 20, happiness: 8, energy: -3, hunger: -2 },
+    minDuration: 20000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.SOCIALIZING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.SOCIALIZING,
+    resultingMood: "HAPPY",
+  },
 
-    DANCING: {
-        immediate: { boredom: 0.2, happiness: 0.15, energy: -0.05 },
-        perMinute: { boredom: 25, happiness: 15, energy: -5, hunger: -4 },
-        minDuration: 15000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.DANCING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.DANCING,
-        resultingMood: "EXCITED",
-    },
+  DANCING: {
+    immediate: { boredom: 0.2, happiness: 0.15, energy: -0.05 },
+    perMinute: { boredom: 25, happiness: 15, energy: -5, hunger: -4 },
+    minDuration: 15000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.DANCING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.DANCING,
+    resultingMood: "EXCITED",
+  },
 
-    SHOPPING: {
-        immediate: { happiness: 0.2 },
-        perMinute: { happiness: 10, hunger: 8, boredom: 5 },
-        cost: { money: 5 },
-        minDuration: 10000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.SHOPPING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.SHOPPING,
-        resultingMood: "CONTENT",
-    },
+  SHOPPING: {
+    immediate: { happiness: 0.2 },
+    perMinute: { happiness: 10, hunger: 8, boredom: 5 },
+    cost: { money: 5 },
+    minDuration: 10000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.SHOPPING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.SHOPPING,
+    resultingMood: "CONTENT",
+  },
 
-    COOKING: {
-        immediate: { boredom: 0.05 },
-        perMinute: { hunger: 20, happiness: 5, energy: -3 },
-        cost: { money: 3 },
-        minDuration: 25000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.COOKING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.COOKING,
-        resultingMood: "CONTENT",
-    },
+  COOKING: {
+    immediate: { boredom: 0.05 },
+    perMinute: { hunger: 20, happiness: 5, energy: -3 },
+    cost: { money: 3 },
+    minDuration: 25000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.COOKING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.COOKING,
+    resultingMood: "CONTENT",
+  },
 
-    EXERCISING: {
-        immediate: { energy: -0.2, boredom: 0.1 },
-        perMinute: { energy: -10, boredom: 8, happiness: 6, hunger: -6 },
-        minDuration: 30000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.EXERCISING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.EXERCISING,
-        resultingMood: "EXCITED",
-    },
+  EXERCISING: {
+    immediate: { energy: -0.2, boredom: 0.1 },
+    perMinute: { energy: -10, boredom: 8, happiness: 6, hunger: -6 },
+    minDuration: 30000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.EXERCISING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.EXERCISING,
+    resultingMood: "EXCITED",
+  },
 
-    MEDITATING: {
-        immediate: { happiness: 0.05, loneliness: -0.03 },
-        perMinute: { happiness: 8, loneliness: -3, sleepiness: -5, boredom: 3 },
-        minDuration: 60000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.MEDITATING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.MEDITATING,
-        resultingMood: "CALM",
-    },
+  MEDITATING: {
+    immediate: { happiness: 0.05, loneliness: -0.03 },
+    perMinute: { happiness: 8, loneliness: -3, sleepiness: -5, boredom: 3 },
+    minDuration: 60000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.MEDITATING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.MEDITATING,
+    resultingMood: "CALM",
+  },
 
-    WRITING: {
-        immediate: { boredom: 0.15, loneliness: -0.05 },
-        perMinute: { boredom: 15, happiness: 5, loneliness: -4, energy: -2 },
-        minDuration: 45000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WRITING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.WRITING,
-        resultingMood: "CONTENT",
-    },
+  WRITING: {
+    immediate: { boredom: 0.15, loneliness: -0.05 },
+    perMinute: { boredom: 15, happiness: 5, loneliness: -4, energy: -2 },
+    minDuration: 45000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WRITING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.WRITING,
+    resultingMood: "CONTENT",
+  },
 
-    WANDERING: {
-        immediate: { boredom: 0.04, loneliness: -0.02 },
-        perMinute: { boredom: 5, energy: -2, happiness: 2 },
-        minDuration: 15000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WANDERING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.WANDERING,
-        resultingMood: "CALM",
-    },
+  WANDERING: {
+    immediate: { boredom: 0.04, loneliness: -0.02 },
+    perMinute: { boredom: 5, energy: -2, happiness: 2 },
+    minDuration: 15000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.WANDERING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.WANDERING,
+    resultingMood: "CALM",
+  },
 
-    EXPLORING: {
-        immediate: { boredom: 0.2, energy: -0.1 },
-        perMinute: { boredom: 18, energy: -6, happiness: 8, hunger: -3 },
-        minDuration: 30000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.EXPLORING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.EXPLORING,
-        resultingMood: "EXCITED",
-    },
+  EXPLORING: {
+    immediate: { boredom: 0.2, energy: -0.1 },
+    perMinute: { boredom: 18, energy: -6, happiness: 8, hunger: -3 },
+    minDuration: 30000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.EXPLORING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.EXPLORING,
+    resultingMood: "EXCITED",
+  },
 
-    CONTEMPLATING: {
-        immediate: { boredom: 0.08, loneliness: -0.05 },
-        perMinute: { boredom: 8, happiness: 4, loneliness: -5, energy: 1 },
-        minDuration: 90000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.CONTEMPLATING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.CONTEMPLATING,
-        resultingMood: "CALM",
-    },
+  CONTEMPLATING: {
+    immediate: { boredom: 0.08, loneliness: -0.05 },
+    perMinute: { boredom: 8, happiness: 4, loneliness: -5, energy: 1 },
+    minDuration: 90000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.CONTEMPLATING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.CONTEMPLATING,
+    resultingMood: "CALM",
+  },
 
-    HIDING: {
-        immediate: { loneliness: -0.2 },
-        perMinute: { loneliness: -15, happiness: -5, energy: 3 },
-        minDuration: 30000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.HIDING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.HIDING,
-        resultingMood: "ANXIOUS",
-    },
+  HIDING: {
+    immediate: { loneliness: -0.2 },
+    perMinute: { loneliness: -15, happiness: -5, energy: 3 },
+    minDuration: 30000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.HIDING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.HIDING,
+    resultingMood: "ANXIOUS",
+  },
 
-    EATING: {
-        immediate: { hunger: 15, happiness: 5 },
-        perMinute: { hunger: 30, happiness: 3, energy: 2 },
-        minDuration: 15000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.EATING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.EATING,
-        resultingMood: "SATISFIED",
-    },
+  EATING: {
+    immediate: { hunger: 15, happiness: 5 },
+    perMinute: { hunger: 30, happiness: 3, energy: 2 },
+    minDuration: 15000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.EATING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.EATING,
+    resultingMood: "SATISFIED",
+  },
 
-    SLEEPING: {
-        immediate: { sleepiness: 20, energy: 10 },
-        perMinute: { sleepiness: 25, energy: 15, health: 2 },
-        minDuration: 180000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.SLEEPING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.SLEEPING,
-        resultingMood: "RESTED",
-    },
+  SLEEPING: {
+    immediate: { sleepiness: 20, energy: 10 },
+    perMinute: { sleepiness: 25, energy: 15, health: 2 },
+    minDuration: 180000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.SLEEPING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.SLEEPING,
+    resultingMood: "RESTED",
+  },
 
-    PLAYING: {
-        immediate: { boredom: 10, happiness: 8 },
-        perMinute: { boredom: 20, happiness: 12, energy: -3 },
-        minDuration: 60000,
-        optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.PLAYING,
-        efficiencyOverTime: EFFICIENCY_FUNCTIONS.PLAYING,
-        resultingMood: "JOYFUL",
-    },
+  PLAYING: {
+    immediate: { boredom: 10, happiness: 8 },
+    perMinute: { boredom: 20, happiness: 12, energy: -3 },
+    minDuration: 60000,
+    optimalDuration: ACTIVITY_OPTIMAL_DURATIONS.PLAYING,
+    efficiencyOverTime: EFFICIENCY_FUNCTIONS.PLAYING,
+    resultingMood: "JOYFUL",
+  },
 };
 
 export const mapActivityToPreferredZone = (
-    activity: ActivityType,
+  activity: ActivityType,
 ): ZoneType | null => {
-    switch (activity) {
+  switch (activity) {
     case "RESTING":
-        return "rest";
+      return "rest";
     case "SOCIALIZING":
     case "DANCING":
-        return "social";
+      return "social";
     case "EXERCISING":
     case "WANDERING":
     case "EXPLORING":
-        return "play";
+      return "play";
     case "WORKING":
-        return "work";
+      return "work";
     case "COOKING":
-        return "food";
+      return "food";
     case "SHOPPING":
-        return "work";
+      return "work";
     case "MEDITATING":
     case "CONTEMPLATING":
     case "WRITING":
-        return "comfort";
+      return "comfort";
     case "HIDING":
-        return "comfort";
+      return "comfort";
     default:
-        return null;
-    }
+      return null;
+  }
 };
 
 export const calculateActivityPriority = (
-    activity: ActivityType,
-    currentStats: EntityStats,
-    timeSpentInActivity = 0,
+  activity: ActivityType,
+  currentStats: EntityStats,
+  timeSpentInActivity = 0,
 ): number => {
-    /**
+  /**
    * Resumen matemático: combina urgencias no lineales por estadística con
    * w(v, α) = 1 − (v/100)^α (α∈[0.1,10]) y una eficiencia temporal tipo “campana”
    * centrada en optimalDuration. Penaliza sobretiempo > 1.5·optimalDuration.
    */
-    const effects = ACTIVITY_EFFECTS[activity];
-    if (!effects) {
-        logAutopoiesis.warn("No effects found for activity", { activity });
-        return 0;
+  const effects = ACTIVITY_EFFECTS[activity];
+  if (!effects) {
+    logAutopoiesis.warn("No effects found for activity", { activity });
+    return 0;
+  }
+
+  let priority = 0;
+
+  const w = (v: number, alpha = 1.6) => {
+    if (!isFinite(v) || !isFinite(alpha)) return 0;
+    const clampedV = Math.min(100, Math.max(0, v));
+    const clampedAlpha = Math.max(0.1, Math.min(10, alpha));
+    const base = clampedV / 100;
+    const result = Math.pow(base, clampedAlpha);
+    return isFinite(result) ? Math.max(0, Math.min(1, 1 - result)) : 0;
+  };
+
+  if (activity === "WORKING") {
+    priority += w(currentStats.money) * 100;
+    priority -= w(100 - currentStats.energy) * 30;
+  }
+
+  if (activity === "SHOPPING") {
+    const costMoney = effects.cost?.money ?? 0;
+    if (currentStats.money > costMoney) {
+      const needLevel = (w(currentStats.hunger) + w(currentStats.boredom)) / 2;
+      priority += needLevel * 100 * 0.8;
+    } else {
+      priority = 0;
     }
+  }
 
-    let priority = 0;
-
-    const w = (v: number, alpha = 1.6) => {
-        if (!isFinite(v) || !isFinite(alpha)) return 0;
-        const clampedV = Math.min(100, Math.max(0, v));
-        const clampedAlpha = Math.max(0.1, Math.min(10, alpha));
-        const base = clampedV / 100;
-        const result = Math.pow(base, clampedAlpha);
-        return isFinite(result) ? Math.max(0, Math.min(1, 1 - result)) : 0;
-    };
-
-    if (activity === "WORKING") {
-        priority += w(currentStats.money) * 100;
-        priority -= w(100 - currentStats.energy) * 30;
-    }
-
-    if (activity === "SHOPPING") {
-        const costMoney = effects.cost?.money ?? 0;
-        if (currentStats.money > costMoney) {
-            const needLevel = (w(currentStats.hunger) + w(currentStats.boredom)) / 2;
-            priority += needLevel * 100 * 0.8;
-        } else {
-            priority = 0;
-        }
-    }
-
-    if (activity === "RESTING") {
-        priority +=
+  if (activity === "RESTING") {
+    priority +=
       Math.max(0, currentStats.sleepiness - 30) * 1.2 +
       w(100 - currentStats.energy) * 80;
+  }
+
+  if (activity === "COOKING") {
+    const costMoney = effects.cost?.money ?? 0;
+    if (currentStats.money >= costMoney) {
+      priority += w(currentStats.hunger) * 100 * 0.9;
     }
+  }
 
-    if (activity === "COOKING") {
-        const costMoney = effects.cost?.money ?? 0;
-        if (currentStats.money >= costMoney) {
-            priority += w(currentStats.hunger) * 100 * 0.9;
-        }
-    }
+  if (activity === "SOCIALIZING") {
+    priority += w(currentStats.loneliness) * 100 * 1.1;
+  }
 
-    if (activity === "SOCIALIZING") {
-        priority += w(currentStats.loneliness) * 100 * 1.1;
-    }
+  if (activity === "DANCING" || activity === "EXERCISING") {
+    priority += w(currentStats.boredom) * 100 * 0.9;
+    priority -= w(100 - currentStats.energy) * 50;
+  }
 
-    if (activity === "DANCING" || activity === "EXERCISING") {
-        priority += w(currentStats.boredom) * 100 * 0.9;
-        priority -= w(100 - currentStats.energy) * 50;
-    }
+  const efficiency = effects.efficiencyOverTime
+    ? effects.efficiencyOverTime(timeSpentInActivity)
+    : 0.5;
+  priority *= efficiency;
 
-    const efficiency = effects.efficiencyOverTime
-        ? effects.efficiencyOverTime(timeSpentInActivity)
-        : 0.5;
-    priority *= efficiency;
-
-    if (
-        effects.optimalDuration &&
+  if (
+    effects.optimalDuration &&
     isFinite(timeSpentInActivity) &&
     isFinite(effects.optimalDuration) &&
     timeSpentInActivity > effects.optimalDuration * 1.5
-    ) {
-        priority *= 0.5;
-    }
+  ) {
+    priority *= 0.5;
+  }
 
-    return isFinite(priority) ? Math.max(0, priority) : 0;
+  return isFinite(priority) ? Math.max(0, priority) : 0;
 };
 
 export const applyHybridDecay = (
-    currentStats: EntityStats,
-    activity: ActivityType,
-    deltaTimeMs: number,
+  currentStats: EntityStats,
+  activity: ActivityType,
+  deltaTimeMs: number,
 ): EntityStats => {
-    const newStats = { ...currentStats };
+  const newStats = { ...currentStats };
 
-    if (!isFinite(deltaTimeMs) || deltaTimeMs < 0) {
-        return newStats;
-    }
-
-    const safeTimeMultiplier =
-    Math.min(10, deltaTimeMs / 1000) * gameConfig.gameSpeedMultiplier;
-    const decayMultiplier = ACTIVITY_DECAY_MULTIPLIERS[activity] ?? 1.0;
-
-    Object.entries(HYBRID_DECAY_RATES.base).forEach(([statName, baseRate]) => {
-        if (statName in newStats) {
-            const finalRate = baseRate * decayMultiplier;
-            const configuredRate =
-        finalRate * DECAY_CONFIG.GENERAL_MULTIPLIER * safeTimeMultiplier;
-            const statKey = statName as keyof EntityStats;
-
-            let newValue = newStats[statKey] + configuredRate;
-
-            if (statKey === "money") {
-                newValue = Math.max(0, newValue);
-            } else {
-                newValue = Math.max(0, Math.min(100, newValue));
-            }
-
-            newStats[statKey] = isFinite(newValue) ? newValue : newStats[statKey];
-        }
-    });
-
+  if (!isFinite(deltaTimeMs) || deltaTimeMs < 0) {
     return newStats;
+  }
+
+  const safeTimeMultiplier =
+    Math.min(10, deltaTimeMs / 1000) * gameConfig.gameSpeedMultiplier;
+  const decayMultiplier = ACTIVITY_DECAY_MULTIPLIERS[activity] ?? 1.0;
+
+  Object.entries(HYBRID_DECAY_RATES.base).forEach(([statName, baseRate]) => {
+    if (statName in newStats) {
+      const finalRate = baseRate * decayMultiplier;
+      const configuredRate =
+        finalRate * DECAY_CONFIG.GENERAL_MULTIPLIER * safeTimeMultiplier;
+      const statKey = statName as keyof EntityStats;
+
+      let newValue = newStats[statKey] + configuredRate;
+
+      if (statKey === "money") {
+        newValue = Math.max(0, newValue);
+      } else {
+        newValue = Math.max(0, Math.min(100, newValue));
+      }
+
+      newStats[statKey] = isFinite(newValue) ? newValue : newStats[statKey];
+    }
+  });
+
+  return newStats;
 };
 
 export const applySurvivalCosts = (
-    currentStats: EntityStats,
-    deltaTimeMs: number,
+  currentStats: EntityStats,
+  deltaTimeMs: number,
 ): EntityStats => {
-    const newStats = { ...currentStats };
-    const minutesElapsed = (deltaTimeMs / 60000) * gameConfig.gameSpeedMultiplier;
+  const newStats = { ...currentStats };
+  const minutesElapsed = (deltaTimeMs / 60000) * gameConfig.gameSpeedMultiplier;
 
-    newStats.money = Math.max(
-        0,
-        newStats.money - SURVIVAL_COSTS.LIVING_COST * minutesElapsed,
-    );
+  newStats.money = Math.max(
+    0,
+    newStats.money - SURVIVAL_COSTS.LIVING_COST * minutesElapsed,
+  );
 
-    if (newStats.money < SURVIVAL_COSTS.CRITICAL_MONEY) {
-        const desperation =
+  if (newStats.money < SURVIVAL_COSTS.CRITICAL_MONEY) {
+    const desperation =
       (SURVIVAL_COSTS.CRITICAL_MONEY - newStats.money) /
       SURVIVAL_COSTS.CRITICAL_MONEY;
-        newStats.hunger = Math.max(
-            0,
-            newStats.hunger - desperation * 5 * minutesElapsed,
-        );
-        newStats.happiness = Math.max(
-            0,
-            newStats.happiness - desperation * 3 * minutesElapsed,
-        );
-    }
+    newStats.hunger = Math.max(
+      0,
+      newStats.hunger - desperation * 5 * minutesElapsed,
+    );
+    newStats.happiness = Math.max(
+      0,
+      newStats.happiness - desperation * 3 * minutesElapsed,
+    );
+  }
 
-    return newStats;
+  return newStats;
 };
 
 export const applyActivityEffectsWithTimeModifiers = (
-    activity: ActivityType,
-    currentStats: EntityStats,
-    deltaTimeMs: number,
-    timeOfDay: TimeOfDayModifiers,
+  activity: ActivityType,
+  currentStats: EntityStats,
+  deltaTimeMs: number,
+  timeOfDay: TimeOfDayModifiers,
 ): EntityStats => {
-    const newStats = { ...currentStats };
-    const effects = ACTIVITY_EFFECTS[activity];
+  const newStats = { ...currentStats };
+  const effects = ACTIVITY_EFFECTS[activity];
 
-    if (effects) {
-        const minutesElapsed =
+  if (effects) {
+    const minutesElapsed =
       (deltaTimeMs / 60000) * gameConfig.gameSpeedMultiplier;
 
-        Object.entries(effects.immediate).forEach(([stat, value]) => {
-            const statKey = stat as keyof EntityStats;
-            if (statKey in newStats) {
-                if (statKey === "money") {
-                    newStats[statKey] = Math.max(0, newStats[statKey] + value);
-                } else {
-                    newStats[statKey] = Math.max(
-                        0,
-                        Math.min(100, newStats[statKey] + value),
-                    );
-                }
-            }
-        });
+    Object.entries(effects.immediate).forEach(([stat, value]) => {
+      const statKey = stat as keyof EntityStats;
+      if (statKey in newStats) {
+        if (statKey === "money") {
+          newStats[statKey] = Math.max(0, newStats[statKey] + value);
+        } else {
+          newStats[statKey] = Math.max(
+            0,
+            Math.min(100, newStats[statKey] + value),
+          );
+        }
+      }
+    });
 
-        Object.entries(effects.perMinute).forEach(([stat, value]) => {
-            const statKey = stat as keyof EntityStats;
-            if (statKey in newStats) {
-                const change = value * minutesElapsed;
-                if (statKey === "money") {
-                    newStats[statKey] = Math.max(0, newStats[statKey] + change);
-                } else {
-                    newStats[statKey] = Math.max(
-                        0,
-                        Math.min(100, newStats[statKey] + change),
-                    );
-                }
-            }
-        });
-    }
+    Object.entries(effects.perMinute).forEach(([stat, value]) => {
+      const statKey = stat as keyof EntityStats;
+      if (statKey in newStats) {
+        const change = value * minutesElapsed;
+        if (statKey === "money") {
+          newStats[statKey] = Math.max(0, newStats[statKey] + change);
+        } else {
+          newStats[statKey] = Math.max(
+            0,
+            Math.min(100, newStats[statKey] + change),
+          );
+        }
+      }
+    });
+  }
 
-    const modifiers = getTimeOfDayActivityModifiers(timeOfDay);
-    const activityModifier = modifiers[activity as keyof typeof modifiers];
+  const modifiers = getTimeOfDayActivityModifiers(timeOfDay);
+  const activityModifier = modifiers[activity as keyof typeof modifiers];
 
-    if (activity === "RESTING" && activityModifier) {
-        const minutesElapsed =
+  if (activity === "RESTING" && activityModifier) {
+    const minutesElapsed =
       (deltaTimeMs / 60000) * gameConfig.gameSpeedMultiplier;
-        const effects = ACTIVITY_EFFECTS.RESTING;
+    const effects = ACTIVITY_EFFECTS.RESTING;
 
-        if ("energyRecoveryBonus" in activityModifier) {
-            const energyBonus =
+    if ("energyRecoveryBonus" in activityModifier) {
+      const energyBonus =
         (effects.perMinute.energy || 0) *
         (activityModifier.energyRecoveryBonus - 1) *
         minutesElapsed;
-            newStats.energy = Math.min(
-                100,
-                Math.max(0, newStats.energy + energyBonus),
-            );
-        }
+      newStats.energy = Math.min(
+        100,
+        Math.max(0, newStats.energy + energyBonus),
+      );
+    }
 
-        if ("sleepinessRecoveryBonus" in activityModifier) {
-            const sleepBonus =
+    if ("sleepinessRecoveryBonus" in activityModifier) {
+      const sleepBonus =
         (effects.perMinute.sleepiness || 0) *
         (activityModifier.sleepinessRecoveryBonus - 1) *
         minutesElapsed;
-            newStats.sleepiness = Math.min(
-                100,
-                Math.max(0, newStats.sleepiness + sleepBonus),
-            );
-        }
-
-        if ("deepSleepBonus" in activityModifier) {
-            const deepSleepHealthBonus =
-        activityModifier.deepSleepBonus * 0.5 * minutesElapsed;
-            newStats.health = Math.min(
-                100,
-                Math.max(0, newStats.health + deepSleepHealthBonus),
-            );
-        }
-
-        if (timeOfDay.isNight) {
-            const boredomReduction = 2 * minutesElapsed;
-            newStats.boredom = Math.max(0, newStats.boredom - boredomReduction);
-        }
+      newStats.sleepiness = Math.min(
+        100,
+        Math.max(0, newStats.sleepiness + sleepBonus),
+      );
     }
 
-    return newStats;
+    if ("deepSleepBonus" in activityModifier) {
+      const deepSleepHealthBonus =
+        activityModifier.deepSleepBonus * 0.5 * minutesElapsed;
+      newStats.health = Math.min(
+        100,
+        Math.max(0, newStats.health + deepSleepHealthBonus),
+      );
+    }
+
+    if (timeOfDay.isNight) {
+      const boredomReduction = 2 * minutesElapsed;
+      newStats.boredom = Math.max(0, newStats.boredom - boredomReduction);
+    }
+  }
+
+  return newStats;
 };
