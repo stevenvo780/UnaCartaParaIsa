@@ -12,6 +12,7 @@ import {
   randomFloat,
   randomInt,
 } from "../utils/deterministicRandom";
+import { logAutopoiesis } from "../utils/logger";
 
 export class GameEntity extends Phaser.Physics.Arcade.Sprite {
   private entityData: Entity;
@@ -34,27 +35,32 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
     entityId: "isa" | "stev",
     services?: IEntityServices,
   ) {
-    // Use sprites that actually exist - fallback to static sprites
-    const initialSprite = entityId === "isa" ? "isa_happy" : "stev_happy";
+    // Use actual spritesheets that exist
+    const spritesheetKey =
+      entityId === "isa" ? "isa_spritesheet" : "stev_spritesheet";
+    const initialSprite = spritesheetKey;
 
     // Debug logging
-    console.log(
+    logAutopoiesis.info(
       `🎭 GameEntity constructor: Creating ${entityId} with sprite ${initialSprite}`,
     );
-    console.log(`🎭 Texture exists:`, scene.textures.exists(initialSprite));
-    console.log(
+    logAutopoiesis.info(
+      `🎭 Texture exists:`,
+      scene.textures.exists(initialSprite),
+    );
+    logAutopoiesis.info(
       `🎭 Scene textures available:`,
       Object.keys(scene.textures.list).slice(0, 10),
     );
 
     try {
-      super(scene, x, y, initialSprite);
-      console.log(
+      super(scene, x, y, initialSprite); // Don't specify frame for spritesheet
+      logAutopoiesis.info(
         `🎭 Parent Phaser.Sprite constructor completed for ${entityId}`,
       );
     } catch (error) {
-      console.error(
-        `❌ Error in Phaser.Sprite constructor for ${entityId}:`,
+      logAutopoiesis.error(
+        `Failed to create GameEntity for ${entityId}:`,
         error,
       );
       // Try with a guaranteed fallback
@@ -66,17 +72,17 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
 
     this.currentSprite = initialSprite;
 
-    console.log(`🎭 About to add ${entityId} to scene...`);
+    logAutopoiesis.info(`🎭 About to add ${entityId} to scene...`);
     scene.add.existing(this);
-    console.log(`🎭 Added ${entityId} to scene successfully`);
+    logAutopoiesis.info(`🎭 Added ${entityId} to scene successfully`);
 
-    console.log(`🎭 About to add ${entityId} to physics...`);
-    console.log(`🎭 Scene physics available:`, !!scene.physics);
+    logAutopoiesis.info(`🎭 About to add ${entityId} to physics...`);
+    logAutopoiesis.info(`🎭 Scene physics available:`, !!scene.physics);
     if (scene.physics) {
       scene.physics.add.existing(this);
-      console.log(`🎭 Added ${entityId} to physics successfully`);
+      logAutopoiesis.info(`🎭 Added ${entityId} to physics successfully`);
     } else {
-      console.error(`❌ No physics available for ${entityId}`);
+      logAutopoiesis.error(`❌ No physics available for ${entityId}`);
     }
 
     this.entityData = {

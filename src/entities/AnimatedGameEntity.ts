@@ -51,7 +51,8 @@ export class AnimatedGameEntity extends GameEntity {
         );
       } else {
         // Fallback to old static sprites
-        const fallbackKey = entityId === "isa" ? "isa_happy" : "stev_happy";
+        const fallbackKey =
+          entityId === "isa" ? "isa_spritesheet" : "stev_spritesheet";
         if (scene.textures.exists(fallbackKey)) {
           this.setTexture(fallbackKey);
           logAutopoiesis.warn(
@@ -87,7 +88,8 @@ export class AnimatedGameEntity extends GameEntity {
 
     if (this.animationManager) {
       // Start with appropriate initial animation using new multi-frame sprites
-      const initialAnimation = entityId === "isa" ? "isa_happy" : "stev_happy";
+      const initialAnimation =
+        entityId === "isa" ? "whomen1:row0" : "man1:row0";
 
       console.log(`🎭 Checking animation: ${initialAnimation}`);
 
@@ -149,7 +151,8 @@ export class AnimatedGameEntity extends GameEntity {
             );
 
             // Try the final fallback
-            const safeTexture = entityId === "isa" ? "isa_happy" : "stev_happy";
+            const safeTexture =
+              entityId === "isa" ? "isa_spritesheet" : "stev_spritesheet";
             console.log(
               `🎭 Using safe texture as final fallback: ${safeTexture}`,
             );
@@ -165,7 +168,8 @@ export class AnimatedGameEntity extends GameEntity {
             `All animations failed for ${entityId}, using static sprite`,
           );
           // Final fallback: make entity visible with static texture - use safe texture
-          const safeTexture = entityId === "isa" ? "isa_happy" : "stev_happy";
+          const safeTexture =
+            entityId === "isa" ? "isa_spritesheet" : "stev_spritesheet";
           console.log(`🎭 Setting safe texture: ${safeTexture}`);
           this.setTexture(safeTexture);
           this.setVisible(true);
@@ -177,7 +181,8 @@ export class AnimatedGameEntity extends GameEntity {
         `No AnimationManager found for entity ${entityId}. Using static sprite.`,
       );
       // Static sprite fallback when no animation manager
-      const staticTexture = entityId === "isa" ? "isa_happy" : "stev_happy";
+      const staticTexture =
+        entityId === "isa" ? "isa_spritesheet" : "stev_spritesheet";
       console.log(`🎭 Using static texture: ${staticTexture}`);
       this.setTexture(staticTexture);
       this.setVisible(true);
@@ -291,10 +296,10 @@ export class AnimatedGameEntity extends GameEntity {
       // Happy state - choose between idle and walking
       if (isMoving) {
         // Usar animaciones de caminar específicas
-        animationKey = entityId === "isa" ? "isa_happy" : "stev_happy";
+        animationKey = entityId === "isa" ? "whomen1:row0" : "man1:row0";
       } else {
         // Usar animaciones de idle
-        animationKey = entityId === "isa" ? "isa_happy" : "stev_happy";
+        animationKey = entityId === "isa" ? "whomen1:row0" : "man1:row0";
       }
     }
 
@@ -362,10 +367,10 @@ export class AnimatedGameEntity extends GameEntity {
    */
   private isStaticSprite(textureKey: string): boolean {
     const staticSprites = [
-      "isa_happy",
+      "whomen1:row0",
       "isa_sad",
       "isa_dying",
-      "stev_happy",
+      "man1:row0",
       "stev_sad",
       "stev_dying",
     ];

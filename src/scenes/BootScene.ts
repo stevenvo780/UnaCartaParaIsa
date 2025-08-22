@@ -372,10 +372,6 @@ export default class BootScene extends Phaser.Scene {
       frameHeight: spriteSize,
     });
 
-    // Static happy frames (first frame of animation)
-    this.load.image("isa_happy", isaCanvas.toDataURL());
-    this.load.image("stev_happy", stevCanvas.toDataURL());
-
     logAutopoiesis.info("🎨 Sprites temporales de entidades creados");
   }
 

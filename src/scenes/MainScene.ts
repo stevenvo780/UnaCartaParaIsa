@@ -194,17 +194,58 @@ export default class MainScene extends Phaser.Scene {
       this.scene.launch("UIScene");
       logAutopoiesis.debug("🎯 MainScene: UIScene launch called");
 
-      // 18. Configurar cámara
-      const worldPixelWidth = baseWorld.config.width * 32;
-      const worldPixelHeight = baseWorld.config.height * 32;
+      // 18. Configurar cámara correctamente
+      const worldPixelWidth =
+        baseWorld.config.width * baseWorld.config.tileSize;
+      const worldPixelHeight =
+        baseWorld.config.height * baseWorld.config.tileSize;
 
+      logAutopoiesis.info("🎥 Configurando cámara", {
+        worldTiles: `${baseWorld.config.width}x${baseWorld.config.height}`,
+        worldPixels: `${worldPixelWidth}x${worldPixelHeight}`,
+        tileSize: baseWorld.config.tileSize,
+      });
+
+      // Configurar límites de cámara según el mundo generado
       this.cameras.main.setBounds(0, 0, worldPixelWidth, worldPixelHeight);
-      this.cameras.main.setZoom(0.5); // Zoom out para ver más del mundo
 
-      // Centrar la cámara en el centro real del mundo generado
+      // Configurar zoom para ver un área apropiada del mundo
+      const gameWidth = this.scale.gameSize.width;
+      const gameHeight = this.scale.gameSize.height;
+
+      // Calcular zoom para mostrar aproximadamente el 80% del mundo (más cercano)
+      const zoomX = gameWidth / (worldPixelWidth * 0.8);
+      const zoomY = gameHeight / (worldPixelHeight * 0.8);
+      const optimalZoom = Math.min(zoomX, zoomY, 1.2); // Permitir zoom hasta 1.2
+
+      this.cameras.main.setZoom(optimalZoom);
+      logAutopoiesis.info("🎥 Zoom configurado", {
+        optimalZoom,
+        gameSize: `${gameWidth}x${gameHeight}`,
+        zoomX,
+        zoomY,
+      });
+
+      // Centrar la cámara en el mundo usando scrollTo en lugar de centerOn
       const centerX = worldPixelWidth / 2;
       const centerY = worldPixelHeight / 2;
-      this.cameras.main.centerOn(centerX, centerY);
+
+      // Calcular posición de scroll para centrar correctamente
+      const scrollX = centerX - gameWidth / optimalZoom / 2;
+      const scrollY = centerY - gameHeight / optimalZoom / 2;
+
+      this.cameras.main.setScroll(scrollX, scrollY);
+
+      logAutopoiesis.info("🎥 Cámara posicionada", {
+        centerX,
+        centerY,
+        scrollX,
+        scrollY,
+        visibleArea: {
+          width: gameWidth / optimalZoom,
+          height: gameHeight / optimalZoom,
+        },
+      });
 
       // 19. Eventos desde UI
       this.events.on("togglePerformanceMode", () => {
@@ -240,13 +281,17 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /**
-   * Genera un mundo básico para testing
+   * Genera un mundo básico cuadrado para testing
    */
   private generateBasicWorld(): GeneratedWorld {
+    // Configuración para un mundo perfectamente cuadrado
+    const worldSize = 50; // 50x50 tiles = mundo cuadrado
+    const tileSize = 32; // 32 píxeles por tile
+
     const config: WorldGenConfig = {
-      width: 100, // 100 tiles = 3200 pixels
-      height: 100, // 100 tiles = 3200 pixels
-      tileSize: 32,
+      width: worldSize,
+      height: worldSize, // Garantiza que sea cuadrado
+      tileSize: tileSize,
       seed: Date.now(),
       noise: {
         temperature: {
@@ -284,22 +329,42 @@ export default class MainScene extends Phaser.Scene {
       },
     };
 
-    // Crear terreno básico con diferentes biomas
+    logAutopoiesis.info("🗺️ Generando mundo cuadrado", {
+      size: `${worldSize}x${worldSize} tiles`,
+      pixelSize: `${worldSize * tileSize}x${worldSize * tileSize}px`,
+      tileSize: `${tileSize}px`,
+    });
+
+    // Crear terreno básico con diferentes biomas en patrón cuadrado
     const terrain: TerrainTile[][] = [];
+    const quarterSize = Math.floor(worldSize / 4);
+
     for (let y = 0; y < config.height; y++) {
       terrain[y] = [];
       for (let x = 0; x < config.width; x++) {
-        // Simular diferentes biomas según posición
+        // Crear biomas en cuadrantes para mejor distribución visual
         let biome = BiomeType.GRASSLAND;
 
-        if (x < 20 || x > 80 || y < 20 || y > 80) {
-          biome = BiomeType.FOREST;
-        } else if (x > 40 && x < 60 && y > 40 && y < 60) {
+        // Centro: área mística
+        if (
+          x > quarterSize &&
+          x < worldSize - quarterSize &&
+          y > quarterSize &&
+          y < worldSize - quarterSize
+        ) {
           biome = BiomeType.MYSTICAL;
-        } else if (x < 30 && y > 70) {
-          biome = BiomeType.WETLAND;
-        } else if (x > 70 && y < 30) {
+        } else if (x < quarterSize && y < quarterSize) {
+          // Esquinas: diferentes biomas
+          biome = BiomeType.FOREST;
+        } else if (x > worldSize - quarterSize && y < quarterSize) {
           biome = BiomeType.MOUNTAINOUS;
+        } else if (x < quarterSize && y > worldSize - quarterSize) {
+          biome = BiomeType.WETLAND;
+        } else if (x > worldSize - quarterSize && y > worldSize - quarterSize) {
+          biome = BiomeType.FOREST;
+        } else {
+          // Resto: pradera
+          biome = BiomeType.GRASSLAND;
         }
 
         terrain[y][x] = {
