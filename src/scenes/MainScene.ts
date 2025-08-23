@@ -133,7 +133,7 @@ export default class MainScene extends Phaser.Scene {
       // 5. Generar mundo base simple primero
       this.progressManager?.startPhase(
         "world_generation",
-        "Generando terreno 64x64...",
+        "Generando terreno 200x200...",
       );
       const baseWorld = this.generateBasicWorld();
       this.progressManager?.completePhase(
@@ -172,8 +172,8 @@ export default class MainScene extends Phaser.Scene {
         "Renderizando 1200+ assets...",
       );
       this.worldRenderer = new LayeredWorldRenderer(this, {
-        enablePerformanceMode: this.performanceMode,
-        maxVisibleAssets: 3000,
+        enablePerformanceMode: false, // Desactivado para mostrar todos los tiles
+        maxVisibleAssets: 50000, // Aumentado para mundo de 200x200 = 40k tiles
       });
 
       await this.worldRenderer.renderComposedWorld(
@@ -186,9 +186,9 @@ export default class MainScene extends Phaser.Scene {
       );
       logAutopoiesis.info("🎮 Mundo renderizado exitosamente");
 
-      // Activar modo performance por defecto
-      this.worldRenderer.setPerformanceMode(true);
-      this.performanceMode = true;
+      // Desactivar modo performance para mostrar todos los tiles
+      this.worldRenderer.setPerformanceMode(false);
+      this.performanceMode = false;
 
       // 10. Crear entidades y lógica del juego
       this.progressManager?.startPhase(
@@ -375,13 +375,14 @@ export default class MainScene extends Phaser.Scene {
    * Genera un mundo básico cuadrado para testing
    */
   private generateBasicWorld(): GeneratedWorld {
-    // Configuración para un mundo perfectamente cuadrado (aumentado para mayor diversidad)
-    const worldSize = 64; // 64x64 tiles = mundo cuadrado más grande para mayor diversidad de assets
-    const tileSize = 32; // 32 píxeles por tile
+    // Configuración para un mundo que cubra bien el área sin exceder límites
+    const worldWidth = 200;  // 200 tiles de ancho
+    const worldHeight = 200; // 200 tiles de alto = 40,000 tiles total (bajo límite de 50k)
+    const tileSize = 32;     // Tamaño normal de tiles (32x32 píxeles)
 
     const config: WorldGenConfig = {
-      width: worldSize,
-      height: worldSize, // Garantiza que sea cuadrado
+      width: worldWidth,
+      height: worldHeight, // Garantiza que sea cuadrado
       tileSize: tileSize,
       seed: Date.now(),
       noise: {
@@ -420,15 +421,16 @@ export default class MainScene extends Phaser.Scene {
       },
     };
 
-    logAutopoiesis.info("🗺️ Generando mundo cuadrado", {
-      size: `${worldSize}x${worldSize} tiles`,
-      pixelSize: `${worldSize * tileSize}x${worldSize * tileSize}px`,
+    logAutopoiesis.info("🗺️ Generando mundo rectangular", {
+      size: `${worldWidth}x${worldHeight} tiles`,
+      pixelSize: `${worldWidth * tileSize}x${worldHeight * tileSize}px`,
       tileSize: `${tileSize}px`,
     });
 
     // Crear terreno básico con diferentes biomas en patrón cuadrado
     const terrain: TerrainTile[][] = [];
-    const quarterSize = Math.floor(worldSize / 4);
+    const quarterWidth = Math.floor(worldWidth / 4);
+    const quarterHeight = Math.floor(worldHeight / 4);
 
     for (let y = 0; y < config.height; y++) {
       terrain[y] = [];
@@ -438,20 +440,20 @@ export default class MainScene extends Phaser.Scene {
 
         // Centro: área mística
         if (
-          x > quarterSize &&
-          x < worldSize - quarterSize &&
-          y > quarterSize &&
-          y < worldSize - quarterSize
+          x > quarterWidth &&
+          x < worldWidth - quarterWidth &&
+          y > quarterHeight &&
+          y < worldHeight - quarterHeight
         ) {
           biome = BiomeType.MYSTICAL;
-        } else if (x < quarterSize && y < quarterSize) {
+        } else if (x < quarterWidth && y < quarterHeight) {
           // Esquinas: diferentes biomas
           biome = BiomeType.FOREST;
-        } else if (x > worldSize - quarterSize && y < quarterSize) {
+        } else if (x > worldWidth - quarterWidth && y < quarterHeight) {
           biome = BiomeType.MOUNTAINOUS;
-        } else if (x < quarterSize && y > worldSize - quarterSize) {
+        } else if (x < quarterWidth && y > worldHeight - quarterHeight) {
           biome = BiomeType.WETLAND;
-        } else if (x > worldSize - quarterSize && y > worldSize - quarterSize) {
+        } else if (x > worldWidth - quarterWidth && y > worldHeight - quarterHeight) {
           biome = BiomeType.FOREST;
         } else {
           // Resto: pradera

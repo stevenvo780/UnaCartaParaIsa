@@ -94,12 +94,18 @@ export class TerrainGenerator {
     }
 
     const startTime = performance.now();
+    const totalTiles = this.config.width * this.config.height;
+    const estimatedMemoryMB = (totalTiles * 0.5) / 1024; // Estimación rough
 
     logAutopoiesis.info("🌍 Iniciando generación de mundo", {
       size: `${this.config.width}x${this.config.height}`,
+      totalTiles,
+      estimatedMemoryMB: estimatedMemoryMB.toFixed(1),
       seed: this.config.seed,
       biomes: this.config.biomes.enabled.length,
     });
+
+    try {
 
     // 1. Generar mapas de ruido base
     const temperatureMap = this.generateNoiseMap(this.config.noise.temperature);
@@ -159,6 +165,25 @@ export class TerrainGenerator {
     });
 
     return world;
+    
+    } catch (error) {
+      const generationTime = performance.now() - startTime;
+      
+      logAutopoiesis.error("❌ Error durante generación de mundo", {
+        error: error instanceof Error ? error.message : String(error),
+        generationTime: `${generationTime.toFixed(2)}ms`,
+        worldSize: `${this.config.width}x${this.config.height}`,
+        seed: this.config.seed,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      // Re-lanzar con contexto adicional
+      throw new Error(
+        `Fallo en generación de mundo (${this.config.width}x${this.config.height}): ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
 
   /** Normaliza un mapa 2D de números al rango [0,1] */
@@ -254,16 +279,44 @@ export class TerrainGenerator {
    * Aplica spawns forzados de biomas en ubicaciones específicas
    */
   private applyForcedSpawns(biomeMap: BiomeType[][]): void {
-    if (!this.config.biomes.forceSpawn) return;
+    if (!this.config.biomes.forceSpawn || this.config.biomes.forceSpawn.length === 0) {
+      return;
+    }
 
-    for (const spawn of this.config.biomes.forceSpawn) {
+    // Crear mapa de prioridades para manejar spawns superpuestos
+    const priorityMap: { [key: string]: { biome: BiomeType; priority: number } } = {};
+
+    for (let i = 0; i < this.config.biomes.forceSpawn.length; i++) {
+      const spawn = this.config.biomes.forceSpawn[i]!;
       const { biome, position, radius } = spawn;
+
+      // Validar spawn
+      if (!biome || !position || typeof radius !== 'number' || radius <= 0) {
+        logAutopoiesis.warn("⚠️ Spawn forzado inválido, saltando", {
+          spawn,
+          index: i,
+        });
+        continue;
+      }
+
+      // Validar que la posición esté dentro de los límites
+      if (
+        position.x < 0 || position.x >= this.config.width ||
+        position.y < 0 || position.y >= this.config.height
+      ) {
+        logAutopoiesis.warn("⚠️ Posición de spawn fuera de límites", {
+          position,
+          mapSize: `${this.config.width}x${this.config.height}`,
+        });
+        continue;
+      }
 
       for (let dy = -radius; dy <= radius; dy++) {
         for (let dx = -radius; dx <= radius; dx++) {
           const x = position.x + dx;
           const y = position.y + dy;
 
+          // Verificar límites
           if (
             x >= 0 &&
             x < this.config.width &&
@@ -272,15 +325,28 @@ export class TerrainGenerator {
           ) {
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance <= radius) {
-              // Aplicar con fading hacia los bordes
+              // Calcular strength y prioridad
               const strength = 1 - distance / radius;
-              if (Math.random() < strength) {
-                biomeMap[y][x] = biome;
+              const priority = strength * (this.config.biomes.forceSpawn.length - i); // Spawns posteriores tienen menos prioridad
+
+              const key = `${x},${y}`;
+              
+              // Solo aplicar si este spawn tiene mayor prioridad o si es el primero
+              if (!priorityMap[key] || priority > priorityMap[key].priority) {
+                if (Math.random() < strength) {
+                  priorityMap[key] = { biome, priority };
+                }
               }
             }
           }
         }
       }
+    }
+
+    // Aplicar spawns basado en prioridades
+    for (const [key, data] of Object.entries(priorityMap)) {
+      const [x, y] = key.split(',').map(Number) as [number, number];
+      biomeMap[y!][x!] = data.biome;
     }
   }
 
@@ -315,13 +381,13 @@ export class TerrainGenerator {
         let maxCount = 0;
         let dominantBiome = biomeMap[y][x];
 
-        for (const [biome, count] of counts) {
+        counts.forEach((count, biome) => {
           if (count > maxCount && count >= 5) {
             // Al menos 5 de 9 neighbors
             maxCount = count;
             dominantBiome = biome;
           }
-        }
+        });
 
         smoothed[y][x] = dominantBiome;
       }
@@ -410,7 +476,18 @@ export class TerrainGenerator {
       }
     }
 
-    return totalCount > 0 ? sameCount / totalCount : 1;
+    // Prevenir división por cero - si no hay vecinos válidos, asumir pureza mínima
+    if (totalCount === 0) {
+      logAutopoiesis.warn("⚠️ No hay vecinos válidos para calcular biome strength", {
+        x,
+        y,
+        biome,
+        mapDimensions: `${this.config.width}x${this.config.height}`,
+      });
+      return 0.1; // Pureza mínima por defecto
+    }
+
+    return sameCount / totalCount;
   }
 
   /**
@@ -437,7 +514,7 @@ export class TerrainGenerator {
       biomeDef.assets.terrain.secondary,
       biomeDef.assets.terrain.weight,
     );
-    assets.terrain = terrainAsset || "cesped1.png"; // fallback
+    assets.terrain = terrainAsset || this.getDefaultTerrainAsset(biome);
 
     // Generar vegetación basada en densidad y clustering
     if (Math.random() < biomeDef.assets.trees.density * strength) {
@@ -505,9 +582,30 @@ export class TerrainGenerator {
     const pCount = primary?.length || 0;
     const sCount = secondary?.length || 0;
 
-    if (pCount === 0 && sCount === 0) return null;
+    // Edge case: no hay assets disponibles
+    if (pCount === 0 && sCount === 0) {
+      logAutopoiesis.warn("⚠️ No hay assets de terreno disponibles", {
+        primaryLength: pCount,
+        secondaryLength: sCount,
+        weightsLength: weights?.length || 0,
+      });
+      return "cesped1.png"; // Fallback de emergencia
+    }
+
+    // Sin pesos: selección uniforme priorizando primary
     if (!weights || weights.length === 0) {
-      // Sin pesos: priorizar primary si existe
+      if (pCount > 0) return this.selectAsset(primary);
+      return this.selectAsset(secondary);
+    }
+
+    // Validar que los pesos no contengan valores inválidos
+    const validWeights = weights.filter((w) => Number.isFinite(w) && w >= 0);
+    if (validWeights.length !== weights.length) {
+      logAutopoiesis.warn("⚠️ Pesos inválidos detectados, usando selección uniforme", {
+        originalWeights: weights,
+        validWeights,
+      });
+      // Fallback a selección uniforme
       if (pCount > 0) return this.selectAsset(primary);
       return this.selectAsset(secondary);
     }
@@ -527,7 +625,18 @@ export class TerrainGenerator {
     if (weights.length === 2 && (pCount > 0 || sCount > 0)) {
       const [wp, ws] = weights;
       const total = (wp ?? 0) + (ws ?? 0);
-      const r = Math.random() * (total || 1);
+      
+      // Edge case: suma de pesos es cero
+      if (total <= 0) {
+        logAutopoiesis.warn("⚠️ Suma de pesos por grupo es cero, usando selección uniforme", {
+          primaryWeight: wp,
+          secondaryWeight: ws,
+        });
+        if (pCount > 0) return this.selectAsset(primary);
+        return this.selectAsset(secondary);
+      }
+
+      const r = Math.random() * total;
       if (r <= (wp ?? 0)) {
         // Elegir de primary
         if (pCount > 0) return this.selectAsset(primary);
@@ -539,6 +648,14 @@ export class TerrainGenerator {
       }
     }
 
+    // Edge case: configuración de pesos no reconocida
+    logAutopoiesis.warn("⚠️ Configuración de pesos no reconocida, usando fallback", {
+      primaryCount: pCount,
+      secondaryCount: sCount,
+      weightsLength: weights.length,
+      weights,
+    });
+
     // Fallback robusto: elegir de primary si hay, si no de secondary
     if (pCount > 0) return this.selectAsset(primary);
     return this.selectAsset(secondary);
@@ -548,23 +665,58 @@ export class TerrainGenerator {
    * Selecciona un asset de una lista con pesos opcionales
    */
   private selectAsset(assets: string[], weights?: number[]): string | null {
-    if (assets.length === 0) return null;
-
-    if (!weights || weights.length !== assets.length) {
-      return assets[Math.floor(Math.random() * assets.length)];
+    // Edge case: array vacío
+    if (!assets || assets.length === 0) {
+      logAutopoiesis.warn("⚠️ Array de assets vacío en selectAsset");
+      return null;
     }
 
-    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    // Validar que no hay elementos null/undefined en assets
+    const validAssets = assets.filter((asset) => asset != null && asset.trim().length > 0);
+    if (validAssets.length === 0) {
+      logAutopoiesis.warn("⚠️ No hay assets válidos después de filtrado", {
+        originalCount: assets.length,
+        validCount: validAssets.length,
+      });
+      return null;
+    }
+
+    // Selección uniforme si no hay pesos o no coinciden
+    if (!weights || weights.length !== validAssets.length) {
+      if (weights && weights.length !== validAssets.length) {
+        logAutopoiesis.debug("Longitud de pesos no coincide con assets, usando selección uniforme", {
+          assetsLength: validAssets.length,
+          weightsLength: weights.length,
+        });
+      }
+      return validAssets[Math.floor(Math.random() * validAssets.length)];
+    }
+
+    // Validar pesos
+    const validWeights = weights.map((w) => (Number.isFinite(w) && w >= 0 ? w : 0));
+    const totalWeight = validWeights.reduce((sum, w) => sum + w, 0);
+    
+    // Edge case: suma de pesos es cero o inválida
+    if (totalWeight <= 0) {
+      logAutopoiesis.warn("⚠️ Suma de pesos inválida, usando selección uniforme", {
+        weights: validWeights,
+        totalWeight,
+      });
+      return validAssets[Math.floor(Math.random() * validAssets.length)];
+    }
+
+    // Selección por pesos
     let random = Math.random() * totalWeight;
 
-    for (let i = 0; i < assets.length; i++) {
-      random -= weights[i];
+    for (let i = 0; i < validAssets.length; i++) {
+      random -= validWeights[i];
       if (random <= 0) {
-        return assets[i];
+        return validAssets[i];
       }
     }
 
-    return assets[assets.length - 1];
+    // Fallback final: último elemento válido
+    return validAssets[validAssets.length - 1];
   }
 
   /**
@@ -578,18 +730,37 @@ export class TerrainGenerator {
     const { clustering } = biomeDef.assets.trees;
 
     // Usar ruido normalizado para determinar si es una zona de clustering
-
     const clusterNoise = this.noiseGen.normalizedNoise(x * 0.1, y * 0.1);
     const inCluster = clusterNoise > 0.5 - clustering * 0.3;
 
-    let treeAssets = biomeDef.assets.trees.primary;
+    let treeAssets = biomeDef.assets.trees.primary || [];
 
     // En clusters, usar más variety; fuera de clusters, usar árboles raros ocasionalmente
     if (!inCluster && Math.random() < 0.05) {
-      treeAssets = [...treeAssets, ...biomeDef.assets.trees.rare];
+      const rareAssets = biomeDef.assets.trees.rare || [];
+      treeAssets = [...treeAssets, ...rareAssets];
     }
 
-    return this.selectAsset(treeAssets);
+    // Si no hay assets disponibles, usar fallbacks del bioma
+    if (treeAssets.length === 0) {
+      logAutopoiesis.debug("⚠️ No hay assets de árboles para bioma, usando fallback", {
+        biome: biomeDef.id,
+      });
+      treeAssets = this.getDefaultVegetationAssets(biomeDef.id);
+    }
+
+    const selectedAsset = this.selectAsset(treeAssets);
+    
+    // Fallback final si selectAsset retorna null
+    if (!selectedAsset && treeAssets.length > 0) {
+      logAutopoiesis.warn("⚠️ selectAsset retornó null, usando primer asset disponible", {
+        biome: biomeDef.id,
+        availableAssets: treeAssets,
+      });
+      return treeAssets[0];
+    }
+
+    return selectedAsset;
   }
 
   /**
@@ -661,6 +832,47 @@ export class TerrainGenerator {
     this.addSurfaceWater(layers, terrain);
 
     return layers;
+  }
+
+  /**
+   * Obtiene un asset de terreno por defecto para un bioma específico
+   */
+  private getDefaultTerrainAsset(biome: BiomeType): string {
+    const defaultAssets = {
+      [BiomeType.GRASSLAND]: "cesped1.png",
+      [BiomeType.FOREST]: "cesped11.png",
+      [BiomeType.MYSTICAL]: "cesped21.png",
+      [BiomeType.WETLAND]: "cesped1.png",
+      [BiomeType.MOUNTAINOUS]: "cesped15.png",
+      [BiomeType.VILLAGE]: "cesped1.png",
+    };
+
+    const defaultAsset = defaultAssets[biome];
+    if (!defaultAsset) {
+      logAutopoiesis.warn("⚠️ Bioma desconocido, usando fallback universal", {
+        biome,
+        fallback: "cesped1.png",
+      });
+      return "cesped1.png";
+    }
+
+    return defaultAsset;
+  }
+
+  /**
+   * Obtiene assets de fallback para vegetación cuando el bioma no tiene assets válidos
+   */
+  private getDefaultVegetationAssets(biome: BiomeType): string[] {
+    const defaultVegetation = {
+      [BiomeType.GRASSLAND]: ["oak_tree.png"],
+      [BiomeType.FOREST]: ["tree_emerald_1.png", "oak_tree.png"],
+      [BiomeType.MYSTICAL]: ["luminous_tree1.png"],
+      [BiomeType.WETLAND]: ["willow1.png"],
+      [BiomeType.MOUNTAINOUS]: ["mega_tree1.png"],
+      [BiomeType.VILLAGE]: ["oak_tree.png"],
+    };
+
+    return defaultVegetation[biome] || ["oak_tree.png"];
   }
 
   /**

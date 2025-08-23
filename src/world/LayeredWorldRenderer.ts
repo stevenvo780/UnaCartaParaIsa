@@ -36,6 +36,7 @@ export class LayeredWorldRenderer {
   private renderedAssets: Map<string, Phaser.GameObjects.Sprite> = new Map();
   private container: Phaser.GameObjects.Container;
   private totalSprites = 0;
+  private tileSize = 32; // Tamaño de tile por defecto
 
   constructor(scene: Phaser.Scene, config: LayeredWorldConfig = {}) {
     this.scene = scene;
@@ -59,6 +60,9 @@ export class LayeredWorldRenderer {
     logAutopoiesis.info("🎨 Inicializando LayeredWorldRenderer...");
 
     try {
+      // Guardar el tamaño de tile del mundo generado
+      this.tileSize = world.config.tileSize;
+      
       // Componer el mundo diverso
       this.composedWorld = await this.composer.composeWorld(world);
 
@@ -331,13 +335,13 @@ export class LayeredWorldRenderer {
         sprite.setOrigin(0.5, 1); // Bottom center para trees y estructuras
         break;
       case "terrain":
-        sprite.setOrigin(0.5, 0.5); // Centro para más naturalidad
-        // Eliminar setDisplaySize forzado y añadir variación sutil
-        const scaleVariation = 0.95 + Math.random() * 0.1; // 95%-105% variación
-        sprite.setScale(scaleVariation);
+        sprite.setOrigin(0, 0); // Esquina superior izquierda para cobertura completa
+        // Configurar tamaño exacto del tile para cobertura sin huecos
+        sprite.setDisplaySize(this.tileSize, this.tileSize);
         break;
       case "water":
-        sprite.setOrigin(0.5, 0.5); // Centro para agua
+        sprite.setOrigin(0, 0); // Esquina superior izquierda para cobertura completa
+        sprite.setDisplaySize(this.tileSize, this.tileSize);
         break;
       default:
         sprite.setOrigin(0.5, 0.5); // Centro por defecto

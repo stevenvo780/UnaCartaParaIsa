@@ -215,17 +215,9 @@ export class DiverseWorldComposer {
           const tile = this.world.terrain[tileY][tileX];
           const biome = tile.biome;
 
-          // Posición en píxeles con variación orgánica para romper la grilla
-          const baseX = tileX * tileSize;
-          const baseY = tileY * tileSize;
-
-          // Añadir ligera variación de posición usando ruido para mantener coherencia
-          const positionNoise = this.noise.noise2D(baseX * 0.05, baseY * 0.05);
-          const offsetX = positionNoise * 8; // ±8 píxeles de variación
-          const offsetY = positionNoise * 8;
-
-          const x = baseX + offsetX;
-          const y = baseY + offsetY;
+          // Posición en píxeles - SIN variación para asegurar cobertura completa
+          const x = tileX * tileSize;
+          const y = tileY * tileSize;
 
           // Seleccionar asset usando ruido orgánico
           const assetIndex = this.getOrganicIndex(x, y, terrainAssets.length);
@@ -842,17 +834,9 @@ export class DiverseWorldComposer {
           const tile = this.world.terrain[tileY][tileX];
           const biome = tile.biome;
 
-          // Posición en píxeles con variación orgánica para romper la grilla (versión streaming)
-          const baseX = tileX * tileSize;
-          const baseY = tileY * tileSize;
-
-          // Añadir ligera variación de posición usando ruido para mantener coherencia
-          const positionNoise = this.noise.noise2D(baseX * 0.05, baseY * 0.05);
-          const offsetX = positionNoise * 8; // ±8 píxeles de variación
-          const offsetY = positionNoise * 8;
-
-          const x = baseX + offsetX;
-          const y = baseY + offsetY;
+          // Posición en píxeles - SIN variación para asegurar cobertura completa
+          const x = tileX * tileSize;
+          const y = tileY * tileSize;
 
           // Seleccionar asset usando ruido orgánico
           const assetIndex = this.getOrganicIndex(x, y, terrainAssets.length);
