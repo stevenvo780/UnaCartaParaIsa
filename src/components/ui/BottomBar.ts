@@ -61,12 +61,12 @@ export class BottomBar {
       actionButtons[2].setPosition(centerX + spacing, 20); // Screenshot
     }
     
-    // Update speed control container position
+    // Update speed control container position (nueva anchura para botones accesibles)
     const speedControls = this.container.list.find(child => 
       child.getData && child.getData('containerType') === 'speedControls'
     );
     if (speedControls) {
-      speedControls.setPosition(width - 150, 20);
+      speedControls.setPosition(width - 200, 20); // Ajustado para el nuevo tamaño
     }
   }
 
@@ -162,26 +162,39 @@ export class BottomBar {
   }
 
   private buildSpeedControls() {
-    const rightX = this.scene.cameras.main.width - 150;
+    const rightX = this.scene.cameras.main.width - 200; // Más ancho para botones accesibles
     const speedContainer = this.scene.add.container(rightX, 20);
+    
+    // Fondo más grande para acomodar botones accesibles
     const bg = this.scene.add.graphics();
     bg.fillStyle(DS.COLORS.surface, 0.8);
-    bg.fillRoundedRect(0, 0, 130, 40, 6);
+    bg.fillRoundedRect(0, 0, 190, 44, 6); // Mayor tamaño
     speedContainer.add(bg);
+    
     const label = this.scene.add.text(10, 8, "⚡ Velocidad:", {
       ...DS.getTextStyle("xs", DS.COLORS.text),
     });
     speedContainer.add(label);
+    
+    // Crear botones con tamaño mínimo accesible de 44x44px según análisis
     const mk = (x: number, txt: string, mult: number, color: number) => {
-      const btn = this.makeButton(x, 20, 28, 16, txt, color, () =>
-        this.callbacks.onSetSpeed(mult),
-      );
+      const btn = createUIButton(this.scene, x, 22, txt, () => 
+        this.callbacks.onSetSpeed(mult), {
+        width: 44,  // Mínimo accesible
+        height: 44, // Mínimo accesible  
+        color,
+      });
+      
+      // Expandir área interactiva para cubrir completamente el target mínimo
+      btn.setInteractive(new Phaser.Geom.Rectangle(-22, -22, 44, 44));
       speedContainer.add(btn);
     };
+    
+    // Reposicionar con más espacio entre botones para los nuevos tamaños
     mk(10, "0.5x", 0.5, 0xe74c3c);
-    mk(42, "1x", 1, 0x95a5a6);
-    mk(74, "2x", 2, 0xf39c12);
-    mk(106, "5x", 5, 0xe67e22);
+    mk(58, "1x", 1, 0x95a5a6);
+    mk(106, "2x", 2, 0xf39c12);
+    mk(154, "5x", 5, 0xe67e22);
     
     speedContainer.setData('containerType', 'speedControls');
     this.container.add(speedContainer);

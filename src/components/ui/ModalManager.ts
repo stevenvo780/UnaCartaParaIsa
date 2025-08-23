@@ -7,6 +7,7 @@ export class ModalManager {
   private registry = new Map<string, Phaser.GameObjects.Container>();
   private order: string[] = [];
   private traps = new Map<string, FocusTrap>();
+  private activeModal?: string; // Solo un modal visible a la vez para evitar solapamientos
   private readonly TOP_BAR_HEIGHT = 70;
   private readonly BOTTOM_BAR_HEIGHT = 80;
   private readonly MARGIN = 16;
@@ -34,7 +35,7 @@ export class ModalManager {
   ): Phaser.GameObjects.Container {
     const modal = this.scene.add.container(0, 0);
     modal.setScrollFactor(0);
-    modal.setDepth(1003);
+    modal.setDepth(DS.Z_INDEX.modal);
     modal.setData("w", width);
     modal.setData("h", height);
 
@@ -85,52 +86,66 @@ export class ModalManager {
   toggle(id: string) {
     const m = this.registry.get(id);
     if (!m) return;
-    const next = !m.visible;
-    m.setVisible(next);
+    
+    if (m.visible) {
+      // Cerrar modal actual
+      this.close(id);
+    } else {
+      // Abrir nuevo modal (cerrar el actual si existe)
+      this.showModal(id);
+    }
+  }
+
+  private showModal(id: string) {
+    // Cerrar modal activo si existe
+    if (this.activeModal && this.activeModal !== id) {
+      this.hideModal(this.activeModal);
+    }
+    
+    const m = this.registry.get(id);
+    if (!m) return;
+    
+    m.setVisible(true);
+    this.activeModal = id;
     const trap = this.traps.get(id);
-    if (trap) next ? trap.activate() : trap.deactivate();
+    trap?.activate();
     this.layout();
   }
 
-  close(id: string) {
+  private hideModal(id: string) {
     const m = this.registry.get(id);
     if (!m) return;
+    
     m.setVisible(false);
+    if (this.activeModal === id) {
+      this.activeModal = undefined;
+    }
     const trap = this.traps.get(id);
     trap?.deactivate();
+  }
+
+  close(id: string) {
+    this.hideModal(id);
     this.layout();
   }
 
   layout() {
+    // Con sistema de cola de modales, solo centramos el modal activo
+    if (!this.activeModal) return;
+    
+    const modal = this.registry.get(this.activeModal);
+    if (!modal || !modal.visible) return;
+    
     const width = this.scene.cameras.main.width;
     const height = this.scene.cameras.main.height;
-    const availX = this.MARGIN;
-    const availW = width - this.MARGIN * 2;
-    const startY = this.TOP_BAR_HEIGHT + this.MARGIN;
-    const maxY = height - this.BOTTOM_BAR_HEIGHT - this.MARGIN;
-
-    let cursorX = availX;
-    let cursorY = startY;
-    let rowH = 0;
-    const visibleIds = this.order.filter(
-      (id) => this.registry.get(id)?.visible,
-    );
-    visibleIds.forEach((id) => {
-      const modal = this.registry.get(id)!;
-      const w = (modal.getData("w") as number) ?? 200;
-      const h = (modal.getData("h") as number) ?? 150;
-      if (cursorX + w > availX + availW) {
-        cursorX = availX;
-        cursorY += rowH + this.MARGIN;
-        rowH = 0;
-      }
-      if (cursorY + h > maxY) {
-        cursorY = Math.max(startY, maxY - h);
-      }
-      modal.setPosition(cursorX, cursorY);
-      cursorX += w + this.MARGIN;
-      rowH = Math.max(rowH, h);
-    });
+    const modalWidth = (modal.getData("w") as number) ?? 360;
+    const modalHeight = (modal.getData("h") as number) ?? 220;
+    
+    // Centrar el modal en la pantalla
+    const x = (width - modalWidth) / 2;
+    const y = (height - modalHeight) / 2;
+    
+    modal.setPosition(x, y);
   }
 
   // Re-dibuja fondos y barras de título con colores actuales del DS

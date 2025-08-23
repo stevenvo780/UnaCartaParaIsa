@@ -28,12 +28,12 @@ export const GAME_BALANCE = {
   },
 
   VISUALS: {
-    ENTITY_SCALE: 1.5,
+    ENTITY_SCALE: 2.0, // Cambiado de 1.5 a 2.0 para evitar desalineación de píxeles
     TILE_SIZE: 64,
     ENTITY_DEPTH: 10,
     ZONE_DEPTH: 2,
     UI_DEPTH: 1000,
-    BASE_PULSE_SCALE: 1.5,
+    BASE_PULSE_SCALE: 2.0, // Ajustado para mantener coherencia
     PULSE_AMPLITUDE: 0.1,
     PULSE_SPEED: 0.1,
   },

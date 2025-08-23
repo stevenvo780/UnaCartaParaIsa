@@ -224,16 +224,26 @@ export class UIDesignSystem {
     },
   };
 
-  // Z-indexes para capas de UI
+  // Z-indexes para capas de UI - reorganizados según análisis UI_LAYOUT_ANALYSIS_PHASER3.md
   public static readonly Z_INDEX = {
-    background: 0,
-    content: 100,
-    overlay: 500,
-    dropdown: 800,
-    tooltip: 900,
-    modal: 1000,
-    notification: 1100,
-    debug: 9999,
+    // Mundo y elementos de fondo
+    worldBackground: 0,
+    worldZones: 10,
+    worldEntities: 20,
+    
+    // Elementos de UI base
+    uiBackground: 100,
+    content: 200,
+    overlay: 300,
+    
+    // Modales y elementos flotantes
+    modal: 400,
+    dropdown: 450,
+    tooltip: 480,
+    notification: 490,
+    
+    // Debug y elementos de desarrollo
+    debug: 500,
   };
 
   // Configuración de accesibilidad

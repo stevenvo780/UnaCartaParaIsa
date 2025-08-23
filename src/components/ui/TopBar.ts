@@ -97,10 +97,11 @@ export class TopBar {
     titleContainer.add([titleIcon, titleText]);
     this.container.add(titleContainer);
 
+    // Usar escalas enteras para evitar desalineación de píxeles según análisis
     this.scene.tweens.add({
       targets: titleIcon,
-      scaleX: { from: 1, to: 1.1 },
-      scaleY: { from: 1, to: 1.1 },
+      scaleX: { from: 1, to: 2 },
+      scaleY: { from: 1, to: 2 },
       duration: 3000,
       yoyo: true,
       repeat: -1,

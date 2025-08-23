@@ -11,6 +11,7 @@ import type {
 } from "../systems/EmergenceSystem";
 import { logAutopoiesis } from "../utils/logger";
 import { SystemLights } from "./ui/SystemLights";
+import { UIDesignSystem as DS } from "../config/uiDesignSystem";
 
 export class SystemStatusUI {
   private scene: Phaser.Scene;
@@ -62,7 +63,7 @@ export class SystemStatusUI {
 
     this.container = this.scene.add.container(x, y);
     this.container.setScrollFactor(0);
-    this.container.setDepth(999); // Will be wrapped by modal when embedded
+    this.container.setDepth(DS.Z_INDEX.content); // Will be wrapped by modal when embedded
     this.container.setVisible(this.isVisible);
 
     this.createUI();

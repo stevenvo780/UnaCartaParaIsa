@@ -9,6 +9,7 @@ import type {
   DialogueChoice,
 } from "../systems/CardDialogueSystem";
 import { logAutopoiesis } from "../utils/logger";
+import { UIDesignSystem as DS } from "../config/uiDesignSystem";
 
 export interface CardUIConfig {
   width: number;
@@ -43,7 +44,7 @@ export class DialogueCardUI {
     // Asegurar que NO se escale con el zoom de la cámara
     this.container.setScrollFactor(0);
     // Colocar por encima de las barras para máxima prioridad visual y de input
-    this.container.setDepth(1002);
+    this.container.setDepth(DS.Z_INDEX.overlay);
 
     // Subscribe to card system events
     this.setupEventListeners();

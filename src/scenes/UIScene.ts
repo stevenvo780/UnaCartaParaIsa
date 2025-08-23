@@ -1121,8 +1121,7 @@ export class UIScene extends Phaser.Scene {
   private createNeedsUI(): void {
     try {
       this.needsUI = new NeedsUI(this);
-      // Colocarla debajo del TopBar y sin solapar BottomBar
-      this.needsUI.setPosition(this.cameras.main.width - 220, 80);
+      // La posición se maneja internamente en NeedsUI.createUI() para evitar solapamientos
     } catch (e) {
       logAutopoiesis.error("Error creando NeedsUI en UIScene", e);
     }

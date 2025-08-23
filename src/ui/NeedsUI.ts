@@ -23,12 +23,15 @@ export class NeedsUI {
     const panelWidth = 320;
     const panelHeight = 400;
     
+    // Ajustar posición para evitar solapamiento con TopBar según análisis
+    const TOPBAR_CLEAR_ZONE = 70 + 10; // TopBar height + margin
+    
     this.container = this.scene.add.container(
       this.scene.cameras.main.width - panelWidth - 20,
-      100, // Más abajo para evitar TopBar
+      TOPBAR_CLEAR_ZONE, // Evitar solapamiento con TopBar
     );
     this.container.setScrollFactor(0);
-    this.container.setDepth(DS.Z_INDEX.content + 1);
+    this.container.setDepth(DS.Z_INDEX.content);
 
     // Fondo con glassmorphism mejorado
     const background = this.scene.add.graphics();
@@ -333,7 +336,8 @@ export class NeedsUI {
   public handleResize(screenWidth: number, screenHeight: number): void {
     // Reposicionar el panel en la esquina superior derecha
     const panelWidth = 320;
-    this.container.setPosition(screenWidth - panelWidth - 20, 100);
+    const TOPBAR_CLEAR_ZONE = 70 + 10; // TopBar height + margin - consistente con createUI
+    this.container.setPosition(screenWidth - panelWidth - 20, TOPBAR_CLEAR_ZONE);
   }
 
   public destroy(): void {
