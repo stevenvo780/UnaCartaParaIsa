@@ -57,15 +57,6 @@ export class UIScene extends Phaser.Scene {
   private settingsModal?: Phaser.GameObjects.Container;
   private needsUI?: NeedsUI;
 
-  // AGREGADAS: Propiedades faltantes
-  private topCenterIndicators?: Phaser.GameObjects.Container;
-  private topMenuBtn?: Phaser.GameObjects.Container;
-  private topBarModalButtons: Phaser.GameObjects.Container[] = [];
-
-  // Top bar layout refs (gestionados por TopBar)
-  private topResonanceText?: Phaser.GameObjects.Text;
-  private topCyclesText?: Phaser.GameObjects.Text;
-  private topTimeText?: Phaser.GameObjects.Text;
   // Constants de layout
   private readonly TOP_BAR_HEIGHT = 70;
   private readonly BOTTOM_BAR_HEIGHT = 80;
@@ -277,154 +268,9 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
-  private createModernTopBarIndicators() {
-    // Contenedor centrado con tres badges compactos
-    const y = 35;
-    const container = this.add.container(this.cameras.main.width / 2, y);
-    let xCursor = -160; // arranca a la izquierda para centrar grupo (~320px total)
+  // Removed - UI elements handled by TopBar component
 
-    const makeBadge = (
-      icon: string,
-      label: string,
-      value: string,
-      color: number,
-      dataKey: string,
-      width = 100,
-    ) => {
-      const c = this.add.container(xCursor, 0);
-      const bg = this.add.graphics();
-      bg.fillStyle(color, 0.15);
-      bg.fillRoundedRect(0, -14, width, 28, 14);
-      bg.lineStyle(1, color, 0.4);
-      bg.strokeRoundedRect(0, -14, width, 28, 14);
-
-      const iconText = this.add
-        .text(14, 0, icon, { fontSize: "13px" })
-        .setOrigin(0.5);
-      const labelText = this.add.text(28, -8, label, {
-        fontSize: "8px",
-        color: "#B2BEC3",
-      });
-      const valueText = this.add.text(28, 4, value, {
-        fontSize: "11px",
-        color: "#FFFFFF",
-        fontStyle: "bold",
-      });
-      c.add([bg, iconText, labelText, valueText]);
-      c.setData(dataKey, valueText);
-      container.add(c);
-      xCursor += width + 20;
-
-      if (dataKey === "resonanceText")
-        this.topResonanceText = valueText as Phaser.GameObjects.Text;
-      if (dataKey === "cyclesText")
-        this.topCyclesText = valueText as Phaser.GameObjects.Text;
-      if (dataKey === "timeText")
-        this.topTimeText = valueText as Phaser.GameObjects.Text;
-    };
-
-    makeBadge("💫", "Resonancia", "0%", 0x74b9ff, "resonanceText", 120);
-    makeBadge("⚡", "Ciclos", "0", 0x00cec9, "cyclesText", 90);
-    makeBadge("⏰", "Tiempo", "00:00", 0xfdcb6e, "timeText", 100);
-
-    this.topBar.add(container);
-    this.topCenterIndicators = container;
-
-    // Botón de menú a la derecha
-    this.createModernMenuButton();
-  }
-
-  private createModernMenuButton() {
-    const menuBtn = this.add.container(this.cameras.main.width - 45, 35);
-
-    // Modern circular menu button with glow
-    const menuBg = this.add.graphics();
-
-    // Outer glow
-    menuBg.fillStyle(0x6c5ce7, 0.3);
-    menuBg.fillCircle(0, 0, 22);
-
-    // Main button
-    menuBg.fillStyle(0x6c5ce7, 0.9);
-    menuBg.fillCircle(0, 0, 18);
-
-    // Inner highlight
-    menuBg.fillStyle(0x74b9ff, 0.4);
-    menuBg.fillCircle(-3, -3, 8);
-
-    const menuIcon = this.add
-      .text(0, 0, "⚙️", {
-        fontSize: "16px",
-      })
-      .setOrigin(0.5, 0.5);
-
-    menuBtn.add([menuBg, menuIcon]);
-    menuBtn.setSize(40, 40);
-    menuBtn.setInteractive();
-
-    // Modern hover effects
-    menuBtn.on("pointerover", () => {
-      this.tweens.add({
-        targets: [menuBtn],
-        scaleX: 1.2,
-        scaleY: 1.2,
-        duration: 200,
-        ease: "Back.easeOut",
-      });
-
-      this.tweens.add({
-        targets: menuIcon,
-        rotation: Math.PI * 0.25,
-        duration: 300,
-        ease: "Power2.easeOut",
-      });
-    });
-
-    menuBtn.on("pointerout", () => {
-      this.tweens.add({
-        targets: [menuBtn],
-        scaleX: 1,
-        scaleY: 1,
-        duration: 200,
-        ease: "Back.easeOut",
-      });
-
-      this.tweens.add({
-        targets: menuIcon,
-        rotation: 0,
-        duration: 300,
-        ease: "Power2.easeOut",
-      });
-    });
-
-    menuBtn.on("pointerdown", () => {
-      // Scale down effect
-      this.tweens.add({
-        targets: menuBtn,
-        scaleX: 0.9,
-        scaleY: 0.9,
-        duration: 100,
-        yoyo: true,
-        ease: "Power2.easeOut",
-        onComplete: () => {
-          this.toggleGameMenu();
-        },
-      });
-    });
-
-    this.topBar.add(menuBtn);
-    this.topMenuBtn = menuBtn;
-
-    // Subtle breathing animation
-    this.tweens.add({
-      targets: menuBg,
-      alpha: { from: 0.9, to: 1 },
-      duration: 2000,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
-  }
+  // Removed - handled by TopBar component
 
   private createModernButton(
     x: number,
@@ -442,34 +288,7 @@ export class UIScene extends Phaser.Scene {
     });
   }
 
-  private createTopBarModalShortcuts() {
-    const baseY = 35;
-    let x = this.cameras.main.width - 45 - 50; // antes del botón de menú
-
-    const makeIconBtn = (emoji: string, onClick: () => void) => {
-      const c = this.add.container(x, baseY);
-      const bg = this.add.graphics();
-      bg.fillStyle(0x000000, 0.25);
-      bg.fillRoundedRect(-12, -12, 24, 24, 6);
-      const t = this.add.text(0, 0, emoji, { fontSize: "14px" }).setOrigin(0.5);
-      c.add([bg, t]);
-      c.setSize(24, 24);
-      c.setInteractive();
-      c.on("pointerdown", onClick);
-      this.topBar.add(c);
-      this.topBarModalButtons.push(c);
-      x -= 34;
-    };
-
-    // 📊 abre/cierra modal de estadísticas
-    makeIconBtn("📊", () => this.toggleStatsModal());
-    // 💬 abre/cierra modal de mensajes
-    makeIconBtn("💬", () => this.toggleMessagesModal());
-    // 🌌 abre/cierra modal de estado del sistema (emergencia/autopoiesis)
-    makeIconBtn("🌌", () => this.toggleSystemModal());
-    // 🌍 abre/cierra modal de mundo (incluye minimapa)
-    makeIconBtn("🌍", () => this.toggleWorldModal());
-  }
+  // Removed - handled by TopBar component
 
   private createBottomBar() {
     this.bottomBar = new BottomBar(this, {
@@ -852,7 +671,7 @@ export class UIScene extends Phaser.Scene {
   ): Phaser.GameObjects.Container {
     const modal = this.add.container(0, 0);
     modal.setScrollFactor(0);
-    modal.setDepth(1003);
+    modal.setDepth(DS.Z_INDEX.modal);
 
     const bg = this.add.graphics();
     bg.fillStyle(0x1a1a2e, 0.95);

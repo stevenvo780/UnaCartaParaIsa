@@ -28,7 +28,7 @@ export class TopBar {
     this.callbacks = callbacks;
     this.container = this.scene.add.container(0, 0);
     this.container.setScrollFactor(0);
-    this.container.setDepth(1000);
+    this.container.setDepth(DS.Z_INDEX.overlay);
     this.build();
   }
 
@@ -49,23 +49,33 @@ export class TopBar {
   }
 
   handleResize(width: number) {
+    // Redraw background
     if (this.bg) {
       this.bg.clear();
-      this.bg.fillStyle(DS.COLORS.background, 0.85);
+      const colors = DS.getAccessibleColors();
+      this.bg.fillStyle(colors.background, 0.85);
       this.bg.fillRect(0, 0, width, 70);
-      this.bg.lineStyle(2, DS.COLORS.secondary, 0.6);
+      this.bg.lineStyle(2, colors.secondary, 0.6);
       this.bg.lineBetween(0, 68, width, 68);
-      this.bg.fillStyle(DS.COLORS.shadow, 0.2);
+      this.bg.fillStyle(colors.shadow, 0.2);
       this.bg.fillRect(0, 70, width, 4);
     }
-    if (this.centerGroup) this.centerGroup.setPosition(width / 2, 35);
-    // Reposicionar botones de modales y menú a la derecha
-    let currentX = width - 45 - 50;
+    
+    // Reposition center group
+    if (this.centerGroup) {
+      this.centerGroup.setPosition(width / 2, 35);
+    }
+    
+    // Reposition modal buttons and menu button
+    let currentX = width - 45 - 50; // Start before menu button
     this.modalButtons.forEach((btn) => {
       btn.setPosition(currentX, 35);
       currentX -= 34;
     });
-    if (this.menuBtn) this.menuBtn.setPosition(width - 45, 35);
+    
+    if (this.menuBtn) {
+      this.menuBtn.setPosition(width - 45, 35);
+    }
   }
 
   private build() {

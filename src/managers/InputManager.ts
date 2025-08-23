@@ -179,15 +179,21 @@ export class InputManager {
 
         this.lastPointerPosition = { x: pointer.x, y: pointer.y };
       } else {
-        // Cursor grab cuando no está dragging
-        this.scene.input.setDefaultCursor("grab");
+        // Solo cambiar cursor si no está sobre elementos UI interactivos
+        if (!this.isPointerOverInteractiveElement(pointer)) {
+          this.scene.input.setDefaultCursor("grab");
+        }
       }
     });
 
-    this.scene.input.on("pointerup", () => {
+    this.scene.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
       this.isDragging = false;
-      // Restaurar cursor normal
-      this.scene.input.setDefaultCursor("default");
+      // Restaurar cursor solo si no está sobre elementos UI
+      if (!this.isPointerOverInteractiveElement(pointer)) {
+        this.scene.input.setDefaultCursor("grab");
+      } else {
+        this.scene.input.setDefaultCursor("default");
+      }
     });
 
     // Mouse wheel para zoom más suave
@@ -421,6 +427,50 @@ export class InputManager {
       // Just update the entity's state-based animation through normal update cycle
       currentEntity.update();
     }
+  }
+
+  /**
+   * Verifica si el puntero está sobre un elemento UI interactivo
+   */
+  private isPointerOverInteractiveElement(pointer: Phaser.Input.Pointer): boolean {
+    // Obtener UIScene para verificar elementos UI
+    const uiScene = this.scene.scene.get("UIScene");
+    if (!uiScene) return false;
+
+    // Verificar si está sobre las barras de UI
+    const topBarHeight = 70;
+    const bottomBarHeight = 80;
+    const screenWidth = this.scene.cameras.main.width;
+    const screenHeight = this.scene.cameras.main.height;
+
+    // Top bar area
+    if (pointer.y <= topBarHeight) return true;
+
+    // Bottom bar area  
+    if (pointer.y >= screenHeight - bottomBarHeight) return true;
+
+    // Right side UI (needs panel)
+    if (pointer.x >= screenWidth - 220) return true;
+
+    // Check for modal areas
+    try {
+      const modalManager = (uiScene as any).modalManager;
+      if (modalManager && modalManager.getVisibleContainers) {
+        const visibleModals = modalManager.getVisibleContainers();
+        for (const modal of visibleModals) {
+          const bounds = modal.getBounds();
+          if (bounds && 
+              pointer.x >= bounds.x && pointer.x <= bounds.x + bounds.width &&
+              pointer.y >= bounds.y && pointer.y <= bounds.y + bounds.height) {
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      // Silently handle missing modalManager
+    }
+
+    return false;
   }
 
   /**

@@ -34,10 +34,39 @@ export class BottomBar {
   }
 
   handleResize(width: number, height: number) {
+    // Reposition container to bottom of screen
     this.container.setPosition(0, height - this.height);
+    
+    // Redraw background with new width
     if (this.bg) {
       this.bg.clear();
       this.drawBackground(width);
+    }
+    
+    // Update button positions for responsive layout
+    this.updateButtonPositions(width);
+  }
+  
+  private updateButtonPositions(width: number) {
+    // Update action buttons positioning
+    const centerX = width / 2;
+    const actionButtons = this.container.list.filter(child => 
+      child.getData && child.getData('buttonType') === 'action'
+    );
+    
+    if (actionButtons.length >= 3) {
+      const spacing = 70;
+      actionButtons[0].setPosition(centerX - spacing, 20); // Pause
+      actionButtons[1].setPosition(centerX, 20);           // Settings  
+      actionButtons[2].setPosition(centerX + spacing, 20); // Screenshot
+    }
+    
+    // Update speed control container position
+    const speedControls = this.container.list.find(child => 
+      child.getData && child.getData('containerType') === 'speedControls'
+    );
+    if (speedControls) {
+      speedControls.setPosition(width - 150, 20);
     }
   }
 
@@ -97,7 +126,8 @@ export class BottomBar {
     const w = 60;
     const h = 36;
     const spacing = 70;
-    this.makeButton(
+    
+    const pauseBtn = this.makeButton(
       centerX - spacing,
       20,
       w,
@@ -106,7 +136,9 @@ export class BottomBar {
       0xf39c12,
       this.callbacks.onTogglePause,
     );
-    this.makeButton(
+    pauseBtn.setData('buttonType', 'action');
+    
+    const settingsBtn = this.makeButton(
       centerX,
       20,
       w,
@@ -115,7 +147,9 @@ export class BottomBar {
       0x9b59b6,
       this.callbacks.onOpenSettings,
     );
-    this.makeButton(
+    settingsBtn.setData('buttonType', 'action');
+    
+    const screenshotBtn = this.makeButton(
       centerX + spacing,
       20,
       w,
@@ -124,6 +158,7 @@ export class BottomBar {
       0x1abc9c,
       this.callbacks.onScreenshot,
     );
+    screenshotBtn.setData('buttonType', 'action');
   }
 
   private buildSpeedControls() {
@@ -147,6 +182,8 @@ export class BottomBar {
     mk(42, "1x", 1, 0x95a5a6);
     mk(74, "2x", 2, 0xf39c12);
     mk(106, "5x", 5, 0xe67e22);
+    
+    speedContainer.setData('containerType', 'speedControls');
     this.container.add(speedContainer);
   }
 }

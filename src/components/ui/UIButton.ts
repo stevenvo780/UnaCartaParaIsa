@@ -41,8 +41,14 @@ export function createUIButton(
     Phaser.Geom.Rectangle.Contains,
   );
   c.on("pointerdown", onClick);
-  c.on("pointerover", () => g.setAlpha(1));
-  c.on("pointerout", () => g.setAlpha(0.9));
+  c.on("pointerover", () => {
+    g.setAlpha(1);
+    scene.input.setDefaultCursor("pointer");
+  });
+  c.on("pointerout", () => {
+    g.setAlpha(0.9);
+    scene.input.setDefaultCursor("default");
+  });
 
   // Focus ring
   const focus = scene.add.graphics();
@@ -54,8 +60,14 @@ export function createUIButton(
   focus.strokeRoundedRect(-2, -2, w + 4, h + 4, 8);
   focus.setVisible(false);
   c.add(focus);
-  c.on("pointerover", () => focus.setVisible(true));
-  c.on("pointerout", () => focus.setVisible(false));
+  c.on("pointerover", () => {
+    focus.setVisible(true);
+    scene.input.setDefaultCursor("pointer");
+  });
+  c.on("pointerout", () => {
+    focus.setVisible(false);
+    scene.input.setDefaultCursor("default");
+  });
 
   return c;
 }
