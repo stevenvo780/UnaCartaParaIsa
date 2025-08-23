@@ -133,37 +133,40 @@ export class NeedsSystem {
     const { needs } = entityData;
     const config = this.needsConfig;
 
-    // Decaimiento natural de necesidades
+    // Decaimiento natural de necesidades (reducido para balance)
     needs.hunger = Math.max(
       0,
-      needs.hunger - config.hungerDecayRate * deltaTime,
+      needs.hunger - config.hungerDecayRate * 0.7 * deltaTime,
     );
     needs.thirst = Math.max(
       0,
-      needs.thirst - config.thirstDecayRate * deltaTime,
+      needs.thirst - config.thirstDecayRate * 0.7 * deltaTime,
     );
     needs.energy = Math.max(
       0,
-      needs.energy - config.energyDecayRate * deltaTime,
+      needs.energy - config.energyDecayRate * 0.7 * deltaTime,
     );
     needs.mentalHealth = Math.max(
       0,
-      needs.mentalHealth - config.mentalHealthDecayRate * deltaTime,
+      needs.mentalHealth - config.mentalHealthDecayRate * 0.7 * deltaTime,
     );
 
-    // Decaimiento de nuevas necesidades
+    // Decaimiento de nuevas necesidades (también reducido)
     needs.hygiene = Math.max(
       0,
-      needs.hygiene - config.hungerDecayRate * 0.8 * deltaTime,
+      needs.hygiene - config.hungerDecayRate * 0.5 * deltaTime,
     );
     needs.social = Math.max(
       0,
-      needs.social - config.mentalHealthDecayRate * 0.5 * deltaTime,
+      needs.social - config.mentalHealthDecayRate * 0.3 * deltaTime,
     );
     needs.fun = Math.max(
       0,
-      needs.fun - config.mentalHealthDecayRate * 0.7 * deltaTime,
+      needs.fun - config.mentalHealthDecayRate * 0.4 * deltaTime,
     );
+
+    // AÑADIR: Recuperación pasiva básica para evitar espirales de muerte
+    this.applyBasicRecovery(entityData, deltaTime);
 
     // Efectos cruzados entre necesidades
     this.applyNeedsCrossEffects(needs, deltaTime);
@@ -172,27 +175,55 @@ export class NeedsSystem {
   }
 
   /**
+   * Aplicar recuperación pasiva básica para evitar que todas las estadísticas bajen constantemente
+   */
+  private applyBasicRecovery(entityData: EntityNeedsData, deltaTime: number): void {
+    const { needs } = entityData;
+    const BASIC_RECOVERY_RATE = 0.15; // Aumentar recuperación básica
+    
+    // Recuperación básica universal - todas las necesidades se recuperan lentamente
+    needs.hunger = Math.min(100, needs.hunger + BASIC_RECOVERY_RATE * deltaTime);
+    needs.thirst = Math.min(100, needs.thirst + BASIC_RECOVERY_RATE * deltaTime);
+    needs.energy = Math.min(100, needs.energy + BASIC_RECOVERY_RATE * deltaTime);
+    needs.mentalHealth = Math.min(100, needs.mentalHealth + BASIC_RECOVERY_RATE * deltaTime);
+    needs.hygiene = Math.min(100, needs.hygiene + BASIC_RECOVERY_RATE * 0.5 * deltaTime);
+    needs.social = Math.min(100, needs.social + BASIC_RECOVERY_RATE * 0.4 * deltaTime);
+    needs.fun = Math.min(100, needs.fun + BASIC_RECOVERY_RATE * 0.5 * deltaTime);
+    
+    // Recuperación adicional cuando las estadísticas están muy bajas (boost de supervivencia)
+    const CRITICAL_BOOST = 0.5; // Aumentar boost crítico
+    if (needs.hunger < 30) needs.hunger = Math.min(100, needs.hunger + CRITICAL_BOOST * deltaTime);
+    if (needs.thirst < 30) needs.thirst = Math.min(100, needs.thirst + CRITICAL_BOOST * deltaTime);
+    if (needs.energy < 30) needs.energy = Math.min(100, needs.energy + CRITICAL_BOOST * deltaTime);
+    
+    // BOOST ESPECIAL para salud mental que está problemática
+    if (needs.mentalHealth < 50) {
+      needs.mentalHealth = Math.min(100, needs.mentalHealth + 0.8 * deltaTime);
+    }
+  }
+
+  /**
    * Aplicar efectos cruzados entre necesidades (REBALANCEADO)
    */
   private applyNeedsCrossEffects(needs: NeedsState, deltaTime: number): void {
     // Límites de seguridad mínimos para evitar espirales de muerte
-    const SAFETY_THRESHOLD = 10;
+    const SAFETY_THRESHOLD = 5; // Reducir para permitir más variación
 
-    // Hambre crítica afecta energía y salud mental (con límites duros)
-    if (needs.hunger < 20) {
-      needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.3 * deltaTime);
+    // Hambre crítica afecta energía y salud mental (REDUCIDO)
+    if (needs.hunger < 10) { // Solo en casos extremos
+      needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.1 * deltaTime);
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
-        needs.mentalHealth - 0.2 * deltaTime,
+        needs.mentalHealth - 0.05 * deltaTime, // Reducido drasticamente
       );
     }
 
-    // Sed crítica afecta energía principalmente (con límites duros)
-    if (needs.thirst < 15) {
-      needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.4 * deltaTime);
+    // Sed crítica afecta energía principalmente (REDUCIDO)
+    if (needs.thirst < 10) { // Solo en casos extremos
+      needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.15 * deltaTime);
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
-        needs.mentalHealth - 0.2 * deltaTime,
+        needs.mentalHealth - 0.05 * deltaTime, // Reducido drasticamente
       );
     }
 
@@ -211,27 +242,27 @@ export class NeedsSystem {
       needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.1 * deltaTime);
     }
 
-    // Higiene baja afecta salud mental
-    if (needs.hygiene < 20) {
+    // Higiene baja afecta salud mental (REDUCIDO)
+    if (needs.hygiene < 10) { // Solo casos extremos
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
-        needs.mentalHealth - 0.1 * deltaTime,
+        needs.mentalHealth - 0.02 * deltaTime, // Drasticamente reducido
       );
     }
 
-    // Falta de diversión afecta salud mental
-    if (needs.fun < 15) {
+    // Falta de diversión afecta salud mental (REDUCIDO)
+    if (needs.fun < 5) { // Solo casos extremos
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
-        needs.mentalHealth - 0.15 * deltaTime,
+        needs.mentalHealth - 0.03 * deltaTime, // Drasticamente reducido
       );
     }
 
-    // Aislamiento social afecta salud mental
-    if (needs.social < 10) {
+    // Aislamiento social afecta salud mental (REDUCIDO)
+    if (needs.social < 5) { // Solo casos extremos
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
-        needs.mentalHealth - 0.2 * deltaTime,
+        needs.mentalHealth - 0.04 * deltaTime, // Drasticamente reducido
       );
     }
 
@@ -243,7 +274,7 @@ export class NeedsSystem {
    * Aplicar validaciones de seguridad para prevenir espirales de muerte
    */
   private applySafetyValidation(needs: NeedsState, deltaTime: number): void {
-    const CRITICAL_THRESHOLD = 3; // Umbral crítico absoluto
+    const CRITICAL_THRESHOLD = 1; // Reducir umbral mínimo para permitir más variación
     const SAFETY_MULTIPLIER = 0.1; // Ralentizar cambios extremos
 
     // Si deltaTime es muy alto (lag/tabs), limitar efectos negativos
@@ -256,8 +287,8 @@ export class NeedsSystem {
       // Revertir efectos excesivos aplicando recuperación parcial
       Object.keys(needs).forEach((key) => {
         const need = needs[key as keyof NeedsState];
-        if (typeof need === "number" && need < CRITICAL_THRESHOLD) {
-          (needs as any)[key] = Math.min(CRITICAL_THRESHOLD + 5, need + 2);
+        if (typeof need === "number" && need < 5) {
+          (needs as any)[key] = Math.min(15, need + 5);
           logAutopoiesis.info(
             `🛡️ Recuperación de emergencia aplicada a ${key}: ${need} -> ${(needs as any)[key]}`,
           );
@@ -265,7 +296,7 @@ export class NeedsSystem {
       });
     }
 
-    // Aplicar límites absolutos mínimos
+    // Aplicar límites absolutos mínimos SOLO en casos extremos
     Object.keys(needs).forEach((key) => {
       const need = needs[key as keyof NeedsState];
       if (typeof need === "number" && need < CRITICAL_THRESHOLD) {
@@ -331,13 +362,14 @@ export class NeedsSystem {
     entityData.isDead = false;
     entityData.deathTime = undefined;
 
-    // Restaurar necesidades al 70%
-    entityData.needs.hunger = 70;
-    entityData.needs.energy = 70;
-    entityData.needs.hygiene = 70;
-    entityData.needs.mentalHealth = 70;
-    entityData.needs.social = 50;
-    entityData.needs.fun = 50;
+    // Restaurar necesidades a niveles más altos para evitar muerte inmediata
+    entityData.needs.hunger = 85;
+    entityData.needs.thirst = 85; // Agregar sed también
+    entityData.needs.energy = 85;
+    entityData.needs.hygiene = 80;
+    entityData.needs.mentalHealth = 90;
+    entityData.needs.social = 70;
+    entityData.needs.fun = 70;
 
     // Obtener punto de spawn
     const spawnPoint = this.getSpawnPoint(entityId);
