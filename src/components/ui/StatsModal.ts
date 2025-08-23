@@ -40,67 +40,110 @@ export class StatsModalContent {
     this.statTexts.forEach((t) => {
       const key = t.getData("statKey") as string;
       const label = t.getData("label") as string;
+      const icon = t.getData("icon") as string;
       const val = map.get(key) ?? 0;
       
-      // Colorear basado en el valor
+      // Colorear basado en el valor con mejor paleta
       let color = "#ecf0f1"; // Color normal
+      let statusIcon = "";
+      
       if (val < 20) {
-        color = "#e74c3c"; // Rojo crítico
+        color = "#ff4757"; // Rojo crítico
+        statusIcon = " ⚠️";
       } else if (val < 40) {
-        color = "#f39c12"; // Naranja advertencia
+        color = "#ff9ff3"; // Naranja advertencia 
+        statusIcon = " ⚠️";
       } else if (val < 60) {
-        color = "#f1c40f"; // Amarillo cuidado
+        color = "#ffa502"; // Amarillo cuidado
+        statusIcon = " ⚠️";
+      } else if (val >= 80) {
+        color = "#2ed573"; // Verde excelente
+        statusIcon = " ✅";
       }
       
-      t.setText(`${label}: ${val}`);
+      // Mostrar con icono, label, valor y estado
+      t.setText(`${icon} ${label}: ${val}%${statusIcon}`);
       t.setColor(color);
     });
   }
 
   private build() {
-    const mk = (x: number, y: number, label: string, key: string) => {
-      const t = this.scene.add.text(x, y, `${label}: 0`, {
-        fontSize: "10px",
+    const mk = (x: number, y: number, icon: string, label: string, key: string) => {
+      const t = this.scene.add.text(x, y, `${icon} ${label}: 0`, {
+        fontSize: "12px",
         color: "#ecf0f1",
+        fontStyle: "normal"
       });
       t.setData("statKey", key);
       t.setData("label", label);
+      t.setData("icon", icon);
       this.container.add(t);
       this.statTexts.push(t);
     };
     
-    // Sección Isa
-    const isaTitle = this.scene.add.text(0, 0, "👩 Isa", {
-      fontSize: "12px",
+    // Título del modal mejorado
+    const modalTitle = this.scene.add.text(150, -10, "📊 ESTADÍSTICAS DETALLADAS", {
+      fontSize: "14px",
+      color: "#74b9ff",
+      fontStyle: "bold",
+      align: "center"
+    });
+    modalTitle.setOrigin(0.5, 0);
+    this.container.add(modalTitle);
+    
+    // Fondo para sección Isa
+    const isaBg = this.scene.add.graphics();
+    isaBg.fillStyle(0xe91e63, 0.1);
+    isaBg.fillRoundedRect(-5, 10, 160, 110, 8);
+    isaBg.lineStyle(2, 0xe91e63, 0.3);
+    isaBg.strokeRoundedRect(-5, 10, 160, 110, 8);
+    this.container.add(isaBg);
+    
+    // Sección Isa mejorada
+    const isaTitle = this.scene.add.text(10, 20, "👩 Isa", {
+      fontSize: "14px",
       color: "#e91e63",
       fontStyle: "bold",
     });
     this.container.add(isaTitle);
     
-    mk(0, 16, "Salud", "isa.health");
-    mk(0, 30, "Energía", "isa.energy");
-    mk(0, 44, "Hambre", "isa.hunger");
-    mk(0, 58, "Sed", "isa.thirst");
-    mk(0, 72, "Mental", "isa.mentalHealth");
+    mk(10, 40, "💚", "Salud", "isa.health");
+    mk(10, 55, "⚡", "Energía", "isa.energy");
+    mk(10, 70, "🍖", "Hambre", "isa.hunger");
+    mk(10, 85, "💧", "Sed", "isa.thirst");
+    mk(10, 100, "🧠", "Mental", "isa.mentalHealth");
 
-    // Línea separadora
+    // Línea separadora mejorada
     const separator = this.scene.add.graphics();
-    separator.lineStyle(1, 0x555555, 0.5);
-    separator.lineBetween(170, 0, 170, 90);
+    separator.lineStyle(2, 0x74b9ff, 0.6);
+    separator.lineBetween(170, 15, 170, 115);
+    // Puntos decorativos
+    separator.fillStyle(0x74b9ff, 0.8);
+    separator.fillCircle(170, 15, 3);
+    separator.fillCircle(170, 65, 3);
+    separator.fillCircle(170, 115, 3);
     this.container.add(separator);
 
-    // Sección Stev
-    const stevTitle = this.scene.add.text(180, 0, "👨 Stev", {
-      fontSize: "12px",
+    // Fondo para sección Stev
+    const stevBg = this.scene.add.graphics();
+    stevBg.fillStyle(0x3498db, 0.1);
+    stevBg.fillRoundedRect(185, 10, 160, 110, 8);
+    stevBg.lineStyle(2, 0x3498db, 0.3);
+    stevBg.strokeRoundedRect(185, 10, 160, 110, 8);
+    this.container.add(stevBg);
+
+    // Sección Stev mejorada
+    const stevTitle = this.scene.add.text(195, 20, "👨 Stev", {
+      fontSize: "14px",
       color: "#3498db",
       fontStyle: "bold",
     });
     this.container.add(stevTitle);
     
-    mk(180, 16, "Salud", "stev.health");
-    mk(180, 30, "Energía", "stev.energy");
-    mk(180, 44, "Hambre", "stev.hunger");
-    mk(180, 58, "Sed", "stev.thirst");
-    mk(180, 72, "Mental", "stev.mentalHealth");
+    mk(195, 40, "💚", "Salud", "stev.health");
+    mk(195, 55, "⚡", "Energía", "stev.energy");
+    mk(195, 70, "🍖", "Hambre", "stev.hunger");
+    mk(195, 85, "💧", "Sed", "stev.thirst");
+    mk(195, 100, "🧠", "Mental", "stev.mentalHealth");
   }
 }

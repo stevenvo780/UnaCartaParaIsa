@@ -1072,7 +1072,7 @@ export class UIScene extends Phaser.Scene {
       this.foodUI.updatePosition();
     }
     if (this.needsUI) {
-      this.needsUI.setPosition(this.cameras.main.width - 220, 80);
+      this.needsUI.handleResize(width, height);
     }
   }
 
