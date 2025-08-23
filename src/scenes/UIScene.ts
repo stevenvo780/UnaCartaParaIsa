@@ -56,6 +56,9 @@ export class UIScene extends Phaser.Scene {
   private messagesModal?: Phaser.GameObjects.Container;
   private settingsModal?: Phaser.GameObjects.Container;
   private needsUI?: NeedsUI;
+  
+  // Cache para datos de necesidades de múltiples agentes
+  private agentNeedsCache: Map<string, any> = new Map();
 
   // Constants de layout
   private readonly TOP_BAR_HEIGHT = 70;
@@ -129,19 +132,30 @@ export class UIScene extends Phaser.Scene {
       // Suscribirse a necesidades desde MainScene (UI + luces)
       const mainScene = this.scene.get("MainScene");
       mainScene.events.on("needsUpdated", (data: any) => {
-        this.needsUI?.updateNeeds(data.entityData);
-        const needs = data?.entityData?.needs as
-          | Record<string, number>
-          | undefined;
-        if (needs) {
-          const criticalCount = Object.entries(needs).filter(
-            ([k, v]) => k !== "lastUpdate" && v < 20,
-          ).length;
-          const warningCount = Object.entries(needs).filter(
-            ([k, v]) => k !== "lastUpdate" && v < 40 && v >= 20,
-          ).length;
-          this.systemStatusUI?.updateNeedsSummary(criticalCount, warningCount);
-        }
+        // Cachear datos de cada agente
+        this.agentNeedsCache.set(data.entityId, data.entityData);
+        
+        // Actualizar UI con todos los agentes cacheados
+        const allAgentsData = Array.from(this.agentNeedsCache.values());
+        this.needsUI?.updateNeeds(allAgentsData);
+        
+        // Calcular totales de críticos/advertencias de todos los agentes
+        let totalCriticalCount = 0;
+        let totalWarningCount = 0;
+        
+        allAgentsData.forEach(entityData => {
+          const needs = entityData?.needs as Record<string, number> | undefined;
+          if (needs) {
+            totalCriticalCount += Object.entries(needs).filter(
+              ([k, v]) => k !== "lastUpdate" && v < 20,
+            ).length;
+            totalWarningCount += Object.entries(needs).filter(
+              ([k, v]) => k !== "lastUpdate" && v < 40 && v >= 20,
+            ).length;
+          }
+        });
+        
+        this.systemStatusUI?.updateNeedsSummary(totalCriticalCount, totalWarningCount);
       });
     } catch (error) {
       logAutopoiesis.error("❌ Error in UIScene.create():", error);
