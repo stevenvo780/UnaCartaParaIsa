@@ -819,7 +819,7 @@ export class DiverseWorldComposer {
     const assets: PlacedAsset[] = [];
 
     // Crear generador para procesar tiles en chunks
-    const tileGenerator = function* () {
+    const tileGenerator = function* (this: DiverseWorldComposer) {
       for (let tileY = 0; tileY < this.world.config.height; tileY++) {
         for (let tileX = 0; tileX < this.world.config.width; tileX++) {
           yield { tileX, tileY };
