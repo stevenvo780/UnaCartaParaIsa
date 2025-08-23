@@ -14,6 +14,7 @@ import {
   type RenderLayer,
 } from "./DiverseWorldComposer";
 import { GeneratedWorld } from "./types";
+import { assetExistsOrFallback, configureHUDVisibility, ROTATION_FEATURE_FLAGS } from "./SelectiveRotationHelpers";
 
 export interface LayeredWorldConfig {
   enableLayerToggle?: boolean;
@@ -254,23 +255,18 @@ export class LayeredWorldRenderer {
     placedAsset: PlacedAsset,
   ): Phaser.GameObjects.Sprite | null {
     try {
-      // Verificar si la textura existe
-      if (!this.scene.textures.exists(placedAsset.asset.key)) {
+      // Verificar si la textura existe usando helper mejorado
+      const validAssetKey = assetExistsOrFallback(this.scene, placedAsset.asset.key, placedAsset.asset.type);
+      
+      if (!validAssetKey) {
         logAutopoiesis.debug(
-          `⚠️ Texture ${placedAsset.asset.key} does not exist, trying fallback`,
+          `❌ No se puede crear sprite para ${placedAsset.asset.key}: no hay texturas válidas`,
         );
-        // Usar fallback asset si no existe
-        const fallbackKey = this.getFallbackAsset(placedAsset.asset.type);
-
-        if (!this.scene.textures.exists(fallbackKey)) {
-          logAutopoiesis.debug(
-            `❌ Fallback texture ${fallbackKey} also doesn't exist`,
-          );
-          return null; // No se puede crear el sprite
-        }
-        placedAsset.asset.key = fallbackKey;
-        logAutopoiesis.debug(`✅ Using fallback texture: ${fallbackKey}`);
+        return null; // No se puede crear el sprite
       }
+      
+      // Usar asset válido (original o fallback)
+      placedAsset.asset.key = validAssetKey;
 
       const sprite = this.scene.add.sprite(
         placedAsset.x,
@@ -294,6 +290,15 @@ export class LayeredWorldRenderer {
       if (placedAsset.metadata?.interactive) {
         sprite.setInteractive();
         sprite.setData("metadata", placedAsset.metadata);
+      }
+      
+      // Configurar visibilidad HUD si es necesario
+      const isHUDElement = placedAsset.metadata?.type === "healing" || 
+                          placedAsset.metadata?.type === "spawn" ||
+                          placedAsset.metadata?.type === "recovery";
+      
+      if (isHUDElement) {
+        configureHUDVisibility(sprite, true);
       }
 
       logAutopoiesis.debug(

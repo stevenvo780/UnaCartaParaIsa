@@ -8,6 +8,7 @@ import { memoryManager } from "../utils/memoryManager";
 import { CreativeAssetLoader, type AssetInfo } from "./CreativeAssetLoader";
 import { NoiseUtils } from "./NoiseUtils";
 import { BiomeType, GeneratedWorld } from "./types";
+import { getSelectiveRotation, getOrganicOffset, ROTATION_FEATURE_FLAGS } from "./SelectiveRotationHelpers";
 
 export interface PlacedAsset {
   asset: AssetInfo;
@@ -307,7 +308,7 @@ export class DiverseWorldComposer {
 
         // Variaciones naturales
         const scale = 1.5 + Math.random() * 1.0; // 1.5x - 2.5x
-        const rotation = Math.random() * Math.PI * 2;
+        const rotation = getSelectiveRotation("vegetation", asset.key);
         const tint = this.getVariationTint(cluster.biome);
 
         assets.push({
@@ -384,7 +385,7 @@ export class DiverseWorldComposer {
           x,
           y,
           scale: 2.0 + Math.random() * 1.0,
-          rotation: Math.random() * Math.PI * 2,
+          rotation: getSelectiveRotation("structure", asset.key),
           tint: this.getStructureTint(cluster.biome),
           depth: y + 100, // Estructuras por encima de vegetación
           metadata: {
@@ -447,7 +448,7 @@ export class DiverseWorldComposer {
           x,
           y,
           scale: 1.2 + Math.random() * 0.8,
-          rotation: Math.random() * Math.PI * 2,
+          rotation: getSelectiveRotation("detail", asset.key),
           tint: 0xffffff,
           depth: y - 5, // Ligeramente por debajo de vegetación
           metadata: { type: "scattered_detail" },
@@ -512,15 +513,16 @@ export class DiverseWorldComposer {
             // Posición con variación orgánica
             const baseX = x * tileSize;
             const baseY = y * tileSize;
-            const offsetX = (Math.random() - 0.5) * tileSize * 0.8;
-            const offsetY = (Math.random() - 0.5) * tileSize * 0.8;
+            const offset = getOrganicOffset(tileSize, "transition", asset.key);
+            const offsetX = offset.x;
+            const offsetY = offset.y;
 
             assets.push({
               asset,
               x: baseX + offsetX,
               y: baseY + offsetY,
               scale: 1.0 + Math.random() * 0.5,
-              rotation: Math.random() * Math.PI * 2,
+              rotation: getSelectiveRotation("transition", asset.key),
               tint: this.getTransitionTint(
                 currentBiome,
                 neighbors[0] || currentBiome,
@@ -580,7 +582,7 @@ export class DiverseWorldComposer {
             x,
             y,
             scale: 1.5 + Math.random() * 1.0,
-            rotation: Math.random() * Math.PI * 2,
+            rotation: getSelectiveRotation("prop", asset.key),
             tint: this.getBiomeTint(biome, 0),
             depth: y + 25,
             metadata: {
@@ -635,7 +637,7 @@ export class DiverseWorldComposer {
               x,
               y,
               scale: 0.3 + Math.random() * 0.4,
-              rotation: Math.random() * Math.PI * 2,
+              rotation: getSelectiveRotation("effect", effect.key),
               tint: 0x88ddff,
               depth: y - 10,
               metadata: {
