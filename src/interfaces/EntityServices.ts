@@ -40,10 +40,14 @@ export interface IGameConfig {
  */
 export type LogData =
   | Record<string, unknown>
+  | unknown[]
   | string
   | number
   | boolean
-  | null;
+  | null
+  | undefined
+  | Error
+  | unknown;
 
 /**
  * Interface para servicios de logging

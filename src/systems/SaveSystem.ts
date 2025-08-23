@@ -55,12 +55,29 @@ export interface SerializedQuest {
   progress: number;
   startTime?: number;
   completionTime?: number;
-  objectives: any[];
+  objectives: Array<{
+    id: string;
+    type: string;
+    description: string;
+    isCompleted: boolean;
+    targetAmount?: number;
+    currentAmount?: number;
+  }>;
 }
 
 export interface SerializedWorldState {
-  zones: any[];
-  mapElements: any[];
+  zones: Array<{
+    id: string;
+    type: string;
+    name: string;
+    bounds: { x: number; y: number; width: number; height: number };
+  }>;
+  mapElements: Array<{
+    id: string;
+    type: string;
+    position: { x: number; y: number };
+    assetKey?: string;
+  }>;
   dayTime: number;
   weather?: string;
   resources: Record<string, number>;
@@ -161,7 +178,19 @@ export class SaveSystem {
         return null;
       }
 
-      const saveData: SaveData = JSON.parse(savedData);
+      // Validar que savedData sea JSON válido y tenga estructura esperada
+      let saveData: SaveData;
+      try {
+        saveData = JSON.parse(savedData);
+      } catch (parseError) {
+        logAutopoiesis.error("Datos de guardado corruptos - JSON inválido");
+        throw new Error("Datos de guardado corruptos");
+      }
+
+      // Validar estructura de datos
+      if (!this.validateLoadedData(saveData)) {
+        throw new Error("Estructura de datos de guardado inválida");
+      }
 
       // Validar versión
       if (!this.isCompatibleVersion(saveData.version)) {
@@ -183,6 +212,51 @@ export class SaveSystem {
       this.showSaveNotification("Error al cargar", true);
       return null;
     }
+  }
+
+  /**
+   * Valida la estructura de datos cargados
+   */
+  private validateLoadedData(data: Record<string, unknown>): data is SaveData {
+    if (!data || typeof data !== "object") {
+      logAutopoiesis.error("SaveData: datos no son un objeto válido");
+      return false;
+    }
+
+    // Validar campos requeridos
+    const requiredFields = [
+      "version",
+      "timestamp",
+      "entities",
+      "needs",
+      "quests",
+      "worldState",
+      "stats",
+    ];
+    for (const field of requiredFields) {
+      if (!(field in data)) {
+        logAutopoiesis.error(`SaveData: falta campo requerido '${field}'`);
+        return false;
+      }
+    }
+
+    // Validar tipos de arrays
+    if (
+      !Array.isArray(data.entities) ||
+      !Array.isArray(data.needs) ||
+      !Array.isArray(data.quests)
+    ) {
+      logAutopoiesis.error("SaveData: campos de array inválidos");
+      return false;
+    }
+
+    // Validar timestamp
+    if (typeof data.timestamp !== "number" || data.timestamp <= 0) {
+      logAutopoiesis.error("SaveData: timestamp inválido");
+      return false;
+    }
+
+    return true;
   }
 
   private applySaveData(saveData: SaveData): void {
@@ -254,7 +328,15 @@ export class SaveSystem {
     return version.startsWith("1.");
   }
 
-  private serializeEntities(entities: any[]): SerializedEntity[] {
+  private serializeEntities(entities: Array<{
+    id: string;
+    position: { x: number; y: number };
+    isDead?: boolean;
+    deathTime?: number;
+    currentZone?: string;
+    currentActivity?: string;
+    fatigue?: number;
+  }>): SerializedEntity[] {
     return entities.map((entity) => ({
       id: entity.id,
       position: { ...entity.position },
@@ -266,7 +348,15 @@ export class SaveSystem {
     }));
   }
 
-  private deserializeEntities(serializedEntities: SerializedEntity[]): any[] {
+  private deserializeEntities(serializedEntities: SerializedEntity[]): Array<{
+    id: string;
+    position: { x: number; y: number };
+    isDead: boolean;
+    deathTime?: number;
+    currentZone?: string;
+    currentActivity: string;
+    fatigue: number;
+  }> {
     return serializedEntities.map((data) => ({
       id: data.id,
       position: { ...data.position },
@@ -278,7 +368,9 @@ export class SaveSystem {
     }));
   }
 
-  private serializeNeeds(needsSystem: any): SerializedNeeds[] {
+  private serializeNeeds(needsSystem: {
+    entityNeeds?: Map<string, EntityNeedsData> | Record<string, EntityNeedsData>;
+  }): SerializedNeeds[] {
     if (!needsSystem || !needsSystem.entityNeeds) return [];
 
     const serialized: SerializedNeeds[] = [];

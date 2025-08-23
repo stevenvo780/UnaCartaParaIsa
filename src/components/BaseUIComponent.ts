@@ -252,5 +252,5 @@ export abstract class BaseUIComponent {
    */
   protected abstract onShow(): void;
   protected abstract onHide(): void;
-  public abstract updateContent(data?: any): void;
+  public abstract updateContent(data?: unknown): void;
 }

@@ -11,7 +11,7 @@ export interface WorldEntity {
   scale?: number;
   rotation?: number;
   depth?: number;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 export type EntityType =

@@ -7,7 +7,8 @@ export type LogData =
   | boolean
   | null
   | undefined
-  | Error;
+  | Error
+  | unknown;
 
 /** Niveles de logging y configuración */
 enum LogLevel {

@@ -6,19 +6,37 @@
 import { logAutopoiesis } from "./logger";
 import type { GameState, Zone } from "../types";
 
-export interface RegistryValidationResult<T = any> {
+export interface RegistryValidationResult<T = Record<string, string | number | boolean>> {
   isValid: boolean;
   data?: T;
   errors: string[];
   sanitizedData?: T;
 }
 
+export interface ValidationMapElement {
+  id: string;
+  type: string;
+  position: { x: number; y: number };
+  size?: { width: number; height: number };
+  color?: string;
+  assetId?: string;
+  rotation?: number;
+  scale?: number;
+}
+
+export interface ValidationWorldConfig {
+  seed?: number;
+  biomeSettings?: Record<string, string | number | boolean>;
+  worldSize?: { width: number; height: number };
+  difficulty?: number;
+}
+
 export interface GameStateSchema {
   zones: Zone[];
-  mapElements: any[];
+  mapElements: ValidationMapElement[];
   resonance: number;
-  worldConfig?: any;
-  entities?: any[];
+  worldConfig?: ValidationWorldConfig;
+  entities?: Entity[];
 }
 
 export class RegistryValidator {
@@ -52,7 +70,7 @@ export class RegistryValidator {
    * Validar datos completos del gameState
    */
   public static validateGameState(
-    data: any,
+    data: Record<string, string | number | boolean | object | undefined> | null | undefined,
   ): RegistryValidationResult<GameState> {
     const errors: string[] = [];
 
@@ -63,20 +81,22 @@ export class RegistryValidator {
       };
     }
 
+    const dataObject = data as Record<string, unknown>;
+
     // Validar zonas
-    const zonesResult = this.validateZones(data.zones);
+    const zonesResult = this.validateZones(dataObject.zones);
     if (!zonesResult.isValid) {
       errors.push(...zonesResult.errors);
     }
 
     // Validar elementos del mapa
-    const elementsResult = this.validateMapElements(data.mapElements);
+    const elementsResult = this.validateMapElements(dataObject.mapElements);
     if (!elementsResult.isValid) {
       errors.push(...elementsResult.errors);
     }
 
     // Validar resonancia
-    const resonanceResult = this.validateResonance(data.resonance);
+    const resonanceResult = this.validateResonance(dataObject.resonance);
     if (!resonanceResult.isValid) {
       errors.push(...resonanceResult.errors);
     }
@@ -86,14 +106,14 @@ export class RegistryValidator {
       zones: zonesResult.sanitizedData || [],
       mapElements: elementsResult.sanitizedData || [],
       resonance: resonanceResult.sanitizedData || 0,
-      entities: this.sanitizeArray(data.entities, 10), // Máximo 10 entidades
+      entities: this.sanitizeArray(dataObject.entities, 10), // Máximo 10 entidades
       cycles: 0,
       lastSave: Date.now(),
       togetherTime: 0,
       connectionAnimation: {
         active: false,
         startTime: 0,
-        type: "exploration" as any,
+        type: "exploration" as const,
       },
       currentConversation: {
         isActive: false,

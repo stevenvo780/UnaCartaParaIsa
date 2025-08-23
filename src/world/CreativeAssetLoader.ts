@@ -1175,7 +1175,9 @@ export class CreativeAssetLoader {
     try {
       // Verificar que Phaser esté completamente inicializado
       if (!this.scene.add || !this.scene.cameras.main) {
-        logAutopoiesis.warn("⚠️ Scene no está lista para crear fallback assets");
+        logAutopoiesis.warn(
+          "⚠️ Scene no está lista para crear fallback assets",
+        );
         return;
       }
 
@@ -1217,7 +1219,6 @@ export class CreativeAssetLoader {
       graphics.generateTexture("fallback_house", 32, 32);
 
       graphics.destroy();
-      
     } catch (error) {
       logAutopoiesis.error("❌ Error creando fallback assets:", error);
     }

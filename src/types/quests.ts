@@ -206,7 +206,7 @@ export interface QuestEvent {
   questId: string;
   objectiveId?: string;
   timestamp: number;
-  data?: Record<string, unknown>;
+  data?: Record<string, string | number | boolean>;
 }
 
 /**

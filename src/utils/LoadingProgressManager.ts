@@ -85,7 +85,9 @@ export class LoadingProgressManager {
     if (this.isVisible) return;
 
     // Siempre usar HTML fallback durante las primeras fases de carga para evitar errores de contexto
-    logAutopoiesis.info("📊 Usando barra de progreso HTML durante carga inicial");
+    logAutopoiesis.info(
+      "📊 Usando barra de progreso HTML durante carga inicial",
+    );
     this.createHTMLProgressBar();
     return;
 
@@ -262,10 +264,10 @@ export class LoadingProgressManager {
     const statusMessage = this.getCurrentStatusMessage();
 
     // Actualizar barra HTML si existe
-    const htmlProgressBar = document.getElementById('html-progress-bar');
-    const htmlPercentText = document.getElementById('html-percent-text');
-    const htmlStatusText = document.getElementById('html-status-text');
-    
+    const htmlProgressBar = document.getElementById("html-progress-bar");
+    const htmlPercentText = document.getElementById("html-percent-text");
+    const htmlStatusText = document.getElementById("html-status-text");
+
     if (htmlProgressBar && htmlPercentText && htmlStatusText) {
       htmlProgressBar.style.width = `${percentage}%`;
       htmlPercentText.textContent = `${percentage}%`;
@@ -346,10 +348,10 @@ export class LoadingProgressManager {
     if (!this.isVisible) return;
 
     // Remover barra HTML si existe
-    const htmlOverlay = document.getElementById('loading-overlay');
+    const htmlOverlay = document.getElementById("loading-overlay");
     if (htmlOverlay) {
-      htmlOverlay.style.opacity = '0';
-      htmlOverlay.style.transition = 'opacity 0.5s ease-out';
+      htmlOverlay.style.opacity = "0";
+      htmlOverlay.style.transition = "opacity 0.5s ease-out";
       setTimeout(() => {
         htmlOverlay.remove();
       }, 500);
@@ -396,8 +398,8 @@ export class LoadingProgressManager {
    */
   private createHTMLProgressBar(): void {
     // Crear elementos HTML para la barra de progreso
-    const overlay = document.createElement('div');
-    overlay.id = 'loading-overlay';
+    const overlay = document.createElement("div");
+    overlay.id = "loading-overlay";
     overlay.style.cssText = `
       position: fixed;
       top: 0;
@@ -413,15 +415,15 @@ export class LoadingProgressManager {
       font-family: Arial, sans-serif;
     `;
 
-    const title = document.createElement('h2');
-    title.textContent = 'Cargando Una Carta Para Isa...';
+    const title = document.createElement("h2");
+    title.textContent = "Cargando Una Carta Para Isa...";
     title.style.cssText = `
       color: white;
       margin-bottom: 20px;
       font-size: 24px;
     `;
 
-    const progressContainer = document.createElement('div');
+    const progressContainer = document.createElement("div");
     progressContainer.style.cssText = `
       width: 400px;
       height: 20px;
@@ -431,8 +433,8 @@ export class LoadingProgressManager {
       margin-bottom: 10px;
     `;
 
-    const progressBar = document.createElement('div');
-    progressBar.id = 'html-progress-bar';
+    const progressBar = document.createElement("div");
+    progressBar.id = "html-progress-bar";
     progressBar.style.cssText = `
       width: 0%;
       height: 100%;
@@ -440,18 +442,18 @@ export class LoadingProgressManager {
       transition: width 0.3s ease;
     `;
 
-    const statusText = document.createElement('p');
-    statusText.id = 'html-status-text';
-    statusText.textContent = 'Preparando carga...';
+    const statusText = document.createElement("p");
+    statusText.id = "html-status-text";
+    statusText.textContent = "Preparando carga...";
     statusText.style.cssText = `
       color: #ccc;
       margin: 0;
       font-size: 14px;
     `;
 
-    const percentText = document.createElement('p');
-    percentText.id = 'html-percent-text';
-    percentText.textContent = '0%';
+    const percentText = document.createElement("p");
+    percentText.id = "html-percent-text";
+    percentText.textContent = "0%";
     percentText.style.cssText = `
       color: #6c5ce7;
       margin: 5px 0 0 0;
@@ -464,9 +466,9 @@ export class LoadingProgressManager {
     overlay.appendChild(progressContainer);
     overlay.appendChild(percentText);
     overlay.appendChild(statusText);
-    
+
     document.body.appendChild(overlay);
-    
+
     this.isVisible = true;
     logAutopoiesis.info("📊 Barra de progreso HTML creada");
   }

@@ -41,6 +41,7 @@ export interface EntityStats {
   courage: number;
   happiness: number;
   stress: number;
+  [key: string]: number; // Allow string indexing for dynamic stat access
 }
 
 export interface Entity {

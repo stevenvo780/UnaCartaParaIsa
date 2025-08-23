@@ -4,13 +4,14 @@
  */
 
 import { GAME_BALANCE, gameConfig } from "../config/gameConfig";
-import { AISystem } from "../systems/AISystem";
-import { CardDialogueSystem } from "../systems/CardDialogueSystem";
 import { DayNightSystem } from "../systems/DayNightSystem";
-import { EmergenceSystem } from "../systems/EmergenceSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { NeedsSystem } from "../systems/NeedsSystem";
 import { QuestSystem } from "../systems/QuestSystem";
+import { SystemLoader } from "../utils/SystemLoader";
+import type { AISystem } from "../systems/AISystem";
+import type { CardDialogueSystem } from "../systems/CardDialogueSystem";
+import type { EmergenceSystem } from "../systems/EmergenceSystem";
 import type {
   Entity,
   EntityStats,
@@ -31,12 +32,17 @@ export class GameLogicManager implements IGameLogicManager {
   private _entityManager: EntityManager;
   private _entityStateManager: EntityStateManager;
   private _eventEmitter: Phaser.Events.EventEmitter;
+  private _registeredListeners: Array<{
+    target: Phaser.Events.EventEmitter;
+    event: string;
+    callback: Function;
+  }> = [];
   private _needsSystem: NeedsSystem;
-  private _aiSystem: AISystem;
+  private _aiSystem: AISystem | null = null; // Loaded dynamically
   private _movementSystem: MovementSystem;
-  private _cardDialogueSystem: CardDialogueSystem;
+  private _cardDialogueSystem: CardDialogueSystem | null = null; // Loaded dynamically
   private _dayNightSystem: DayNightSystem;
-  private _emergenceSystem: EmergenceSystem;
+  private _emergenceSystem: EmergenceSystem | null = null; // Loaded dynamically
   private _questSystem: QuestSystem;
 
   public constructor(scene: Phaser.Scene, initialGameState: GameState) {
@@ -55,20 +61,10 @@ export class GameLogicManager implements IGameLogicManager {
       this._needsSystem,
     );
 
-    // FASE 2: Crear sistemas con dependencias (será completado en initialize())
-    this._aiSystem = new AISystem(scene, initialGameState, this._needsSystem);
-    this._cardDialogueSystem = new CardDialogueSystem(
-      scene,
-      initialGameState,
-      this._needsSystem,
-    );
-    this._emergenceSystem = new EmergenceSystem(
-      scene,
-      initialGameState,
-      this._needsSystem,
-      this._aiSystem,
-      this._dayNightSystem,
-    );
+    // FASE 2: Sistemas no críticos se cargan dinámicamente
+    this._aiSystem = null;
+    this._cardDialogueSystem = null; 
+    this._emergenceSystem = null;
     this._questSystem = new QuestSystem(scene);
 
     logAutopoiesis.info(
@@ -79,13 +75,18 @@ export class GameLogicManager implements IGameLogicManager {
   /**
    * Initialize the game logic system - FASE 2 de inicialización
    */
-  public initialize(): void {
+  public async initialize(): Promise<void> {
     logAutopoiesis.info(
-      "🔧 Iniciando FASE 2: conectando dependencias entre sistemas",
+      "🔧 Iniciando FASE 2: carga lazy de sistemas no críticos",
     );
 
-    // FASE 2A: Conectar referencias entre sistemas (después de que todos existan)
-    this._aiSystem.setMovementSystem(this._movementSystem);
+    // FASE 2A: Cargar sistemas dinámicamente
+    await this._loadNonCriticalSystems();
+
+    // FASE 2B: Conectar referencias entre sistemas (después de que todos existan)
+    if (this._aiSystem) {
+      this._aiSystem.setMovementSystem(this._movementSystem);
+    }
 
     // Solo conectar CardDialogueSystem con AISystem si ambos están listos
     if (this._cardDialogueSystem && this._aiSystem) {
@@ -99,10 +100,10 @@ export class GameLogicManager implements IGameLogicManager {
       }
     }
 
-    // FASE 2B: Configurar eventos entre sistemas
+    // FASE 2C: Configurar eventos entre sistemas
     this._setupSystemEvents();
 
-    // FASE 2C: Inicializar después de que el mundo esté listo (con delay para rendering)
+    // FASE 2D: Inicializar después de que el mundo esté listo (con delay para rendering)
     this._scene.time.delayedCall(200, () => {
       this._initializeAfterWorldReady();
     });
@@ -110,7 +111,57 @@ export class GameLogicManager implements IGameLogicManager {
     // Configurar game loop principal
     this._setupGameLoop();
 
-    logAutopoiesis.info("🏗️ FASE 2 iniciada - conexiones configuradas");
+    logAutopoiesis.info("🏗️ FASE 2 completada - sistemas cargados y configurados");
+  }
+
+  /**
+   * Carga sistemas no críticos de manera lazy
+   */
+  private async _loadNonCriticalSystems(): Promise<void> {
+    try {
+      // Cargar AISystem
+      const { AISystem } = await SystemLoader.loadAISystem();
+      this._aiSystem = new AISystem(this._scene, this._gameState, this._needsSystem);
+
+      // Cargar CardDialogueSystem  
+      const { CardDialogueSystem } = await SystemLoader.loadCardDialogueSystem();
+      this._cardDialogueSystem = new CardDialogueSystem(
+        this._scene,
+        this._gameState, 
+        this._needsSystem,
+      );
+
+      // Cargar EmergenceSystem
+      const { EmergenceSystem } = await SystemLoader.loadEmergenceSystem();
+      this._emergenceSystem = new EmergenceSystem(
+        this._scene,
+        this._gameState,
+        this._needsSystem,
+        this._aiSystem,
+        this._dayNightSystem,
+      );
+
+      logAutopoiesis.info("✅ Sistemas no críticos cargados exitosamente");
+    } catch (error) {
+      logAutopoiesis.error("❌ Error cargando sistemas no críticos:", error);
+      // Crear fallbacks básicos
+      this._createSystemFallbacks();
+    }
+  }
+
+  /**
+   * Crear fallbacks para sistemas que fallaron al cargar
+   */
+  private _createSystemFallbacks(): void {
+    if (!this._aiSystem) {
+      this._aiSystem = { setMovementSystem: () => {}, update: () => {} };
+    }
+    if (!this._cardDialogueSystem) {
+      this._cardDialogueSystem = { update: () => {}, cleanup: () => {} };
+    }
+    if (!this._emergenceSystem) {
+      this._emergenceSystem = { update: () => {}, cleanup: () => {} };
+    }
   }
 
   /**
@@ -241,13 +292,13 @@ export class GameLogicManager implements IGameLogicManager {
     }
 
     try {
-      this._aiSystem.update();
+      this._aiSystem?.update();
     } catch (error) {
       logAutopoiesis.error("Error en AISystem.update:", error);
     }
 
     try {
-      this._cardDialogueSystem.update();
+      this._cardDialogueSystem?.update();
     } catch (error) {
       logAutopoiesis.error("Error en CardDialogueSystem.update:", error);
     }
@@ -259,7 +310,7 @@ export class GameLogicManager implements IGameLogicManager {
     }
 
     try {
-      this._emergenceSystem.update();
+      this._emergenceSystem?.update();
     } catch (error) {
       logAutopoiesis.error("Error en EmergenceSystem.update:", error);
     }
@@ -429,7 +480,7 @@ export class GameLogicManager implements IGameLogicManager {
 
     // Inicializar sistemas usando el estado centralizado
     this._needsSystem.initializeEntityNeeds(entityId, entityState.needs);
-    this._aiSystem.initializeEntityAI(entityId);
+    this._aiSystem?.initializeEntityAI(entityId);
     this._movementSystem.initializeEntityMovement(
       entityId,
       entityState.position,
@@ -642,7 +693,7 @@ export class GameLogicManager implements IGameLogicManager {
   /**
    * Obtener sistema de IA
    */
-  public getAISystem(): AISystem {
+  public getAISystem(): AISystem | null {
     return this._aiSystem;
   }
 
@@ -656,7 +707,7 @@ export class GameLogicManager implements IGameLogicManager {
   /**
    * Obtener sistema de cartas de diálogo
    */
-  public getCardDialogueSystem(): CardDialogueSystem {
+  public getCardDialogueSystem(): CardDialogueSystem | null {
     return this._cardDialogueSystem;
   }
 
@@ -670,7 +721,7 @@ export class GameLogicManager implements IGameLogicManager {
   /**
    * Obtener sistema de emergencia
    */
-  public getEmergenceSystem(): EmergenceSystem {
+  public getEmergenceSystem(): EmergenceSystem | null {
     return this._emergenceSystem;
   }
 
@@ -685,7 +736,7 @@ export class GameLogicManager implements IGameLogicManager {
    * Establecer control manual de entidad
    */
   public setEntityPlayerControl(entityId: string, controlled: boolean): void {
-    this._aiSystem.setPlayerControl(entityId, controlled);
+    this._aiSystem?.setPlayerControl(entityId, controlled);
   }
 
   /**
@@ -695,13 +746,19 @@ export class GameLogicManager implements IGameLogicManager {
     logAutopoiesis.info("🔗 Configurando eventos entre sistemas");
 
     // Conectar sistema de cartas con sistema de misiones
-    this._scene.events.on("cardResponded", (data: any) => {
+    const cardRespondedCallback = (data: any) => {
       this._questSystem.handleEvent({
         type: "dialogue_completed",
         entityId: data.card.sourceEntityId || "unknown",
         timestamp: Date.now(),
         data: { cardId: data.card.id, choice: data.choice },
       });
+    };
+    this._scene.events.on("cardResponded", cardRespondedCallback);
+    this._registeredListeners.push({
+      target: this._scene.events,
+      event: "cardResponded",
+      callback: cardRespondedCallback,
     });
 
     // Conectar emergencias con sistema de cartas
@@ -815,7 +872,7 @@ export class GameLogicManager implements IGameLogicManager {
 
       // Inicializar sistemas usando el estado centralizado
       this._needsSystem.initializeEntityNeeds(entityId, entityState.needs);
-      this._aiSystem.initializeEntityAI(entityId);
+      this._aiSystem?.initializeEntityAI(entityId);
       this._movementSystem.initializeEntityMovement(
         entityId,
         entityState.position,
@@ -840,11 +897,17 @@ export class GameLogicManager implements IGameLogicManager {
     this._entityManager.clearAllEntities();
     this._entityStateManager.cleanup();
     this._needsSystem.cleanup();
-    this._aiSystem.cleanup();
+    this._aiSystem?.cleanup();
     this._movementSystem.cleanup();
-    this._cardDialogueSystem.cleanup();
+    this._cardDialogueSystem?.cleanup();
     this._dayNightSystem.cleanup();
-    this._emergenceSystem.cleanup();
+    this._emergenceSystem?.cleanup();
+    // Cleanup de event listeners registrados
+    this._registeredListeners.forEach(({ target, event, callback }) => {
+      target.off(event, callback);
+    });
+    this._registeredListeners.length = 0;
+
     this._eventEmitter.removeAllListeners();
 
     logAutopoiesis.info("GameLogicManager destroyed");

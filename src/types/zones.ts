@@ -45,7 +45,8 @@ export interface ZoneDefinition {
     width: number;
     height: number;
   };
-  properties?: Record<string, unknown>;
+  properties?: Record<string, string | number | boolean>;
+  metadata?: Record<string, unknown>;
   benefits?: {
     energy?: number;
     happiness?: number;

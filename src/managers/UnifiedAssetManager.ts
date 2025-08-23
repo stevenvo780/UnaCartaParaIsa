@@ -1070,6 +1070,17 @@ export class UnifiedAssetManager {
       "dialogues",
     ]);
 
+    // Limpiar caches si exceden el límite
+    if (this.loadingPromises.size > 500) {
+      logAutopoiesis.warn("Limpiando cache de promesas de carga");
+      this.loadingPromises.clear();
+    }
+
+    if (this.assetsByType.size > 100) {
+      logAutopoiesis.warn("Limpiando cache de assets por tipo");
+      this.assetsByType.clear();
+    }
+
     this.loadedAssets.forEach((key) => {
       if (!keepSet.has(key)) {
         if (this.scene.textures.exists(key)) {

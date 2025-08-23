@@ -256,12 +256,12 @@ export class MemoryManager {
   /**
    * Estimar tamaño de objeto en bytes
    */
-  private estimateSize(obj: any): number {
+  private estimateSize(obj: object | string | number | boolean | null | undefined): number {
     const seen = new WeakSet();
 
-    const estimate = (obj: any): number => {
+    const estimate = (obj: object | string | number | boolean | null | undefined): number => {
       if (obj === null || obj === undefined) return 0;
-      if (seen.has(obj)) return 0;
+      if (typeof obj === 'object' && seen.has(obj as object)) return 0;
 
       const type = typeof obj;
 
@@ -271,16 +271,20 @@ export class MemoryManager {
         case "number":
           return 8;
         case "string":
-          return obj.length * 2; // UTF-16
+          return (obj as string).length * 2; // UTF-16
         case "object":
-          if (seen.has(obj)) return 0;
-          seen.add(obj);
+          if (obj === null) return 0;
+          
+          const objAsObject = obj as object;
+          if (seen.has(objAsObject)) return 0;
+          seen.add(objAsObject);
 
           if (Array.isArray(obj)) {
             return obj.reduce((size, item) => size + estimate(item), 0);
           } else {
-            return Object.keys(obj).reduce((size, key) => {
-              return size + key.length * 2 + estimate(obj[key]);
+            const objAsRecord = obj as Record<string, object | string | number | boolean | null | undefined>;
+            return Object.keys(objAsRecord).reduce((size, key) => {
+              return size + key.length * 2 + estimate(objAsRecord[key]);
             }, 0);
           }
         default:
@@ -362,10 +366,10 @@ export class MemoryManager {
     if (
       typeof window !== "undefined" &&
       "performance" in window &&
-      "memory" in (window.performance as any)
+      "memory" in (window.performance as unknown as { memory?: unknown })
     ) {
       setInterval(() => {
-        const memory = (window.performance as any).memory;
+        const memory = (window.performance as unknown as { memory: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
         const usedMB = memory.usedJSHeapSize / (1024 * 1024);
         const limitMB = memory.jsHeapSizeLimit / (1024 * 1024);
 
@@ -390,7 +394,7 @@ export class MemoryManager {
     if (
       typeof window !== "undefined" &&
       "performance" in window &&
-      "memory" in (window.performance as any)
+      "memory" in (window.performance as unknown as { memory?: unknown })
     ) {
       const memory = (window.performance as any).memory;
       const usedMB = memory.usedJSHeapSize / (1024 * 1024);
@@ -410,8 +414,8 @@ export class MemoryManager {
 
     while (this.isMemoryLow() && Date.now() - startTime < maxWait) {
       // Forzar garbage collection si está disponible
-      if (typeof window !== "undefined" && (window as any).gc) {
-        (window as any).gc();
+      if (typeof window !== "undefined" && (window as unknown as { gc?: () => void }).gc) {
+        (window as unknown as { gc: () => void }).gc();
       }
 
       await new Promise((resolve) => setTimeout(resolve, 100));

@@ -55,7 +55,9 @@ export default class MainScene extends Phaser.Scene {
     logAutopoiesis.info("🌍 Creating complete game world with entities...");
 
     // PRIMERO: Mostrar barra de progreso inmediatamente
-    const progressManager = this.registry.get("progressManager") as LoadingProgressManager;
+    const progressManager = this.registry.get(
+      "progressManager",
+    ) as LoadingProgressManager;
     if (progressManager) {
       setTimeout(() => {
         try {
@@ -95,10 +97,12 @@ export default class MainScene extends Phaser.Scene {
     this.progressManager = this.registry.get(
       "progressManager",
     ) as LoadingProgressManager;
-    
+
     // Si no hay progressManager, crear uno temporal para evitar errores
     if (!this.progressManager) {
-      logAutopoiesis.warn("⚠️ No se encontró progressManager, creando uno temporal");
+      logAutopoiesis.warn(
+        "⚠️ No se encontró progressManager, creando uno temporal",
+      );
       try {
         this.progressManager = new LoadingProgressManager(this);
         logAutopoiesis.info("✅ LoadingProgressManager creado exitosamente");
@@ -111,7 +115,7 @@ export default class MainScene extends Phaser.Scene {
           completePhase: () => {},
           isComplete: () => true,
           hideProgressBar: () => {},
-          showProgressBar: () => {}
+          showProgressBar: () => {},
         } as any;
       }
     }
@@ -230,42 +234,37 @@ export default class MainScene extends Phaser.Scene {
       // 15. UI de necesidades gestionada por UIScene
 
       // 16. Reemitir necesidades para UIScene y mostrar resumen
-      this.gameLogicManager.on("needsUpdated", (data: unknown) => {
+      this.gameLogicManager.on("needsUpdated", (data: { entityId: string; entityData: import('../systems/NeedsSystem').EntityNeedsData }) => {
         // Reemitir evento a otras escenas (UIScene)
         this.events.emit("needsUpdated", data);
 
-        // Estado resumido a mensajes - validación básica
-        if (typeof data === "object" && data !== null) {
-          const typedData = data as {
-            entityId?: string;
-            entityData?: { needs?: Record<string, number> };
-          };
+        // Estado resumido a mensajes
+        const typedData = data;
+        
+        if (typedData.entityId === "stev" || typedData.entityId === "isa") {
+          const needsData = typedData.entityData?.needs;
+          if (needsData) {
+            const criticalCount = Object.entries(needsData).filter(
+              ([key, value]) => key !== "lastUpdate" && value < 20,
+            ).length;
+            const warningCount = Object.entries(needsData).filter(
+              ([key, value]) =>
+                key !== "lastUpdate" && value < 40 && value >= 20,
+            ).length;
 
-          if (typedData.entityId === "stev" || typedData.entityId === "isa") {
-            const needsData = typedData.entityData?.needs;
-            if (needsData) {
-              const criticalCount = Object.entries(needsData).filter(
-                ([key, value]) => key !== "lastUpdate" && value < 20,
-              ).length;
-              const warningCount = Object.entries(needsData).filter(
-                ([key, value]) =>
-                  key !== "lastUpdate" && value < 40 && value >= 20,
-              ).length;
-
-              const level =
-                criticalCount > 0
-                  ? "critical"
-                  : warningCount > 0
-                    ? "warning"
-                    : "ok";
-              this.events.emit("systemEvent", {
-                type: level === "critical" ? "warning" : "system",
-                message:
-                  level === "ok"
-                    ? "Needs: estado normal"
-                    : `Needs: ${criticalCount} críticos, ${warningCount} advertencias`,
-              });
-            }
+            const level =
+              criticalCount > 0
+                ? "critical"
+                : warningCount > 0
+                  ? "warning"
+                  : "ok";
+            this.events.emit("systemEvent", {
+              type: level === "critical" ? "warning" : "system",
+              message:
+                level === "ok"
+                  ? "Needs: estado normal"
+                  : `Needs: ${criticalCount} críticos, ${warningCount} advertencias`,
+            });
           }
         }
       });

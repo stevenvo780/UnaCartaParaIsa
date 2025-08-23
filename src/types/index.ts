@@ -98,7 +98,10 @@ export interface MapElement {
     furnitureType?: string;
     assetId?: string;
     rotation?: number;
-    [key: string]: unknown;
+    scale?: number;
+    tint?: number;
+    interactive?: boolean;
+    collider?: boolean;
   };
 }
 
@@ -110,11 +113,19 @@ export interface Zone {
   effects?: Partial<Record<keyof EntityStats, number>>;
   color: string;
   attractiveness: number;
-  properties?: Record<string, unknown>;
+  properties?: {
+    comfort?: number;
+    privacy?: number;
+    lighting?: number;
+    temperature?: number;
+    noise?: number;
+  };
   metadata?: {
     furnitureTypes?: string[];
     priority?: number;
-    [key: string]: unknown;
+    biome?: string;
+    accessibility?: 'public' | 'private' | 'semi-private';
+    capacity?: number;
   };
 }
 
@@ -163,6 +174,31 @@ export interface ObjectLayer {
   visible: boolean;
 }
 
+export type WeatherType = 'sunny' | 'cloudy' | 'rainy' | 'foggy' | 'windy';
+
+export interface WeatherState {
+  current: WeatherType;
+  temperature: number; // Celsius
+  humidity: number; // 0-100
+  windSpeed: number; // km/h
+  visibility: number; // 0-1 (fog factor)
+  lastChange: number; // timestamp
+  duration: number; // how long this weather lasts
+}
+
+export interface GameResources {
+  energy: number;
+  materials: {
+    wood: number;
+    stone: number;
+    food: number;
+    water: number;
+  };
+  currency: number;
+  experience: number;
+  unlockedFeatures: string[];
+}
+
 export interface GameState {
   entities: Entity[];
   resonance: number;
@@ -188,7 +224,6 @@ export interface GameState {
   exploredBiomes?: string[]; // Biomas descubiertos
   unlockedAssets?: string[]; // Assets desbloqueados
   dayTime?: number;
-  weather?: any;
-  resources?: any;
-  [key: string]: unknown; // Index signature for compatibility
+  weather?: WeatherState;
+  resources?: GameResources;
 }

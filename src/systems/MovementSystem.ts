@@ -258,7 +258,7 @@ export class MovementSystem {
   /**
    * Verificar si un elemento es un obstáculo
    */
-  private isObstacle(element: any): boolean {
+  private isObstacle(element: { assetKey?: string; collides?: boolean }): boolean {
     // Elementos que bloquean el paso
     const obstacles = [
       "tree",

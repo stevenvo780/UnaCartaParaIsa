@@ -136,22 +136,21 @@ export class ResonanceBar extends Phaser.GameObjects.Container {
   /**
    * Actualiza la resonancia basada en estado del juego
    */
-  public updateFromGameState(gameState: Record<string, unknown>): void {
+  public updateFromGameState(gameState: Record<string, number | string | boolean | object | null | undefined>): void {
     if (!gameState) return;
 
     let resonance = 0.5; // Base neutral
 
     // Factores que afectan la resonancia
     if (gameState.entities && typeof gameState.entities === "object") {
-      const entities = Object.values(gameState.entities) as Record<
-        string,
-        unknown
-      >[];
+      const entities = Object.values(gameState.entities) as Array<{
+        needs?: Record<string, number>;
+      }>;
 
       // Bienestar promedio de entidades
       const avgWellbeing =
-        entities.reduce((sum: number, entity: Record<string, unknown>) => {
-          const needs = (entity.needs as Record<string, number>) || {};
+        entities.reduce((sum: number, entity: { needs?: Record<string, number> }) => {
+          const needs = entity.needs || {};
           const needsSum = Object.values(needs).reduce(
             (s: number, n: number) => s + n,
             0,
@@ -163,7 +162,7 @@ export class ResonanceBar extends Phaser.GameObjects.Container {
     }
 
     // Factor de tiempo (día/noche)
-    const dayNightCycle = gameState.dayNightCycle as Record<string, unknown>;
+    const dayNightCycle = gameState.dayNightCycle as Record<string, number | string | boolean> | undefined;
     if (
       dayNightCycle?.timeOfDay &&
       typeof dayNightCycle.timeOfDay === "number"

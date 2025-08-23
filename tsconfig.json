@@ -25,16 +25,16 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": false,
 
-    /* Type Checking - VERY RELAXED for personal artistic project */
-    "strict": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false,
-    "strictPropertyInitialization": false,
-    "noImplicitThis": false,
-    "useUnknownInCatchVariables": false,
-    "alwaysStrict": false,
+    /* Type Checking - STRICT for better quality */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": false, // Keep relaxed for Phaser compatibility
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+    "alwaysStrict": true,
     "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": false,
     "noUncheckedIndexedAccess": false,
@@ -55,6 +55,7 @@
   "include": [
     "src/**/*",
     "vite.config.ts",
+    "vitest.config.ts",
     "eslint.config.mjs",
     "scripts/**/*"
   ],

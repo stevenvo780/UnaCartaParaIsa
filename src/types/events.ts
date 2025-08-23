@@ -34,7 +34,7 @@ export interface MapElement {
   width?: number;
   height?: number;
   priceMultiplier?: number;
-  properties?: Record<string, any>;
+  properties?: Record<string, string | number | boolean>;
 }
 
 /**
@@ -162,7 +162,7 @@ export interface QuestEventData {
   }>;
   objectives: Array<{
     type: string;
-    target?: any;
+    target?: string | number;
     completed: boolean;
   }>;
 }
@@ -174,9 +174,9 @@ export interface GeneratedWorldData {
   zones: ZoneDefinition[];
   mapElements: MapElement[];
   generatedWorld?: GeneratedWorld;
-  terrainTiles: any[];
-  roads: any[];
-  objectLayers: any[];
+  terrainTiles: Array<{ x: number; y: number; assetId: string; type: string }>;
+  roads: Array<{ id: string; points: Array<{ x: number; y: number }>; width: number }>;
+  objectLayers: Array<{ id: string; name: string; objects: MapElement[]; zIndex: number }>;
   worldSize: { width: number; height: number };
   generatorVersion: string;
 }
@@ -226,22 +226,22 @@ export interface GameEvents {
   playerInteraction: PlayerInteractionData;
   uiUpdate: GameLogicUpdateData;
   wheelScroll: { deltaX: number; deltaY: number };
-  needsUpdated: { entityId: string; entityData: any };
+  needsUpdated: { entityId: string; entityData: import('../systems/NeedsSystem').EntityNeedsData };
 }
 
 /**
  * Event emitter tipado
  */
-export interface TypedEventEmitter<T extends Record<string, any>> {
+export interface TypedEventEmitter<T extends Record<string, object | string | number | boolean>> {
   on<K extends keyof T>(
     event: K,
     listener: (data: T[K]) => void,
-    context?: any,
+    context?: object,
   ): void;
   off<K extends keyof T>(
     event: K,
     listener?: (data: T[K]) => void,
-    context?: any,
+    context?: object,
   ): void;
   emit<K extends keyof T>(event: K, data: T[K]): void;
 }

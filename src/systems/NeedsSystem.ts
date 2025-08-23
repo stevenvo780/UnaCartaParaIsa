@@ -815,7 +815,7 @@ export class NeedsSystem {
   /**
    * Suscribirse a eventos de necesidades
    */
-  public on(event: string, callback: (...args: any[]) => void): void {
+  public on(event: string, callback: (...args: Array<string | number | boolean | object>) => void): void {
     this.needsEvents.on(event, callback);
   }
 

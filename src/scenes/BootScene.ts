@@ -33,7 +33,7 @@ export default class BootScene extends Phaser.Scene {
   private createEnhancedLoadingBar(): void {
     // Crear e inicializar el LoadingProgressManager real
     this.progressManager = new LoadingProgressManager(this);
-    
+
     // Mostrar la barra inmediatamente (usará HTML fallback si Phaser no está listo)
     this.progressManager.showProgressBar();
 
@@ -285,14 +285,14 @@ export default class BootScene extends Phaser.Scene {
       // Load as spritesheets for animations - check for valid data URL
       const isaDataURL = isaCanvas.toDataURL();
       const stevDataURL = stevCanvas.toDataURL();
-      
+
       logAutopoiesis.debug("🎨 Creating spritesheets", {
         isaDataLength: isaDataURL.length,
         stevDataLength: stevDataURL.length,
-        hasValidIsa: isaDataURL.startsWith('data:image'),
-        hasValidStev: stevDataURL.startsWith('data:image')
+        hasValidIsa: isaDataURL.startsWith("data:image"),
+        hasValidStev: stevDataURL.startsWith("data:image"),
       });
-      
+
       this.load.spritesheet("isa_spritesheet", isaDataURL, {
         frameWidth: spriteSize,
         frameHeight: spriteSize,
@@ -313,7 +313,7 @@ export default class BootScene extends Phaser.Scene {
 
   create() {
     logAutopoiesis.info("🎯 BootScene.create() iniciado");
-    
+
     // Crear sprites básicos ahora que Phaser está completamente inicializado
     try {
       this.createBasicSprites();
@@ -321,7 +321,7 @@ export default class BootScene extends Phaser.Scene {
     } catch (error) {
       logAutopoiesis.error("❌ Error creando sprites básicos:", error);
     }
-    
+
     logAutopoiesis.info(
       "🔄 Registrando UnifiedAssetManager y cambiando a MainScene...",
     );
