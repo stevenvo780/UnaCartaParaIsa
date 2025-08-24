@@ -273,7 +273,7 @@ export class DiverseWorldComposer {
 
     for (const cluster of clusters) {
       const clusterAssets = this.getClusterAssets(cluster.type, allVegetation);
-      const density = 8 + Math.random() * 15; // 8-23 items por cluster
+      const density = 6 + Math.random() * 8; // 6-14 items por cluster (muy conservador)
 
       for (let i = 0; i < density; i++) {
         // Distribución gaussiana alrededor del centro del cluster
@@ -416,8 +416,8 @@ export class DiverseWorldComposer {
       );
     }
 
-    // Distribución orgánica de detalles (aumentada para más diversidad)
-    const detailDensity = 0.08; // 8% de tiles (4x más assets)
+    // Distribución orgánica de detalles (muy conservador)
+    const detailDensity = 0.06; // 6% de tiles (muy conservador)
     const totalTiles =
       (this.world.config.width / 32) * (this.world.config.height / 32);
     const targetCount = Math.floor(totalTiles * detailDensity);
@@ -555,7 +555,7 @@ export class DiverseWorldComposer {
 
     // Props dispersos por el mundo basado en biomas (aumentado para más diversidad)
     const scatteredCount = Math.floor(
-      (this.world.config.width * this.world.config.height) / 150, // Cambió de 500 a 150 para más props
+      (this.world.config.width * this.world.config.height) / 200, // Muy conservador
     );
 
     for (let i = 0; i < scatteredCount; i++) {
@@ -791,7 +791,7 @@ export class DiverseWorldComposer {
           radius: 80 + Math.random() * 120, // 80-200 radio
           biome,
           type: clusterType,
-          density: 0.6 + Math.random() * 0.4,
+          density: 0.4 + Math.random() * 0.3, // Densidad muy conservadora en clusters
         });
 
         if (clusters.length >= count) break;
@@ -913,7 +913,7 @@ export class DiverseWorldComposer {
           radius: 150 + Math.random() * 100,
           biome,
           type: "ruins_site",
-          density: 0.3 + Math.random() * 0.4,
+          density: 0.2 + Math.random() * 0.3, // Densidad muy conservadora en ruinas
         });
 
         if (clusters.length >= count) break;

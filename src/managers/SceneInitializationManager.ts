@@ -27,7 +27,38 @@ export class SceneInitializationManager {
 
     // Crear un estado de juego básico primero
     const gameState: GameState = {
-      zones: [],
+      zones: [
+        // Zona de comida grande y visible (verde brillante)
+        {
+          id: "food_zone_central",
+          type: "food" as const,
+          name: "Zona de Alimentación Central",
+          bounds: { x: 1200, y: 1000, width: 400, height: 400 },
+          color: "#00FF00", // Verde brillante
+          attractiveness: 8,
+          effects: { energy: 10, happiness: 5 },
+        },
+        // Zona de agua/hidratación (azul brillante)
+        {
+          id: "water_zone_north",
+          type: "water" as const,
+          name: "Fuente de Agua Norte",
+          bounds: { x: 800, y: 600, width: 300, height: 300 },
+          color: "#00BFFF", // Azul celeste brillante
+          attractiveness: 7,
+          effects: { energy: 8, comfort: 6 },
+        },
+        // Zona de descanso (morado)
+        {
+          id: "rest_zone_south",
+          type: "rest" as const,
+          name: "Área de Descanso",
+          bounds: { x: 1600, y: 1800, width: 350, height: 350 },
+          color: "#FF00FF", // Magenta brillante
+          attractiveness: 9,
+          effects: { energy: 15, comfort: 10, happiness: 8 },
+        },
+      ],
       mapElements: [],
       entities: [],
       resonance: 0,

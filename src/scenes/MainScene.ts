@@ -2,8 +2,10 @@ import { AnimationManager } from "../managers/AnimationManager";
 import { EntityManager } from "../managers/EntityManager";
 import { GameLogicManager } from "../managers/GameLogicManager";
 import { InputManager } from "../managers/InputManager";
+import { PerformanceManager } from "../managers/PerformanceManager";
 import { SceneInitializationManager } from "../managers/SceneInitializationManager";
 import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
+import { ZoneRenderer } from "../managers/ZoneRenderer";
 import { logAutopoiesis } from "../utils/logger";
 import { LoadingProgressManager } from "../utils/LoadingProgressManager";
 import { DiverseWorldComposer } from "../world/DiverseWorldComposer";
@@ -23,6 +25,8 @@ export default class MainScene extends Phaser.Scene {
   public entityManager!: EntityManager;
   public inputManager!: InputManager;
   public animationManager!: AnimationManager;
+  public performanceManager!: PerformanceManager;
+  public zoneRenderer!: ZoneRenderer;
 
   // Sistema de mundo diverso
   private worldComposer!: DiverseWorldComposer;
@@ -82,6 +86,8 @@ export default class MainScene extends Phaser.Scene {
     this.entityManager = new EntityManager(this);
     this.inputManager = new InputManager(this);
     this.animationManager = new AnimationManager(this);
+    this.performanceManager = new PerformanceManager(this);
+    this.zoneRenderer = new ZoneRenderer(this);
     this.entities = this.add.group();
 
     // 3. Crear todas las animaciones desde los nuevos sprites
@@ -133,7 +139,7 @@ export default class MainScene extends Phaser.Scene {
       // 5. Generar mundo base simple primero
       this.progressManager?.startPhase(
         "world_generation",
-        "Generando terreno 200x200...",
+        "Generando terreno 180x180...",
       );
       const baseWorld = this.generateBasicWorld();
       this.progressManager?.completePhase(
@@ -190,6 +196,20 @@ export default class MainScene extends Phaser.Scene {
       this.worldRenderer.setPerformanceMode(false);
       this.performanceMode = false;
 
+      // 9.5. Renderizar zonas de recuperación de forma visible
+      this.progressManager?.startPhase(
+        "zone_rendering",
+        "Dibujando zonas de recuperación...",
+      );
+      this.zoneRenderer.renderZones(gameState.zones);
+      this.progressManager?.completePhase(
+        "zone_rendering",
+        "Zonas renderizadas exitosamente",
+      );
+      logAutopoiesis.info("🎨 Zonas de recuperación renderizadas", {
+        count: gameState.zones.length
+      });
+
       // 10. Crear entidades y lógica del juego
       this.progressManager?.startPhase(
         "entities",
@@ -234,40 +254,46 @@ export default class MainScene extends Phaser.Scene {
       // 15. UI de necesidades gestionada por UIScene
 
       // 16. Reemitir necesidades para UIScene y mostrar resumen
-      this.gameLogicManager.on("needsUpdated", (data: { entityId: string; entityData: import('../systems/NeedsSystem').EntityNeedsData }) => {
-        // Reemitir evento a otras escenas (UIScene)
-        this.events.emit("needsUpdated", data);
+      this.gameLogicManager.on(
+        "needsUpdated",
+        (data: {
+          entityId: string;
+          entityData: import("../systems/NeedsSystem").EntityNeedsData;
+        }) => {
+          // Reemitir evento a otras escenas (UIScene)
+          this.events.emit("needsUpdated", data);
 
-        // Estado resumido a mensajes
-        const typedData = data;
-        
-        if (typedData.entityId === "stev" || typedData.entityId === "isa") {
-          const needsData = typedData.entityData?.needs;
-          if (needsData) {
-            const criticalCount = Object.entries(needsData).filter(
-              ([key, value]) => key !== "lastUpdate" && value < 20,
-            ).length;
-            const warningCount = Object.entries(needsData).filter(
-              ([key, value]) =>
-                key !== "lastUpdate" && value < 40 && value >= 20,
-            ).length;
+          // Estado resumido a mensajes
+          const typedData = data;
 
-            const level =
-              criticalCount > 0
-                ? "critical"
-                : warningCount > 0
-                  ? "warning"
-                  : "ok";
-            this.events.emit("systemEvent", {
-              type: level === "critical" ? "warning" : "system",
-              message:
-                level === "ok"
-                  ? "Needs: estado normal"
-                  : `Needs: ${criticalCount} críticos, ${warningCount} advertencias`,
-            });
+          if (typedData.entityId === "stev" || typedData.entityId === "isa") {
+            const needsData = typedData.entityData?.needs;
+            if (needsData) {
+              const criticalCount = Object.entries(needsData).filter(
+                ([key, value]) => key !== "lastUpdate" && value < 20,
+              ).length;
+              const warningCount = Object.entries(needsData).filter(
+                ([key, value]) =>
+                  key !== "lastUpdate" && value < 40 && value >= 20,
+              ).length;
+
+              const level =
+                criticalCount > 0
+                  ? "critical"
+                  : warningCount > 0
+                    ? "warning"
+                    : "ok";
+              this.events.emit("systemEvent", {
+                type: level === "critical" ? "warning" : "system",
+                message:
+                  level === "ok"
+                    ? "Needs: estado normal"
+                    : `Needs: ${criticalCount} críticos, ${warningCount} advertencias`,
+              });
+            }
           }
-        }
-      });
+        },
+      );
 
       // 17. Completar carga de entidades y ocultar barra de progreso
       this.progressManager?.completePhase(
@@ -375,10 +401,10 @@ export default class MainScene extends Phaser.Scene {
    * Genera un mundo básico cuadrado para testing
    */
   private generateBasicWorld(): GeneratedWorld {
-    // Configuración para un mundo que cubra bien el área sin exceder límites
-    const worldWidth = 200;  // 200 tiles de ancho
-    const worldHeight = 200; // 200 tiles de alto = 40,000 tiles total (bajo límite de 50k)
-    const tileSize = 32;     // Tamaño normal de tiles (32x32 píxeles)
+    // Configuración balanceada para no exceder límites con objetos densos
+    const worldWidth = 180; // 180 tiles de ancho
+    const worldHeight = 180; // 180 tiles de alto = 32,400 tiles base
+    const tileSize = 32; // Tamaño normal de tiles (32x32 píxeles)
 
     const config: WorldGenConfig = {
       width: worldWidth,
@@ -453,7 +479,10 @@ export default class MainScene extends Phaser.Scene {
           biome = BiomeType.MOUNTAINOUS;
         } else if (x < quarterWidth && y > worldHeight - quarterHeight) {
           biome = BiomeType.WETLAND;
-        } else if (x > worldWidth - quarterWidth && y > worldHeight - quarterHeight) {
+        } else if (
+          x > worldWidth - quarterWidth &&
+          y > worldHeight - quarterHeight
+        ) {
           biome = BiomeType.FOREST;
         } else {
           // Resto: pradera
@@ -510,6 +539,11 @@ export default class MainScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number) {
+    // Actualizar performance manager primero para optimizar el frame
+    if (this.performanceManager) {
+      this.performanceManager.update(time, delta);
+    }
+    
     // Update loop real - ejecutar lógica de juego
     if (this.gameLogicManager) {
       this.gameLogicManager.update(delta / 1000); // Convertir a segundos
@@ -522,6 +556,11 @@ export default class MainScene extends Phaser.Scene {
         camera.scrollX + camera.width / 2,
         camera.scrollY + camera.height / 2,
       );
+    }
+
+    // Actualizar visibilidad de zonas basado en zoom
+    if (this.zoneRenderer && this.cameras?.main) {
+      this.zoneRenderer.updateVisibility(this.cameras.main.zoom);
     }
 
     // Usar tiempo absoluto para sincronización (ejemplo futuro:
@@ -634,6 +673,31 @@ export default class MainScene extends Phaser.Scene {
           logAutopoiesis.info(`📷 Cámara centrada en ${controlled}`);
         }
       }
+    });
+
+    // Controles de zoom suaves con rueda del mouse
+    this.input.on('wheel', (pointer: any, gameObjects: any, deltaX: number, deltaY: number) => {
+      const camera = this.cameras.main;
+      const currentZoom = camera.zoom;
+      
+      // Límites conservadores para mantener rendimiento
+      const minZoom = 0.5;
+      const maxZoom = 1.5;
+      
+      // Zoom suave
+      const zoomFactor = deltaY > 0 ? 0.95 : 1.05;
+      const newZoom = Phaser.Math.Clamp(currentZoom * zoomFactor, minZoom, maxZoom);
+      
+      camera.setZoom(newZoom);
+    });
+
+    // Z para toggle de zonas de recuperación
+    this.input.keyboard?.on("keydown-Z", () => {
+      const container = this.zoneRenderer.getContainer();
+      const newVisibility = !container.visible;
+      container.setVisible(newVisibility);
+      
+      logAutopoiesis.info(`🎨 Zonas de recuperación ${newVisibility ? 'mostradas' : 'ocultas'}`);
     });
   }
 }
