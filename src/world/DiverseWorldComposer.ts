@@ -23,6 +23,7 @@ export interface PlacedAsset {
   tint: number;
   depth: number;
   metadata?: Record<string, unknown>;
+  bounds?: { x: number; y: number; width: number; height: number };
 }
 
 export interface RenderLayer {
@@ -47,6 +48,8 @@ export interface ClusterPoint {
   biome: BiomeType;
   type:
     | "forest_grove"
+    | "dense_forest"
+    | "tree_line"
     | "rock_formation"
     | "flower_meadow"
     | "mushroom_circle"
@@ -54,8 +57,12 @@ export interface ClusterPoint {
     | "water_feature"
     | "village_settlement"
     | "city_district"
-    | "market_square";
+    | "market_square"
+    | "residential_area"
+    | "commercial_zone"
+    | "park_area";
   density: number;
+  occupiedPositions?: Array<{ x: number; y: number; radius: number }>;
 }
 
 export interface ComposedWorld {
@@ -74,7 +81,10 @@ export class DiverseWorldComposer {
   private noise: NoiseUtils;
   private assetLoader: CreativeAssetLoader;
   private assetPool: Map<string, AssetInfo[]> = new Map();
+  private vegetationAssets: Map<string, AssetInfo[]> = new Map();
+  private buildingAssets: Map<string, AssetInfo[]> = new Map();
   private world: GeneratedWorld;
+  private placedAssets: PlacedAsset[] = [];
 
   constructor(scene: Phaser.Scene, seed: string) {
     this.noise = new NoiseUtils(seed);
@@ -119,7 +129,7 @@ export class DiverseWorldComposer {
     // 7. Capa de efectos - Detalles atmosféricos
     layers.push(await this.createEffectsLayer());
 
-    const clusters = this.generateClusterPoints(30); // 30 clusters total (mínimo para testing)
+    const clusters = this.generateClusterPoints(50); // 50 clusters total (mayor densidad)
     const stats = this.calculateDiversityStats(layers);
 
     const totalCompositionTime = Date.now() - startTime;
@@ -148,6 +158,9 @@ export class DiverseWorldComposer {
     await this.assetLoader.loadAllAssets();
     logAutopoiesis.debug("🎯 assetLoader.loadAllAssets() completed!");
 
+    // Separar assets en vegetación y edificaciones
+    this.separateVegetationAndBuildings();
+    
     // Organizar assets por categorías amplias
     const categories = [
       "terrain",
@@ -276,19 +289,66 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Crea capa de vegetación con clusters naturales
+   * Separa assets en vegetación y edificaciones
+   */
+  private separateVegetationAndBuildings(): void {
+    const allAssets = this.assetLoader.getAllAssets();
+    
+    // Separar vegetación
+    const trees = allAssets.filter(asset => 
+      asset.type === 'tree' || asset.key.includes('tree') || asset.key.includes('oak'));
+    const foliage = allAssets.filter(asset => 
+      asset.type === 'foliage' || asset.key.includes('bush') || asset.key.includes('grass'));
+    const mushrooms = allAssets.filter(asset => 
+      asset.type === 'mushroom' || asset.key.includes('mushroom'));
+    
+    this.vegetationAssets.set('trees', trees);
+    this.vegetationAssets.set('foliage', foliage);
+    this.vegetationAssets.set('mushrooms', mushrooms);
+    
+    // Separar edificaciones
+    const structures = allAssets.filter(asset => 
+      asset.type === 'structure' || asset.key.includes('house') || asset.key.includes('building'));
+    const props = allAssets.filter(asset => 
+      asset.type === 'prop' || asset.key.includes('chair') || asset.key.includes('table'));
+    const ruins = allAssets.filter(asset => 
+      asset.type === 'ruin' || asset.key.includes('ruin'));
+    
+    this.buildingAssets.set('structures', structures);
+    this.buildingAssets.set('props', props);
+    this.buildingAssets.set('ruins', ruins);
+    
+    logAutopoiesis.info('🌿 Assets separados:', {
+      vegetation: {
+        trees: trees.length,
+        foliage: foliage.length, 
+        mushrooms: mushrooms.length
+      },
+      buildings: {
+        structures: structures.length,
+        props: props.length,
+        ruins: ruins.length
+      }
+    });
+  }
+
+  /**
+   * Crea capa de vegetación con clusters naturales y zonas verdes densas
    */
   private async createVegetationLayer(): Promise<RenderLayer> {
     const assets: PlacedAsset[] = [];
-    const clusters = this.generateVegetationClusters(5); // Solo 5 clusters para testing performance
-
-    const treeAssets = this.assetPool.get("tree") || [];
-    const foliageAssets = this.assetPool.get("foliage") || [];
+    
+    // Generar más clusters con diferentes tipos
+    const forestClusters = this.generateVegetationClusters(8); // Más clusters de bosque
+    const greenZones = this.generateGreenZones(5); // Nuevas zonas verdes densas
+    
+    const treeAssets = this.vegetationAssets.get('trees') || [];
+    const foliageAssets = this.vegetationAssets.get('foliage') || [];
     let allVegetation = [...treeAssets, ...foliageAssets];
 
-    // Debug simplificado
+    // Debug mejorado
     logAutopoiesis.info(
-      `🌳 Vegetación: ${treeAssets.length} árboles, ${foliageAssets.length} arbustos`,
+      `🌳 Vegetación mejorada: ${treeAssets.length} árboles, ${foliageAssets.length} arbustos`,
     );
 
     // Si no hay assets cargados, usar fallbacks básicos
@@ -300,9 +360,10 @@ export class DiverseWorldComposer {
       ];
     }
 
-    for (const cluster of clusters) {
+    // Procesar clusters de bosque con densidad aumentada
+    for (const cluster of forestClusters) {
       const clusterAssets = this.getClusterAssets(cluster.type, allVegetation);
-      const density = 2; // Solo 2 items por cluster para testing
+      const density = this.getDensityForCluster(cluster.type); // Densidad variable
 
       for (let i = 0; i < density; i++) {
         // Distribución gaussiana alrededor del centro del cluster
@@ -326,35 +387,48 @@ export class DiverseWorldComposer {
         const asset = this.weightedRandomSelect(clusterAssets);
         if (!asset) continue; // Skip if no assets available
 
-        // Escalas diferentes para árboles vs arbustos
-        const scale = asset.key.includes("tree")
-          ? 2.0 + Math.random() * 1.5 // 2.0x-3.5x para árboles (grandes y visibles)
-          : 1.0 + Math.random() * 0.5; // 1.0x-1.5x para arbustos
+        // Verificar anti-solapamiento
+        if (this.wouldOverlap(x, y, asset)) {
+          continue;
+        }
 
-        // Debug mínimo
-        if (i === 0)
-          logAutopoiesis.debug(`🌱 Cluster ${cluster.type}: ${asset.key}`);
+        // Escalas diferentes para árboles vs arbustos con más variedad
+        const scale = asset.key.includes("tree")
+          ? 1.8 + Math.random() * 2.0 // 1.8x-3.8x para árboles (más variados)
+          : 0.8 + Math.random() * 0.8; // 0.8x-1.6x para arbustos
+
         const rotation = getSelectiveRotation("vegetation", asset.key);
         const tint = this.getVariationTint(cluster.biome);
 
-        assets.push({
+        const placedAsset: PlacedAsset = {
           asset,
           x,
           y,
           scale,
           rotation,
           tint,
-          depth: y + 10 + (asset.key.includes("tree") ? 50 : 0), // Árboles más visibles, arbustos abajo
+          depth: y + 10 + (asset.key.includes("tree") ? 50 : 0),
+          bounds: this.calculateAssetBounds(x, y, scale, asset),
           metadata: {
             clusterId: cluster.type,
             clusterCenter: { x: cluster.x, y: cluster.y },
+            assetType: 'vegetation'
           },
-        });
+        };
+        
+        assets.push(placedAsset);
+        this.placedAssets.push(placedAsset);
       }
     }
 
+    // Procesar zonas verdes densas
+    for (const greenZone of greenZones) {
+      const zoneAssets = this.populateGreenZone(greenZone, treeAssets);
+      assets.push(...zoneAssets);
+    }
+
     logAutopoiesis.info(
-      `🌳 Vegetación: ${assets.length} assets en ${clusters.length} clusters`,
+      `🌳 Vegetación mejorada: ${assets.length} assets en ${forestClusters.length} clusters y ${greenZones.length} zonas verdes`,
     );
 
     return {
@@ -367,12 +441,14 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Crea capa de estructuras (ruinas, edificios)
+   * Crea capa de estructuras mejorada con mejor separación de assets
    */
   private async createStructureLayer(): Promise<RenderLayer> {
     const assets: PlacedAsset[] = [];
-    const structureAssets = this.assetPool.get("structure") || [];
-    const ruinAssets = this.assetPool.get("ruin") || [];
+    
+    // Usar assets separados de edificaciones
+    const structureAssets = this.buildingAssets.get('structures') || [];
+    const ruinAssets = this.buildingAssets.get('ruins') || [];
     let allStructures = [...structureAssets, ...ruinAssets];
 
     // Si no hay assets cargados, usar fallbacks básicos
@@ -384,16 +460,24 @@ export class DiverseWorldComposer {
       ];
     }
 
-    // Generar estructuras en ubicaciones estratégicas (reducido para testing)
-    const structureClusters = this.generateStructureClusters(5); // Solo 5 para testing
+    // Generar más clusters de estructuras con mayor densidad
+    const structureClusters = this.generateStructureClusters(12); // Más clusters
+    const settlementClusters = this.generateSettlementClusters(8); // Nuevos asentamientos
 
+    // Procesar clusters de estructuras tradicionales
     for (const cluster of structureClusters) {
       const clusterAssets = this.getClusterAssets(cluster.type, allStructures);
-      const structureCount = 1 + Math.floor(Math.random() * 3); // 1-3 estructuras por cluster
+      const structureCount = this.getStructureCount(cluster.type);
 
-      for (let i = 0; i < structureCount; i++) {
-        const angle = (i / structureCount) * Math.PI * 2 + Math.random() * 0.5;
-        const distance = Math.random() * cluster.radius * 0.5;
+      let placedInCluster = 0;
+      let attempts = 0;
+      const maxAttempts = structureCount * 3;
+
+      while (placedInCluster < structureCount && attempts < maxAttempts) {
+        attempts++;
+        
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * cluster.radius * 0.7;
 
         const x = cluster.x + Math.cos(angle) * distance;
         const y = cluster.y + Math.sin(angle) * distance;
@@ -401,34 +485,59 @@ export class DiverseWorldComposer {
         if (
           x < 50 ||
           y < 50 ||
-          x > this.world.config.width - 50 ||
-          y > this.world.config.height - 50
+          x > this.world.config.width * 32 - 50 ||
+          y > this.world.config.height * 32 - 50
         ) {
           continue;
         }
 
         const asset = this.weightedRandomSelect(clusterAssets);
-        if (!asset) continue; // Skip if no assets available
+        if (!asset) continue;
 
-        assets.push({
+        // Verificar anti-solapamiento
+        if (this.wouldOverlap(x, y, asset)) {
+          continue;
+        }
+
+        const scale = 1.2 + Math.random() * 1.0; // 1.2x-2.2x estructuras variadas
+        const rotation = getSelectiveRotation("structure", asset.key);
+        const tint = this.getStructureTint(cluster.biome);
+
+        const placedAsset: PlacedAsset = {
           asset,
           x,
           y,
-          scale: 1.5 + Math.random() * 1.0, // 1.5x-2.5x (estructuras más razonables)
-          rotation: getSelectiveRotation("structure", asset.key),
-          tint: this.getStructureTint(cluster.biome),
-          depth: y + 200, // Estructuras bien por encima de vegetación
+          scale,
+          rotation,
+          tint,
+          depth: y + 200,
+          bounds: this.calculateAssetBounds(x, y, scale, asset),
           metadata: {
             structureType: cluster.type,
             biome: cluster.biome,
+            assetType: 'building'
           },
-        });
+        };
+
+        assets.push(placedAsset);
+        this.placedAssets.push(placedAsset);
+        placedInCluster++;
       }
     }
 
+    // Procesar asentamientos
+    for (const settlement of settlementClusters) {
+      const settlementAssets = this.populateSettlementStructures(settlement, structureAssets);
+      assets.push(...settlementAssets);
+    }
+
+    logAutopoiesis.info(
+      `🏠 Estructuras: ${assets.length} edificios en ${structureClusters.length} clusters y ${settlementClusters.length} asentamientos`,
+    );
+
     return {
       type: "structure",
-      name: "Structures & Ruins",
+      name: "Buildings & Settlements",
       assets,
       zIndex: 3,
       visible: true,
@@ -436,12 +545,12 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Crea capa de detalles pequeños distribuidos
+   * Crea capa de detalles con mayor densidad y variedad
    */
   private async createDetailLayer(): Promise<RenderLayer> {
     const assets: PlacedAsset[] = [];
     const rockAssets = this.assetPool.get("rock") || [];
-    const mushroomAssets = this.assetPool.get("mushroom") || [];
+    const mushroomAssets = this.vegetationAssets.get('mushrooms') || [];
     const decorationAssets = this.assetPool.get("decoration") || [];
     const allDetails = [...rockAssets, ...mushroomAssets, ...decorationAssets];
 
@@ -454,45 +563,95 @@ export class DiverseWorldComposer {
       );
     }
 
-    // Distribución orgánica de detalles (mínimo para testing)
-    const detailDensity = 0.05; // 5% de tiles (muy poco para testing)
-    const totalTiles =
-      (this.world.config.width / 32) * (this.world.config.height / 32);
+    // Aumentar significativamente la densidad de detalles
+    const detailDensity = 0.25; // 25% de tiles (5x más denso)
+    const totalTiles = (this.world.config.width / 32) * (this.world.config.height / 32);
     const targetCount = Math.floor(totalTiles * detailDensity);
 
-    for (let i = 0; i < targetCount; i++) {
+    let placedDetails = 0;
+    let attempts = 0;
+    const maxAttempts = targetCount * 2;
+
+    while (placedDetails < targetCount && attempts < maxAttempts) {
+      attempts++;
+      
       // Convertir de tiles a píxeles para coincidir con terreno
       const x = Math.random() * this.world.config.width * 32;
       const y = Math.random() * this.world.config.height * 32;
 
-      // Usar ruido para crear agrupaciones naturales
-      const clusterNoise = this.noise.noise2D(x * 0.01, y * 0.01);
-      const shouldPlace = clusterNoise > 0.2; // Solo en áreas "positivas" del ruido
+      // Usar ruido más permisivo para crear agrupaciones naturales
+      const clusterNoise = this.noise.noise2D(x * 0.008, y * 0.008);
+      const shouldPlace = clusterNoise > -0.1; // Más permisivo
 
       if (shouldPlace) {
         const asset = this.weightedRandomSelect(allDetails);
-        if (!asset) continue; // Skip if no assets available
+        if (!asset) continue;
 
-        assets.push({
+        // Verificar anti-solapamiento con tolerancia para detalles pequeños
+        const bounds = this.calculateAssetBounds(x, y, 1.0, asset);
+        const tooClose = this.placedAssets.some(placedAsset => {
+          if (!placedAsset.bounds) return false;
+          const distance = Math.hypot(
+            bounds.x - placedAsset.bounds.x,
+            bounds.y - placedAsset.bounds.y
+          );
+          return distance < 20; // Menor distancia para detalles
+        });
+
+        if (tooClose) continue;
+
+        const scale = 0.6 + Math.random() * 0.9; // 0.6x-1.5x (más variedad)
+        const rotation = getSelectiveRotation("detail", asset.key);
+        const tint = this.getDetailTint(asset.type || 'rock');
+
+        const placedAsset: PlacedAsset = {
           asset,
           x,
           y,
-          scale: 0.8 + Math.random() * 0.7, // 0.8x-1.5x (detalles pequeños)
-          rotation: getSelectiveRotation("detail", asset.key),
-          tint: 0xffffff,
-          depth: y - 20, // Claramente por debajo de vegetación
-          metadata: { type: "scattered_detail" },
-        });
+          scale,
+          rotation,
+          tint,
+          depth: y - 20,
+          bounds: this.calculateAssetBounds(x, y, scale, asset),
+          metadata: { 
+            type: "scattered_detail",
+            assetType: 'detail'
+          },
+        };
+
+        assets.push(placedAsset);
+        this.placedAssets.push(placedAsset);
+        placedDetails++;
       }
     }
 
+    logAutopoiesis.info(
+      `🌿 Detalles: ${assets.length} elementos decorativos distribuidos`,
+    );
+
     return {
       type: "detail",
-      name: "Scattered Details",
+      name: "Rich Details",
       assets,
       zIndex: 1,
       visible: true,
     };
+  }
+
+  /**
+   * Obtiene tint para detalles según su tipo
+   */
+  private getDetailTint(assetType: string): number {
+    switch (assetType) {
+      case 'rock':
+        return 0xf5f5f5; // Gris claro para rocas
+      case 'mushroom':
+        return 0xffefd5; // Papaya para hongos
+      case 'decoration':
+        return 0xffffff; // Blanco para decoraciones
+      default:
+        return 0xffffff;
+    }
   }
 
   /**
@@ -816,7 +975,123 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Genera puntos de cluster para vegetación
+   * Calcula la densidad según el tipo de cluster
+   */
+  private getDensityForCluster(clusterType: string): number {
+    switch (clusterType) {
+      case 'dense_forest':
+        return 12 + Math.floor(Math.random() * 8); // 12-20 árboles por cluster denso
+      case 'forest_grove':
+        return 6 + Math.floor(Math.random() * 6); // 6-12 árboles por bosquecillo
+      case 'tree_line':
+        return 8 + Math.floor(Math.random() * 4); // 8-12 árboles en línea
+      case 'flower_meadow':
+        return 15 + Math.floor(Math.random() * 10); // 15-25 flores/arbustos
+      case 'mushroom_circle':
+        return 8 + Math.floor(Math.random() * 4); // 8-12 hongos
+      default:
+        return 4 + Math.floor(Math.random() * 4); // 4-8 por defecto
+    }
+  }
+
+  /**
+   * Genera zonas verdes densas con muchos árboles
+   */
+  private generateGreenZones(count: number): ClusterPoint[] {
+    const greenZones: ClusterPoint[] = [];
+    const minDistance = Math.sqrt((this.world.config.width * this.world.config.height) / count) * 1.2;
+
+    for (let attempt = 0; attempt < count * 4; attempt++) {
+      const x = 150 + Math.random() * (this.world.config.width * 32 - 300);
+      const y = 150 + Math.random() * (this.world.config.height * 32 - 300);
+
+      const biome = this.getBiomeAtPosition(x, y);
+      
+      // Solo crear zonas verdes en biomas apropiados
+      if (biome !== BiomeType.FOREST && biome !== BiomeType.GRASSLAND) continue;
+
+      const tooClose = greenZones.some(
+        (zone) => Math.hypot(zone.x - x, zone.y - y) < minDistance,
+      );
+
+      if (!tooClose) {
+        greenZones.push({
+          x,
+          y,
+          radius: 200 + Math.random() * 150, // Zonas más grandes: 200-350 radio
+          biome,
+          type: 'park_area',
+          density: 0.9, // Alta densidad para zonas verdes
+          occupiedPositions: []
+        });
+
+        if (greenZones.length >= count) break;
+      }
+    }
+
+    return greenZones;
+  }
+
+  /**
+   * Puebla una zona verde con árboles densos
+   */
+  private populateGreenZone(greenZone: ClusterPoint, treeAssets: AssetInfo[]): PlacedAsset[] {
+    const assets: PlacedAsset[] = [];
+    const treeCount = 25 + Math.floor(Math.random() * 15); // 25-40 árboles por zona
+
+    for (let i = 0; i < treeCount; i++) {
+      // Distribución más densa hacia el centro
+      const angle = Math.random() * Math.PI * 2;
+      const distance = this.gaussianRandom() * greenZone.radius * 0.95;
+
+      const x = greenZone.x + Math.cos(angle) * distance;
+      const y = greenZone.y + Math.sin(angle) * distance;
+
+      if (x < 0 || y < 0 || x > this.world.config.width * 32 || y > this.world.config.height * 32) {
+        continue;
+      }
+
+      // Solo usar árboles para zonas verdes
+      const trees = treeAssets.filter(asset => asset.key.includes('tree') || asset.type === 'tree');
+      if (trees.length === 0) continue;
+
+      const asset = this.weightedRandomSelect(trees);
+      if (!asset) continue;
+
+      // Verificar anti-solapamiento
+      if (this.wouldOverlap(x, y, asset)) {
+        continue;
+      }
+
+      const scale = 1.5 + Math.random() * 1.8; // Árboles grandes para zonas verdes
+      const rotation = getSelectiveRotation('vegetation', asset.key);
+      const tint = this.getVariationTint(greenZone.biome);
+
+      const placedAsset: PlacedAsset = {
+        asset,
+        x,
+        y,
+        scale,
+        rotation,
+        tint,
+        depth: y + 60, // Árboles de zona verde más altos
+        bounds: this.calculateAssetBounds(x, y, scale, asset),
+        metadata: {
+          zoneId: 'green_zone',
+          zoneCenter: { x: greenZone.x, y: greenZone.y },
+          assetType: 'vegetation'
+        },
+      };
+
+      assets.push(placedAsset);
+      this.placedAssets.push(placedAsset);
+    }
+
+    return assets;
+  }
+
+  /**
+   * Genera puntos de cluster para vegetación mejorados
    */
   private generateVegetationClusters(count: number): ClusterPoint[] {
     const clusters: ClusterPoint[] = [];
@@ -844,6 +1119,7 @@ export class DiverseWorldComposer {
           biome,
           type: clusterType,
           density: 0.8 + Math.random() * 0.4, // Densidad aumentada en clusters
+          occupiedPositions: []
         });
 
         if (clusters.length >= count) break;
@@ -953,13 +1229,29 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Genera clusters para estructuras
+   * Obtiene la cantidad de estructuras según el tipo de cluster
+   */
+  private getStructureCount(clusterType: string): number {
+    switch (clusterType) {
+      case 'ruins_site':
+        return 3 + Math.floor(Math.random() * 4); // 3-6 ruinas
+      case 'village_settlement':
+        return 5 + Math.floor(Math.random() * 8); // 5-12 edificios
+      case 'city_district':
+        return 8 + Math.floor(Math.random() * 12); // 8-19 edificios
+      default:
+        return 2 + Math.floor(Math.random() * 3); // 2-4 por defecto
+    }
+  }
+
+  /**
+   * Genera clusters para estructuras con mayor variedad
    */
   private generateStructureClusters(count: number): ClusterPoint[] {
     const clusters: ClusterPoint[] = [];
     const minDistance =
       Math.sqrt((this.world.config.width * this.world.config.height) / count) *
-      1.2;
+      1.0; // Reducir distancia para más densidad
 
     for (let attempt = 0; attempt < count * 4; attempt++) {
       const x = 150 + Math.random() * (this.world.config.width * 32 - 300);
@@ -975,10 +1267,11 @@ export class DiverseWorldComposer {
         clusters.push({
           x,
           y,
-          radius: 150 + Math.random() * 100,
+          radius: 120 + Math.random() * 80, // Radio más pequeño para más clusters
           biome,
           type: "ruins_site",
-          density: 0.6 + Math.random() * 0.5, // Densidad aumentada en ruinas
+          density: 0.7 + Math.random() * 0.3,
+          occupiedPositions: []
         });
 
         if (clusters.length >= count) break;
@@ -986,6 +1279,102 @@ export class DiverseWorldComposer {
     }
 
     return clusters;
+  }
+
+  /**
+   * Genera clusters específicos para asentamientos
+   */
+  private generateSettlementClusters(count: number): ClusterPoint[] {
+    const settlements: ClusterPoint[] = [];
+    const minDistance = Math.sqrt((this.world.config.width * this.world.config.height) / count) * 1.5;
+
+    for (let attempt = 0; attempt < count * 3; attempt++) {
+      const x = 200 + Math.random() * (this.world.config.width * 32 - 400);
+      const y = 200 + Math.random() * (this.world.config.height * 32 - 400);
+
+      const biome = this.getBiomeAtPosition(x, y);
+      if (biome === BiomeType.WETLAND) continue; // Evitar pantanos
+
+      const tooClose = settlements.some(
+        (settlement) => Math.hypot(settlement.x - x, settlement.y - y) < minDistance,
+      );
+
+      if (!tooClose) {
+        const settlementType = this.getSettlementType(biome);
+        settlements.push({
+          x,
+          y,
+          radius: this.getSettlementRadius(settlementType),
+          biome,
+          type: settlementType,
+          density: 0.8 + Math.random() * 0.2,
+          occupiedPositions: []
+        });
+
+        if (settlements.length >= count) break;
+      }
+    }
+
+    return settlements;
+  }
+
+  /**
+   * Puebla un asentamiento con estructuras
+   */
+  private populateSettlementStructures(
+    settlement: ClusterPoint,
+    structureAssets: AssetInfo[],
+  ): PlacedAsset[] {
+    const assets: PlacedAsset[] = [];
+    const buildingCount = this.getStructureCount(settlement.type);
+
+    let attempts = 0;
+    let placedBuildings = 0;
+    const maxAttempts = buildingCount * 4;
+
+    while (placedBuildings < buildingCount && attempts < maxAttempts) {
+      attempts++;
+      
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * settlement.radius * 0.8;
+
+      const x = settlement.x + Math.cos(angle) * distance;
+      const y = settlement.y + Math.sin(angle) * distance;
+
+      const asset = this.weightedRandomSelect(structureAssets);
+      if (!asset) continue;
+
+      // Verificar anti-solapamiento
+      if (this.wouldOverlap(x, y, asset)) {
+        continue;
+      }
+
+      const scale = 1.0 + Math.random() * 0.8; // 1.0x-1.8x para asentamientos
+      const rotation = getSelectiveRotation("structure", asset.key);
+      const tint = this.getSettlementTint(settlement.type);
+
+      const placedAsset: PlacedAsset = {
+        asset,
+        x,
+        y,
+        scale,
+        rotation,
+        tint,
+        depth: y + 180,
+        bounds: this.calculateAssetBounds(x, y, scale, asset),
+        metadata: {
+          settlementType: settlement.type,
+          biome: settlement.biome,
+          assetType: 'building'
+        },
+      };
+
+      assets.push(placedAsset);
+      this.placedAssets.push(placedAsset);
+      placedBuildings++;
+    }
+
+    return assets;
   }
 
   /**
@@ -1012,12 +1401,18 @@ export class DiverseWorldComposer {
   ): AssetInfo[] {
     // Filtrar assets apropiados para el tipo de cluster
     switch (clusterType) {
+      case "dense_forest":
       case "forest_grove":
         return allAssets.filter(
           (asset) =>
             asset.key.includes("tree") ||
             asset.key.includes("oak") ||
-            asset.key.includes("emerald"),
+            asset.key.includes("emerald") ||
+            asset.type === 'tree',
+        );
+      case "tree_line":
+        return allAssets.filter(
+          (asset) => asset.key.includes("tree") || asset.type === 'tree'
         );
       case "rock_formation":
         return allAssets.filter(
@@ -1028,10 +1423,11 @@ export class DiverseWorldComposer {
           (asset) =>
             asset.key.includes("flower") ||
             asset.key.includes("bush") ||
-            asset.key.includes("grass"),
+            asset.key.includes("grass") ||
+            asset.type === 'foliage',
         );
       case "mushroom_circle":
-        return allAssets.filter((asset) => asset.key.includes("mushroom"));
+        return allAssets.filter((asset) => asset.key.includes("mushroom") || asset.type === 'mushroom');
       case "ruins_site":
         return allAssets.filter(
           (asset) =>
@@ -1049,13 +1445,17 @@ export class DiverseWorldComposer {
 
     switch (biome) {
       case BiomeType.FOREST:
-        return random < 0.7 ? "forest_grove" : "mushroom_circle";
+        if (random < 0.4) return "dense_forest";
+        else if (random < 0.7) return "forest_grove";
+        else return "mushroom_circle";
       case BiomeType.GRASSLAND:
-        return random < 0.6 ? "flower_meadow" : "forest_grove";
+        if (random < 0.5) return "flower_meadow";
+        else if (random < 0.8) return "tree_line";
+        else return "forest_grove";
       case BiomeType.MOUNTAINOUS:
         return "rock_formation";
       case BiomeType.MYSTICAL:
-        return "rock_formation";
+        return random < 0.6 ? "mushroom_circle" : "rock_formation";
       default:
         return "forest_grove";
     }
@@ -1178,7 +1578,7 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Genera puntos de asentamiento urbano en areas apropiadas
+   * Genera poblados mejorados con diferentes tipos de asentamientos
    */
   private generateUrbanSettlements(count: number): ClusterPoint[] {
     const settlements: ClusterPoint[] = [];
@@ -1192,7 +1592,7 @@ export class DiverseWorldComposer {
 
       const biome = this.getBiomeAtPosition(x, y);
 
-      // Asentamientos solo en biomas apropiados (no en pantanos o muy místicos)
+      // Asentamientos solo en biomas apropiados
       if (biome === BiomeType.WETLAND) continue;
 
       // Verificar distancia mínima a otros asentamientos
@@ -1201,13 +1601,15 @@ export class DiverseWorldComposer {
       );
 
       if (!tooClose) {
+        const settlementType = this.getSettlementType(biome);
         settlements.push({
           x,
           y,
-          radius: 150 + Math.random() * 200, // 150-350 radius
+          radius: this.getSettlementRadius(settlementType),
           biome,
-          type: this.getSettlementType(biome),
-          density: 0.9 + Math.random() * 0.1, // Alta densidad urbana
+          type: settlementType,
+          density: 0.9 + Math.random() * 0.1,
+          occupiedPositions: []
         });
 
         if (settlements.length >= count) break;
@@ -1218,67 +1620,126 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Determina el tipo de asentamiento según el bioma
+   * Obtiene el radio apropiado según el tipo de asentamiento
+   */
+  private getSettlementRadius(settlementType: string): number {
+    switch (settlementType) {
+      case 'city_district':
+        return 250 + Math.random() * 150; // 250-400 para ciudades
+      case 'village_settlement':
+        return 150 + Math.random() * 100; // 150-250 para pueblos
+      case 'residential_area':
+        return 200 + Math.random() * 100; // 200-300 para residencial
+      case 'commercial_zone':
+        return 180 + Math.random() * 80; // 180-260 para comercial
+      default:
+        return 150 + Math.random() * 100;
+    }
+  }
+
+  /**
+   * Determina el tipo de asentamiento según el bioma con más variedad
    */
   private getSettlementType(
     biome: BiomeType,
-  ): "village_settlement" | "city_district" | "market_square" {
+  ): "village_settlement" | "city_district" | "market_square" | "residential_area" | "commercial_zone" {
+    const random = Math.random();
+    
     switch (biome) {
       case BiomeType.GRASSLAND:
-        return "village_settlement";
+        return random < 0.6 ? "village_settlement" : "residential_area";
       case BiomeType.FOREST:
-        return "village_settlement";
+        return random < 0.7 ? "village_settlement" : "residential_area";
       case BiomeType.MOUNTAINOUS:
-        return "city_district";
+        return random < 0.5 ? "city_district" : "commercial_zone";
       case BiomeType.MYSTICAL:
-        return "market_square";
+        return random < 0.6 ? "market_square" : "commercial_zone";
       default:
         return "village_settlement";
     }
   }
 
   /**
-   * Puebla un asentamiento con mobiliario urbano apropiado
+   * Puebla un asentamiento con mobiliario urbano mejorado y anti-solapamiento
    */
   private populateSettlement(
     settlement: ClusterPoint,
     urbanAssets: AssetInfo[],
   ): PlacedAsset[] {
     const assets: PlacedAsset[] = [];
-    const itemCount = 8 + Math.random() * 12; // 8-20 items por asentamiento (reducido para mejor espaciado)
+    const itemCount = this.getSettlementItemCount(settlement.type);
 
-    for (let i = 0; i < itemCount; i++) {
+    let attempts = 0;
+    let placedItems = 0;
+    const maxAttempts = itemCount * 5; // Más intentos para encontrar posiciones válidas
+
+    while (placedItems < itemCount && attempts < maxAttempts) {
+      attempts++;
+      
       // Distribución circular con concentración hacia el centro
       const angle = Math.random() * Math.PI * 2;
-      const distance = this.gaussianRandom() * settlement.radius * 0.9;
+      const distance = this.gaussianRandom() * settlement.radius * 0.85;
 
       const x = settlement.x + Math.cos(angle) * distance;
       const y = settlement.y + Math.sin(angle) * distance;
 
       const asset = this.weightedRandomSelect(urbanAssets);
-      if (asset) {
-        assets.push({
-          asset,
-          x,
-          y,
-          scale: 1.0 + Math.random() * 0.8, // 1.0x-1.8x Assets urbanos moderados
-          rotation: getSelectiveRotation("prop", asset.key),
-          tint: this.getSettlementTint(settlement.type),
-          depth: y + 150, // Props urbanos por encima de vegetación pero debajo de estructuras
-          metadata: {
-            type: "urban_prop",
-            settlement: settlement.type,
-            biome: settlement.biome,
-          },
-        });
+      if (!asset) continue;
+
+      // Verificar anti-solapamiento
+      if (this.wouldOverlap(x, y, asset)) {
+        continue;
       }
+
+      const scale = 0.8 + Math.random() * 0.6; // 0.8x-1.4x Assets urbanos más variados
+      const rotation = getSelectiveRotation("prop", asset.key);
+      const tint = this.getSettlementTint(settlement.type);
+
+      const placedAsset: PlacedAsset = {
+        asset,
+        x,
+        y,
+        scale,
+        rotation,
+        tint,
+        depth: y + 150,
+        bounds: this.calculateAssetBounds(x, y, scale, asset),
+        metadata: {
+          type: "urban_prop",
+          settlement: settlement.type,
+          biome: settlement.biome,
+          assetType: 'building'
+        },
+      };
+
+      assets.push(placedAsset);
+      this.placedAssets.push(placedAsset);
+      placedItems++;
     }
 
     return assets;
   }
 
   /**
-   * Obtiene tint apropiado para diferentes tipos de asentamientos
+   * Obtiene la cantidad de items según el tipo de asentamiento
+   */
+  private getSettlementItemCount(settlementType: string): number {
+    switch (settlementType) {
+      case 'city_district':
+        return 20 + Math.floor(Math.random() * 15); // 20-35 items para ciudades
+      case 'commercial_zone':
+        return 15 + Math.floor(Math.random() * 10); // 15-25 items para comercial
+      case 'residential_area':
+        return 12 + Math.floor(Math.random() * 8); // 12-20 items residencial
+      case 'village_settlement':
+        return 8 + Math.floor(Math.random() * 6); // 8-14 items para pueblos
+      default:
+        return 10 + Math.floor(Math.random() * 5);
+    }
+  }
+
+  /**
+   * Obtiene tint apropiado para diferentes tipos de asentamientos expandidos
    */
   private getSettlementTint(settlementType: string): number {
     switch (settlementType) {
@@ -1288,6 +1749,10 @@ export class DiverseWorldComposer {
         return 0xe0e0e0; // Gris urbano
       case "market_square":
         return 0xffd700; // Dorado mercantil
+      case "residential_area":
+        return 0xf0f8ff; // Azul claro residencial
+      case "commercial_zone":
+        return 0xffefd5; // Papaya comercial
       default:
         return 0xffffff;
     }
@@ -1306,6 +1771,64 @@ export class DiverseWorldComposer {
         Math.hypot(x - settlement.x, y - settlement.y) <
         settlement.radius * 1.2,
     );
+  }
+
+  // ==========================================
+  // SISTEMA ANTI-SOLAPAMIENTO
+  // ==========================================
+
+  /**
+   * Verifica si un asset se solaparía con otros existentes
+   */
+  private wouldOverlap(x: number, y: number, asset: AssetInfo): boolean {
+    const newBounds = this.calculateAssetBounds(x, y, 1.0, asset); // Escala base para verificación
+    const minDistance = 32; // Distancia mínima entre assets
+
+    return this.placedAssets.some(placedAsset => {
+      if (!placedAsset.bounds) return false;
+      
+      const distance = Math.hypot(
+        newBounds.x - placedAsset.bounds.x,
+        newBounds.y - placedAsset.bounds.y
+      );
+      
+      return distance < minDistance;
+    });
+  }
+
+  /**
+   * Calcula los límites de un asset
+   */
+  private calculateAssetBounds(x: number, y: number, scale: number, asset: AssetInfo): { x: number; y: number; width: number; height: number } {
+    // Tamaños base aproximados según tipo de asset
+    let baseWidth = 32;
+    let baseHeight = 32;
+
+    switch (asset.type) {
+      case 'tree':
+        baseWidth = 64;
+        baseHeight = 96;
+        break;
+      case 'structure':
+        baseWidth = 96;
+        baseHeight = 96;
+        break;
+      case 'prop':
+        baseWidth = 24;
+        baseHeight = 24;
+        break;
+      case 'foliage':
+        baseWidth = 32;
+        baseHeight = 32;
+        break;
+    }
+
+    return {
+      x: x,
+      y: y,
+      width: baseWidth * scale,
+      height: baseHeight * scale
+    };
   }
 
   // ==========================================

@@ -80,7 +80,7 @@ export class SceneInitializationManager {
       terrainTiles: [],
       roads: [],
       objectLayers: [],
-      worldSize: { width: 1024, height: 1024 }, // 32 tiles × 32px (very small for testing)
+      worldSize: { width: 2048, height: 2048 }, // 64 tiles × 32px (smaller but workable)
       generatorVersion: "2.0.0-diverse",
       mapSeed: seed,
     };
