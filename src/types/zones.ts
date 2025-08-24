@@ -22,7 +22,15 @@ export type ZoneType =
   | "energy"
   | "hygiene"
   | "entertainment"
-  | "fun";
+  | "fun"
+  // Nuevas zonas para edificios
+  | "medical" // Hospital
+  | "education" // Escuela
+  | "training" // Gimnasio
+  | "knowledge" // Biblioteca
+  | "market" // Mercado
+  | "spiritual" // Templo
+  | "security"; // Torre de vigilancia
 
 export interface ZoneDefinition {
   id: string;

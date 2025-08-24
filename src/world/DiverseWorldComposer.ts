@@ -129,7 +129,7 @@ export class DiverseWorldComposer {
     // 7. Capa de efectos - Detalles atmosféricos
     layers.push(await this.createEffectsLayer());
 
-    const clusters = this.generateClusterPoints(50); // 50 clusters total (mayor densidad)
+    const clusters = this.generateClusterPoints(Math.floor(50 * 1.7)); // 85 clusters total (+70% densidad)
     const stats = this.calculateDiversityStats(layers);
 
     const totalCompositionTime = Date.now() - startTime;
@@ -338,9 +338,9 @@ export class DiverseWorldComposer {
   private async createVegetationLayer(): Promise<RenderLayer> {
     const assets: PlacedAsset[] = [];
     
-    // Generar más clusters con diferentes tipos
-    const forestClusters = this.generateVegetationClusters(8); // Más clusters de bosque
-    const greenZones = this.generateGreenZones(5); // Nuevas zonas verdes densas
+    // Generar muchos más clusters con diferentes tipos (+70%)
+    const forestClusters = this.generateVegetationClusters(Math.floor(8 * 1.7)); // 14 clusters de bosque
+    const greenZones = this.generateGreenZones(Math.floor(5 * 1.7)); // 9 zonas verdes densas
     
     const treeAssets = this.vegetationAssets.get('trees') || [];
     const foliageAssets = this.vegetationAssets.get('foliage') || [];
@@ -460,9 +460,9 @@ export class DiverseWorldComposer {
       ];
     }
 
-    // Generar más clusters de estructuras con mayor densidad
-    const structureClusters = this.generateStructureClusters(12); // Más clusters
-    const settlementClusters = this.generateSettlementClusters(8); // Nuevos asentamientos
+    // Generar muchos más clusters de estructuras con mayor densidad (+70%)
+    const structureClusters = this.generateStructureClusters(Math.floor(12 * 1.7)); // 20 clusters
+    const settlementClusters = this.generateSettlementClusters(Math.floor(8 * 1.7)); // 14 asentamientos
 
     // Registrar clusters como zonas ocupadas
     for (const cluster of structureClusters) {
@@ -582,8 +582,8 @@ export class DiverseWorldComposer {
       );
     }
 
-    // Aumentar significativamente la densidad de detalles
-    const detailDensity = 0.25; // 25% de tiles (5x más denso)
+    // Aumentar muy significativamente la densidad de detalles (+70% adicional)
+    const detailDensity = 0.25 * 1.7; // 42.5% de tiles (masiva densidad)
     const totalTiles = (this.world.config.width / 32) * (this.world.config.height / 32);
     const targetCount = Math.floor(totalTiles * detailDensity);
 
@@ -777,16 +777,16 @@ export class DiverseWorldComposer {
       (asset) => !this.isUrbanAsset(asset.key),
     );
 
-    // 1. Generar asentamientos urbanos con mobiliario agrupado
-    const settlements = this.generateUrbanSettlements(2); // Solo 2 asentamientos para testing
+    // 1. Generar asentamientos urbanos con mobiliario agrupado (+70%)
+    const settlements = this.generateUrbanSettlements(Math.floor(2 * 1.7)); // 3 asentamientos urbanos
     for (const settlement of settlements) {
       const settlementAssets = this.populateSettlement(settlement, urbanAssets);
       assets.push(...settlementAssets);
     }
 
-    // 2. Props naturales dispersos (solo en áreas sin asentamientos)
+    // 2. Props naturales dispersos (solo en áreas sin asentamientos) (+70%)
     const naturalCount = Math.floor(
-      (this.world.config.width * this.world.config.height) / 25, // Reducido para dar espacio a ciudades
+      ((this.world.config.width * this.world.config.height) / 25) * 1.7, // Mucha más densidad natural
     );
 
     for (let i = 0; i < naturalCount; i++) {
@@ -845,7 +845,7 @@ export class DiverseWorldComposer {
     }
 
     if (waterEffects.length > 0) {
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < Math.floor(20 * 1.7); i++) { // 34 efectos de agua
         const x = Math.random() * this.world.config.width * 32;
         const y = Math.random() * this.world.config.height * 32;
 
@@ -889,7 +889,7 @@ export class DiverseWorldComposer {
     }
 
     if (lightEffects.length > 0) {
-      for (let i = 0; i < 15; i++) {
+      for (let i = 0; i < Math.floor(15 * 1.7); i++) { // 26 efectos de luz
         const x = Math.random() * this.world.config.width * 32;
         const y = Math.random() * this.world.config.height * 32;
 
@@ -994,23 +994,28 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Calcula la densidad según el tipo de cluster
+   * Calcula la densidad según el tipo de cluster (aumentada 70%)
    */
   private getDensityForCluster(clusterType: string): number {
-    switch (clusterType) {
-      case 'dense_forest':
-        return 12 + Math.floor(Math.random() * 8); // 12-20 árboles por cluster denso
-      case 'forest_grove':
-        return 6 + Math.floor(Math.random() * 6); // 6-12 árboles por bosquecillo
-      case 'tree_line':
-        return 8 + Math.floor(Math.random() * 4); // 8-12 árboles en línea
-      case 'flower_meadow':
-        return 15 + Math.floor(Math.random() * 10); // 15-25 flores/arbustos
-      case 'mushroom_circle':
-        return 8 + Math.floor(Math.random() * 4); // 8-12 hongos
-      default:
-        return 4 + Math.floor(Math.random() * 4); // 4-8 por defecto
-    }
+    const baseCount = (() => {
+      switch (clusterType) {
+        case 'dense_forest':
+          return 12 + Math.floor(Math.random() * 8); // 12-20 árboles por cluster denso
+        case 'forest_grove':
+          return 6 + Math.floor(Math.random() * 6); // 6-12 árboles por bosquecillo
+        case 'tree_line':
+          return 8 + Math.floor(Math.random() * 4); // 8-12 árboles en línea
+        case 'flower_meadow':
+          return 15 + Math.floor(Math.random() * 10); // 15-25 flores/arbustos
+        case 'mushroom_circle':
+          return 8 + Math.floor(Math.random() * 4); // 8-12 hongos
+        default:
+          return 4 + Math.floor(Math.random() * 4); // 4-8 por defecto
+      }
+    })();
+    
+    // Aumentar 70% la densidad
+    return Math.floor(baseCount * 1.7);
   }
 
   /**
@@ -1056,7 +1061,7 @@ export class DiverseWorldComposer {
    */
   private populateGreenZone(greenZone: ClusterPoint, treeAssets: AssetInfo[]): PlacedAsset[] {
     const assets: PlacedAsset[] = [];
-    const treeCount = 25 + Math.floor(Math.random() * 15); // 25-40 árboles por zona
+    const treeCount = Math.floor((25 + Math.floor(Math.random() * 15)) * 1.7); // 43-68 árboles por zona (+70%)
 
     for (let i = 0; i < treeCount; i++) {
       // Distribución más densa hacia el centro
@@ -1248,19 +1253,24 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Obtiene la cantidad de estructuras según el tipo de cluster
+   * Obtiene la cantidad de estructuras según el tipo de cluster (aumentada 70%)
    */
   private getStructureCount(clusterType: string): number {
-    switch (clusterType) {
-      case 'ruins_site':
-        return 3 + Math.floor(Math.random() * 4); // 3-6 ruinas
-      case 'village_settlement':
-        return 5 + Math.floor(Math.random() * 8); // 5-12 edificios
-      case 'city_district':
-        return 8 + Math.floor(Math.random() * 12); // 8-19 edificios
-      default:
-        return 2 + Math.floor(Math.random() * 3); // 2-4 por defecto
-    }
+    const baseCount = (() => {
+      switch (clusterType) {
+        case 'ruins_site':
+          return 3 + Math.floor(Math.random() * 4); // 3-6 ruinas
+        case 'village_settlement':
+          return 5 + Math.floor(Math.random() * 8); // 5-12 edificios
+        case 'city_district':
+          return 8 + Math.floor(Math.random() * 12); // 8-19 edificios
+        default:
+          return 2 + Math.floor(Math.random() * 3); // 2-4 por defecto
+      }
+    })();
+    
+    // Aumentar 70% la densidad
+    return Math.floor(baseCount * 1.7);
   }
 
   /**
@@ -1282,9 +1292,9 @@ export class DiverseWorldComposer {
         (cluster) => Math.hypot(cluster.x - x, cluster.y - y) < minDistance,
       );
       
-      // Verificar distancia con zonas ocupadas
+      // Verificar distancia con zonas ocupadas (reducida para mayor densidad)
       const tooCloseToOccupied = this.occupiedZones.some(
-        (zone) => Math.hypot(zone.x - x, zone.y - y) < (zone.radius + 100)
+        (zone) => Math.hypot(zone.x - x, zone.y - y) < (zone.radius + 70) // Reducido de 100 a 70
       );
 
       if (!tooCloseToCluster && !tooCloseToOccupied) {
@@ -1331,9 +1341,9 @@ export class DiverseWorldComposer {
         (settlement) => Math.hypot(settlement.x - x, settlement.y - y) < minDistance,
       );
       
-      // Verificar distancia con zonas ya ocupadas
+      // Verificar distancia con zonas ya ocupadas (reducida para mayor densidad)
       const tooCloseToOccupied = this.occupiedZones.some(
-        (zone) => Math.hypot(zone.x - x, zone.y - y) < (zone.radius + 150)
+        (zone) => Math.hypot(zone.x - x, zone.y - y) < (zone.radius + 100) // Reducido de 150 a 100
       );
 
       if (!tooCloseToSettlement && !tooCloseToOccupied) {
@@ -1765,21 +1775,26 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Obtiene la cantidad de items según el tipo de asentamiento
+   * Obtiene la cantidad de items según el tipo de asentamiento (aumentada 70%)
    */
   private getSettlementItemCount(settlementType: string): number {
-    switch (settlementType) {
-      case 'city_district':
-        return 20 + Math.floor(Math.random() * 15); // 20-35 items para ciudades
-      case 'commercial_zone':
-        return 15 + Math.floor(Math.random() * 10); // 15-25 items para comercial
-      case 'residential_area':
-        return 12 + Math.floor(Math.random() * 8); // 12-20 items residencial
-      case 'village_settlement':
-        return 8 + Math.floor(Math.random() * 6); // 8-14 items para pueblos
-      default:
-        return 10 + Math.floor(Math.random() * 5);
-    }
+    const baseCount = (() => {
+      switch (settlementType) {
+        case 'city_district':
+          return 20 + Math.floor(Math.random() * 15); // 20-35 items para ciudades
+        case 'commercial_zone':
+          return 15 + Math.floor(Math.random() * 10); // 15-25 items para comercial
+        case 'residential_area':
+          return 12 + Math.floor(Math.random() * 8); // 12-20 items residencial
+        case 'village_settlement':
+          return 8 + Math.floor(Math.random() * 6); // 8-14 items para pueblos
+        default:
+          return 10 + Math.floor(Math.random() * 5);
+      }
+    })();
+    
+    // Aumentar 70% la densidad
+    return Math.floor(baseCount * 1.7);
   }
 
   /**
@@ -1871,16 +1886,17 @@ export class DiverseWorldComposer {
    */
   private getMinDistanceBetweenAssets(asset1: AssetInfo, asset2: AssetInfo, scale1: number, scale2: number): number {
     // Distancias base según combinaciones de tipos
+    // Distancias mínimas optimizadas para mayor densidad (reducidas 30%)
     const getBaseDistance = (type: string): number => {
       switch (type) {
-        case 'structure': return 120; // Estructuras necesitan mucho espacio
-        case 'tree': return 80;       // Árboles necesitan espacio moderado
-        case 'prop': return 40;       // Props menos espacio
-        case 'rock': return 30;       // Rocas menos espacio
-        case 'mushroom': return 25;   // Hongos muy poco espacio
-        case 'foliage': return 30;    // Follaje poco espacio
-        case 'decoration': return 35;
-        default: return 50;
+        case 'structure': return 85;  // Estructuras - reducido de 120 a 85
+        case 'tree': return 55;       // Árboles - reducido de 80 a 55
+        case 'prop': return 30;       // Props - reducido de 40 a 30
+        case 'rock': return 22;       // Rocas - reducido de 30 a 22
+        case 'mushroom': return 18;   // Hongos - reducido de 25 a 18
+        case 'foliage': return 22;    // Follaje - reducido de 30 a 22
+        case 'decoration': return 25; // Decoraciones - reducido de 35 a 25
+        default: return 35;           // Por defecto - reducido de 50 a 35
       }
     };
     

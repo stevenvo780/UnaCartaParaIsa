@@ -27,6 +27,9 @@ export class StatsModalContent {
       map.set("isa.hunger", Math.round(isa.stats.hunger));
       map.set("isa.thirst", Math.round(isa.stats.thirst || 0));
       map.set("isa.mentalHealth", Math.round(isa.stats.mentalHealth || 0));
+      map.set("isa.stamina", Math.round(isa.stats.stamina || 50));
+      map.set("isa.intelligence", Math.round(isa.stats.intelligence || 50));
+      map.set("isa.socialSkills", Math.round(isa.stats.socialSkills || 50));
     }
 
     if (stev) {
@@ -35,6 +38,9 @@ export class StatsModalContent {
       map.set("stev.hunger", Math.round(stev.stats.hunger));
       map.set("stev.thirst", Math.round(stev.stats.thirst || 0));
       map.set("stev.mentalHealth", Math.round(stev.stats.mentalHealth || 0));
+      map.set("stev.stamina", Math.round(stev.stats.stamina || 50));
+      map.set("stev.intelligence", Math.round(stev.stats.intelligence || 50));
+      map.set("stev.socialSkills", Math.round(stev.stats.socialSkills || 50));
     }
 
     this.statTexts.forEach((t) => {
@@ -105,9 +111,9 @@ export class StatsModalContent {
     // Fondo para sección Isa
     const isaBg = this.scene.add.graphics();
     isaBg.fillStyle(0xe91e63, 0.1);
-    isaBg.fillRoundedRect(-5, 10, 160, 110, 8);
+    isaBg.fillRoundedRect(-5, 10, 160, 155, 8);
     isaBg.lineStyle(2, 0xe91e63, 0.3);
-    isaBg.strokeRoundedRect(-5, 10, 160, 110, 8);
+    isaBg.strokeRoundedRect(-5, 10, 160, 155, 8);
     this.container.add(isaBg);
 
     // Sección Isa mejorada
@@ -123,24 +129,27 @@ export class StatsModalContent {
     mk(10, 70, "🍖", "Hambre", "isa.hunger");
     mk(10, 85, "💧", "Sed", "isa.thirst");
     mk(10, 100, "🧠", "Mental", "isa.mentalHealth");
+    mk(10, 115, "🏃", "Resistencia", "isa.stamina");
+    mk(10, 130, "🎓", "Inteligencia", "isa.intelligence");
+    mk(10, 145, "👥", "Social", "isa.socialSkills");
 
     // Línea separadora mejorada
     const separator = this.scene.add.graphics();
     separator.lineStyle(2, 0x74b9ff, 0.6);
-    separator.lineBetween(170, 15, 170, 115);
+    separator.lineBetween(170, 15, 170, 160);
     // Puntos decorativos
     separator.fillStyle(0x74b9ff, 0.8);
     separator.fillCircle(170, 15, 3);
-    separator.fillCircle(170, 65, 3);
-    separator.fillCircle(170, 115, 3);
+    separator.fillCircle(170, 85, 3);
+    separator.fillCircle(170, 160, 3);
     this.container.add(separator);
 
     // Fondo para sección Stev
     const stevBg = this.scene.add.graphics();
     stevBg.fillStyle(0x3498db, 0.1);
-    stevBg.fillRoundedRect(185, 10, 160, 110, 8);
+    stevBg.fillRoundedRect(185, 10, 160, 155, 8);
     stevBg.lineStyle(2, 0x3498db, 0.3);
-    stevBg.strokeRoundedRect(185, 10, 160, 110, 8);
+    stevBg.strokeRoundedRect(185, 10, 160, 155, 8);
     this.container.add(stevBg);
 
     // Sección Stev mejorada
@@ -156,5 +165,8 @@ export class StatsModalContent {
     mk(195, 70, "🍖", "Hambre", "stev.hunger");
     mk(195, 85, "💧", "Sed", "stev.thirst");
     mk(195, 100, "🧠", "Mental", "stev.mentalHealth");
+    mk(195, 115, "🏃", "Resistencia", "stev.stamina");
+    mk(195, 130, "🎓", "Inteligencia", "stev.intelligence");
+    mk(195, 145, "👥", "Social", "stev.socialSkills");
   }
 }

@@ -44,9 +44,6 @@ export class CircuitBreaker {
     if (this.state === CircuitState.OPEN) {
       if (this.shouldAttemptReset()) {
         this.state = CircuitState.HALF_OPEN;
-        console.log(
-          `🔄 Circuit breaker ${this.name}: Transitioning to HALF_OPEN`,
-        );
       } else {
         throw new Error(`Circuit breaker ${this.name} is OPEN`);
       }
@@ -69,9 +66,6 @@ export class CircuitBreaker {
     if (this.state === CircuitState.OPEN) {
       if (this.shouldAttemptReset()) {
         this.state = CircuitState.HALF_OPEN;
-        console.log(
-          `🔄 Circuit breaker ${this.name}: Transitioning to HALF_OPEN`,
-        );
       } else {
         throw new Error(`Circuit breaker ${this.name} is OPEN`);
       }
@@ -95,9 +89,6 @@ export class CircuitBreaker {
       if (this.successCount >= this.options.successThreshold) {
         this.state = CircuitState.CLOSED;
         this.successCount = 0;
-        console.log(
-          `✅ Circuit breaker ${this.name}: Closed after successful recovery`,
-        );
       }
     }
   }
@@ -114,15 +105,9 @@ export class CircuitBreaker {
       // If we fail in half-open, go back to open
       this.state = CircuitState.OPEN;
       this.successCount = 0;
-      console.log(
-        `⚠️ Circuit breaker ${this.name}: Back to OPEN after failure during recovery`,
-      );
     } else if (this.state === CircuitState.CLOSED) {
       if (this.failures.length >= this.options.failureThreshold) {
         this.state = CircuitState.OPEN;
-        console.log(
-          `🚨 Circuit breaker ${this.name}: OPENED due to ${this.failures.length} failures`,
-        );
       }
     }
   }
@@ -143,7 +128,6 @@ export class CircuitBreaker {
   public forceOpen(): void {
     this.state = CircuitState.OPEN;
     this.lastFailureTime = Date.now();
-    console.log(`🔒 Circuit breaker ${this.name}: Manually opened`);
   }
 
   /**
@@ -154,7 +138,6 @@ export class CircuitBreaker {
     this.failureCount = 0;
     this.successCount = 0;
     this.failures = [];
-    console.log(`🔓 Circuit breaker ${this.name}: Manually closed`);
   }
 
   /**

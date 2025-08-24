@@ -41,4 +41,12 @@ export type EntityType =
   | "mystical_circles"
   | "sacred_springs"
   | "crystal_formations"
-  | "ruins_ancient";
+  | "ruins_ancient"
+  // Nuevas estructuras
+  | "gymnasium"
+  | "library_building" 
+  | "hospital"
+  | "school"
+  | "market"
+  | "temple"
+  | "watchtower";

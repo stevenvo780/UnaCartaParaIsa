@@ -58,8 +58,129 @@ export class SceneInitializationManager {
           attractiveness: 9,
           effects: { energy: 15, comfort: 10, happiness: 8 },
         },
+        // Zona médica - Recuperación de salud
+        {
+          id: "medical_zone_hospital",
+          type: "medical" as const,
+          name: "Hospital Central",
+          bounds: { x: 500, y: 1200, width: 300, height: 250 },
+          color: "#FF6B6B", // Rojo médico
+          attractiveness: 6,
+          effects: { health: 20, comfort: 8, mentalHealth: 5 },
+        },
+        // Zona de entrenamiento - Mejora resistencia
+        {
+          id: "training_zone_gym",
+          type: "training" as const,
+          name: "Gimnasio de Entrenamiento",
+          bounds: { x: 300, y: 800, width: 280, height: 280 },
+          color: "#FFA500", // Naranja energético
+          attractiveness: 7,
+          effects: { stamina: 15, energy: -5, health: 10 },
+        },
+        // Zona de conocimiento - Mejora inteligencia
+        {
+          id: "knowledge_zone_library",
+          type: "knowledge" as const,
+          name: "Gran Biblioteca",
+          bounds: { x: 1800, y: 500, width: 250, height: 300 },
+          color: "#4ECDC4", // Verde azulado intelectual
+          attractiveness: 5,
+          effects: { intelligence: 12, mentalHealth: 8, boredom: -10 },
+        },
+        // Zona espiritual - Recuperación mental y social
+        {
+          id: "spiritual_zone_temple",
+          type: "spiritual" as const,
+          name: "Templo de Serenidad",
+          bounds: { x: 1000, y: 400, width: 200, height: 200 },
+          color: "#9B59B6", // Púrpura espiritual
+          attractiveness: 8,
+          effects: { mentalHealth: 18, stress: -15, socialSkills: 8 },
+        },
+        // Zona de mercado - Mejora habilidades sociales
+        {
+          id: "market_zone_plaza",
+          type: "market" as const,
+          name: "Plaza del Mercado",
+          bounds: { x: 1400, y: 1400, width: 350, height: 200 },
+          color: "#F39C12", // Amarillo comercial
+          attractiveness: 6,
+          effects: { socialSkills: 10, happiness: 6, money: 5 },
+        },
       ],
-      mapElements: [],
+      mapElements: [
+        // Hospital en zona médica
+        {
+          id: "hospital_building",
+          type: "decoration" as const,
+          position: { x: 650, y: 1325 }, // Centro de zona médica
+          size: { width: 80, height: 80 },
+          color: "#FF6B6B",
+          metadata: {
+            furnitureType: "hospital",
+            assetId: "hospital",
+            scale: 1.0,
+            interactive: true,
+          }
+        },
+        // Gimnasio en zona de entrenamiento
+        {
+          id: "gym_building",
+          type: "decoration" as const,
+          position: { x: 440, y: 940 }, // Centro de zona de entrenamiento
+          size: { width: 70, height: 70 },
+          color: "#FFA500",
+          metadata: {
+            furnitureType: "gymnasium",
+            assetId: "gymnasium",
+            scale: 1.0,
+            interactive: true,
+          }
+        },
+        // Biblioteca en zona de conocimiento
+        {
+          id: "library_building",
+          type: "decoration" as const,
+          position: { x: 1925, y: 650 }, // Centro de zona de conocimiento
+          size: { width: 60, height: 75 },
+          color: "#4ECDC4",
+          metadata: {
+            furnitureType: "library_building",
+            assetId: "library_building",
+            scale: 1.0,
+            interactive: true,
+          }
+        },
+        // Templo en zona espiritual
+        {
+          id: "temple_building",
+          type: "decoration" as const,
+          position: { x: 1100, y: 500 }, // Centro de zona espiritual
+          size: { width: 50, height: 50 },
+          color: "#9B59B6",
+          metadata: {
+            furnitureType: "temple",
+            assetId: "temple",
+            scale: 1.0,
+            interactive: true,
+          }
+        },
+        // Mercado en zona de mercado
+        {
+          id: "market_building",
+          type: "decoration" as const,
+          position: { x: 1575, y: 1500 }, // Centro de zona de mercado
+          size: { width: 90, height: 50 },
+          color: "#F39C12",
+          metadata: {
+            furnitureType: "market",
+            assetId: "market",
+            scale: 1.0,
+            interactive: true,
+          }
+        },
+      ],
       entities: [],
       resonance: 0,
       cycles: 0,

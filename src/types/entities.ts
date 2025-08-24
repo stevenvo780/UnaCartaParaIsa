@@ -41,6 +41,10 @@ export interface EntityStats {
   courage: number;
   happiness: number;
   stress: number;
+  // Nuevas estadísticas
+  stamina: number; // Resistencia física
+  intelligence: number; // Capacidad intelectual
+  socialSkills: number; // Habilidades sociales
   [key: string]: number; // Allow string indexing for dynamic stat access
 }
 
