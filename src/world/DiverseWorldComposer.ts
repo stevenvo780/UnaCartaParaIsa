@@ -215,25 +215,35 @@ export class DiverseWorldComposer {
           const tile = this.world.terrain[tileY][tileX];
           const biome = tile.biome;
 
-          // Posición en píxeles - SIN variación para asegurar cobertura completa
-          const x = tileX * tileSize;
-          const y = tileY * tileSize;
+          // Posición en píxeles con ligera variación para naturalidad
+          const baseX = tileX * tileSize;
+          const baseY = tileY * tileSize;
+          
+          // Variación sutil para terreno (máximo 4px para mantener cobertura)
+          const offsetX = (this.noise.noise2D(baseX * 0.01, baseY * 0.01) - 0.5) * 8;
+          const offsetY = (this.noise.noise2D(baseX * 0.01 + 100, baseY * 0.01 + 100) - 0.5) * 8;
+          
+          const x = baseX + offsetX;
+          const y = baseY + offsetY;
 
           // Seleccionar asset usando ruido orgánico
           const assetIndex = this.getOrganicIndex(x, y, terrainAssets.length);
           const asset = terrainAssets[assetIndex];
 
-          // Añadir variaciones sutiles
+          // Añadir variaciones sutiles para naturalidad
           const variation = this.noise.noise2D(x * 0.01, y * 0.01);
-          const scale = 1.0 + variation * 0.1; // ±10% variación
+          const scale = 1.0 + variation * 0.15; // ±15% variación en tamaño
           const tint = this.getBiomeTint(biome, variation);
+          
+          // Sin rotación para tiles de terreno (se ven mal rotados)
+          const rotation = 0;
 
           assets.push({
             asset,
             x,
             y,
             scale,
-            rotation: 0,
+            rotation,
             tint,
             depth: y,
             metadata: { biome, tileX, tileY },
@@ -834,25 +844,35 @@ export class DiverseWorldComposer {
           const tile = this.world.terrain[tileY][tileX];
           const biome = tile.biome;
 
-          // Posición en píxeles - SIN variación para asegurar cobertura completa
-          const x = tileX * tileSize;
-          const y = tileY * tileSize;
+          // Posición en píxeles con ligera variación para naturalidad
+          const baseX = tileX * tileSize;
+          const baseY = tileY * tileSize;
+          
+          // Variación sutil para terreno (máximo 4px para mantener cobertura)
+          const offsetX = (this.noise.noise2D(baseX * 0.01, baseY * 0.01) - 0.5) * 8;
+          const offsetY = (this.noise.noise2D(baseX * 0.01 + 100, baseY * 0.01 + 100) - 0.5) * 8;
+          
+          const x = baseX + offsetX;
+          const y = baseY + offsetY;
 
           // Seleccionar asset usando ruido orgánico
           const assetIndex = this.getOrganicIndex(x, y, terrainAssets.length);
           const asset = terrainAssets[assetIndex];
 
-          // Añadir variaciones sutiles
+          // Añadir variaciones sutiles para naturalidad
           const variation = this.noise.noise2D(x * 0.01, y * 0.01);
-          const scale = 1.0 + variation * 0.1; // ±10% variación
+          const scale = 1.0 + variation * 0.15; // ±15% variación en tamaño
           const tint = this.getBiomeTint(biome, variation);
+          
+          // Sin rotación para tiles de terreno (se ven mal rotados)
+          const rotation = 0;
 
           chunkAssets.push({
             asset,
             x,
             y,
             scale,
-            rotation: 0,
+            rotation,
             tint,
             depth: y,
             metadata: { biome, tileX, tileY },

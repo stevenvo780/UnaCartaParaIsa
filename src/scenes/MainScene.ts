@@ -16,6 +16,8 @@ import {
   TerrainTile,
   WorldGenConfig,
 } from "../world/types";
+import { TerrainGenerator } from "../world/TerrainGenerator";
+import { NoiseUtils } from "../world/NoiseUtils";
 
 export default class MainScene extends Phaser.Scene {
   // Propiedades básicas de escena
@@ -136,15 +138,15 @@ export default class MainScene extends Phaser.Scene {
     }
 
     try {
-      // 5. Generar mundo base simple primero
+      // 5. Generar mundo orgánico mejorado
       this.progressManager?.startPhase(
         "world_generation",
-        "Generando terreno 180x180...",
+        "Generando terreno orgánico 180x180...",
       );
-      const baseWorld = this.generateBasicWorld();
+      const baseWorld = this.generateOrganicWorld();
       this.progressManager?.completePhase(
         "world_generation",
-        "Mundo base generado",
+        "Mundo orgánico generado",
       );
 
       // 6. Inicializar GameState
@@ -398,102 +400,66 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /**
-   * Genera un mundo básico cuadrado para testing
+   * Genera un mundo orgánico usando ruido Perlin para biomas naturales
    */
-  private generateBasicWorld(): GeneratedWorld {
-    // Configuración balanceada para no exceder límites con objetos densos
-    const worldWidth = 180; // 180 tiles de ancho
-    const worldHeight = 180; // 180 tiles de alto = 32,400 tiles base
-    const tileSize = 32; // Tamaño normal de tiles (32x32 píxeles)
+  private generateOrganicWorld(): GeneratedWorld {
+    const worldWidth = 180;
+    const worldHeight = 180;
+    const tileSize = 32;
 
     const config: WorldGenConfig = {
       width: worldWidth,
-      height: worldHeight, // Garantiza que sea cuadrado
+      height: worldHeight,
       tileSize: tileSize,
       seed: Date.now(),
-      noise: {
-        temperature: {
-          scale: 0.01,
-          octaves: 4,
-          persistence: 0.5,
-          lacunarity: 2.0,
-        },
-        moisture: {
-          scale: 0.01,
-          octaves: 4,
-          persistence: 0.5,
-          lacunarity: 2.0,
-        },
-        elevation: {
-          scale: 0.005,
-          octaves: 6,
-          persistence: 0.6,
-          lacunarity: 2.0,
-        },
-      },
       biomes: {
-        enabled: [
-          BiomeType.GRASSLAND,
-          BiomeType.FOREST,
-          BiomeType.MYSTICAL,
-          BiomeType.WETLAND,
-          BiomeType.MOUNTAINOUS,
-        ],
+        enabled: [BiomeType.GRASSLAND, BiomeType.FOREST, BiomeType.MYSTICAL, BiomeType.WETLAND, BiomeType.MOUNTAINOUS],
       },
-      water: {
-        level: 0.3,
-        rivers: true,
-        lakes: true,
+      noise: {
+        temperature: { scale: 0.01, octaves: 4, persistence: 0.5, lacunarity: 2.0 },
+        moisture: { scale: 0.008, octaves: 3, persistence: 0.6, lacunarity: 2.0 },
+        elevation: { scale: 0.006, octaves: 5, persistence: 0.4, lacunarity: 2.5 }
       },
+      water: { level: 0.3, rivers: true, lakes: true },
     };
 
-    logAutopoiesis.info("🗺️ Generando mundo rectangular", {
-      size: `${worldWidth}x${worldHeight} tiles`,
-      pixelSize: `${worldWidth * tileSize}x${worldHeight * tileSize}px`,
-      tileSize: `${tileSize}px`,
-    });
-
-    // Crear terreno básico con diferentes biomas en patrón cuadrado
+    // Usar ruido Perlin simple para crear biomas orgánicos
+    const noise = new NoiseUtils(config.seed);
     const terrain: TerrainTile[][] = [];
-    const quarterWidth = Math.floor(worldWidth / 4);
-    const quarterHeight = Math.floor(worldHeight / 4);
+
+    logAutopoiesis.info("🌿 Generando mundo con biomas orgánicos", {
+      size: `${worldWidth}x${worldHeight} tiles`
+    });
 
     for (let y = 0; y < config.height; y++) {
       terrain[y] = [];
       for (let x = 0; x < config.width; x++) {
-        // Crear biomas en cuadrantes para mejor distribución visual
+        // Usar múltiples capas de ruido para decidir bioma de forma orgánica
+        const biomeNoise1 = noise.noise2D(x * 0.02, y * 0.02); // Ruido principal
+        const biomeNoise2 = noise.noise2D(x * 0.05, y * 0.05) * 0.5; // Detalles
+        const biomeNoise3 = noise.noise2D(x * 0.008, y * 0.008) * 0.3; // Grandes regiones
+        
+        const combinedNoise = (biomeNoise1 + biomeNoise2 + biomeNoise3) / 1.8;
+        
+        // Asignar biomas de forma orgánica basado en ruido
         let biome = BiomeType.GRASSLAND;
-
-        // Centro: área mística
-        if (
-          x > quarterWidth &&
-          x < worldWidth - quarterWidth &&
-          y > quarterHeight &&
-          y < worldHeight - quarterHeight
-        ) {
+        if (combinedNoise > 0.6) {
           biome = BiomeType.MYSTICAL;
-        } else if (x < quarterWidth && y < quarterHeight) {
-          // Esquinas: diferentes biomas
+        } else if (combinedNoise > 0.3) {
           biome = BiomeType.FOREST;
-        } else if (x > worldWidth - quarterWidth && y < quarterHeight) {
-          biome = BiomeType.MOUNTAINOUS;
-        } else if (x < quarterWidth && y > worldHeight - quarterHeight) {
-          biome = BiomeType.WETLAND;
-        } else if (
-          x > worldWidth - quarterWidth &&
-          y > worldHeight - quarterHeight
-        ) {
-          biome = BiomeType.FOREST;
-        } else {
-          // Resto: pradera
+        } else if (combinedNoise > 0.0) {
           biome = BiomeType.GRASSLAND;
+        } else if (combinedNoise > -0.3) {
+          biome = BiomeType.WETLAND;
+        } else {
+          biome = BiomeType.MOUNTAINOUS;
         }
 
         terrain[y][x] = {
           x: x * config.tileSize,
           y: y * config.tileSize,
           biome,
-          biomeStrength: 0.8 + Math.random() * 0.2,
+          biomeStrength: 0.7 + Math.random() * 0.3,
           temperature: Math.random(),
           moisture: Math.random(),
           elevation: Math.random(),
@@ -517,23 +483,56 @@ export default class MainScene extends Phaser.Scene {
       }
     }
 
+    // Crear capa básica de terreno para renderizado
+    const terrainLayer = {
+      name: "terrain",
+      type: "terrain",
+      zIndex: 0,
+      visible: true,
+      assets: [],
+    };
+
+    // Agregar todos los tiles de terreno a la capa
+    for (let y = 0; y < config.height; y++) {
+      for (let x = 0; x < config.width; x++) {
+        const tile = terrain[y][x];
+        terrainLayer.assets.push({
+          asset: {
+            key: tile.assets.terrain,
+            path: "", // No necesario para test
+            type: "terrain",
+          },
+          x: tile.x,
+          y: tile.y,
+          scale: 1,
+          rotation: 0,
+          tint: 0xffffff,
+          depth: 0,
+          metadata: {
+            biome: tile.biome,
+            id: `terrain_${x}_${y}`,
+          },
+        });
+      }
+    }
+
     return {
       config,
       terrain,
-      layers: [], // Será llenado por DiverseWorldComposer
+      layers: [terrainLayer],
       biomeMap,
       metadata: {
         generationTime: 0,
         biomeDistribution: {
-          [BiomeType.GRASSLAND]: 50,
-          [BiomeType.FOREST]: 30,
-          [BiomeType.MYSTICAL]: 10,
-          [BiomeType.WETLAND]: 5,
-          [BiomeType.MOUNTAINOUS]: 5,
+          [BiomeType.GRASSLAND]: 40,
+          [BiomeType.FOREST]: 25,
+          [BiomeType.MYSTICAL]: 15,
+          [BiomeType.WETLAND]: 10,
+          [BiomeType.MOUNTAINOUS]: 10,
           [BiomeType.VILLAGE]: 0,
         },
-        totalAssets: 0,
-        version: "1.0.0",
+        totalAssets: terrainLayer.assets.length,
+        version: "2.0.0-organic",
       },
     };
   }

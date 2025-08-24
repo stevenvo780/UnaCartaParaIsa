@@ -13,6 +13,7 @@ import {
   getBiomeDefinition,
 } from "./BiomeDefinitions";
 import { NoiseUtils } from "./NoiseUtils";
+import { VoronoiGenerator, type VoronoiRegion } from "./VoronoiGenerator";
 import {
   BiomeType,
   type BiomeDefinition,
@@ -24,6 +25,7 @@ import {
 
 export class TerrainGenerator {
   private noiseGen: NoiseUtils;
+  private voronoiGen: VoronoiGenerator;
   private config: WorldGenConfig;
 
   constructor(config: WorldGenConfig = DEFAULT_WORLD_CONFIG) {
@@ -68,6 +70,7 @@ export class TerrainGenerator {
     }
 
     this.noiseGen = new NoiseUtils(this.config.seed);
+    this.voronoiGen = new VoronoiGenerator(this.config.width, this.config.height, this.config.seed);
 
     logAutopoiesis.info(
       "✅ TerrainGenerator inicializado con configuración validada",
@@ -239,38 +242,70 @@ export class TerrainGenerator {
     moistureMap: number[][],
     elevationMap: number[][],
   ): BiomeType[][] {
+    // Generar regiones orgánicas usando Voronoi
+    const numRegions = Math.floor((this.config.width * this.config.height) / 400); // ~1 región cada 20x20 tiles
+    const voronoiRegions = this.voronoiGen.generateRegions(numRegions, 80);
+    
+    // Asignar biomas a las regiones Voronoi
+    const regionsWithBiomes = this.voronoiGen.assignBiomes(voronoiRegions);
+    
+    // Crear mapa de biomas basado en regiones Voronoi
     const biomeMap: BiomeType[][] = Array.from(
       { length: this.config.height },
       () => Array<BiomeType>(this.config.width).fill(BiomeType.GRASSLAND),
     );
 
+    // Asignar biomas usando las regiones Voronoi orgánicas
     for (let y = 0; y < this.config.height; y++) {
       for (let x = 0; x < this.config.width; x++) {
+        const pixelX = x * this.config.tileSize;
+        const pixelY = y * this.config.tileSize;
+        
+        // Encontrar la región Voronoi más cercana
+        let closestRegion = regionsWithBiomes[0];
+        let minDistance = Infinity;
+        
+        for (const region of regionsWithBiomes) {
+          const distance = Math.hypot(
+            pixelX - region.center.x,
+            pixelY - region.center.y
+          );
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestRegion = region;
+          }
+        }
+        
+        // Verificar si el bioma puede existir en estas condiciones
         const temperature = temperatureMap[y][x];
         const moisture = moistureMap[y][x];
         const elevation = elevationMap[y][x];
+        
+        if (canBiomeSpawn(closestRegion.biome, temperature, moisture, elevation)) {
+          biomeMap[y][x] = closestRegion.biome;
+        } else {
+          // Fallback: usar el sistema original para este tile
+          let bestBiome = BiomeType.GRASSLAND;
+          let bestFitness = 0;
 
-        let bestBiome = BiomeType.GRASSLAND;
-        let bestFitness = 0;
-
-        for (const biome of this.config.biomes.enabled) {
-          if (canBiomeSpawn(biome, temperature, moisture, elevation)) {
-            const fitness = calculateBiomeFitness(
-              biome,
-              temperature,
-              moisture,
-              elevation,
-            );
-            if (fitness > bestFitness) {
-              bestFitness = fitness;
-              bestBiome = biome;
+          for (const biome of this.config.biomes.enabled) {
+            if (canBiomeSpawn(biome, temperature, moisture, elevation)) {
+              const fitness = calculateBiomeFitness(biome, temperature, moisture, elevation);
+              if (fitness > bestFitness) {
+                bestFitness = fitness;
+                bestBiome = biome;
+              }
             }
           }
+          biomeMap[y][x] = bestBiome;
         }
-
-        biomeMap[y][x] = bestBiome;
       }
     }
+
+    logAutopoiesis.info("🔸 Biomas asignados usando Voronoi", {
+      regions: regionsWithBiomes.length,
+      biomeTypes: [...new Set(regionsWithBiomes.map(r => r.biome))]
+    });
 
     return biomeMap;
   }
