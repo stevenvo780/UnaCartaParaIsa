@@ -409,8 +409,18 @@ export class AISystem {
    * Obtener posición de entidad
    */
   private getEntityPosition(entityId: string): { x: number; y: number } | null {
-    // Implementación simplificada - debería obtener la posición real de la entidad
-    return { x: 100, y: 100 }; // Placeholder
+    // Usar MovementSystem si está disponible
+    if (this.movementSystem) {
+      const state = this.movementSystem.getEntityMovementState(entityId);
+      if (state && state.currentPosition) {
+        return { x: state.currentPosition.x, y: state.currentPosition.y };
+      }
+    }
+
+    // Fallback suave: centro aproximado del mundo (reduce sesgo)
+    const defaultPos = this.gameState.entities?.find((e: any) => e.id === entityId)?.position;
+    if (defaultPos) return { x: defaultPos.x, y: defaultPos.y };
+    return { x: 0, y: 0 };
   }
 
   /**

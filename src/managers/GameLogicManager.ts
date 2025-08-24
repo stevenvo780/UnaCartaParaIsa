@@ -818,6 +818,10 @@ export class GameLogicManager implements IGameLogicManager {
 
     // Conectar movimiento con quest system
     this._scene.events.on("entityArrivedAtZone", (data: any) => {
+      // Actualizar zona actual en el sistema de necesidades al llegar
+      try {
+        this._needsSystem.setEntityZone(data.entityId, data.zoneId ?? data.zone);
+      } catch {}
       this._questSystem.handleEvent({
         type: "movement_completed",
         entityId: data.entityId,

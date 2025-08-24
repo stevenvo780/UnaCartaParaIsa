@@ -66,6 +66,60 @@ export class NeedsSystem {
       updateInterval: this.updateInterval,
       config: this.needsConfig,
     });
+
+    // Evitar deltaTime gigante en la primera actualización
+    this.lastUpdateTime = Date.now();
+  }
+
+  /**
+   * Obtener configuración actual del sistema de necesidades
+   */
+  public getConfig(): NeedsConfig {
+    return { ...this.needsConfig };
+  }
+
+  /**
+   * Actualizar parcialmente la configuración (con validaciones)
+   */
+  public updateConfig(partial: Partial<NeedsConfig>): void {
+    const prev = { ...this.needsConfig };
+    this.needsConfig = {
+      ...this.needsConfig,
+      ...partial,
+    };
+    // Validaciones básicas
+    const clamp = (v: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, v));
+    this.needsConfig.hungerDecayRate = clamp(
+      this.needsConfig.hungerDecayRate,
+      0.01,
+      2,
+    );
+    this.needsConfig.thirstDecayRate = clamp(
+      this.needsConfig.thirstDecayRate,
+      0.01,
+      2,
+    );
+    this.needsConfig.energyDecayRate = clamp(
+      this.needsConfig.energyDecayRate,
+      0.01,
+      2,
+    );
+    this.needsConfig.mentalHealthDecayRate = clamp(
+      this.needsConfig.mentalHealthDecayRate,
+      0.0,
+      1,
+    );
+    this.needsConfig.recoveryMultiplier = clamp(
+      this.needsConfig.recoveryMultiplier,
+      0.5,
+      10,
+    );
+
+    logAutopoiesis.info("🛠️ Config NeedsSystem actualizada", {
+      prev,
+      next: this.needsConfig,
+    });
   }
 
   /**
@@ -182,7 +236,8 @@ export class NeedsSystem {
     deltaTime: number,
   ): void {
     const { needs } = entityData;
-    const BASIC_RECOVERY_RATE = 0.15; // Aumentar recuperación básica
+    // Recuperación pasiva suave: no debe superar al decaimiento base
+    const BASIC_RECOVERY_RATE = 0.04;
 
     // Recuperación básica universal - todas las necesidades se recuperan lentamente
     needs.hunger = Math.min(
@@ -215,7 +270,7 @@ export class NeedsSystem {
     );
 
     // Recuperación adicional cuando las estadísticas están muy bajas (boost de supervivencia)
-    const CRITICAL_BOOST = 0.5; // Aumentar boost crítico
+    const CRITICAL_BOOST = 0.2;
     if (needs.hunger < 30)
       needs.hunger = Math.min(100, needs.hunger + CRITICAL_BOOST * deltaTime);
     if (needs.thirst < 30)
@@ -223,9 +278,9 @@ export class NeedsSystem {
     if (needs.energy < 30)
       needs.energy = Math.min(100, needs.energy + CRITICAL_BOOST * deltaTime);
 
-    // BOOST ESPECIAL para salud mental que está problemática
+    // Boost moderado para salud mental
     if (needs.mentalHealth < 50) {
-      needs.mentalHealth = Math.min(100, needs.mentalHealth + 0.8 * deltaTime);
+      needs.mentalHealth = Math.min(100, needs.mentalHealth + 0.2 * deltaTime);
     }
   }
 
