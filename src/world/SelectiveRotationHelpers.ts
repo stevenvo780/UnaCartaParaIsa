@@ -55,20 +55,47 @@ const NON_ROTATABLE_KEYWORDS = [
   "barn",
   "ruins", // Ruinas también deben mantener orientación
   "structure",
+  // Árboles específicos que NO deben rotar
+  "oak_tree",
+  "tree_idol", // Árboles sagrados/totems
+  "mega_tree", // Árboles muy grandes
+  "luminous_tree", // Árboles especiales
+  "white_tree",
+  "curved_tree",
+  "swirling_tree",
+  "willow", // Sauces tienen forma específica
 ];
 
 // Tipos que SÍ pueden rotar libremente
 const ROTATABLE_TYPES = [
   "terrain",
-  "vegetation",
-  "foliage",
-  "tree", // Solo algunos árboles
+  "foliage", // Arbustos y plantas pequeñas
   "rock",
   "debris",
   "mushroom",
   "grass",
   "flowers",
   "decoration", // Decoraciones menores
+];
+
+// Árboles que SÍ pueden rotar (lista específica y limitada)
+const ROTATABLE_TREES = [
+  "tree_emerald", // Árboles básicos esmeralda pueden rotar ligeramente
+  // Nota: La mayoría de árboles NO deben rotar para verse naturales
+];
+
+// Árboles que NUNCA deben rotar (lista explícita)
+const NEVER_ROTATE_TREES = [
+  "oak_tree",
+  "tree_idol",
+  "mega_tree", 
+  "luminous_tree",
+  "white_tree",
+  "curved_tree", 
+  "swirling_tree",
+  "willow",
+  "blue-green_balls_tree", // Estos tienen forma específica
+  "light_balls_tree",
 ];
 
 /**
@@ -80,19 +107,31 @@ export function canAssetRotate(assetType: string, assetKey: string): boolean {
     return true;
   }
 
-  // Verificar tipo exacto
-  if (NON_ROTATABLE_TYPES.includes(assetType.toLowerCase())) {
+  const typeLower = assetType.toLowerCase();
+  const keyLower = assetKey.toLowerCase();
+
+  // Caso especial para árboles - ser muy restrictivo
+  if (typeLower === 'tree' || keyLower.includes('tree')) {
+    // Primero verificar si está en la lista de nunca rotar
+    if (NEVER_ROTATE_TREES.some(treeType => keyLower.includes(treeType.toLowerCase()))) {
+      return false;
+    }
+    // Luego verificar si está permitido rotar (lista muy pequeña)
+    return ROTATABLE_TREES.some(treeType => keyLower.includes(treeType.toLowerCase()));
+  }
+
+  // Verificar tipo exacto no-rotable
+  if (NON_ROTATABLE_TYPES.includes(typeLower)) {
     return false;
   }
 
   // Verificar palabras clave en la key del asset
-  const keyLower = assetKey.toLowerCase();
   if (NON_ROTATABLE_KEYWORDS.some((keyword) => keyLower.includes(keyword))) {
     return false;
   }
 
   // Verificar si es explícitamente rotable
-  if (ROTATABLE_TYPES.includes(assetType.toLowerCase())) {
+  if (ROTATABLE_TYPES.includes(typeLower)) {
     return true;
   }
 
@@ -127,12 +166,16 @@ export function getSelectiveRotation(
 
     case "vegetation":
     case "foliage":
-    case "tree":
-      // Vegetación con rotación más sutil
-      if (assetKey.includes("tree_idol") || assetKey.includes("sacred")) {
-        return 0; // Árboles sagrados/totems no rotan
-      }
+      // Solo follaje y plantas pequeñas rotan libremente
       return Math.random() * Math.PI * 2;
+      
+    case "tree":
+      // Árboles: solo rotan los que están en la lista permitida
+      if (ROTATABLE_TREES.some(treeType => assetKey.includes(treeType))) {
+        // Rotación muy sutil para árboles permitidos (solo ±15 grados)
+        return (Math.random() - 0.5) * Math.PI / 6; // ±30° -> ±15°
+      }
+      return 0; // La mayoría de árboles NO rotan para verse naturales
 
     case "decoration":
       // Decoraciones menores pueden rotar

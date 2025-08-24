@@ -11,7 +11,6 @@ import { BiomeType, GeneratedWorld } from "./types";
 import {
   getSelectiveRotation,
   getOrganicOffset,
-  ROTATION_FEATURE_FLAGS,
 } from "./SelectiveRotationHelpers";
 
 export interface PlacedAsset {
@@ -85,6 +84,7 @@ export class DiverseWorldComposer {
   private buildingAssets: Map<string, AssetInfo[]> = new Map();
   private world: GeneratedWorld;
   private placedAssets: PlacedAsset[] = [];
+  private occupiedZones: Array<{ x: number; y: number; radius: number; type: string }> = [];
 
   constructor(scene: Phaser.Scene, seed: string) {
     this.noise = new NoiseUtils(seed);
@@ -387,15 +387,15 @@ export class DiverseWorldComposer {
         const asset = this.weightedRandomSelect(clusterAssets);
         if (!asset) continue; // Skip if no assets available
 
-        // Verificar anti-solapamiento
-        if (this.wouldOverlap(x, y, asset)) {
-          continue;
-        }
-
         // Escalas diferentes para árboles vs arbustos con más variedad
         const scale = asset.key.includes("tree")
           ? 1.8 + Math.random() * 2.0 // 1.8x-3.8x para árboles (más variados)
           : 0.8 + Math.random() * 0.8; // 0.8x-1.6x para arbustos
+
+        // Verificar anti-solapamiento con escala correcta
+        if (this.wouldOverlap(x, y, asset, scale)) {
+          continue;
+        }
 
         const rotation = getSelectiveRotation("vegetation", asset.key);
         const tint = this.getVariationTint(cluster.biome);
@@ -464,6 +464,25 @@ export class DiverseWorldComposer {
     const structureClusters = this.generateStructureClusters(12); // Más clusters
     const settlementClusters = this.generateSettlementClusters(8); // Nuevos asentamientos
 
+    // Registrar clusters como zonas ocupadas
+    for (const cluster of structureClusters) {
+      this.occupiedZones.push({
+        x: cluster.x,
+        y: cluster.y,
+        radius: cluster.radius * 1.2, // Un poco más grande para buffer
+        type: 'structure_cluster'
+      });
+    }
+    
+    for (const settlement of settlementClusters) {
+      this.occupiedZones.push({
+        x: settlement.x,
+        y: settlement.y,
+        radius: settlement.radius * 1.3,
+        type: 'settlement'
+      });
+    }
+
     // Procesar clusters de estructuras tradicionales
     for (const cluster of structureClusters) {
       const clusterAssets = this.getClusterAssets(cluster.type, allStructures);
@@ -494,12 +513,12 @@ export class DiverseWorldComposer {
         const asset = this.weightedRandomSelect(clusterAssets);
         if (!asset) continue;
 
-        // Verificar anti-solapamiento
-        if (this.wouldOverlap(x, y, asset)) {
+        const scale = 1.2 + Math.random() * 1.0; // 1.2x-2.2x estructuras variadas
+        
+        // Verificar anti-solapamiento con escala correcta
+        if (this.wouldOverlap(x, y, asset, scale)) {
           continue;
         }
-
-        const scale = 1.2 + Math.random() * 1.0; // 1.2x-2.2x estructuras variadas
         const rotation = getSelectiveRotation("structure", asset.key);
         const tint = this.getStructureTint(cluster.biome);
 
@@ -1058,12 +1077,12 @@ export class DiverseWorldComposer {
       const asset = this.weightedRandomSelect(trees);
       if (!asset) continue;
 
-      // Verificar anti-solapamiento
-      if (this.wouldOverlap(x, y, asset)) {
+      const scale = 1.5 + Math.random() * 1.8; // Árboles grandes para zonas verdes
+      
+      // Verificar anti-solapamiento con escala correcta
+      if (this.wouldOverlap(x, y, asset, scale)) {
         continue;
       }
-
-      const scale = 1.5 + Math.random() * 1.8; // Árboles grandes para zonas verdes
       const rotation = getSelectiveRotation('vegetation', asset.key);
       const tint = this.getVariationTint(greenZone.biome);
 
@@ -1245,33 +1264,45 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Genera clusters para estructuras con mayor variedad
+   * Genera clusters para estructuras con mejor evitación de solapamiento
    */
   private generateStructureClusters(count: number): ClusterPoint[] {
     const clusters: ClusterPoint[] = [];
-    const minDistance =
-      Math.sqrt((this.world.config.width * this.world.config.height) / count) *
-      1.0; // Reducir distancia para más densidad
+    const minDistance = Math.sqrt((this.world.config.width * this.world.config.height) / count) * 1.2;
 
-    for (let attempt = 0; attempt < count * 4; attempt++) {
-      const x = 150 + Math.random() * (this.world.config.width * 32 - 300);
-      const y = 150 + Math.random() * (this.world.config.height * 32 - 300);
+    for (let attempt = 0; attempt < count * 5; attempt++) {
+      const x = 200 + Math.random() * (this.world.config.width * 32 - 400);
+      const y = 200 + Math.random() * (this.world.config.height * 32 - 400);
 
-      const tooClose = clusters.some(
+      const biome = this.getBiomeAtPosition(x, y);
+      if (biome === BiomeType.WETLAND) continue; // Evitar pantanos
+
+      // Verificar distancia con otros clusters
+      const tooCloseToCluster = clusters.some(
         (cluster) => Math.hypot(cluster.x - x, cluster.y - y) < minDistance,
       );
+      
+      // Verificar distancia con zonas ocupadas
+      const tooCloseToOccupied = this.occupiedZones.some(
+        (zone) => Math.hypot(zone.x - x, zone.y - y) < (zone.radius + 100)
+      );
 
-      if (!tooClose) {
-        const biome = this.getBiomeAtPosition(x, y);
-
+      if (!tooCloseToCluster && !tooCloseToOccupied) {
+        const radius = 100 + Math.random() * 60; // Radio controlado
+        
         clusters.push({
           x,
           y,
-          radius: 120 + Math.random() * 80, // Radio más pequeño para más clusters
+          radius,
           biome,
           type: "ruins_site",
           density: 0.7 + Math.random() * 0.3,
           occupiedPositions: []
+        });
+        
+        // Registrar como zona ocupada inmediatamente
+        this.occupiedZones.push({
+          x, y, radius: radius * 1.3, type: 'ruins_cluster'
         });
 
         if (clusters.length >= count) break;
@@ -1282,33 +1313,46 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Genera clusters específicos para asentamientos
+   * Genera clusters específicos para asentamientos con mejor separación
    */
   private generateSettlementClusters(count: number): ClusterPoint[] {
     const settlements: ClusterPoint[] = [];
-    const minDistance = Math.sqrt((this.world.config.width * this.world.config.height) / count) * 1.5;
+    const minDistance = Math.sqrt((this.world.config.width * this.world.config.height) / count) * 2.0; // Aumentar separación
 
-    for (let attempt = 0; attempt < count * 3; attempt++) {
-      const x = 200 + Math.random() * (this.world.config.width * 32 - 400);
-      const y = 200 + Math.random() * (this.world.config.height * 32 - 400);
+    for (let attempt = 0; attempt < count * 4; attempt++) {
+      const x = 300 + Math.random() * (this.world.config.width * 32 - 600); // Más margen
+      const y = 300 + Math.random() * (this.world.config.height * 32 - 600);
 
       const biome = this.getBiomeAtPosition(x, y);
-      if (biome === BiomeType.WETLAND) continue; // Evitar pantanos
+      if (biome === BiomeType.WETLAND) continue;
 
-      const tooClose = settlements.some(
+      // Verificar distancia con otros asentamientos
+      const tooCloseToSettlement = settlements.some(
         (settlement) => Math.hypot(settlement.x - x, settlement.y - y) < minDistance,
       );
+      
+      // Verificar distancia con zonas ya ocupadas
+      const tooCloseToOccupied = this.occupiedZones.some(
+        (zone) => Math.hypot(zone.x - x, zone.y - y) < (zone.radius + 150)
+      );
 
-      if (!tooClose) {
+      if (!tooCloseToSettlement && !tooCloseToOccupied) {
         const settlementType = this.getSettlementType(biome);
+        const radius = this.getSettlementRadius(settlementType);
+        
         settlements.push({
           x,
           y,
-          radius: this.getSettlementRadius(settlementType),
+          radius,
           biome,
           type: settlementType,
           density: 0.8 + Math.random() * 0.2,
           occupiedPositions: []
+        });
+        
+        // Registrar inmediatamente como zona ocupada
+        this.occupiedZones.push({
+          x, y, radius: radius * 1.5, type: 'settlement'
         });
 
         if (settlements.length >= count) break;
@@ -1344,12 +1388,12 @@ export class DiverseWorldComposer {
       const asset = this.weightedRandomSelect(structureAssets);
       if (!asset) continue;
 
-      // Verificar anti-solapamiento
-      if (this.wouldOverlap(x, y, asset)) {
+      const scale = 1.0 + Math.random() * 0.8; // 1.0x-1.8x para asentamientos
+      
+      // Verificar anti-solapamiento con escala correcta
+      if (this.wouldOverlap(x, y, asset, scale)) {
         continue;
       }
-
-      const scale = 1.0 + Math.random() * 0.8; // 1.0x-1.8x para asentamientos
       const rotation = getSelectiveRotation("structure", asset.key);
       const tint = this.getSettlementTint(settlement.type);
 
@@ -1686,12 +1730,12 @@ export class DiverseWorldComposer {
       const asset = this.weightedRandomSelect(urbanAssets);
       if (!asset) continue;
 
-      // Verificar anti-solapamiento
-      if (this.wouldOverlap(x, y, asset)) {
+      const scale = 0.8 + Math.random() * 0.6; // 0.8x-1.4x Assets urbanos más variados
+      
+      // Verificar anti-solapamiento con escala correcta
+      if (this.wouldOverlap(x, y, asset, scale)) {
         continue;
       }
-
-      const scale = 0.8 + Math.random() * 0.6; // 0.8x-1.4x Assets urbanos más variados
       const rotation = getSelectiveRotation("prop", asset.key);
       const tint = this.getSettlementTint(settlement.type);
 
@@ -1778,15 +1822,34 @@ export class DiverseWorldComposer {
   // ==========================================
 
   /**
-   * Verifica si un asset se solaparía con otros existentes
+   * Verifica si un asset se solaparía con otros existentes (mejorado)
    */
-  private wouldOverlap(x: number, y: number, asset: AssetInfo): boolean {
-    const newBounds = this.calculateAssetBounds(x, y, 1.0, asset); // Escala base para verificación
-    const minDistance = 32; // Distancia mínima entre assets
-
+  private wouldOverlap(x: number, y: number, asset: AssetInfo, scale: number = 1.0): boolean {
+    const newBounds = this.calculateAssetBounds(x, y, scale, asset);
+    
     return this.placedAssets.some(placedAsset => {
       if (!placedAsset.bounds) return false;
       
+      // Calcular distancia mínima según tipos de assets
+      const minDistance = this.getMinDistanceBetweenAssets(asset, placedAsset.asset, scale, placedAsset.scale);
+      
+      // Verificar si las áreas se solapan usando bounds reales
+      const overlapX = this.boundsOverlap(
+        newBounds.x - newBounds.width/2, newBounds.x + newBounds.width/2,
+        placedAsset.bounds.x - placedAsset.bounds.width/2, placedAsset.bounds.x + placedAsset.bounds.width/2
+      );
+      
+      const overlapY = this.boundsOverlap(
+        newBounds.y - newBounds.height/2, newBounds.y + newBounds.height/2,
+        placedAsset.bounds.y - placedAsset.bounds.height/2, placedAsset.bounds.y + placedAsset.bounds.height/2
+      );
+      
+      // Si hay solapamiento en ambos ejes, hay colisión
+      if (overlapX && overlapY) {
+        return true;
+      }
+      
+      // Verificar distancia mínima para assets grandes
       const distance = Math.hypot(
         newBounds.x - placedAsset.bounds.x,
         newBounds.y - placedAsset.bounds.y
@@ -1797,29 +1860,90 @@ export class DiverseWorldComposer {
   }
 
   /**
-   * Calcula los límites de un asset
+   * Verifica si dos rangos se solapan
+   */
+  private boundsOverlap(start1: number, end1: number, start2: number, end2: number): boolean {
+    return start1 < end2 && start2 < end1;
+  }
+
+  /**
+   * Obtiene la distancia mínima entre dos tipos de assets
+   */
+  private getMinDistanceBetweenAssets(asset1: AssetInfo, asset2: AssetInfo, scale1: number, scale2: number): number {
+    // Distancias base según combinaciones de tipos
+    const getBaseDistance = (type: string): number => {
+      switch (type) {
+        case 'structure': return 120; // Estructuras necesitan mucho espacio
+        case 'tree': return 80;       // Árboles necesitan espacio moderado
+        case 'prop': return 40;       // Props menos espacio
+        case 'rock': return 30;       // Rocas menos espacio
+        case 'mushroom': return 25;   // Hongos muy poco espacio
+        case 'foliage': return 30;    // Follaje poco espacio
+        case 'decoration': return 35;
+        default: return 50;
+      }
+    };
+    
+    const dist1 = getBaseDistance(asset1.type || 'decoration');
+    const dist2 = getBaseDistance(asset2.type || 'decoration');
+    
+    // Usar la distancia mayor y aplicar escalas
+    const baseDistance = Math.max(dist1, dist2);
+    const scaleMultiplier = Math.max(scale1, scale2);
+    
+    return baseDistance * scaleMultiplier;
+  }
+
+  /**
+   * Calcula los límites de un asset con tamaños más precisos
    */
   private calculateAssetBounds(x: number, y: number, scale: number, asset: AssetInfo): { x: number; y: number; width: number; height: number } {
-    // Tamaños base aproximados según tipo de asset
+    // Tamaños base más precisos según tipo de asset y key específica
     let baseWidth = 32;
     let baseHeight = 32;
 
     switch (asset.type) {
       case 'tree':
-        baseWidth = 64;
-        baseHeight = 96;
+        // Árboles diferentes tienen tamaños diferentes
+        if (asset.key.includes('mega_tree')) {
+          baseWidth = 128; baseHeight = 192;
+        } else if (asset.key.includes('oak_tree') || asset.key.includes('willow')) {
+          baseWidth = 96; baseHeight = 128;
+        } else {
+          baseWidth = 64; baseHeight = 96;
+        }
         break;
       case 'structure':
-        baseWidth = 96;
-        baseHeight = 96;
+        // Estructuras tienen tamaños variables
+        if (asset.key.includes('house')) {
+          baseWidth = 128; baseHeight = 128;
+        } else if (asset.key.includes('well')) {
+          baseWidth = 64; baseHeight = 64;
+        } else {
+          baseWidth = 96; baseHeight = 96;
+        }
         break;
       case 'prop':
-        baseWidth = 24;
-        baseHeight = 24;
+        // Props varían mucho
+        if (asset.key.includes('table') || asset.key.includes('bench')) {
+          baseWidth = 48; baseHeight = 32;
+        } else if (asset.key.includes('lamp') || asset.key.includes('post')) {
+          baseWidth = 24; baseHeight = 64;
+        } else {
+          baseWidth = 32; baseHeight = 32;
+        }
+        break;
+      case 'ruin':
+        baseWidth = 80; baseHeight = 80;
+        break;
+      case 'rock':
+        baseWidth = 40; baseHeight = 40;
+        break;
+      case 'mushroom':
+        baseWidth = 24; baseHeight = 32;
         break;
       case 'foliage':
-        baseWidth = 32;
-        baseHeight = 32;
+        baseWidth = 40; baseHeight = 40;
         break;
     }
 
