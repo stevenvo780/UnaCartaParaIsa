@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import type { GameLogicUpdateData } from "../../types";
+import { ENTITY_STATS, UI_CONFIG } from "../../constants/WorldConfig";
 
 export class StatsModalContent {
   private scene: Phaser.Scene;
@@ -21,27 +22,20 @@ export class StatsModalContent {
     const isa = data.entities?.find((e) => e.id === "isa");
     const stev = data.entities?.find((e) => e.id === "stev");
 
-    if (isa) {
-      map.set("isa.health", Math.round(isa.stats.health));
-      map.set("isa.energy", Math.round(isa.stats.energy));
-      map.set("isa.hunger", Math.round(isa.stats.hunger));
-      map.set("isa.thirst", Math.round(isa.stats.thirst || 0));
-      map.set("isa.mentalHealth", Math.round(isa.stats.mentalHealth || 0));
-      map.set("isa.stamina", Math.round(isa.stats.stamina || 50));
-      map.set("isa.intelligence", Math.round(isa.stats.intelligence || 50));
-      map.set("isa.socialSkills", Math.round(isa.stats.socialSkills || 50));
-    }
+    // Llenar mapa con TODAS las estadísticas usando las constantes centralizadas
+    const entities = [
+      { id: "isa", entity: isa },
+      { id: "stev", entity: stev }
+    ];
 
-    if (stev) {
-      map.set("stev.health", Math.round(stev.stats.health));
-      map.set("stev.energy", Math.round(stev.stats.energy));
-      map.set("stev.hunger", Math.round(stev.stats.hunger));
-      map.set("stev.thirst", Math.round(stev.stats.thirst || 0));
-      map.set("stev.mentalHealth", Math.round(stev.stats.mentalHealth || 0));
-      map.set("stev.stamina", Math.round(stev.stats.stamina || 50));
-      map.set("stev.intelligence", Math.round(stev.stats.intelligence || 50));
-      map.set("stev.socialSkills", Math.round(stev.stats.socialSkills || 50));
-    }
+    entities.forEach(({ id, entity }) => {
+      if (entity) {
+        ENTITY_STATS.ALL.forEach(stat => {
+          const value = entity.stats[stat.key as keyof typeof entity.stats] ?? 50;
+          map.set(`${id}.${stat.key}`, Math.round(value));
+        });
+      }
+    });
 
     this.statTexts.forEach((t) => {
       const key = t.getData("statKey") as string;
@@ -74,6 +68,8 @@ export class StatsModalContent {
   }
 
   private build() {
+    const config = UI_CONFIG.STATS_MODAL;
+    
     const mk = (
       x: number,
       y: number,
@@ -82,7 +78,7 @@ export class StatsModalContent {
       key: string,
     ) => {
       const t = this.scene.add.text(x, y, `${icon} ${label}: 0`, {
-        fontSize: "12px",
+        fontSize: config.FONT_SIZE,
         color: "#ecf0f1",
         fontStyle: "normal",
       });
@@ -93,13 +89,13 @@ export class StatsModalContent {
       this.statTexts.push(t);
     };
 
-    // Título del modal mejorado
+    // Título del modal
     const modalTitle = this.scene.add.text(
-      150,
+      config.TOTAL_WIDTH / 2,
       -10,
-      "📊 ESTADÍSTICAS DETALLADAS",
+      `📊 ESTADÍSTICAS COMPLETAS (${ENTITY_STATS.ALL.length} STATS)`,
       {
-        fontSize: "14px",
+        fontSize: "13px",
         color: "#74b9ff",
         fontStyle: "bold",
         align: "center",
@@ -108,65 +104,72 @@ export class StatsModalContent {
     modalTitle.setOrigin(0.5, 0);
     this.container.add(modalTitle);
 
-    // Fondo para sección Isa
-    const isaBg = this.scene.add.graphics();
-    isaBg.fillStyle(0xe91e63, 0.1);
-    isaBg.fillRoundedRect(-5, 10, 160, 155, 8);
-    isaBg.lineStyle(2, 0xe91e63, 0.3);
-    isaBg.strokeRoundedRect(-5, 10, 160, 155, 8);
-    this.container.add(isaBg);
+    // Función para crear sección de estadísticas
+    const createStatsSection = (
+      entityId: string,
+      title: string,
+      color: number,
+      xOffset: number
+    ) => {
+      // Fondo de la sección
+      const bg = this.scene.add.graphics();
+      bg.fillStyle(color, 0.08);
+      bg.fillRoundedRect(xOffset - 5, 15, config.SECTION_WIDTH, config.SECTION_HEIGHT, 8);
+      bg.lineStyle(2, color, 0.3);
+      bg.strokeRoundedRect(xOffset - 5, 15, config.SECTION_WIDTH, config.SECTION_HEIGHT, 8);
+      this.container.add(bg);
 
-    // Sección Isa mejorada
-    const isaTitle = this.scene.add.text(10, 20, "👩 Isa", {
-      fontSize: "14px",
-      color: "#e91e63",
-      fontStyle: "bold",
-    });
-    this.container.add(isaTitle);
+      // Título de la sección
+      const sectionTitle = this.scene.add.text(xOffset + 10, 25, title, {
+        fontSize: "12px",
+        color: `#${color.toString(16).padStart(6, '0')}`,
+        fontStyle: "bold",
+      });
+      this.container.add(sectionTitle);
 
-    mk(10, 40, "💚", "Salud", "isa.health");
-    mk(10, 55, "⚡", "Energía", "isa.energy");
-    mk(10, 70, "🍖", "Hambre", "isa.hunger");
-    mk(10, 85, "💧", "Sed", "isa.thirst");
-    mk(10, 100, "🧠", "Mental", "isa.mentalHealth");
-    mk(10, 115, "🏃", "Resistencia", "isa.stamina");
-    mk(10, 130, "🎓", "Inteligencia", "isa.intelligence");
-    mk(10, 145, "👥", "Social", "isa.socialSkills");
+      // Crear estadísticas organizadas por categoría
+      let yPos = 50;
+      const colWidth = 120;
+      
+      // Físicas
+      ENTITY_STATS.PHYSICAL.forEach((stat, index) => {
+        const x = xOffset + 10 + (Math.floor(index / 6) * colWidth);
+        const y = yPos + (index % 6) * config.LINE_HEIGHT;
+        mk(x, y, stat.icon, stat.label, `${entityId}.${stat.key}`);
+      });
 
-    // Línea separadora mejorada
+      yPos += 100; // Espacio para próxima categoría
+
+      // Mentales
+      ENTITY_STATS.MENTAL.forEach((stat, index) => {
+        const x = xOffset + 10 + (Math.floor(index / 6) * colWidth);
+        const y = yPos + (index % 6) * config.LINE_HEIGHT;
+        mk(x, y, stat.icon, stat.label, `${entityId}.${stat.key}`);
+      });
+
+      yPos += 100; // Espacio para próxima categoría
+
+      // Sociales
+      ENTITY_STATS.SOCIAL.forEach((stat, index) => {
+        const x = xOffset + 10 + (Math.floor(index / 6) * colWidth);
+        const y = yPos + (index % 6) * config.LINE_HEIGHT;
+        mk(x, y, stat.icon, stat.label, `${entityId}.${stat.key}`);
+      });
+    };
+
+    // Crear secciones
+    createStatsSection("isa", "👩 ISA - Estadísticas Completas", 0xe91e63, 0);
+    createStatsSection("stev", "👨 STEV - Estadísticas Completas", 0x3498db, config.SECTION_WIDTH + 20);
+
+    // Separador central
     const separator = this.scene.add.graphics();
     separator.lineStyle(2, 0x74b9ff, 0.6);
-    separator.lineBetween(170, 15, 170, 160);
-    // Puntos decorativos
+    const sepX = config.SECTION_WIDTH + 10;
+    separator.lineBetween(sepX, 20, sepX, config.SECTION_HEIGHT + 10);
     separator.fillStyle(0x74b9ff, 0.8);
-    separator.fillCircle(170, 15, 3);
-    separator.fillCircle(170, 85, 3);
-    separator.fillCircle(170, 160, 3);
+    separator.fillCircle(sepX, 20, 3);
+    separator.fillCircle(sepX, config.SECTION_HEIGHT / 2, 3);
+    separator.fillCircle(sepX, config.SECTION_HEIGHT + 10, 3);
     this.container.add(separator);
-
-    // Fondo para sección Stev
-    const stevBg = this.scene.add.graphics();
-    stevBg.fillStyle(0x3498db, 0.1);
-    stevBg.fillRoundedRect(185, 10, 160, 155, 8);
-    stevBg.lineStyle(2, 0x3498db, 0.3);
-    stevBg.strokeRoundedRect(185, 10, 160, 155, 8);
-    this.container.add(stevBg);
-
-    // Sección Stev mejorada
-    const stevTitle = this.scene.add.text(195, 20, "👨 Stev", {
-      fontSize: "14px",
-      color: "#3498db",
-      fontStyle: "bold",
-    });
-    this.container.add(stevTitle);
-
-    mk(195, 40, "💚", "Salud", "stev.health");
-    mk(195, 55, "⚡", "Energía", "stev.energy");
-    mk(195, 70, "🍖", "Hambre", "stev.hunger");
-    mk(195, 85, "💧", "Sed", "stev.thirst");
-    mk(195, 100, "🧠", "Mental", "stev.mentalHealth");
-    mk(195, 115, "🏃", "Resistencia", "stev.stamina");
-    mk(195, 130, "🎓", "Inteligencia", "stev.intelligence");
-    mk(195, 145, "👥", "Social", "stev.socialSkills");
   }
 }

@@ -95,21 +95,29 @@ export class GameEntity extends Phaser.Physics.Arcade.Sprite {
       state: "idle",
       activity: "WANDERING",
       stats: {
+        // Estadísticas físicas principales
         hunger: this.services.config.entityInitialStats,
         thirst: this.services.config.entityInitialStats,
         sleepiness: this.services.config.entityInitialStats,
+        energy: this.services.config.entityInitialStats,
+        health: this.services.config.entityInitialHealth,
+        stamina: this.services.config.entityInitialStats, // Nueva
+        
+        // Estadísticas mentales y emocionales
         loneliness: this.services.config.entityInitialStats,
         happiness: this.services.config.entityInitialStats,
-        energy: this.services.config.entityInitialStats,
         boredom: this.services.config.entityInitialStats,
-        money: this.services.config.entityInitialMoney,
-        health: this.services.config.entityInitialHealth,
         stress: this.services.config.entityInitialStats,
+        mentalHealth: this.services.config.entityInitialStats,
+        intelligence: this.services.config.entityInitialStats, // Nueva
+        
+        // Estadísticas sociales y avanzadas
+        money: this.services.config.entityInitialMoney,
         comfort: this.services.config.entityInitialStats,
         creativity: this.services.config.entityInitialStats,
         resonance: this.services.config.initialResonance,
         courage: this.services.config.entityInitialStats,
-        mentalHealth: this.services.config.entityInitialStats,
+        socialSkills: this.services.config.entityInitialStats, // Nueva
       },
       lastActivityChange: Date.now(),
       pulsePhase: 0,

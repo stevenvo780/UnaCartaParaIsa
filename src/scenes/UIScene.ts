@@ -126,7 +126,8 @@ export class UIScene extends Phaser.Scene {
       logAutopoiesis.info("✅ ExplorationUI created");
 
       // Setup modern navigation
-      this.setupModernNavigation();
+      // Navigation manejada por InputManager en MainScene
+      // this.setupModernNavigation();
       logAutopoiesis.info("✅ Modern navigation setup complete");
 
       // Suscribirse a necesidades desde MainScene (UI + luces)
@@ -563,12 +564,14 @@ export class UIScene extends Phaser.Scene {
           const newScrollX = camera.scrollX + deltaX;
           const newScrollY = camera.scrollY + deltaY;
 
-          // Set reasonable world bounds (adjust these based on your world size)
-          const maxScrollX = 2000;
-          const maxScrollY = 2000;
+          // Usar límites del WorldConfig para consistencia
+          const viewWidth = camera.width / camera.zoom;
+          const viewHeight = camera.height / camera.zoom;
+          const maxScrollX = Math.max(0, 4096 - viewWidth);  // WORLD_CONFIG.WORLD_WIDTH
+          const maxScrollY = Math.max(0, 4096 - viewHeight); // WORLD_CONFIG.WORLD_HEIGHT
 
-          camera.scrollX = Phaser.Math.Clamp(newScrollX, -500, maxScrollX);
-          camera.scrollY = Phaser.Math.Clamp(newScrollY, -500, maxScrollY);
+          camera.scrollX = Phaser.Math.Clamp(newScrollX, 0, maxScrollX);
+          camera.scrollY = Phaser.Math.Clamp(newScrollY, 0, maxScrollY);
 
           this.lastPointerX = pointer.x;
           this.lastPointerY = pointer.y;

@@ -4,10 +4,11 @@
  */
 
 import * as EasyStar from "easystarjs";
-import type { GameState, Zone } from "../types";
+import type { GameState, Zone, MapElement } from "../types";
 import { logAutopoiesis } from "../utils/logger";
 import { lerp, calculateZoneDistance, worldToGrid } from "../utils/mathUtils";
 import { PHYSICS } from "../constants";
+import { WORLD_CONFIG } from "../constants/WorldConfig";
 
 export interface MovementState {
   entityId: string;
@@ -66,10 +67,9 @@ export class MovementSystem {
   private zoneDistanceCache = new Map<string, ZoneDistance>();
 
   // Sistema de pathfinding simple optimizado
-  private readonly GRID_SIZE = PHYSICS.PATHFINDING.GRID_SIZE;
   private readonly gridSize = PHYSICS.PATHFINDING.GRID_SIZE;
-  private readonly gridWidth = 40; // 1280px / 32px = 40 tiles
-  private readonly gridHeight = 30; // 960px / 32px = 30 tiles
+  private gridWidth: number; // dinámico según tamaño del mundo
+  private gridHeight: number; // dinámico según tamaño del mundo
   private occupiedTiles = new Set<string>();
   private cachedGrid: number[][] | null = null;
   private gridCacheTime: number = 0;
@@ -93,6 +93,14 @@ export class MovementSystem {
       this.MAX_PATHFINDING_ITERATIONS,
     );
 
+    // Calcular dimensiones del grid basadas en el tamaño del mundo
+    const worldWidthPx =
+      this.gameState.worldSize?.width ?? WORLD_CONFIG.WORLD_WIDTH;
+    const worldHeightPx =
+      this.gameState.worldSize?.height ?? WORLD_CONFIG.WORLD_HEIGHT;
+    this.gridWidth = Math.max(1, Math.ceil(worldWidthPx / this.gridSize));
+    this.gridHeight = Math.max(1, Math.ceil(worldHeightPx / this.gridSize));
+
     this.precomputeZoneDistances();
     this.initializeObstacles();
 
@@ -104,7 +112,7 @@ export class MovementSystem {
     logAutopoiesis.info("🚶 Sistema de Movimiento inicializado", {
       baseSpeed: this.BASE_MOVEMENT_SPEED,
       zoneDistances: this.zoneDistanceCache.size,
-      gridSize: this.GRID_SIZE,
+      gridSize: this.gridSize,
       pathfinder: "EasyStar.js",
       obstacles: this.occupiedTiles.size,
     });
@@ -231,14 +239,14 @@ export class MovementSystem {
         const { x: tileX, y: tileY } = worldToGrid(
           obstacle.position.x,
           obstacle.position.y,
-          this.GRID_SIZE,
+          this.gridSize,
         );
 
         // Ocupar múltiples tiles según el tamaño del objeto
-        const width = obstacle.width || this.GRID_SIZE;
-        const height = obstacle.height || this.GRID_SIZE;
-        const tilesWide = Math.ceil(width / this.GRID_SIZE);
-        const tilesHigh = Math.ceil(height / this.GRID_SIZE);
+        const width = obstacle.width || this.gridSize;
+        const height = obstacle.height || this.gridSize;
+        const tilesWide = Math.ceil(width / this.gridSize);
+        const tilesHigh = Math.ceil(height / this.gridSize);
 
         for (let dx = 0; dx < tilesWide; dx++) {
           for (let dy = 0; dy < tilesHigh; dy++) {
@@ -258,12 +266,9 @@ export class MovementSystem {
   /**
    * Verificar si un elemento es un obstáculo
    */
-  private isObstacle(element: {
-    assetKey?: string;
-    collides?: boolean;
-  }): boolean {
+  private isObstacle(element: MapElement): boolean {
     // Elementos que bloquean el paso
-    const obstacles = [
+    const obstacleKeywords = [
       "tree",
       "rock",
       "building",
@@ -271,10 +276,18 @@ export class MovementSystem {
       "water",
       "fence",
       "boulder",
+      "house",
+      "structure",
     ];
+
+    const assetId = element.metadata?.assetId || element.metadata?.furnitureType || "";
+    const hasCollider = element.metadata?.collider === true;
+    const typedObstacle = element.type === "obstacle";
+
     return (
-      obstacles.some((type) => element.assetKey?.includes(type)) ||
-      element.collides === true
+      typedObstacle ||
+      hasCollider ||
+      obstacleKeywords.some((kw) => assetId.toLowerCase().includes(kw))
     );
   }
 
@@ -288,12 +301,12 @@ export class MovementSystem {
     const { x: startX, y: startY } = worldToGrid(
       position.x,
       position.y,
-      this.GRID_SIZE,
+      this.gridSize,
     );
     const { x: endX, y: endY } = worldToGrid(
       position.x + size.width,
       position.y + size.height,
-      this.GRID_SIZE,
+      this.gridSize,
     );
 
     for (let x = startX; x <= endX; x++) {
@@ -434,8 +447,8 @@ export class MovementSystem {
     const targetPos = pathResult.path[pathResult.path.length - 1];
     if (
       this.checkCollisionBox(targetPos, {
-        width: this.GRID_SIZE,
-        height: this.GRID_SIZE,
+        width: this.gridSize,
+        height: this.gridSize,
       })
     ) {
       logAutopoiesis.warn(`Destino ${targetZoneId} bloqueado por obstáculos`);
@@ -495,7 +508,7 @@ export class MovementSystem {
     };
 
     // Crear cache key para rutas
-    const pathKey = `${Math.round(from.x / 32)},${Math.round(from.y / 32)}->${targetZone.id}`;
+    const pathKey = `${Math.floor(from.x / this.gridSize)},${Math.floor(from.y / this.gridSize)}->${targetZone.id}`;
 
     // Verificar cache de rutas primero
     const now = Date.now();
@@ -566,8 +579,9 @@ export class MovementSystem {
     }
 
     // Verificar si destino es accesible y encontrar alternativa si es necesario
-    endX = this.findAccessibleDestination(grid, endX, endY).x;
-    endY = this.findAccessibleDestination(grid, endX, endY).y;
+    const accessible = this.findAccessibleDestination(grid, endX, endY);
+    endX = accessible.x;
+    endY = accessible.y;
     to.x = endX * this.gridSize;
     to.y = endY * this.gridSize;
 
@@ -690,7 +704,8 @@ export class MovementSystem {
     const distance = Math.hypot(to.x - from.x, to.y - from.y);
 
     return {
-      success: false,
+      // Permitir ruta directa como degradación; validamos colisión en destino por separado
+      success: true,
       path: [from, to],
       estimatedTime: this.estimateTravelTime(distance, 0),
       distance,

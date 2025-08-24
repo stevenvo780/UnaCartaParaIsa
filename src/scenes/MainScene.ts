@@ -8,6 +8,7 @@ import { UnifiedAssetManager } from "../managers/UnifiedAssetManager";
 import { ZoneRenderer } from "../managers/ZoneRenderer";
 import { logAutopoiesis } from "../utils/logger";
 import { LoadingProgressManager } from "../utils/LoadingProgressManager";
+import { WORLD_CONFIG, CAMERA_CONFIG } from "../constants/WorldConfig";
 import { DiverseWorldComposer } from "../world/DiverseWorldComposer";
 import { LayeredWorldRenderer } from "../world/LayeredWorldRenderer";
 import {
@@ -38,6 +39,13 @@ export default class MainScene extends Phaser.Scene {
   // Manager de progreso de carga
   private progressManager?: LoadingProgressManager;
 
+  // Controles de cámara
+  private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
+  private wasd?: { up: Phaser.Input.Keyboard.Key; down: Phaser.Input.Keyboard.Key; left: Phaser.Input.Keyboard.Key; right: Phaser.Input.Keyboard.Key };
+  private isDraggingCamera = false;
+  private dragStart = { x: 0, y: 0 };
+  private camStart = { x: 0, y: 0 };
+
   // UI principal (cartas, necesidades, estado) se gestiona en UIScene
   // UI principal (cartas y estado de sistema) se gestiona en UIScene
 
@@ -51,7 +59,7 @@ export default class MainScene extends Phaser.Scene {
 
     // Configuración muy básica
     this.scale.on("resize", this.resize, this);
-    this.input.keyboard?.createCursorKeys();
+    this.cursors = this.input.keyboard?.createCursorKeys();
 
     logAutopoiesis.info("✅ MainScene init complete");
   }
@@ -313,57 +321,43 @@ export default class MainScene extends Phaser.Scene {
       this.scene.launch("UIScene");
       logAutopoiesis.debug("🎯 MainScene: UIScene launch called");
 
-      // 18. Configurar cámara correctamente
-      const worldPixelWidth =
-        baseWorld.config.width * baseWorld.config.tileSize;
-      const worldPixelHeight =
-        baseWorld.config.height * baseWorld.config.tileSize;
+      // 18. Configurar cámara usando constantes centralizadas
+      const worldPixelWidth = WORLD_CONFIG.WORLD_WIDTH;
+      const worldPixelHeight = WORLD_CONFIG.WORLD_HEIGHT;
 
-      logAutopoiesis.info("🎥 Configurando cámara", {
-        worldTiles: `${baseWorld.config.width}x${baseWorld.config.height}`,
+      logAutopoiesis.info("🎥 Configurando cámara con constantes centralizadas", {
         worldPixels: `${worldPixelWidth}x${worldPixelHeight}`,
-        tileSize: baseWorld.config.tileSize,
+        cameraConfig: CAMERA_CONFIG,
       });
 
-      // Configurar límites de cámara según el mundo generado
-      this.cameras.main.setBounds(0, 0, worldPixelWidth, worldPixelHeight);
+      // Configurar límites de cámara - NECESARIO para evitar ir fuera del mundo
+      this.cameras.main.setBounds(0, 0, WORLD_CONFIG.WORLD_WIDTH, WORLD_CONFIG.WORLD_HEIGHT);
 
-      // Configurar zoom para ver un área apropiada del mundo
+      // Configurar zoom inicial
       const gameWidth = this.scale.gameSize.width;
       const gameHeight = this.scale.gameSize.height;
 
-      // Calcular zoom para mostrar aproximadamente el 80% del mundo (más cercano)
-      const zoomX = gameWidth / (worldPixelWidth * 0.8);
-      const zoomY = gameHeight / (worldPixelHeight * 0.8);
-      const optimalZoom = Math.min(zoomX, zoomY, 1.2); // Permitir zoom hasta 1.2
-
-      this.cameras.main.setZoom(optimalZoom);
+      // Usar zoom por defecto de las constantes
+      this.cameras.main.setZoom(CAMERA_CONFIG.DEFAULT_ZOOM);
+      
       logAutopoiesis.info("🎥 Zoom configurado", {
-        optimalZoom,
+        initialZoom: CAMERA_CONFIG.DEFAULT_ZOOM,
         gameSize: `${gameWidth}x${gameHeight}`,
-        zoomX,
-        zoomY,
+        worldSize: `${worldPixelWidth}x${worldPixelHeight}`,
       });
 
-      // Centrar la cámara en el mundo usando scrollTo en lugar de centerOn
-      const centerX = worldPixelWidth / 2;
-      const centerY = worldPixelHeight / 2;
+      // Centrar la cámara en el mundo usando constantes
+      const centerX = WORLD_CONFIG.WORLD_CENTER_X;
+      const centerY = WORLD_CONFIG.WORLD_CENTER_Y;
 
-      // Calcular posición de scroll para centrar correctamente
-      const scrollX = centerX - gameWidth / optimalZoom / 2;
-      const scrollY = centerY - gameHeight / optimalZoom / 2;
-
-      this.cameras.main.setScroll(scrollX, scrollY);
+      // Centrar correctamente
+      this.cameras.main.centerOn(centerX, centerY);
 
       logAutopoiesis.info("🎥 Cámara posicionada", {
-        centerX,
-        centerY,
-        scrollX,
-        scrollY,
-        visibleArea: {
-          width: gameWidth / optimalZoom,
-          height: gameHeight / optimalZoom,
-        },
+        center: `${centerX}, ${centerY}`,
+        currentScroll: `${this.cameras.main.scrollX}, ${this.cameras.main.scrollY}`,
+        zoom: CAMERA_CONFIG.DEFAULT_ZOOM,
+        worldSize: `${worldPixelWidth}x${worldPixelHeight}`,
       });
 
       // 19. Eventos desde UI
@@ -403,9 +397,10 @@ export default class MainScene extends Phaser.Scene {
    * Genera un mundo orgánico usando ruido Perlin para biomas naturales
    */
   private generateOrganicWorld(): GeneratedWorld {
-    const worldWidth = 180;
-    const worldHeight = 180;
     const tileSize = 32;
+    // Calcular dimensiones en tiles basado en WorldConfig
+    const worldWidth = Math.floor(WORLD_CONFIG.WORLD_WIDTH / tileSize);
+    const worldHeight = Math.floor(WORLD_CONFIG.WORLD_HEIGHT / tileSize);
 
     const config: WorldGenConfig = {
       width: worldWidth,
@@ -583,6 +578,29 @@ export default class MainScene extends Phaser.Scene {
       this.zoneRenderer.updateVisibility(this.cameras.main.zoom);
     }
 
+    // Pan de cámara con teclas (WASD y Flechas)
+    const cam = this.cameras.main;
+    const speed = (CAMERA_CONFIG.PAN_SPEED * (delta / 16.67)) / cam.zoom;
+    let moveX = 0;
+    let moveY = 0;
+    const c = this.cursors;
+    const w = this.wasd;
+    if (c) {
+      if (c.left?.isDown) moveX -= speed;
+      if (c.right?.isDown) moveX += speed;
+      if (c.up?.isDown) moveY -= speed;
+      if (c.down?.isDown) moveY += speed;
+    }
+    if (w) {
+      if (w.left?.isDown) moveX -= speed;
+      if (w.right?.isDown) moveX += speed;
+      if (w.up?.isDown) moveY -= speed;
+      if (w.down?.isDown) moveY += speed;
+    }
+    if (moveX !== 0 || moveY !== 0) {
+      cam.setScroll(cam.scrollX + moveX, cam.scrollY + moveY);
+    }
+
     // Usar tiempo absoluto para sincronización (ejemplo futuro:
     // sincronizar animaciones globales, efectos de día/noche, etc.)
     // TODO: Implementar efectos basados en tiempo absoluto cuando sea necesario
@@ -640,6 +658,15 @@ export default class MainScene extends Phaser.Scene {
    * Configura los controles del juego
    */
   private setupControls(): void {
+    // Crear cursores y WASD
+    this.cursors = this.input.keyboard?.createCursorKeys();
+    this.wasd = this.input.keyboard?.addKeys({
+      up: "W",
+      down: "S",
+      left: "A",
+      right: "D",
+    }) as any;
+
     // TAB para cambiar control entre entidades
     this.input.keyboard?.on("keydown-TAB", () => {
       const current = this.inputManager.getControlledEntity();
@@ -702,9 +729,9 @@ export default class MainScene extends Phaser.Scene {
         const camera = this.cameras.main;
         const currentZoom = camera.zoom;
 
-        // Límites conservadores para mantener rendimiento
-        const minZoom = 0.5;
-        const maxZoom = 1.5;
+        // Límites desde la configuración centralizada
+        const minZoom = CAMERA_CONFIG.MIN_ZOOM;
+        const maxZoom = CAMERA_CONFIG.MAX_ZOOM;
 
         // Zoom suave
         const zoomFactor = deltaY > 0 ? 0.95 : 1.05;
@@ -717,6 +744,29 @@ export default class MainScene extends Phaser.Scene {
         camera.setZoom(newZoom);
       },
     );
+
+    // Arrastre para mover cámara
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      if (pointer.rightButtonDown() || pointer.leftButtonDown()) {
+        this.isDraggingCamera = true;
+        this.dragStart.x = pointer.x;
+        this.dragStart.y = pointer.y;
+        this.camStart.x = this.cameras.main.scrollX;
+        this.camStart.y = this.cameras.main.scrollY;
+      }
+    });
+
+    this.input.on("pointerup", () => {
+      this.isDraggingCamera = false;
+    });
+
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      if (!this.isDraggingCamera || !pointer.isDown) return;
+      const cam = this.cameras.main;
+      const dx = (pointer.x - this.dragStart.x) / cam.zoom;
+      const dy = (pointer.y - this.dragStart.y) / cam.zoom;
+      cam.setScroll(this.camStart.x - dx, this.camStart.y - dy);
+    });
 
     // Z para toggle de zonas de recuperación
     this.input.keyboard?.on("keydown-Z", () => {

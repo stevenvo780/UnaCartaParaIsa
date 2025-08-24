@@ -6,6 +6,7 @@
 import Phaser from "phaser";
 import type { AnimatedGameEntity } from "../entities/AnimatedGameEntity";
 import { logAutopoiesis } from "../utils/logger";
+import { WORLD_CONFIG, CAMERA_CONFIG } from "../constants/WorldConfig";
 
 export type ControlledEntity = "isa" | "stev" | "none";
 
@@ -89,7 +90,7 @@ export class InputManager {
     this.scene.input.keyboard.on("keydown", (event: KeyboardEvent) => {
       if (event.ctrlKey && this.scene.cameras?.main) {
         const camera = this.scene.cameras.main;
-        const panSpeed = 20;
+        const panSpeed = CAMERA_CONFIG.PAN_SPEED;
 
         switch (event.code) {
           case "KeyW":
@@ -115,7 +116,7 @@ export class InputManager {
           case "Equal":
           case "NumpadAdd": {
             // Zoom in con +
-            const newZoomIn = Phaser.Math.Clamp(camera.zoom * 1.1, 0.3, 3);
+            const newZoomIn = Phaser.Math.Clamp(camera.zoom * (1 + CAMERA_CONFIG.ZOOM_STEP), CAMERA_CONFIG.MIN_ZOOM, CAMERA_CONFIG.MAX_ZOOM);
             camera.setZoom(newZoomIn);
             event.preventDefault();
             break;
@@ -123,16 +124,16 @@ export class InputManager {
           case "Minus":
           case "NumpadSubtract": {
             // Zoom out con -
-            const newZoomOut = Phaser.Math.Clamp(camera.zoom * 0.9, 0.3, 3);
+            const newZoomOut = Phaser.Math.Clamp(camera.zoom * (1 - CAMERA_CONFIG.ZOOM_STEP), CAMERA_CONFIG.MIN_ZOOM, CAMERA_CONFIG.MAX_ZOOM);
             camera.setZoom(newZoomOut);
             event.preventDefault();
             break;
           }
           case "Digit0":
           case "Numpad0": {
-            // Reset zoom y posición
-            camera.setZoom(1);
-            camera.centerOn(600, 400); // Centro del mundo
+            // Reset zoom y posición usando constantes centralizadas
+            camera.setZoom(CAMERA_CONFIG.DEFAULT_ZOOM);
+            camera.centerOn(WORLD_CONFIG.WORLD_CENTER_X, WORLD_CONFIG.WORLD_CENTER_Y);
             event.preventDefault();
             break;
           }
@@ -172,10 +173,16 @@ export class InputManager {
       if (this.isDragging && this.scene.cameras?.main) {
         const deltaX = pointer.x - this.lastPointerPosition.x;
         const deltaY = pointer.y - this.lastPointerPosition.y;
+        const camera = this.scene.cameras.main;
 
-        // Movimiento más sensible y natural
-        this.scene.cameras.main.scrollX -= deltaX * 1.2;
-        this.scene.cameras.main.scrollY -= deltaY * 1.2;
+        // Movimiento suave - Phaser maneja los límites automáticamente con setBounds()
+        const oldScrollX = camera.scrollX;
+        const oldScrollY = camera.scrollY;
+        
+        camera.scrollX -= deltaX * CAMERA_CONFIG.SMOOTH_FACTOR;
+        camera.scrollY -= deltaY * CAMERA_CONFIG.SMOOTH_FACTOR;
+        
+        // Movimiento limpio sin debug logging
 
         this.lastPointerPosition = { x: pointer.x, y: pointer.y };
       } else {
@@ -208,9 +215,9 @@ export class InputManager {
         if (this.scene.cameras?.main) {
           const camera = this.scene.cameras.main;
 
-          // Zoom más suave y con más rango
-          const zoomFactor = deltaY > 0 ? 0.95 : 1.05; // Más sutil que 0.9/1.1
-          const newZoom = Phaser.Math.Clamp(camera.zoom * zoomFactor, 0.3, 3); // Más rango
+          // Zoom con constantes centralizadas
+          const zoomFactor = deltaY > 0 ? (1 - CAMERA_CONFIG.ZOOM_STEP) : (1 + CAMERA_CONFIG.ZOOM_STEP);
+          const newZoom = Phaser.Math.Clamp(camera.zoom * zoomFactor, CAMERA_CONFIG.MIN_ZOOM, CAMERA_CONFIG.MAX_ZOOM);
 
           // Zoom hacia el cursor del mouse
           const worldPoint = camera.getWorldPoint(pointer.x, pointer.y);
@@ -218,8 +225,12 @@ export class InputManager {
 
           // Ajustar scroll para que el zoom sea hacia donde está el mouse
           const newWorldPoint = camera.getWorldPoint(pointer.x, pointer.y);
-          camera.scrollX -= newWorldPoint.x - worldPoint.x;
-          camera.scrollY -= newWorldPoint.y - worldPoint.y;
+          const newScrollX = camera.scrollX - (newWorldPoint.x - worldPoint.x);
+          const newScrollY = camera.scrollY - (newWorldPoint.y - worldPoint.y);
+
+          // Aplicar scroll - Phaser maneja los límites automáticamente
+          camera.scrollX = newScrollX;
+          camera.scrollY = newScrollY;
         }
       },
     );
