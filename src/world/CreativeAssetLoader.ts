@@ -790,66 +790,67 @@ export class CreativeAssetLoader {
     const structureAssets: AssetInfo[] = [];
 
     const structures = [
-      // Casas y edificios
+      // Casas y edificios (ahora compatibles con biomas generados)
       {
         key: "house",
         path: "assets/structures/estructuras_completas/House.png",
-        biome: "village",
+        biome: "grassland", // Cambio: de "village" a "grassland"
         rarity: "uncommon",
       },
       {
         key: "house_hay_1",
         path: "assets/structures/estructuras_completas/House_Hay_1.png",
-        biome: "village",
+        biome: "grassland", // Cambio: aparecen en praderas
         rarity: "common",
       },
       {
         key: "house_hay_2",
         path: "assets/structures/estructuras_completas/House_Hay_2.png",
-        biome: "village",
+        biome: "forest", // Cambio: casas en bosques también
         rarity: "common",
       },
       {
         key: "house_hay_3",
         path: "assets/structures/estructuras_completas/House_Hay_3.png",
-        biome: "village",
+        biome: "grassland",
         rarity: "common",
       },
       {
         key: "house_hay_4_purple",
         path: "assets/structures/estructuras_completas/House_Hay_4_Purple.png",
-        biome: "village",
+        biome: "mystical", // Cambio: la casa púrpura va en biomas místicos
         rarity: "rare",
       },
 
-      // Otras estructuras
+      // Otras estructuras (compatibles con biomas generados)
       {
         key: "well_hay_1",
         path: "assets/structures/estructuras_completas/Well_Hay_1.png",
-        biome: "village",
+        biome: "grassland", // Cambio: pozos en praderas
         rarity: "uncommon",
       },
       {
         key: "city_wall_gate_1",
         path: "assets/structures/estructuras_completas/CityWall_Gate_1.png",
-        biome: "city",
+        biome: "mountainous", // Cambio: muros en montañas
         rarity: "rare",
       },
       {
         key: "fences",
         path: "assets/structures/estructuras_completas/Fences.png",
-        biome: "village",
+        biome: "forest", // Cambio: cercas en bosques
         rarity: "common",
       },
     ];
 
-    // Assets numerados
+    // Assets numerados (distribución variada por biomas)
+    const biomes = ["grassland", "forest", "mystical", "wetland", "mountainous"];
     for (let i = 1; i <= 11; i++) {
       const assetInfo: AssetInfo = {
         key: `structure_${i.toString().padStart(3, "0")}`,
         path: `assets/structures/estructuras_completas/Assets_source_002_${i.toString().padStart(3, "0")}.png`,
         type: "structure",
-        biome: "village",
+        biome: biomes[(i-1) % biomes.length], // Rotar entre todos los biomas
         variant: i,
         rarity: "common",
       };
@@ -917,36 +918,84 @@ export class CreativeAssetLoader {
       }
     }
 
-    // Props especiales de Phaser
+    // Props especiales expandidos con biomas compatibles
     const specialProps = [
-      {
-        key: "barrel_small_empty",
-        path: "assets/props/Barrel_Small_Empty.png",
-        biome: "village",
-      },
-      {
-        key: "basket_empty",
-        path: "assets/props/Basket_Empty.png",
-        biome: "village",
-      },
-      { key: "bench_1", path: "assets/props/Bench_1.png", biome: "village" },
-      { key: "bench_3", path: "assets/props/Bench_3.png", biome: "village" },
-      { key: "chest", path: "assets/props/Chest.png", biome: "village" },
-      {
-        key: "fireplace_1",
-        path: "assets/props/Fireplace_1.png",
-        biome: "village",
-      },
-      {
-        key: "lamp_post_3",
-        path: "assets/props/LampPost_3.png",
-        biome: "city",
-      },
-      {
-        key: "table_medium_1",
-        path: "assets/props/Table_Medium_1.png",
-        biome: "village",
-      },
+      // Props básicos
+      { key: "barrel_small_empty", path: "assets/props/Barrel_Small_Empty.png", biome: "grassland" },
+      { key: "basket_empty", path: "assets/props/Basket_Empty.png", biome: "grassland" },
+      { key: "bench_1", path: "assets/props/Bench_1.png", biome: "grassland" },
+      { key: "bench_3", path: "assets/props/Bench_3.png", biome: "forest" },
+      { key: "chest", path: "assets/props/Chest.png", biome: "grassland" },
+      { key: "fireplace_1", path: "assets/props/Fireplace_1.png", biome: "mystical" },
+      { key: "lamp_post_3", path: "assets/props/LampPost_3.png", biome: "mountainous" },
+      { key: "table_medium_1", path: "assets/props/Table_Medium_1.png", biome: "grassland" },
+      
+      // Sillas masivas (tienes muchas!)
+      { key: "furn_silla", path: "assets/props/furn_silla.png", biome: "grassland" },
+      { key: "silla", path: "assets/props/silla.png", biome: "forest" },
+      { key: "silla2", path: "assets/props/silla2.png", biome: "grassland" },
+      { key: "silla3", path: "assets/props/silla3.png", biome: "wetland" },
+      { key: "silla5", path: "assets/props/silla5.png", biome: "mystical" },
+      
+      // Grupos de sillas
+      { key: "sillas1", path: "assets/props/sillas1.png", biome: "grassland" },
+      { key: "sillas2", path: "assets/props/sillas2.png", biome: "forest" },
+      { key: "sillas3", path: "assets/props/sillas3.png", biome: "grassland" },
+      { key: "sillas4", path: "assets/props/sillas4.png", biome: "wetland" },
+      { key: "sillas5", path: "assets/props/sillas5.png", biome: "mountainous" },
+      { key: "sillas6", path: "assets/props/sillas6.png", biome: "mystical" },
+      
+      // Sillas de calle  
+      { key: "sillas_de_calle1", path: "assets/props/sillas_de_calle1.png", biome: "grassland" },
+      { key: "sillas_de_calle2", path: "assets/props/sillas_de_calle2.png", biome: "forest" },
+      { key: "sillas_de_calle3", path: "assets/props/sillas_de_calle3.png", biome: "mountainous" },
+      { key: "sillas_de_calle4", path: "assets/props/sillas_de_calle4.png", biome: "wetland" },
+      
+      // Ventanas (13 tipos!)
+      { key: "ventana1", path: "assets/props/ventana1.png", biome: "grassland" },
+      { key: "ventana2", path: "assets/props/ventana2.png", biome: "forest" },
+      { key: "ventana3", path: "assets/props/ventana3.png", biome: "mystical" },
+      { key: "ventana4", path: "assets/props/ventana4.png", biome: "wetland" },
+      { key: "ventana5", path: "assets/props/ventana5.png", biome: "mountainous" },
+      { key: "ventana6", path: "assets/props/ventana6.png", biome: "grassland" },
+      { key: "ventana7", path: "assets/props/ventana7.png", biome: "forest" },
+      { key: "ventana8", path: "assets/props/ventana8.png", biome: "mystical" },
+      { key: "ventana9", path: "assets/props/ventana9.png", biome: "wetland" },
+      { key: "ventana10", path: "assets/props/ventana10.png", biome: "mountainous" },
+      { key: "ventana11", path: "assets/props/ventana11.png", biome: "grassland" },
+      { key: "ventana12", path: "assets/props/ventana12.png", biome: "forest" },
+      { key: "ventana13", path: "assets/props/ventana13.png", biome: "mystical" },
+      
+      // Decoraciones urbanas
+      { key: "sombrilla1", path: "assets/props/sombrilla1.png", biome: "grassland" },
+      { key: "sombrilla2", path: "assets/props/sombrilla2.png", biome: "forest" },
+      { key: "sombrilla3", path: "assets/props/sombrilla3.png", biome: "wetland" },
+      
+      // Lámparas
+      { key: "lamparas1", path: "assets/props/lamparas1.png", biome: "mystical" },
+      { key: "lamparas2", path: "assets/props/lamparas2.png", biome: "grassland" },
+      { key: "lamparas3", path: "assets/props/lamparas3.png", biome: "mountainous" },
+      
+      // Postes
+      { key: "poste1", path: "assets/props/poste1.png", biome: "grassland" },
+      { key: "poste2", path: "assets/props/poste2.png", biome: "forest" },
+      { key: "poste3", path: "assets/props/poste3.png", biome: "wetland" },
+      { key: "poste4", path: "assets/props/poste4.png", biome: "mountainous" },
+      
+      // Cajas y contenedores
+      { key: "cajas1", path: "assets/props/cajas1.png", biome: "grassland" },
+      { key: "cajas2", path: "assets/props/cajas2.png", biome: "forest" },
+      { key: "cajas3", path: "assets/props/cajas3.png", biome: "mountainous" },
+      
+      // Botellas decorativas
+      { key: "botellas1", path: "assets/props/botellas1.png", biome: "grassland" },
+      { key: "botellas2", path: "assets/props/botellas2.png", biome: "wetland" },
+      { key: "botellas3", path: "assets/props/botellas3.png", biome: "mystical" },
+      
+      // Ropa tendida
+      { key: "ropas_tendidas1", path: "assets/props/ropas_tendidas1.png", biome: "grassland" },
+      { key: "ropas_tendidas2", path: "assets/props/ropas_tendidas2.png", biome: "forest" },
+      { key: "ropas_tendidas3", path: "assets/props/ropas_tendidas3.png", biome: "wetland" },
     ];
 
     for (const prop of specialProps) {

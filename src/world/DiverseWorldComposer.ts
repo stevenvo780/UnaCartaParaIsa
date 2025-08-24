@@ -283,7 +283,7 @@ export class DiverseWorldComposer {
 
     for (const cluster of clusters) {
       const clusterAssets = this.getClusterAssets(cluster.type, allVegetation);
-      const density = 6 + Math.random() * 8; // 6-14 items por cluster (muy conservador)
+      const density = 15 + Math.random() * 20; // 15-35 items por cluster (más denso)
 
       for (let i = 0; i < density; i++) {
         // Distribución gaussiana alrededor del centro del cluster
@@ -426,8 +426,8 @@ export class DiverseWorldComposer {
       );
     }
 
-    // Distribución orgánica de detalles (muy conservador)
-    const detailDensity = 0.06; // 6% de tiles (muy conservador)
+    // Distribución orgánica de detalles (aumentado para más riqueza visual)
+    const detailDensity = 0.2; // 20% de tiles (mucho más denso)
     const totalTiles =
       (this.world.config.width / 32) * (this.world.config.height / 32);
     const targetCount = Math.floor(totalTiles * detailDensity);
@@ -506,8 +506,8 @@ export class DiverseWorldComposer {
           (biome) => biome !== currentBiome,
         );
 
-        if (hasDifferentBiome && Math.random() < 0.25) {
-          // 25% probabilidad
+        if (hasDifferentBiome && Math.random() < 0.6) {
+          // 60% probabilidad (más transiciones)
           const asset = this.weightedRandomSelect(transitionAssets);
           if (!asset) continue; // Skip if no assets available
 
@@ -565,7 +565,7 @@ export class DiverseWorldComposer {
 
     // Props dispersos por el mundo basado en biomas (aumentado para más diversidad)
     const scatteredCount = Math.floor(
-      (this.world.config.width * this.world.config.height) / 200, // Muy conservador
+      (this.world.config.width * this.world.config.height) / 50, // Mucho más denso
     );
 
     for (let i = 0; i < scatteredCount; i++) {
@@ -801,7 +801,7 @@ export class DiverseWorldComposer {
           radius: 80 + Math.random() * 120, // 80-200 radio
           biome,
           type: clusterType,
-          density: 0.4 + Math.random() * 0.3, // Densidad muy conservadora en clusters
+          density: 0.8 + Math.random() * 0.4, // Densidad aumentada en clusters
         });
 
         if (clusters.length >= count) break;
@@ -933,7 +933,7 @@ export class DiverseWorldComposer {
           radius: 150 + Math.random() * 100,
           biome,
           type: "ruins_site",
-          density: 0.2 + Math.random() * 0.3, // Densidad muy conservadora en ruinas
+          density: 0.6 + Math.random() * 0.5, // Densidad aumentada en ruinas
         });
 
         if (clusters.length >= count) break;
