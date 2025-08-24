@@ -822,6 +822,10 @@ export class GameLogicManager implements IGameLogicManager {
       try {
         this._needsSystem.setEntityZone(data.entityId, data.zoneId ?? data.zone);
       } catch {}
+      // Notificar a IA para memoria y cierre de objetivos
+      try {
+        this._aiSystem?.notifyEntityArrived?.(data.entityId, data.zoneId ?? data.zone);
+      } catch {}
       this._questSystem.handleEvent({
         type: "movement_completed",
         entityId: data.entityId,
@@ -872,22 +876,29 @@ export class GameLogicManager implements IGameLogicManager {
       );
     }
 
-    // Inicializar sistemas para entidades existentes usando estado centralizado
+    // Inicializar sistemas para entidades existentes si aún no están inicializadas
     this._entityManager.getAllEntities().forEach((_, entityId) => {
-      // Inicializar en el gestor centralizado primero
-      this._entityStateManager.initializeEntity(entityId);
-
-      // Obtener estado desde fuente única
-      const entityState = this._entityStateManager.getEntityState(entityId);
-      if (!entityState) return;
-
-      // Inicializar sistemas usando el estado centralizado
-      this._needsSystem.initializeEntityNeeds(entityId, entityState.needs);
-      this._aiSystem?.initializeEntityAI(entityId);
-      this._movementSystem.initializeEntityMovement(
+      // Si ya existe estado de movimiento, asumimos inicializada
+      const alreadyInitialized = !!this._movementSystem.getEntityMovementState(
         entityId,
-        entityState.position,
       );
+
+      if (!alreadyInitialized) {
+        // Inicializar en el gestor centralizado primero
+        this._entityStateManager.initializeEntity(entityId);
+
+        // Obtener estado desde fuente única
+        const entityState = this._entityStateManager.getEntityState(entityId);
+        if (!entityState) return;
+
+        // Inicializar sistemas usando el estado centralizado
+        this._needsSystem.initializeEntityNeeds(entityId, entityState.needs);
+        this._aiSystem?.initializeEntityAI(entityId);
+        this._movementSystem.initializeEntityMovement(
+          entityId,
+          entityState.position,
+        );
+      }
     });
 
     logAutopoiesis.info("🎯 Inicialización completa", {

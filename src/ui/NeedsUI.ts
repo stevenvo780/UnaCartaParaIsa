@@ -12,6 +12,7 @@ export class NeedsUI {
     new Map();
   private needsBars: Map<string, Phaser.GameObjects.Graphics> = new Map();
   private needsLabels: Map<string, Phaser.GameObjects.Text> = new Map();
+  private infoLabels: Map<string, Phaser.GameObjects.Text> = new Map();
   private isVisible = true;
 
   constructor(scene: Phaser.Scene) {
@@ -21,8 +22,8 @@ export class NeedsUI {
 
   private createUI(): void {
     // Posicionar en la esquina superior derecha con más espacio
-    const panelWidth = 320;
-    const panelHeight = 400;
+    const panelWidth = 360;
+    const panelHeight = 500;
 
     // Ajustar posición para evitar solapamiento con TopBar según análisis
     const TOPBAR_CLEAR_ZONE = 70 + 10; // TopBar height + margin
@@ -90,7 +91,7 @@ export class NeedsUI {
 
     // Crear secciones para cada agente con más espacio
     this.createAgentSection("isa", "👩 Isa", 60, 0xe91e63);
-    this.createAgentSection("stev", "👨 Stev", 220, 0x3498db);
+    this.createAgentSection("stev", "👨 Stev", 290, 0x3498db);
 
     // Hacer el UI interactivo con área más grande
     background.setInteractive(
@@ -110,8 +111,8 @@ export class NeedsUI {
     color: number,
   ): void {
     const agentContainer = this.scene.add.container(0, yOffset);
-    const sectionWidth = 300;
-    const sectionHeight = 140;
+    const sectionWidth = 330;
+    const sectionHeight = 210;
 
     this.agentContainers.set(agentId, agentContainer);
     this.container.add(agentContainer);
@@ -156,11 +157,14 @@ export class NeedsUI {
       { key: "hunger", label: "🍖 Hambre", color: 0xd4763b },
       { key: "thirst", label: "💧 Sed", color: 0x4a90e2 },
       { key: "energy", label: "⚡ Energía", color: 0xf5a623 },
+      { key: "hygiene", label: "🧼 Higiene", color: 0x95a5a6 },
+      { key: "social", label: "👥 Social", color: 0x8e44ad },
+      { key: "fun", label: "🎉 Diversión", color: 0xe67e22 },
       { key: "mentalHealth", label: "🧠 Mental", color: 0x7ed321 },
     ];
 
     needs.forEach((need, index) => {
-      const yPos = 30 + index * 24;
+      const yPos = 30 + index * 20;
       const needKey = `${agentId}.${need.key}`;
 
       // Etiqueta mejorada
@@ -175,13 +179,13 @@ export class NeedsUI {
       const barContainer = this.scene.add.graphics();
       // Sombra de barra
       barContainer.fillStyle(DS.COLORS.shadow, 0.3);
-      barContainer.fillRoundedRect(102, yPos + 3, 140, 14, 7);
+      barContainer.fillRoundedRect(102, yPos + 3, 170, 12, 6);
       // Fondo de barra
       barContainer.fillStyle(DS.COLORS.surfaceLight, 0.8);
-      barContainer.fillRoundedRect(100, yPos + 1, 140, 14, 7);
+      barContainer.fillRoundedRect(100, yPos + 1, 170, 12, 6);
       // Borde de barra
       barContainer.lineStyle(1, need.color, 0.3);
-      barContainer.strokeRoundedRect(100, yPos + 1, 140, 14, 7);
+      barContainer.strokeRoundedRect(100, yPos + 1, 170, 12, 6);
       agentContainer.add(barContainer);
 
       // Barra de progreso
@@ -193,16 +197,38 @@ export class NeedsUI {
     // Indicador de estado con mejor styling
     const emergencyBg = this.scene.add.graphics();
     emergencyBg.fillStyle(DS.COLORS.surface, 0.5);
-    emergencyBg.fillRoundedRect(15, 120, 120, 18, 9);
+    emergencyBg.fillRoundedRect(15, 168, 140, 18, 9);
     agentContainer.add(emergencyBg);
 
-    const emergencyText = this.scene.add.text(25, 125, "✅ Estado: Normal", {
+    const emergencyText = this.scene.add.text(25, 172, "✅ Estado: Normal", {
       ...DS.getTextStyle("sm", DS.COLORS.text),
       fontSize: "11px",
     });
     (emergencyText as any).isStatusIndicator = true;
     (emergencyText as any).agentId = agentId;
     agentContainer.add(emergencyText);
+
+    // Info líneas (zona / actividad / objetivo)
+    const zoneLabel = this.scene.add.text(180, 120, "Zona: -", {
+      ...DS.getTextStyle("xs", DS.COLORS.textSecondary),
+      fontSize: "10px",
+    });
+    this.infoLabels.set(`${agentId}.zone`, zoneLabel);
+    agentContainer.add(zoneLabel);
+
+    const actLabel = this.scene.add.text(180, 138, "Actividad: -", {
+      ...DS.getTextStyle("xs", DS.COLORS.textSecondary),
+      fontSize: "10px",
+    });
+    this.infoLabels.set(`${agentId}.activity`, actLabel);
+    agentContainer.add(actLabel);
+
+    const goalLabel = this.scene.add.text(180, 156, "Objetivo: -", {
+      ...DS.getTextStyle("xs", DS.COLORS.textSecondary),
+      fontSize: "10px",
+    });
+    this.infoLabels.set(`${agentId}.goal`, goalLabel);
+    agentContainer.add(goalLabel);
   }
 
   public updateNeeds(entityData: EntityNeedsData | EntityNeedsData[]): void {
@@ -221,8 +247,17 @@ export class NeedsUI {
     const needs = entityData.needs;
 
     // Actualizar cada barra para este agente
-    ["hunger", "thirst", "energy", "mentalHealth"].forEach((needKey, index) => {
-      const value = needs[needKey as keyof NeedsState] as number;
+    [
+      "hunger",
+      "thirst",
+      "energy",
+      "hygiene",
+      "social",
+      "fun",
+      "mentalHealth",
+    ].forEach((needKey, index) => {
+      let raw = needs[needKey as keyof NeedsState] as number | undefined;
+      const value = Number.isFinite(raw as number) ? (raw as number) : 0;
       const fullNeedKey = `${agentId}.${needKey}`;
       const bar = this.needsBars.get(fullNeedKey);
       const label = this.needsLabels.get(fullNeedKey);
@@ -245,8 +280,8 @@ export class NeedsUI {
       }
 
       // Dibujar barra con valor actual con mejor diseño
-      const barWidth = Math.max(0, (value / 100) * 138); // 138px max width
-      const barYPos = 32 + index * 24; // Ajustar para nueva separación
+      const barWidth = Math.max(0, (value / 100) * 168); // 168px max width
+      const barYPos = 32 + index * 20; // Ajustado a nueva separación
 
       // Limpiar barra anterior
       bar.clear();
@@ -266,12 +301,15 @@ export class NeedsUI {
         hunger: "🍖 Hambre",
         thirst: "💧 Sed",
         energy: "⚡ Energía",
+        hygiene: "🧼 Higiene",
+        social: "👥 Social",
+        fun: "🎉 Diversión",
         mentalHealth: "🧠 Mental",
       };
 
       // Mostrar con porcentaje y barra visual
       const percentage = Math.round(value);
-      label.setText(`${needLabels[needKey]}: ${percentage}%`);
+      label.setText(`${needLabels[needKey] || needKey}: ${percentage}%`);
 
       // Cambiar color del texto basado en el estado
       if (value < 20) {
@@ -287,6 +325,23 @@ export class NeedsUI {
 
     // Mostrar nivel de emergencia para este agente
     this.updateAgentEmergencyStatus(agentId, entityData.emergencyLevel);
+
+    // Actualizar info de zona/actividad/objetivo
+    try {
+      const glm = this.scene.registry.get("gameLogicManager") as any;
+      const move = glm?.getMovementSystem?.().getEntityMovementState(agentId);
+      const ai = glm?.getAISystem?.().getEntityAI?.(agentId);
+      const zoneId = entityData.currentZone || move?.targetZone || "-";
+      const activity = move?.currentActivity || (move?.isMoving ? "moving" : "idle");
+      const goal = ai?.currentGoal
+        ? `${ai.currentGoal.type}${ai.currentGoal.targetZone ? `→${ai.currentGoal.targetZone}` : ""}`
+        : "-";
+      this.infoLabels.get(`${agentId}.zone`)?.setText(`Zona: ${zoneId}`);
+      this.infoLabels
+        .get(`${agentId}.activity`)
+        ?.setText(`Actividad: ${activity}`);
+      this.infoLabels.get(`${agentId}.goal`)?.setText(`Objetivo: ${goal}`);
+    } catch {}
   }
 
   private getColorForNeed(needKey: string): number {

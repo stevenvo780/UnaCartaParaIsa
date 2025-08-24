@@ -527,6 +527,22 @@ export class AISystem {
   }
 
   /**
+   * Notificación al llegar a una zona: actualizar memoria y completar objetivo si corresponde
+   */
+  public notifyEntityArrived(entityId: string, zoneId: string): void {
+    const aiState = this.aiStates.get(entityId);
+    if (!aiState) return;
+
+    aiState.memory.visitedZones.add?.(zoneId);
+
+    if (aiState.currentGoal && aiState.currentGoal.targetZone === zoneId) {
+      this.completeGoal(aiState, true);
+    }
+
+    logAutopoiesis.debug(`📍 ${entityId} registrado en zona ${zoneId}`);
+  }
+
+  /**
    * Mover entidad a zona
    */
   private moveToZone(entityId: string, zoneId: string): void {
@@ -538,8 +554,11 @@ export class AISystem {
       const success = this.movementSystem.moveToZone(entityId, zoneId);
 
       if (success) {
-        // Notificar al sistema de necesidades sobre el cambio de zona
-        this.needsSystem.setEntityZone(entityId, zoneId);
+        // Al iniciar viaje, limpiar zona actual para evitar beneficios en tránsito
+        try {
+          this.needsSystem.setEntityZone(entityId, undefined);
+        } catch {}
+        // La zona se marcará al ARRIBAR (evento entityArrivedAtZone)
         logAutopoiesis.debug(`🚶 ${entityId} iniciando viaje a zona ${zoneId}`);
       } else {
         logAutopoiesis.debug(

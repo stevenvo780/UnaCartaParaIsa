@@ -56,7 +56,7 @@ export class NeedsSystem {
       hungerDecayRate: 0.2, // Pierde 0.2 puntos por segundo = 12/minuto → 100 a 0 en 8 minutos
       thirstDecayRate: 0.3, // Pierde 0.3 puntos por segundo = 18/minuto → 100 a 0 en 5.5 minutos
       energyDecayRate: 0.15, // Pierde 0.15 puntos por segundo = 9/minuto → 100 a 0 en 11 minutos
-      mentalHealthDecayRate: 0.05, // Pierde 0.05 puntos por segundo = 3/minuto → 100 a 0 en 33 minutos
+      mentalHealthDecayRate: 0.12, // Pierde 0.12 p/s = 7.2/min → 100 a 0 en ~14 min
       criticalThreshold: 20, // Crítico bajo 20
       warningThreshold: 40, // Advertencia bajo 40
       recoveryMultiplier: 5.0, // Velocidad de recuperación optimizada en zonas
@@ -171,7 +171,7 @@ export class NeedsSystem {
       this.updateEntityNeeds(entityData, deltaTime);
       this.checkEntityDeath(entityId, entityData.needs);
       this.checkEmergencyLevels(entityData);
-      this.handleZoneBenefits(entityData);
+      this.handleZoneBenefits(entityData, deltaTime);
     });
 
     this.lastUpdateTime = now;
@@ -219,8 +219,7 @@ export class NeedsSystem {
       needs.fun - config.mentalHealthDecayRate * 0.4 * deltaTime,
     );
 
-    // AÑADIR: Recuperación pasiva básica para evitar espirales de muerte
-    this.applyBasicRecovery(entityData, deltaTime);
+    // Recuperación pasiva deshabilitada: la recuperación ocurre solo en zonas
 
     // Efectos cruzados entre necesidades
     this.applyNeedsCrossEffects(needs, deltaTime);
@@ -236,52 +235,17 @@ export class NeedsSystem {
     deltaTime: number,
   ): void {
     const { needs } = entityData;
-    // Recuperación pasiva suave: no debe superar al decaimiento base
-    const BASIC_RECOVERY_RATE = 0.04;
+    // Deshabilitado: la recuperación solo ocurre dentro de zonas designadas
+    const BASIC_RECOVERY_RATE = 0.0;
 
     // Recuperación básica universal - todas las necesidades se recuperan lentamente
-    needs.hunger = Math.min(
-      100,
-      needs.hunger + BASIC_RECOVERY_RATE * deltaTime,
-    );
-    needs.thirst = Math.min(
-      100,
-      needs.thirst + BASIC_RECOVERY_RATE * deltaTime,
-    );
-    needs.energy = Math.min(
-      100,
-      needs.energy + BASIC_RECOVERY_RATE * deltaTime,
-    );
-    needs.mentalHealth = Math.min(
-      100,
-      needs.mentalHealth + BASIC_RECOVERY_RATE * deltaTime,
-    );
-    needs.hygiene = Math.min(
-      100,
-      needs.hygiene + BASIC_RECOVERY_RATE * 0.5 * deltaTime,
-    );
-    needs.social = Math.min(
-      100,
-      needs.social + BASIC_RECOVERY_RATE * 0.4 * deltaTime,
-    );
-    needs.fun = Math.min(
-      100,
-      needs.fun + BASIC_RECOVERY_RATE * 0.5 * deltaTime,
-    );
+    // (sin efecto)
 
     // Recuperación adicional cuando las estadísticas están muy bajas (boost de supervivencia)
-    const CRITICAL_BOOST = 0.2;
-    if (needs.hunger < 30)
-      needs.hunger = Math.min(100, needs.hunger + CRITICAL_BOOST * deltaTime);
-    if (needs.thirst < 30)
-      needs.thirst = Math.min(100, needs.thirst + CRITICAL_BOOST * deltaTime);
-    if (needs.energy < 30)
-      needs.energy = Math.min(100, needs.energy + CRITICAL_BOOST * deltaTime);
+    const CRITICAL_BOOST = 0.0;
 
     // Boost moderado para salud mental
-    if (needs.mentalHealth < 50) {
-      needs.mentalHealth = Math.min(100, needs.mentalHealth + 0.2 * deltaTime);
-    }
+    // (sin efecto)
   }
 
   /**
@@ -386,21 +350,25 @@ export class NeedsSystem {
       });
     }
 
-    // Aplicar límites absolutos mínimos SOLO en casos extremos
-    Object.keys(needs).forEach((key) => {
-      const need = needs[key as keyof NeedsState];
-      if (typeof need === "number" && need < CRITICAL_THRESHOLD) {
-        (needs as any)[key] = CRITICAL_THRESHOLD;
-      }
-    });
+    // Aplicar límites absolutos mínimos SOLO en casos extremos (excepto lastUpdate)
+    (Object.keys(needs) as (keyof NeedsState)[])
+      .filter((k) => k !== "lastUpdate")
+      .forEach((key) => {
+        const need = needs[key];
+        if (typeof need === "number" && need < CRITICAL_THRESHOLD) {
+          (needs as any)[key] = CRITICAL_THRESHOLD;
+        }
+      });
 
-    // Límites máximos también (prevenir valores extremos)
-    Object.keys(needs).forEach((key) => {
-      const need = needs[key as keyof NeedsState];
-      if (typeof need === "number" && need > 100) {
-        (needs as any)[key] = 100;
-      }
-    });
+    // Límites máximos también (prevenir valores extremos) - excluir lastUpdate
+    (Object.keys(needs) as (keyof NeedsState)[])
+      .filter((k) => k !== "lastUpdate")
+      .forEach((key) => {
+        const need = needs[key];
+        if (typeof need === "number" && need > 100) {
+          (needs as any)[key] = 100;
+        }
+      });
   }
 
   /**
@@ -618,7 +586,7 @@ export class NeedsSystem {
   /**
    * Manejar beneficios de zonas
    */
-  private handleZoneBenefits(entityData: EntityNeedsData): void {
+  private handleZoneBenefits(entityData: EntityNeedsData, deltaTime: number): void {
     if (!entityData.currentZone) return;
 
     const zone = this.gameState.zones.find(
@@ -627,7 +595,6 @@ export class NeedsSystem {
     if (!zone) return;
 
     const recoveryRate = this.needsConfig.recoveryMultiplier;
-    const deltaTime = this.updateInterval / 1000;
 
     // Aplicar beneficios según tipo de zona
     switch (zone.type) {
@@ -645,15 +612,15 @@ export class NeedsSystem {
         break;
 
       case "social":
-        this.satisfyNeed(entityData, "social", recoveryRate * deltaTime);
+        this.satisfyNeed(entityData, "social", recoveryRate * 0.6 * deltaTime);
         this.satisfyNeed(
           entityData,
           "mentalHealth",
-          recoveryRate * 0.8 * deltaTime,
+          recoveryRate * 0.3 * deltaTime,
         );
-        this.satisfyNeed(entityData, "fun", recoveryRate * 0.5 * deltaTime);
+        this.satisfyNeed(entityData, "fun", recoveryRate * 0.3 * deltaTime);
         // Beneficio menor en otras necesidades por socialización
-        this.satisfyNeed(entityData, "energy", recoveryRate * 0.3 * deltaTime);
+        this.satisfyNeed(entityData, "energy", recoveryRate * 0.2 * deltaTime);
         break;
 
       case "hygiene":
@@ -661,7 +628,7 @@ export class NeedsSystem {
         this.satisfyNeed(
           entityData,
           "mentalHealth",
-          recoveryRate * 0.3 * deltaTime,
+          recoveryRate * 0.15 * deltaTime,
         );
         break;
 
@@ -671,7 +638,7 @@ export class NeedsSystem {
         this.satisfyNeed(
           entityData,
           "mentalHealth",
-          recoveryRate * 0.4 * deltaTime,
+          recoveryRate * 0.2 * deltaTime,
         );
         break;
 
@@ -684,8 +651,67 @@ export class NeedsSystem {
         this.satisfyNeed(
           entityData,
           "mentalHealth",
+          recoveryRate * 0.15 * deltaTime,
+        );
+        break;
+
+      // Zonas adicionales ya definidas en WorldConfig
+      case "medical":
+        // Enfocado en salud mental (recuperación) y un pequeño descanso energético
+        this.satisfyNeed(
+          entityData,
+          "mentalHealth",
+          recoveryRate * 0.4 * deltaTime,
+        );
+        this.satisfyNeed(entityData, "energy", recoveryRate * 0.2 * deltaTime);
+        break;
+
+      case "training":
+        // Entrenamiento consume energía, pero mejora bienestar mental
+        entityData.needs.energy = Math.max(
+          0,
+          entityData.needs.energy - 0.25 * deltaTime,
+        );
+        this.satisfyNeed(
+          entityData,
+          "mentalHealth",
+          recoveryRate * 0.2 * deltaTime,
+        );
+        this.satisfyNeed(entityData, "fun", recoveryRate * 0.2 * deltaTime);
+        break;
+
+      case "knowledge":
+        // Conocimiento aporta bienestar mental y algo de diversión; ligero coste de energía
+        entityData.needs.energy = Math.max(
+          0,
+          entityData.needs.energy - 0.1 * deltaTime,
+        );
+        this.satisfyNeed(
+          entityData,
+          "mentalHealth",
+          recoveryRate * 0.25 * deltaTime,
+        );
+        this.satisfyNeed(entityData, "fun", recoveryRate * 0.2 * deltaTime);
+        break;
+
+      case "spiritual":
+        // Espiritualidad fuertemente restaurativa para salud mental
+        this.satisfyNeed(
+          entityData,
+          "mentalHealth",
           recoveryRate * 0.5 * deltaTime,
         );
+        break;
+
+      case "market":
+        // Mercado/socialización ligera, aumenta bienestar general leve
+        this.satisfyNeed(entityData, "social", recoveryRate * 0.3 * deltaTime);
+        this.satisfyNeed(
+          entityData,
+          "mentalHealth",
+          recoveryRate * 0.1 * deltaTime,
+        );
+        this.satisfyNeed(entityData, "fun", recoveryRate * 0.2 * deltaTime);
         break;
     }
   }
@@ -854,7 +880,16 @@ export class NeedsSystem {
       hunger: ["food"],
       thirst: ["water"],
       energy: ["rest", "shelter"],
-      mentalHealth: ["social", "rest"],
+      // Ampliamos tipos útiles para bienestar mental según zonas existentes
+      mentalHealth: [
+        "social",
+        "rest",
+        "spiritual",
+        "knowledge",
+        "medical",
+        "market",
+        "fun",
+      ],
     };
 
     const targetTypes = zoneTypes[needType] || [];

@@ -854,8 +854,8 @@ export class UIScene extends Phaser.Scene {
         "settings",
         "⚙️ Configuración",
         content.getContainer(),
-        360,
-        160,
+        380,
+        280,
       );
     } else {
       this.modalManager.toggle("settings");
