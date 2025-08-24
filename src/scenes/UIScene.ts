@@ -56,7 +56,7 @@ export class UIScene extends Phaser.Scene {
   private messagesModal?: Phaser.GameObjects.Container;
   private settingsModal?: Phaser.GameObjects.Container;
   private needsUI?: NeedsUI;
-  
+
   // Cache para datos de necesidades de múltiples agentes
   private agentNeedsCache: Map<string, any> = new Map();
 
@@ -134,16 +134,16 @@ export class UIScene extends Phaser.Scene {
       mainScene.events.on("needsUpdated", (data: any) => {
         // Cachear datos de cada agente
         this.agentNeedsCache.set(data.entityId, data.entityData);
-        
+
         // Actualizar UI con todos los agentes cacheados
         const allAgentsData = Array.from(this.agentNeedsCache.values());
         this.needsUI?.updateNeeds(allAgentsData);
-        
+
         // Calcular totales de críticos/advertencias de todos los agentes
         let totalCriticalCount = 0;
         let totalWarningCount = 0;
-        
-        allAgentsData.forEach(entityData => {
+
+        allAgentsData.forEach((entityData) => {
           const needs = entityData?.needs as Record<string, number> | undefined;
           if (needs) {
             totalCriticalCount += Object.entries(needs).filter(
@@ -154,8 +154,11 @@ export class UIScene extends Phaser.Scene {
             ).length;
           }
         });
-        
-        this.systemStatusUI?.updateNeedsSummary(totalCriticalCount, totalWarningCount);
+
+        this.systemStatusUI?.updateNeedsSummary(
+          totalCriticalCount,
+          totalWarningCount,
+        );
       });
     } catch (error) {
       logAutopoiesis.error("❌ Error in UIScene.create():", error);

@@ -124,7 +124,7 @@ export interface Zone {
     furnitureTypes?: string[];
     priority?: number;
     biome?: string;
-    accessibility?: 'public' | 'private' | 'semi-private';
+    accessibility?: "public" | "private" | "semi-private";
     capacity?: number;
   };
 }
@@ -174,7 +174,7 @@ export interface ObjectLayer {
   visible: boolean;
 }
 
-export type WeatherType = 'sunny' | 'cloudy' | 'rainy' | 'foggy' | 'windy';
+export type WeatherType = "sunny" | "cloudy" | "rainy" | "foggy" | "windy";
 
 export interface WeatherState {
   current: WeatherType;

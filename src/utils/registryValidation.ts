@@ -6,7 +6,9 @@
 import { logAutopoiesis } from "./logger";
 import type { GameState, Zone } from "../types";
 
-export interface RegistryValidationResult<T = Record<string, string | number | boolean>> {
+export interface RegistryValidationResult<
+  T = Record<string, string | number | boolean>,
+> {
   isValid: boolean;
   data?: T;
   errors: string[];
@@ -70,7 +72,10 @@ export class RegistryValidator {
    * Validar datos completos del gameState
    */
   public static validateGameState(
-    data: Record<string, string | number | boolean | object | undefined> | null | undefined,
+    data:
+      | Record<string, string | number | boolean | object | undefined>
+      | null
+      | undefined,
   ): RegistryValidationResult<GameState> {
     const errors: string[] = [];
 

@@ -45,7 +45,7 @@ export class LoadingProgressManager {
     });
 
     this.phases.set("world_generation", {
-      name: "Generando mundo (64x64 tiles)...",
+      name: "Mundo simple cargando...",
       weight: 0.15, // 15% del progreso total
       progress: 0,
       status: "pending",

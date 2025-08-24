@@ -432,7 +432,9 @@ export class InputManager {
   /**
    * Verifica si el puntero está sobre un elemento UI interactivo
    */
-  private isPointerOverInteractiveElement(pointer: Phaser.Input.Pointer): boolean {
+  private isPointerOverInteractiveElement(
+    pointer: Phaser.Input.Pointer,
+  ): boolean {
     // Obtener UIScene para verificar elementos UI
     const uiScene = this.scene.scene.get("UIScene");
     if (!uiScene) return false;
@@ -446,7 +448,7 @@ export class InputManager {
     // Top bar area
     if (pointer.y <= topBarHeight) return true;
 
-    // Bottom bar area  
+    // Bottom bar area
     if (pointer.y >= screenHeight - bottomBarHeight) return true;
 
     // Right side UI (needs panel)
@@ -459,9 +461,13 @@ export class InputManager {
         const visibleModals = modalManager.getVisibleContainers();
         for (const modal of visibleModals) {
           const bounds = modal.getBounds();
-          if (bounds && 
-              pointer.x >= bounds.x && pointer.x <= bounds.x + bounds.width &&
-              pointer.y >= bounds.y && pointer.y <= bounds.y + bounds.height) {
+          if (
+            bounds &&
+            pointer.x >= bounds.x &&
+            pointer.x <= bounds.x + bounds.width &&
+            pointer.y >= bounds.y &&
+            pointer.y <= bounds.y + bounds.height
+          ) {
             return true;
           }
         }

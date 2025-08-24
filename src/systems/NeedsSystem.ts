@@ -177,25 +177,52 @@ export class NeedsSystem {
   /**
    * Aplicar recuperación pasiva básica para evitar que todas las estadísticas bajen constantemente
    */
-  private applyBasicRecovery(entityData: EntityNeedsData, deltaTime: number): void {
+  private applyBasicRecovery(
+    entityData: EntityNeedsData,
+    deltaTime: number,
+  ): void {
     const { needs } = entityData;
     const BASIC_RECOVERY_RATE = 0.15; // Aumentar recuperación básica
-    
+
     // Recuperación básica universal - todas las necesidades se recuperan lentamente
-    needs.hunger = Math.min(100, needs.hunger + BASIC_RECOVERY_RATE * deltaTime);
-    needs.thirst = Math.min(100, needs.thirst + BASIC_RECOVERY_RATE * deltaTime);
-    needs.energy = Math.min(100, needs.energy + BASIC_RECOVERY_RATE * deltaTime);
-    needs.mentalHealth = Math.min(100, needs.mentalHealth + BASIC_RECOVERY_RATE * deltaTime);
-    needs.hygiene = Math.min(100, needs.hygiene + BASIC_RECOVERY_RATE * 0.5 * deltaTime);
-    needs.social = Math.min(100, needs.social + BASIC_RECOVERY_RATE * 0.4 * deltaTime);
-    needs.fun = Math.min(100, needs.fun + BASIC_RECOVERY_RATE * 0.5 * deltaTime);
-    
+    needs.hunger = Math.min(
+      100,
+      needs.hunger + BASIC_RECOVERY_RATE * deltaTime,
+    );
+    needs.thirst = Math.min(
+      100,
+      needs.thirst + BASIC_RECOVERY_RATE * deltaTime,
+    );
+    needs.energy = Math.min(
+      100,
+      needs.energy + BASIC_RECOVERY_RATE * deltaTime,
+    );
+    needs.mentalHealth = Math.min(
+      100,
+      needs.mentalHealth + BASIC_RECOVERY_RATE * deltaTime,
+    );
+    needs.hygiene = Math.min(
+      100,
+      needs.hygiene + BASIC_RECOVERY_RATE * 0.5 * deltaTime,
+    );
+    needs.social = Math.min(
+      100,
+      needs.social + BASIC_RECOVERY_RATE * 0.4 * deltaTime,
+    );
+    needs.fun = Math.min(
+      100,
+      needs.fun + BASIC_RECOVERY_RATE * 0.5 * deltaTime,
+    );
+
     // Recuperación adicional cuando las estadísticas están muy bajas (boost de supervivencia)
     const CRITICAL_BOOST = 0.5; // Aumentar boost crítico
-    if (needs.hunger < 30) needs.hunger = Math.min(100, needs.hunger + CRITICAL_BOOST * deltaTime);
-    if (needs.thirst < 30) needs.thirst = Math.min(100, needs.thirst + CRITICAL_BOOST * deltaTime);
-    if (needs.energy < 30) needs.energy = Math.min(100, needs.energy + CRITICAL_BOOST * deltaTime);
-    
+    if (needs.hunger < 30)
+      needs.hunger = Math.min(100, needs.hunger + CRITICAL_BOOST * deltaTime);
+    if (needs.thirst < 30)
+      needs.thirst = Math.min(100, needs.thirst + CRITICAL_BOOST * deltaTime);
+    if (needs.energy < 30)
+      needs.energy = Math.min(100, needs.energy + CRITICAL_BOOST * deltaTime);
+
     // BOOST ESPECIAL para salud mental que está problemática
     if (needs.mentalHealth < 50) {
       needs.mentalHealth = Math.min(100, needs.mentalHealth + 0.8 * deltaTime);
@@ -210,7 +237,8 @@ export class NeedsSystem {
     const SAFETY_THRESHOLD = 5; // Reducir para permitir más variación
 
     // Hambre crítica afecta energía y salud mental (REDUCIDO)
-    if (needs.hunger < 10) { // Solo en casos extremos
+    if (needs.hunger < 10) {
+      // Solo en casos extremos
       needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.1 * deltaTime);
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
@@ -219,8 +247,12 @@ export class NeedsSystem {
     }
 
     // Sed crítica afecta energía principalmente (REDUCIDO)
-    if (needs.thirst < 10) { // Solo en casos extremos
-      needs.energy = Math.max(SAFETY_THRESHOLD, needs.energy - 0.15 * deltaTime);
+    if (needs.thirst < 10) {
+      // Solo en casos extremos
+      needs.energy = Math.max(
+        SAFETY_THRESHOLD,
+        needs.energy - 0.15 * deltaTime,
+      );
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
         needs.mentalHealth - 0.05 * deltaTime, // Reducido drasticamente
@@ -243,7 +275,8 @@ export class NeedsSystem {
     }
 
     // Higiene baja afecta salud mental (REDUCIDO)
-    if (needs.hygiene < 10) { // Solo casos extremos
+    if (needs.hygiene < 10) {
+      // Solo casos extremos
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
         needs.mentalHealth - 0.02 * deltaTime, // Drasticamente reducido
@@ -251,7 +284,8 @@ export class NeedsSystem {
     }
 
     // Falta de diversión afecta salud mental (REDUCIDO)
-    if (needs.fun < 5) { // Solo casos extremos
+    if (needs.fun < 5) {
+      // Solo casos extremos
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
         needs.mentalHealth - 0.03 * deltaTime, // Drasticamente reducido
@@ -259,7 +293,8 @@ export class NeedsSystem {
     }
 
     // Aislamiento social afecta salud mental (REDUCIDO)
-    if (needs.social < 5) { // Solo casos extremos
+    if (needs.social < 5) {
+      // Solo casos extremos
       needs.mentalHealth = Math.max(
         SAFETY_THRESHOLD,
         needs.mentalHealth - 0.04 * deltaTime, // Drasticamente reducido
@@ -847,7 +882,10 @@ export class NeedsSystem {
   /**
    * Suscribirse a eventos de necesidades
    */
-  public on(event: string, callback: (...args: Array<string | number | boolean | object>) => void): void {
+  public on(
+    event: string,
+    callback: (...args: Array<string | number | boolean | object>) => void,
+  ): void {
     this.needsEvents.on(event, callback);
   }
 

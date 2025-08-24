@@ -8,7 +8,8 @@ import { UIDesignSystem as DS } from "../config/uiDesignSystem";
 export class NeedsUI {
   private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
-  private agentContainers: Map<string, Phaser.GameObjects.Container> = new Map();
+  private agentContainers: Map<string, Phaser.GameObjects.Container> =
+    new Map();
   private needsBars: Map<string, Phaser.GameObjects.Graphics> = new Map();
   private needsLabels: Map<string, Phaser.GameObjects.Text> = new Map();
   private isVisible = true;
@@ -22,10 +23,10 @@ export class NeedsUI {
     // Posicionar en la esquina superior derecha con más espacio
     const panelWidth = 320;
     const panelHeight = 400;
-    
+
     // Ajustar posición para evitar solapamiento con TopBar según análisis
     const TOPBAR_CLEAR_ZONE = 70 + 10; // TopBar height + margin
-    
+
     this.container = this.scene.add.container(
       this.scene.cameras.main.width - panelWidth - 20,
       TOPBAR_CLEAR_ZONE, // Evitar solapamiento con TopBar
@@ -35,25 +36,37 @@ export class NeedsUI {
 
     // Fondo con glassmorphism mejorado
     const background = this.scene.add.graphics();
-    
+
     // Sombra exterior
     background.fillStyle(DS.COLORS.shadow, 0.3);
     background.fillRoundedRect(4, 4, panelWidth, panelHeight, DS.RADIUS.lg);
-    
+
     // Fondo principal con gradiente simulado
     background.fillStyle(DS.COLORS.surfaceDark, 0.95);
     background.fillRoundedRect(0, 0, panelWidth, panelHeight, DS.RADIUS.lg);
-    
+
     // Highlight interior
     background.fillStyle(DS.COLORS.surface, 0.1);
-    background.fillRoundedRect(2, 2, panelWidth - 4, panelHeight - 4, DS.RADIUS.lg - 2);
-    
+    background.fillRoundedRect(
+      2,
+      2,
+      panelWidth - 4,
+      panelHeight - 4,
+      DS.RADIUS.lg - 2,
+    );
+
     // Bordes con brillo
     background.lineStyle(2, DS.COLORS.accent, 0.4);
     background.strokeRoundedRect(0, 0, panelWidth, panelHeight, DS.RADIUS.lg);
     background.lineStyle(1, DS.COLORS.secondary, 0.2);
-    background.strokeRoundedRect(1, 1, panelWidth - 2, panelHeight - 2, DS.RADIUS.lg - 1);
-    
+    background.strokeRoundedRect(
+      1,
+      1,
+      panelWidth - 2,
+      panelHeight - 2,
+      DS.RADIUS.lg - 1,
+    );
+
     this.container.add(background);
 
     // Título con mejor tipografía
@@ -63,7 +76,7 @@ export class NeedsUI {
       "⚡ ESTADO DE AGENTES",
       {
         ...DS.getTextStyle("xl", DS.COLORS.text, "bold"),
-        align: "center"
+        align: "center",
       },
     );
     title.setOrigin(0.5, 0);
@@ -90,32 +103,44 @@ export class NeedsUI {
     });
   }
 
-  private createAgentSection(agentId: string, title: string, yOffset: number, color: number): void {
+  private createAgentSection(
+    agentId: string,
+    title: string,
+    yOffset: number,
+    color: number,
+  ): void {
     const agentContainer = this.scene.add.container(0, yOffset);
     const sectionWidth = 300;
     const sectionHeight = 140;
-    
+
     this.agentContainers.set(agentId, agentContainer);
     this.container.add(agentContainer);
 
     // Fondo de sección con glassmorphism
     const sectionBg = this.scene.add.graphics();
     sectionBg.fillStyle(color, 0.1);
-    sectionBg.fillRoundedRect(10, -5, sectionWidth, sectionHeight, DS.RADIUS.md);
+    sectionBg.fillRoundedRect(
+      10,
+      -5,
+      sectionWidth,
+      sectionHeight,
+      DS.RADIUS.md,
+    );
     sectionBg.lineStyle(2, color, 0.4);
-    sectionBg.strokeRoundedRect(10, -5, sectionWidth, sectionHeight, DS.RADIUS.md);
+    sectionBg.strokeRoundedRect(
+      10,
+      -5,
+      sectionWidth,
+      sectionHeight,
+      DS.RADIUS.md,
+    );
     agentContainer.add(sectionBg);
 
     // Título del agente con mejor styling
-    const agentTitle = this.scene.add.text(
-      20,
-      5,
-      title,
-      {
-        ...DS.getTextStyle("lg", color, "bold"),
-        fontSize: "16px"
-      },
-    );
+    const agentTitle = this.scene.add.text(20, 5, title, {
+      ...DS.getTextStyle("lg", color, "bold"),
+      fontSize: "16px",
+    });
     agentContainer.add(agentTitle);
 
     // Avatar/icono decorativo
@@ -139,15 +164,10 @@ export class NeedsUI {
       const needKey = `${agentId}.${need.key}`;
 
       // Etiqueta mejorada
-      const label = this.scene.add.text(
-        20,
-        yPos,
-        need.label,
-        {
-          ...DS.getTextStyle("sm", DS.COLORS.text),
-          fontSize: "12px"
-        },
-      );
+      const label = this.scene.add.text(20, yPos, need.label, {
+        ...DS.getTextStyle("sm", DS.COLORS.text),
+        fontSize: "12px",
+      });
       this.needsLabels.set(needKey, label);
       agentContainer.add(label);
 
@@ -176,15 +196,10 @@ export class NeedsUI {
     emergencyBg.fillRoundedRect(15, 120, 120, 18, 9);
     agentContainer.add(emergencyBg);
 
-    const emergencyText = this.scene.add.text(
-      25,
-      125,
-      "✅ Estado: Normal",
-      {
-        ...DS.getTextStyle("sm", DS.COLORS.text),
-        fontSize: "11px"
-      },
-    );
+    const emergencyText = this.scene.add.text(25, 125, "✅ Estado: Normal", {
+      ...DS.getTextStyle("sm", DS.COLORS.text),
+      fontSize: "11px",
+    });
     (emergencyText as any).isStatusIndicator = true;
     (emergencyText as any).agentId = agentId;
     agentContainer.add(emergencyText);
@@ -232,14 +247,14 @@ export class NeedsUI {
       // Dibujar barra con valor actual con mejor diseño
       const barWidth = Math.max(0, (value / 100) * 138); // 138px max width
       const barYPos = 32 + index * 24; // Ajustar para nueva separación
-      
+
       // Limpiar barra anterior
       bar.clear();
-      
+
       // Barra principal con gradiente simulado
       bar.fillStyle(color);
       bar.fillRoundedRect(102, barYPos, barWidth, 12, 6);
-      
+
       // Highlight en la barra para efecto de volumen
       if (barWidth > 4) {
         bar.fillStyle(0xffffff, 0.3);
@@ -249,7 +264,7 @@ export class NeedsUI {
       // Actualizar texto con valor numérico e iconos
       const needLabels: Record<string, string> = {
         hunger: "🍖 Hambre",
-        thirst: "💧 Sed", 
+        thirst: "💧 Sed",
         energy: "⚡ Energía",
         mentalHealth: "🧠 Mental",
       };
@@ -289,7 +304,7 @@ export class NeedsUI {
     if (!agentContainer) return;
 
     // Buscar indicador de estado de emergencia para este agente
-    let statusText = agentContainer.list.find(
+    const statusText = agentContainer.list.find(
       (obj) =>
         obj instanceof Phaser.GameObjects.Text &&
         (obj as any).isStatusIndicator &&
@@ -332,12 +347,15 @@ export class NeedsUI {
   public setPosition(x: number, y: number): void {
     this.container.setPosition(x, y);
   }
-  
+
   public handleResize(screenWidth: number, screenHeight: number): void {
     // Reposicionar el panel en la esquina superior derecha
     const panelWidth = 320;
     const TOPBAR_CLEAR_ZONE = 70 + 10; // TopBar height + margin - consistente con createUI
-    this.container.setPosition(screenWidth - panelWidth - 20, TOPBAR_CLEAR_ZONE);
+    this.container.setPosition(
+      screenWidth - panelWidth - 20,
+      TOPBAR_CLEAR_ZONE,
+    );
   }
 
   public destroy(): void {

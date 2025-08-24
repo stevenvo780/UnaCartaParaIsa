@@ -855,7 +855,10 @@ export class QuestUI {
   /**
    * Maneja evento de misión iniciada
    */
-  private _onQuestStarted(_event: { questId: string; timestamp: number }): void {
+  private _onQuestStarted(_event: {
+    questId: string;
+    timestamp: number;
+  }): void {
     this._refreshQuestData();
     if (this._isVisible) {
       this._updateQuestDisplay();
@@ -868,7 +871,10 @@ export class QuestUI {
   /**
    * Maneja evento de misión completada
    */
-  private _onQuestCompleted(_event: { questId: string; timestamp: number }): void {
+  private _onQuestCompleted(_event: {
+    questId: string;
+    timestamp: number;
+  }): void {
     this._refreshQuestData();
     if (this._isVisible) {
       this._updateQuestDisplay();
@@ -881,7 +887,11 @@ export class QuestUI {
   /**
    * Maneja evento de objetivo completado
    */
-  private _onObjectiveCompleted(_event: { questId: string; objectiveId: string; timestamp: number }): void {
+  private _onObjectiveCompleted(_event: {
+    questId: string;
+    objectiveId: string;
+    timestamp: number;
+  }): void {
     this._refreshQuestData();
     if (this._isVisible) {
       this._updateQuestDisplay();

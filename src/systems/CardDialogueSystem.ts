@@ -678,7 +678,11 @@ export class CardDialogueSystem {
     // Aplicar efectos en necesidades
     if (choice.effects.needs) {
       Object.entries(choice.effects.needs).forEach(([need, value]) => {
-        this.needsSystem.satisfyNeed(entityNeeds, need as keyof import('./NeedsSystem').NeedsState, value);
+        this.needsSystem.satisfyNeed(
+          entityNeeds,
+          need as keyof import("./NeedsSystem").NeedsState,
+          value,
+        );
       });
     }
 
@@ -1045,9 +1049,12 @@ export class CardDialogueSystem {
    */
   private setupEventListeners(): void {
     // Escuchar respuestas del usuario desde DialogueCardUI
-    this.scene.events.on("dialogueChoiceSelected", (eventData: { cardId: string; choice: { id: string } }) => {
-      this.respondToCard(eventData.cardId, eventData.choice.id);
-    });
+    this.scene.events.on(
+      "dialogueChoiceSelected",
+      (eventData: { cardId: string; choice: { id: string } }) => {
+        this.respondToCard(eventData.cardId, eventData.choice.id);
+      },
+    );
   }
 
   /**

@@ -136,7 +136,12 @@ export class ResonanceBar extends Phaser.GameObjects.Container {
   /**
    * Actualiza la resonancia basada en estado del juego
    */
-  public updateFromGameState(gameState: Record<string, number | string | boolean | object | null | undefined>): void {
+  public updateFromGameState(
+    gameState: Record<
+      string,
+      number | string | boolean | object | null | undefined
+    >,
+  ): void {
     if (!gameState) return;
 
     let resonance = 0.5; // Base neutral
@@ -149,20 +154,25 @@ export class ResonanceBar extends Phaser.GameObjects.Container {
 
       // Bienestar promedio de entidades
       const avgWellbeing =
-        entities.reduce((sum: number, entity: { needs?: Record<string, number> }) => {
-          const needs = entity.needs || {};
-          const needsSum = Object.values(needs).reduce(
-            (s: number, n: number) => s + n,
-            0,
-          );
-          return sum + (needsSum / Object.keys(needs).length || 0.5);
-        }, 0) / (entities.length || 1);
+        entities.reduce(
+          (sum: number, entity: { needs?: Record<string, number> }) => {
+            const needs = entity.needs || {};
+            const needsSum = Object.values(needs).reduce(
+              (s: number, n: number) => s + n,
+              0,
+            );
+            return sum + (needsSum / Object.keys(needs).length || 0.5);
+          },
+          0,
+        ) / (entities.length || 1);
 
       resonance = avgWellbeing;
     }
 
     // Factor de tiempo (día/noche)
-    const dayNightCycle = gameState.dayNightCycle as Record<string, number | string | boolean> | undefined;
+    const dayNightCycle = gameState.dayNightCycle as
+      | Record<string, number | string | boolean>
+      | undefined;
     if (
       dayNightCycle?.timeOfDay &&
       typeof dayNightCycle.timeOfDay === "number"

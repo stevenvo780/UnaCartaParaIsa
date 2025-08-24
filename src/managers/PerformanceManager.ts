@@ -26,21 +26,45 @@ export class PerformanceManager {
     fps: 60,
     frameTime: 16,
     memoryUsage: 0,
-    renderCount: 0
+    renderCount: 0,
   };
-  
+
   private frameTimeHistory: number[] = [];
   private lastMetricUpdate = 0;
   private metricUpdateInterval = 1000; // 1 segundo
-  
+
   // Niveles LOD predefinidos
   private lodLevels: LODLevel[] = [
-    { minZoom: 0.0, maxZoom: 0.4, textureScale: 0.5, animationSpeed: 0.5, particleCount: 0.2 }, // Muy lejos
-    { minZoom: 0.4, maxZoom: 0.8, textureScale: 0.75, animationSpeed: 0.75, particleCount: 0.5 }, // Lejos
-    { minZoom: 0.8, maxZoom: 1.2, textureScale: 1.0, animationSpeed: 1.0, particleCount: 1.0 }, // Normal
-    { minZoom: 1.2, maxZoom: 2.0, textureScale: 1.0, animationSpeed: 1.0, particleCount: 1.0 }  // Cerca
+    {
+      minZoom: 0.0,
+      maxZoom: 0.4,
+      textureScale: 0.5,
+      animationSpeed: 0.5,
+      particleCount: 0.2,
+    }, // Muy lejos
+    {
+      minZoom: 0.4,
+      maxZoom: 0.8,
+      textureScale: 0.75,
+      animationSpeed: 0.75,
+      particleCount: 0.5,
+    }, // Lejos
+    {
+      minZoom: 0.8,
+      maxZoom: 1.2,
+      textureScale: 1.0,
+      animationSpeed: 1.0,
+      particleCount: 1.0,
+    }, // Normal
+    {
+      minZoom: 1.2,
+      maxZoom: 2.0,
+      textureScale: 1.0,
+      animationSpeed: 1.0,
+      particleCount: 1.0,
+    }, // Cerca
   ];
-  
+
   private currentLODLevel = 2; // Normal por defecto
   private isOptimizationActive = false;
 
@@ -53,20 +77,20 @@ export class PerformanceManager {
    */
   update(time: number, delta: number): void {
     const now = Date.now();
-    
+
     // Guardar tiempo de frame
     this.frameTimeHistory.push(delta);
     if (this.frameTimeHistory.length > 60) {
       this.frameTimeHistory.shift();
     }
-    
+
     // Actualizar métricas cada segundo
     if (now - this.lastMetricUpdate >= this.metricUpdateInterval) {
       this.updateMetrics();
       this.adjustLODBasedOnPerformance();
       this.lastMetricUpdate = now;
     }
-    
+
     // Actualizar LOD basado en zoom de cámara
     if (this.scene.cameras?.main) {
       this.updateLODBasedOnZoom(this.scene.cameras.main.zoom);
@@ -78,19 +102,21 @@ export class PerformanceManager {
    */
   private updateMetrics(): void {
     // Calcular FPS promedio
-    const avgFrameTime = this.frameTimeHistory.reduce((a, b) => a + b, 0) / this.frameTimeHistory.length;
+    const avgFrameTime =
+      this.frameTimeHistory.reduce((a, b) => a + b, 0) /
+      this.frameTimeHistory.length;
     this.metrics.frameTime = avgFrameTime;
     this.metrics.fps = 1000 / avgFrameTime;
-    
+
     // Estimar uso de memoria (aproximación)
     this.metrics.memoryUsage = (performance as any).memory?.usedJSHeapSize || 0;
-    
+
     // Log métricas si el rendimiento es bajo
     if (this.metrics.fps < 45) {
       logAutopoiesis.debug("⚡ Rendimiento bajo detectado", {
         fps: Math.round(this.metrics.fps),
         frameTime: Math.round(this.metrics.frameTime),
-        lodLevel: this.currentLODLevel
+        lodLevel: this.currentLODLevel,
       });
     }
   }
@@ -100,18 +126,18 @@ export class PerformanceManager {
    */
   private adjustLODBasedOnPerformance(): void {
     const targetFPS = 50;
-    
+
     if (this.metrics.fps < targetFPS && !this.isOptimizationActive) {
       this.isOptimizationActive = true;
       this.applyPerformanceOptimizations();
       logAutopoiesis.info("🚀 Optimizaciones de rendimiento activadas", {
-        fps: Math.round(this.metrics.fps)
+        fps: Math.round(this.metrics.fps),
       });
     } else if (this.metrics.fps > targetFPS + 10 && this.isOptimizationActive) {
       this.isOptimizationActive = false;
       this.removePerformanceOptimizations();
       logAutopoiesis.info("✨ Optimizaciones de rendimiento desactivadas", {
-        fps: Math.round(this.metrics.fps)
+        fps: Math.round(this.metrics.fps),
       });
     }
   }
@@ -121,15 +147,15 @@ export class PerformanceManager {
    */
   private updateLODBasedOnZoom(zoom: number): void {
     const newLODLevel = this.calculateLODLevel(zoom);
-    
+
     if (newLODLevel !== this.currentLODLevel) {
       this.currentLODLevel = newLODLevel;
       this.applyLODLevel(this.lodLevels[newLODLevel]);
-      
+
       logAutopoiesis.debug("🎯 LOD actualizado", {
         zoom: Math.round(zoom * 100) / 100,
         lodLevel: newLODLevel,
-        textureScale: this.lodLevels[newLODLevel].textureScale
+        textureScale: this.lodLevels[newLODLevel].textureScale,
       });
     }
   }
@@ -158,7 +184,7 @@ export class PerformanceManager {
       const filter = lodLevel.textureScale < 1.0 ? gl.LINEAR : gl.NEAREST;
       // Nota: En un sistema más avanzado, aquí se aplicarían filtros específicos
     }
-    
+
     // Ajustar velocidad de animaciones
     if (this.scene.anims) {
       this.scene.anims.globalTimeScale = lodLevel.animationSpeed;
@@ -173,7 +199,7 @@ export class PerformanceManager {
     if (this.scene.physics?.world) {
       (this.scene.physics.world as any).fps = 30; // Reducir FPS de física
     }
-    
+
     // Reducir frecuencia de actualización de algunos sistemas
     this.scene.tweens.timeScale = 0.8; // Ralentizar tweens levemente
   }
@@ -186,7 +212,7 @@ export class PerformanceManager {
     if (this.scene.physics?.world) {
       (this.scene.physics.world as any).fps = 60;
     }
-    
+
     // Restaurar velocidad normal de tweens
     this.scene.tweens.timeScale = 1.0;
   }

@@ -20,7 +20,7 @@ export class StatsModalContent {
     const map = new Map<string, number>();
     const isa = data.entities?.find((e) => e.id === "isa");
     const stev = data.entities?.find((e) => e.id === "stev");
-    
+
     if (isa) {
       map.set("isa.health", Math.round(isa.stats.health));
       map.set("isa.energy", Math.round(isa.stats.energy));
@@ -28,7 +28,7 @@ export class StatsModalContent {
       map.set("isa.thirst", Math.round(isa.stats.thirst || 0));
       map.set("isa.mentalHealth", Math.round(isa.stats.mentalHealth || 0));
     }
-    
+
     if (stev) {
       map.set("stev.health", Math.round(stev.stats.health));
       map.set("stev.energy", Math.round(stev.stats.energy));
@@ -36,22 +36,22 @@ export class StatsModalContent {
       map.set("stev.thirst", Math.round(stev.stats.thirst || 0));
       map.set("stev.mentalHealth", Math.round(stev.stats.mentalHealth || 0));
     }
-    
+
     this.statTexts.forEach((t) => {
       const key = t.getData("statKey") as string;
       const label = t.getData("label") as string;
       const icon = t.getData("icon") as string;
       const val = map.get(key) ?? 0;
-      
+
       // Colorear basado en el valor con mejor paleta
       let color = "#ecf0f1"; // Color normal
       let statusIcon = "";
-      
+
       if (val < 20) {
         color = "#ff4757"; // Rojo crítico
         statusIcon = " ⚠️";
       } else if (val < 40) {
-        color = "#ff9ff3"; // Naranja advertencia 
+        color = "#ff9ff3"; // Naranja advertencia
         statusIcon = " ⚠️";
       } else if (val < 60) {
         color = "#ffa502"; // Amarillo cuidado
@@ -60,7 +60,7 @@ export class StatsModalContent {
         color = "#2ed573"; // Verde excelente
         statusIcon = " ✅";
       }
-      
+
       // Mostrar con icono, label, valor y estado
       t.setText(`${icon} ${label}: ${val}%${statusIcon}`);
       t.setColor(color);
@@ -68,11 +68,17 @@ export class StatsModalContent {
   }
 
   private build() {
-    const mk = (x: number, y: number, icon: string, label: string, key: string) => {
+    const mk = (
+      x: number,
+      y: number,
+      icon: string,
+      label: string,
+      key: string,
+    ) => {
       const t = this.scene.add.text(x, y, `${icon} ${label}: 0`, {
         fontSize: "12px",
         color: "#ecf0f1",
-        fontStyle: "normal"
+        fontStyle: "normal",
       });
       t.setData("statKey", key);
       t.setData("label", label);
@@ -80,17 +86,22 @@ export class StatsModalContent {
       this.container.add(t);
       this.statTexts.push(t);
     };
-    
+
     // Título del modal mejorado
-    const modalTitle = this.scene.add.text(150, -10, "📊 ESTADÍSTICAS DETALLADAS", {
-      fontSize: "14px",
-      color: "#74b9ff",
-      fontStyle: "bold",
-      align: "center"
-    });
+    const modalTitle = this.scene.add.text(
+      150,
+      -10,
+      "📊 ESTADÍSTICAS DETALLADAS",
+      {
+        fontSize: "14px",
+        color: "#74b9ff",
+        fontStyle: "bold",
+        align: "center",
+      },
+    );
     modalTitle.setOrigin(0.5, 0);
     this.container.add(modalTitle);
-    
+
     // Fondo para sección Isa
     const isaBg = this.scene.add.graphics();
     isaBg.fillStyle(0xe91e63, 0.1);
@@ -98,7 +109,7 @@ export class StatsModalContent {
     isaBg.lineStyle(2, 0xe91e63, 0.3);
     isaBg.strokeRoundedRect(-5, 10, 160, 110, 8);
     this.container.add(isaBg);
-    
+
     // Sección Isa mejorada
     const isaTitle = this.scene.add.text(10, 20, "👩 Isa", {
       fontSize: "14px",
@@ -106,7 +117,7 @@ export class StatsModalContent {
       fontStyle: "bold",
     });
     this.container.add(isaTitle);
-    
+
     mk(10, 40, "💚", "Salud", "isa.health");
     mk(10, 55, "⚡", "Energía", "isa.energy");
     mk(10, 70, "🍖", "Hambre", "isa.hunger");
@@ -139,7 +150,7 @@ export class StatsModalContent {
       fontStyle: "bold",
     });
     this.container.add(stevTitle);
-    
+
     mk(195, 40, "💚", "Salud", "stev.health");
     mk(195, 55, "⚡", "Energía", "stev.energy");
     mk(195, 70, "🍖", "Hambre", "stev.hunger");

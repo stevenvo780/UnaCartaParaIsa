@@ -14,7 +14,11 @@ import {
   type RenderLayer,
 } from "./DiverseWorldComposer";
 import { GeneratedWorld } from "./types";
-import { assetExistsOrFallback, configureHUDVisibility, ROTATION_FEATURE_FLAGS } from "./SelectiveRotationHelpers";
+import {
+  assetExistsOrFallback,
+  configureHUDVisibility,
+  ROTATION_FEATURE_FLAGS,
+} from "./SelectiveRotationHelpers";
 
 export interface LayeredWorldConfig {
   enableLayerToggle?: boolean;
@@ -62,7 +66,7 @@ export class LayeredWorldRenderer {
     try {
       // Guardar el tamaño de tile del mundo generado
       this.tileSize = world.config.tileSize;
-      
+
       // Componer el mundo diverso
       this.composedWorld = await this.composer.composeWorld(world);
 
@@ -260,15 +264,19 @@ export class LayeredWorldRenderer {
   ): Phaser.GameObjects.Sprite | null {
     try {
       // Verificar si la textura existe usando helper mejorado
-      const validAssetKey = assetExistsOrFallback(this.scene, placedAsset.asset.key, placedAsset.asset.type);
-      
+      const validAssetKey = assetExistsOrFallback(
+        this.scene,
+        placedAsset.asset.key,
+        placedAsset.asset.type,
+      );
+
       if (!validAssetKey) {
         logAutopoiesis.debug(
           `❌ No se puede crear sprite para ${placedAsset.asset.key}: no hay texturas válidas`,
         );
         return null; // No se puede crear el sprite
       }
-      
+
       // Usar asset válido (original o fallback)
       placedAsset.asset.key = validAssetKey;
 
@@ -295,12 +303,13 @@ export class LayeredWorldRenderer {
         sprite.setInteractive();
         sprite.setData("metadata", placedAsset.metadata);
       }
-      
+
       // Configurar visibilidad HUD si es necesario
-      const isHUDElement = placedAsset.metadata?.type === "healing" || 
-                          placedAsset.metadata?.type === "spawn" ||
-                          placedAsset.metadata?.type === "recovery";
-      
+      const isHUDElement =
+        placedAsset.metadata?.type === "healing" ||
+        placedAsset.metadata?.type === "spawn" ||
+        placedAsset.metadata?.type === "recovery";
+
       if (isHUDElement) {
         configureHUDVisibility(sprite, true);
       }

@@ -26,7 +26,7 @@ export class ZoneRenderer {
     this.clearZones();
 
     // Renderizar cada zona
-    zones.forEach(zone => {
+    zones.forEach((zone) => {
       this.renderZone(zone);
     });
 
@@ -35,7 +35,7 @@ export class ZoneRenderer {
 
     logAutopoiesis.info("🎨 Zonas de recuperación renderizadas", {
       count: zones.length,
-      types: zones.map(z => z.type)
+      types: zones.map((z) => z.type),
     });
   }
 
@@ -44,51 +44,55 @@ export class ZoneRenderer {
    */
   private renderZone(zone: Zone): void {
     const graphics = this.scene.add.graphics();
-    
+
     // Configurar estilo según el tipo de zona
     const zoneStyle = this.getZoneStyle(zone);
-    
+
     // Dibujar fondo con transparencia
     graphics.fillStyle(zoneStyle.fillColor, zoneStyle.fillAlpha);
     graphics.fillRoundedRect(
-      zone.bounds.x, 
-      zone.bounds.y, 
-      zone.bounds.width, 
+      zone.bounds.x,
+      zone.bounds.y,
+      zone.bounds.width,
       zone.bounds.height,
-      16 // Radio de esquinas redondeadas
+      16, // Radio de esquinas redondeadas
     );
-    
+
     // Dibujar borde más visible
-    graphics.lineStyle(zoneStyle.borderWidth, zoneStyle.borderColor, zoneStyle.borderAlpha);
-    graphics.strokeRoundedRect(
-      zone.bounds.x, 
-      zone.bounds.y, 
-      zone.bounds.width, 
-      zone.bounds.height,
-      16
+    graphics.lineStyle(
+      zoneStyle.borderWidth,
+      zoneStyle.borderColor,
+      zoneStyle.borderAlpha,
     );
-    
+    graphics.strokeRoundedRect(
+      zone.bounds.x,
+      zone.bounds.y,
+      zone.bounds.width,
+      zone.bounds.height,
+      16,
+    );
+
     // Agregar texto del nombre de la zona
     const text = this.scene.add.text(
       zone.bounds.x + zone.bounds.width / 2,
       zone.bounds.y + zone.bounds.height / 2,
       zone.name,
       {
-        fontSize: '18px',
+        fontSize: "18px",
         color: zoneStyle.textColor,
-        fontFamily: 'Arial, sans-serif',
-        align: 'center',
-        stroke: '#000000',
-        strokeThickness: 2
-      }
+        fontFamily: "Arial, sans-serif",
+        align: "center",
+        stroke: "#000000",
+        strokeThickness: 2,
+      },
     );
     text.setOrigin(0.5, 0.5);
     text.setDepth(10);
-    
+
     // Agregar al container
     this.zoneContainer.add(graphics);
     this.zoneContainer.add(text);
-    
+
     // Guardar referencia para animaciones
     this.zoneGraphics.set(zone.id, graphics);
   }
@@ -97,35 +101,35 @@ export class ZoneRenderer {
    * Obtiene el estilo visual según el tipo de zona
    */
   private getZoneStyle(zone: Zone) {
-    const baseColor = parseInt(zone.color.replace('#', ''), 16);
-    
+    const baseColor = parseInt(zone.color.replace("#", ""), 16);
+
     switch (zone.type) {
-      case 'food':
+      case "food":
         return {
-          fillColor: 0x00FF00,
+          fillColor: 0x00ff00,
           fillAlpha: 0.3,
-          borderColor: 0x00AA00,
+          borderColor: 0x00aa00,
           borderAlpha: 0.8,
           borderWidth: 4,
-          textColor: '#FFFFFF'
+          textColor: "#FFFFFF",
         };
-      case 'water':
+      case "water":
         return {
-          fillColor: 0x00BFFF,
+          fillColor: 0x00bfff,
           fillAlpha: 0.3,
-          borderColor: 0x0080FF,
+          borderColor: 0x0080ff,
           borderAlpha: 0.8,
           borderWidth: 4,
-          textColor: '#FFFFFF'
+          textColor: "#FFFFFF",
         };
-      case 'rest':
+      case "rest":
         return {
-          fillColor: 0xFF00FF,
+          fillColor: 0xff00ff,
           fillAlpha: 0.3,
-          borderColor: 0xCC00CC,
+          borderColor: 0xcc00cc,
           borderAlpha: 0.8,
           borderWidth: 4,
-          textColor: '#FFFFFF'
+          textColor: "#FFFFFF",
         };
       default:
         return {
@@ -134,7 +138,7 @@ export class ZoneRenderer {
           borderColor: baseColor,
           borderAlpha: 0.6,
           borderWidth: 3,
-          textColor: '#FFFFFF'
+          textColor: "#FFFFFF",
         };
     }
   }
@@ -151,9 +155,9 @@ export class ZoneRenderer {
       targets: this.zoneContainer,
       alpha: { from: 0.7, to: 1.0 },
       duration: 2000,
-      ease: 'Sine.easeInOut',
+      ease: "Sine.easeInOut",
       yoyo: true,
-      repeat: -1
+      repeat: -1,
     });
   }
 
@@ -172,7 +176,7 @@ export class ZoneRenderer {
   clearZones(): void {
     this.zoneGraphics.clear();
     this.zoneContainer.removeAll(true);
-    
+
     if (this.animationTween) {
       this.animationTween.destroy();
       this.animationTween = undefined;

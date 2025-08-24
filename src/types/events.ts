@@ -175,8 +175,17 @@ export interface GeneratedWorldData {
   mapElements: MapElement[];
   generatedWorld?: GeneratedWorld;
   terrainTiles: Array<{ x: number; y: number; assetId: string; type: string }>;
-  roads: Array<{ id: string; points: Array<{ x: number; y: number }>; width: number }>;
-  objectLayers: Array<{ id: string; name: string; objects: MapElement[]; zIndex: number }>;
+  roads: Array<{
+    id: string;
+    points: Array<{ x: number; y: number }>;
+    width: number;
+  }>;
+  objectLayers: Array<{
+    id: string;
+    name: string;
+    objects: MapElement[];
+    zIndex: number;
+  }>;
   worldSize: { width: number; height: number };
   generatorVersion: string;
 }
@@ -226,13 +235,18 @@ export interface GameEvents {
   playerInteraction: PlayerInteractionData;
   uiUpdate: GameLogicUpdateData;
   wheelScroll: { deltaX: number; deltaY: number };
-  needsUpdated: { entityId: string; entityData: import('../systems/NeedsSystem').EntityNeedsData };
+  needsUpdated: {
+    entityId: string;
+    entityData: import("../systems/NeedsSystem").EntityNeedsData;
+  };
 }
 
 /**
  * Event emitter tipado
  */
-export interface TypedEventEmitter<T extends Record<string, object | string | number | boolean>> {
+export interface TypedEventEmitter<
+  T extends Record<string, object | string | number | boolean>,
+> {
   on<K extends keyof T>(
     event: K,
     listener: (data: T[K]) => void,

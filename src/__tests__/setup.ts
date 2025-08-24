@@ -49,7 +49,7 @@ const mockPhaser = {
   },
 };
 
-// Global Phaser mock  
+// Global Phaser mock
 declare global {
   interface Window {
     Phaser: typeof mockPhaser;

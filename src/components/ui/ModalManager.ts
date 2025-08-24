@@ -86,7 +86,7 @@ export class ModalManager {
   toggle(id: string) {
     const m = this.registry.get(id);
     if (!m) return;
-    
+
     if (m.visible) {
       // Cerrar modal actual
       this.close(id);
@@ -101,10 +101,10 @@ export class ModalManager {
     if (this.activeModal && this.activeModal !== id) {
       this.hideModal(this.activeModal);
     }
-    
+
     const m = this.registry.get(id);
     if (!m) return;
-    
+
     m.setVisible(true);
     this.activeModal = id;
     const trap = this.traps.get(id);
@@ -115,7 +115,7 @@ export class ModalManager {
   private hideModal(id: string) {
     const m = this.registry.get(id);
     if (!m) return;
-    
+
     m.setVisible(false);
     if (this.activeModal === id) {
       this.activeModal = undefined;
@@ -132,19 +132,19 @@ export class ModalManager {
   layout() {
     // Con sistema de cola de modales, solo centramos el modal activo
     if (!this.activeModal) return;
-    
+
     const modal = this.registry.get(this.activeModal);
     if (!modal || !modal.visible) return;
-    
+
     const width = this.scene.cameras.main.width;
     const height = this.scene.cameras.main.height;
     const modalWidth = (modal.getData("w") as number) ?? 360;
     const modalHeight = (modal.getData("h") as number) ?? 220;
-    
+
     // Centrar el modal en la pantalla
     const x = (width - modalWidth) / 2;
     const y = (height - modalHeight) / 2;
-    
+
     modal.setPosition(x, y);
   }
 

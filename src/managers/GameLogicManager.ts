@@ -63,7 +63,7 @@ export class GameLogicManager implements IGameLogicManager {
 
     // FASE 2: Sistemas no críticos se cargan dinámicamente
     this._aiSystem = null;
-    this._cardDialogueSystem = null; 
+    this._cardDialogueSystem = null;
     this._emergenceSystem = null;
     this._questSystem = new QuestSystem(scene);
 
@@ -111,7 +111,9 @@ export class GameLogicManager implements IGameLogicManager {
     // Configurar game loop principal
     this._setupGameLoop();
 
-    logAutopoiesis.info("🏗️ FASE 2 completada - sistemas cargados y configurados");
+    logAutopoiesis.info(
+      "🏗️ FASE 2 completada - sistemas cargados y configurados",
+    );
   }
 
   /**
@@ -121,13 +123,18 @@ export class GameLogicManager implements IGameLogicManager {
     try {
       // Cargar AISystem
       const { AISystem } = await SystemLoader.loadAISystem();
-      this._aiSystem = new AISystem(this._scene, this._gameState, this._needsSystem);
+      this._aiSystem = new AISystem(
+        this._scene,
+        this._gameState,
+        this._needsSystem,
+      );
 
-      // Cargar CardDialogueSystem  
-      const { CardDialogueSystem } = await SystemLoader.loadCardDialogueSystem();
+      // Cargar CardDialogueSystem
+      const { CardDialogueSystem } =
+        await SystemLoader.loadCardDialogueSystem();
       this._cardDialogueSystem = new CardDialogueSystem(
         this._scene,
-        this._gameState, 
+        this._gameState,
         this._needsSystem,
       );
 

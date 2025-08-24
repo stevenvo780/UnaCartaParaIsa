@@ -328,15 +328,17 @@ export class SaveSystem {
     return version.startsWith("1.");
   }
 
-  private serializeEntities(entities: Array<{
-    id: string;
-    position: { x: number; y: number };
-    isDead?: boolean;
-    deathTime?: number;
-    currentZone?: string;
-    currentActivity?: string;
-    fatigue?: number;
-  }>): SerializedEntity[] {
+  private serializeEntities(
+    entities: Array<{
+      id: string;
+      position: { x: number; y: number };
+      isDead?: boolean;
+      deathTime?: number;
+      currentZone?: string;
+      currentActivity?: string;
+      fatigue?: number;
+    }>,
+  ): SerializedEntity[] {
     return entities.map((entity) => ({
       id: entity.id,
       position: { ...entity.position },
@@ -369,7 +371,9 @@ export class SaveSystem {
   }
 
   private serializeNeeds(needsSystem: {
-    entityNeeds?: Map<string, EntityNeedsData> | Record<string, EntityNeedsData>;
+    entityNeeds?:
+      | Map<string, EntityNeedsData>
+      | Record<string, EntityNeedsData>;
   }): SerializedNeeds[] {
     if (!needsSystem || !needsSystem.entityNeeds) return [];
 

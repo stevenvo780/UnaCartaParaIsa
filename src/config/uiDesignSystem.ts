@@ -230,18 +230,18 @@ export class UIDesignSystem {
     worldBackground: 0,
     worldZones: 10,
     worldEntities: 20,
-    
+
     // Elementos de UI base
     uiBackground: 100,
     content: 200,
     overlay: 300,
-    
+
     // Modales y elementos flotantes
     modal: 400,
     dropdown: 450,
     tooltip: 480,
     notification: 490,
-    
+
     // Debug y elementos de desarrollo
     debug: 500,
   };

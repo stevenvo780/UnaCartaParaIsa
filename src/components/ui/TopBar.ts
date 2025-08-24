@@ -60,19 +60,19 @@ export class TopBar {
       this.bg.fillStyle(colors.shadow, 0.2);
       this.bg.fillRect(0, 70, width, 4);
     }
-    
+
     // Reposition center group
     if (this.centerGroup) {
       this.centerGroup.setPosition(width / 2, 35);
     }
-    
+
     // Reposition modal buttons and menu button
     let currentX = width - 45 - 50; // Start before menu button
     this.modalButtons.forEach((btn) => {
       btn.setPosition(currentX, 35);
       currentX -= 34;
     });
-    
+
     if (this.menuBtn) {
       this.menuBtn.setPosition(width - 45, 35);
     }

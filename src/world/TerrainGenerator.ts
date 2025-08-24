@@ -70,7 +70,11 @@ export class TerrainGenerator {
     }
 
     this.noiseGen = new NoiseUtils(this.config.seed);
-    this.voronoiGen = new VoronoiGenerator(this.config.width, this.config.height, this.config.seed);
+    this.voronoiGen = new VoronoiGenerator(
+      this.config.width,
+      this.config.height,
+      this.config.seed,
+    );
 
     logAutopoiesis.info(
       "✅ TerrainGenerator inicializado con configuración validada",
@@ -109,69 +113,70 @@ export class TerrainGenerator {
     });
 
     try {
+      // 1. Generar mapas de ruido base
+      const temperatureMap = this.generateNoiseMap(
+        this.config.noise.temperature,
+      );
+      const moistureMap = this.generateNoiseMap(this.config.noise.moisture);
+      const elevationMap = this.generateNoiseMap(this.config.noise.elevation);
 
-    // 1. Generar mapas de ruido base
-    const temperatureMap = this.generateNoiseMap(this.config.noise.temperature);
-    const moistureMap = this.generateNoiseMap(this.config.noise.moisture);
-    const elevationMap = this.generateNoiseMap(this.config.noise.elevation);
+      // 2. Asignar biomas basado en condiciones
+      const biomeMap = this.assignBiomes(
+        temperatureMap,
+        moistureMap,
+        elevationMap,
+      );
 
-    // 2. Asignar biomas basado en condiciones
-    const biomeMap = this.assignBiomes(
-      temperatureMap,
-      moistureMap,
-      elevationMap,
-    );
+      // 3. Aplicar spawn forzado de biomas
+      this.applyForcedSpawns(biomeMap);
 
-    // 3. Aplicar spawn forzado de biomas
-    this.applyForcedSpawns(biomeMap);
+      // 4. Suavizar transiciones entre biomas
+      const smoothedBiomeMap = this.smoothBiomeTransitions(biomeMap);
 
-    // 4. Suavizar transiciones entre biomas
-    const smoothedBiomeMap = this.smoothBiomeTransitions(biomeMap);
+      // 5. Generar tiles de terreno detallado
+      const terrain = this.generateDetailedTerrain(
+        smoothedBiomeMap,
+        temperatureMap,
+        moistureMap,
+        elevationMap,
+      );
 
-    // 5. Generar tiles de terreno detallado
-    const terrain = this.generateDetailedTerrain(
-      smoothedBiomeMap,
-      temperatureMap,
-      moistureMap,
-      elevationMap,
-    );
+      // 6. Generar capas de assets
+      const layers = this.generateAssetLayers(terrain);
 
-    // 6. Generar capas de assets
-    const layers = this.generateAssetLayers(terrain);
+      // 7. Calcular metadata
+      const biomeDistribution =
+        this.calculateBiomeDistribution(smoothedBiomeMap);
+      const totalAssets = layers.reduce(
+        (sum, layer) => sum + layer.tiles.length,
+        0,
+      );
 
-    // 7. Calcular metadata
-    const biomeDistribution = this.calculateBiomeDistribution(smoothedBiomeMap);
-    const totalAssets = layers.reduce(
-      (sum, layer) => sum + layer.tiles.length,
-      0,
-    );
+      const generationTime = performance.now() - startTime;
 
-    const generationTime = performance.now() - startTime;
+      const world: GeneratedWorld = {
+        config: this.config,
+        terrain,
+        layers,
+        biomeMap: smoothedBiomeMap,
+        metadata: {
+          generationTime,
+          biomeDistribution,
+          totalAssets,
+          version: "1.0.0",
+        },
+      };
 
-    const world: GeneratedWorld = {
-      config: this.config,
-      terrain,
-      layers,
-      biomeMap: smoothedBiomeMap,
-      metadata: {
-        generationTime,
-        biomeDistribution,
+      logAutopoiesis.info("✅ Mundo generado exitosamente", {
+        generationTime: `${generationTime.toFixed(2)}ms`,
         totalAssets,
-        version: "1.0.0",
-      },
-    };
+        biomeDistribution,
+      });
 
-    logAutopoiesis.info("✅ Mundo generado exitosamente", {
-      generationTime: `${generationTime.toFixed(2)}ms`,
-      totalAssets,
-      biomeDistribution,
-    });
-
-    return world;
-    
+      return world;
     } catch (error) {
       const generationTime = performance.now() - startTime;
-      
+
       logAutopoiesis.error("❌ Error durante generación de mundo", {
         error: error instanceof Error ? error.message : String(error),
         generationTime: `${generationTime.toFixed(2)}ms`,
@@ -184,7 +189,7 @@ export class TerrainGenerator {
       throw new Error(
         `Fallo en generación de mundo (${this.config.width}x${this.config.height}): ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -243,12 +248,14 @@ export class TerrainGenerator {
     elevationMap: number[][],
   ): BiomeType[][] {
     // Generar regiones orgánicas usando Voronoi
-    const numRegions = Math.floor((this.config.width * this.config.height) / 400); // ~1 región cada 20x20 tiles
+    const numRegions = Math.floor(
+      (this.config.width * this.config.height) / 400,
+    ); // ~1 región cada 20x20 tiles
     const voronoiRegions = this.voronoiGen.generateRegions(numRegions, 80);
-    
+
     // Asignar biomas a las regiones Voronoi
     const regionsWithBiomes = this.voronoiGen.assignBiomes(voronoiRegions);
-    
+
     // Crear mapa de biomas basado en regiones Voronoi
     const biomeMap: BiomeType[][] = Array.from(
       { length: this.config.height },
@@ -260,28 +267,30 @@ export class TerrainGenerator {
       for (let x = 0; x < this.config.width; x++) {
         const pixelX = x * this.config.tileSize;
         const pixelY = y * this.config.tileSize;
-        
+
         // Encontrar la región Voronoi más cercana
         let closestRegion = regionsWithBiomes[0];
         let minDistance = Infinity;
-        
+
         for (const region of regionsWithBiomes) {
           const distance = Math.hypot(
             pixelX - region.center.x,
-            pixelY - region.center.y
+            pixelY - region.center.y,
           );
           if (distance < minDistance) {
             minDistance = distance;
             closestRegion = region;
           }
         }
-        
+
         // Verificar si el bioma puede existir en estas condiciones
         const temperature = temperatureMap[y][x];
         const moisture = moistureMap[y][x];
         const elevation = elevationMap[y][x];
-        
-        if (canBiomeSpawn(closestRegion.biome, temperature, moisture, elevation)) {
+
+        if (
+          canBiomeSpawn(closestRegion.biome, temperature, moisture, elevation)
+        ) {
           biomeMap[y][x] = closestRegion.biome;
         } else {
           // Fallback: usar el sistema original para este tile
@@ -290,7 +299,12 @@ export class TerrainGenerator {
 
           for (const biome of this.config.biomes.enabled) {
             if (canBiomeSpawn(biome, temperature, moisture, elevation)) {
-              const fitness = calculateBiomeFitness(biome, temperature, moisture, elevation);
+              const fitness = calculateBiomeFitness(
+                biome,
+                temperature,
+                moisture,
+                elevation,
+              );
               if (fitness > bestFitness) {
                 bestFitness = fitness;
                 bestBiome = biome;
@@ -304,7 +318,7 @@ export class TerrainGenerator {
 
     logAutopoiesis.info("🔸 Biomas asignados usando Voronoi", {
       regions: regionsWithBiomes.length,
-      biomeTypes: [...new Set(regionsWithBiomes.map(r => r.biome))]
+      biomeTypes: [...new Set(regionsWithBiomes.map((r) => r.biome))],
     });
 
     return biomeMap;
@@ -314,19 +328,24 @@ export class TerrainGenerator {
    * Aplica spawns forzados de biomas en ubicaciones específicas
    */
   private applyForcedSpawns(biomeMap: BiomeType[][]): void {
-    if (!this.config.biomes.forceSpawn || this.config.biomes.forceSpawn.length === 0) {
+    if (
+      !this.config.biomes.forceSpawn ||
+      this.config.biomes.forceSpawn.length === 0
+    ) {
       return;
     }
 
     // Crear mapa de prioridades para manejar spawns superpuestos
-    const priorityMap: { [key: string]: { biome: BiomeType; priority: number } } = {};
+    const priorityMap: {
+      [key: string]: { biome: BiomeType; priority: number };
+    } = {};
 
     for (let i = 0; i < this.config.biomes.forceSpawn.length; i++) {
       const spawn = this.config.biomes.forceSpawn[i]!;
       const { biome, position, radius } = spawn;
 
       // Validar spawn
-      if (!biome || !position || typeof radius !== 'number' || radius <= 0) {
+      if (!biome || !position || typeof radius !== "number" || radius <= 0) {
         logAutopoiesis.warn("⚠️ Spawn forzado inválido, saltando", {
           spawn,
           index: i,
@@ -336,8 +355,10 @@ export class TerrainGenerator {
 
       // Validar que la posición esté dentro de los límites
       if (
-        position.x < 0 || position.x >= this.config.width ||
-        position.y < 0 || position.y >= this.config.height
+        position.x < 0 ||
+        position.x >= this.config.width ||
+        position.y < 0 ||
+        position.y >= this.config.height
       ) {
         logAutopoiesis.warn("⚠️ Posición de spawn fuera de límites", {
           position,
@@ -362,10 +383,11 @@ export class TerrainGenerator {
             if (distance <= radius) {
               // Calcular strength y prioridad
               const strength = 1 - distance / radius;
-              const priority = strength * (this.config.biomes.forceSpawn.length - i); // Spawns posteriores tienen menos prioridad
+              const priority =
+                strength * (this.config.biomes.forceSpawn.length - i); // Spawns posteriores tienen menos prioridad
 
               const key = `${x},${y}`;
-              
+
               // Solo aplicar si este spawn tiene mayor prioridad o si es el primero
               if (!priorityMap[key] || priority > priorityMap[key].priority) {
                 if (Math.random() < strength) {
@@ -380,7 +402,7 @@ export class TerrainGenerator {
 
     // Aplicar spawns basado en prioridades
     for (const [key, data] of Object.entries(priorityMap)) {
-      const [x, y] = key.split(',').map(Number) as [number, number];
+      const [x, y] = key.split(",").map(Number) as [number, number];
       biomeMap[y!][x!] = data.biome;
     }
   }
@@ -513,12 +535,15 @@ export class TerrainGenerator {
 
     // Prevenir división por cero - si no hay vecinos válidos, asumir pureza mínima
     if (totalCount === 0) {
-      logAutopoiesis.warn("⚠️ No hay vecinos válidos para calcular biome strength", {
-        x,
-        y,
-        biome,
-        mapDimensions: `${this.config.width}x${this.config.height}`,
-      });
+      logAutopoiesis.warn(
+        "⚠️ No hay vecinos válidos para calcular biome strength",
+        {
+          x,
+          y,
+          biome,
+          mapDimensions: `${this.config.width}x${this.config.height}`,
+        },
+      );
       return 0.1; // Pureza mínima por defecto
     }
 
@@ -636,10 +661,13 @@ export class TerrainGenerator {
     // Validar que los pesos no contengan valores inválidos
     const validWeights = weights.filter((w) => Number.isFinite(w) && w >= 0);
     if (validWeights.length !== weights.length) {
-      logAutopoiesis.warn("⚠️ Pesos inválidos detectados, usando selección uniforme", {
-        originalWeights: weights,
-        validWeights,
-      });
+      logAutopoiesis.warn(
+        "⚠️ Pesos inválidos detectados, usando selección uniforme",
+        {
+          originalWeights: weights,
+          validWeights,
+        },
+      );
       // Fallback a selección uniforme
       if (pCount > 0) return this.selectAsset(primary);
       return this.selectAsset(secondary);
@@ -660,13 +688,16 @@ export class TerrainGenerator {
     if (weights.length === 2 && (pCount > 0 || sCount > 0)) {
       const [wp, ws] = weights;
       const total = (wp ?? 0) + (ws ?? 0);
-      
+
       // Edge case: suma de pesos es cero
       if (total <= 0) {
-        logAutopoiesis.warn("⚠️ Suma de pesos por grupo es cero, usando selección uniforme", {
-          primaryWeight: wp,
-          secondaryWeight: ws,
-        });
+        logAutopoiesis.warn(
+          "⚠️ Suma de pesos por grupo es cero, usando selección uniforme",
+          {
+            primaryWeight: wp,
+            secondaryWeight: ws,
+          },
+        );
         if (pCount > 0) return this.selectAsset(primary);
         return this.selectAsset(secondary);
       }
@@ -684,12 +715,15 @@ export class TerrainGenerator {
     }
 
     // Edge case: configuración de pesos no reconocida
-    logAutopoiesis.warn("⚠️ Configuración de pesos no reconocida, usando fallback", {
-      primaryCount: pCount,
-      secondaryCount: sCount,
-      weightsLength: weights.length,
-      weights,
-    });
+    logAutopoiesis.warn(
+      "⚠️ Configuración de pesos no reconocida, usando fallback",
+      {
+        primaryCount: pCount,
+        secondaryCount: sCount,
+        weightsLength: weights.length,
+        weights,
+      },
+    );
 
     // Fallback robusto: elegir de primary si hay, si no de secondary
     if (pCount > 0) return this.selectAsset(primary);
@@ -707,7 +741,9 @@ export class TerrainGenerator {
     }
 
     // Validar que no hay elementos null/undefined en assets
-    const validAssets = assets.filter((asset) => asset != null && asset.trim().length > 0);
+    const validAssets = assets.filter(
+      (asset) => asset != null && asset.trim().length > 0,
+    );
     if (validAssets.length === 0) {
       logAutopoiesis.warn("⚠️ No hay assets válidos después de filtrado", {
         originalCount: assets.length,
@@ -719,24 +755,32 @@ export class TerrainGenerator {
     // Selección uniforme si no hay pesos o no coinciden
     if (!weights || weights.length !== validAssets.length) {
       if (weights && weights.length !== validAssets.length) {
-        logAutopoiesis.debug("Longitud de pesos no coincide con assets, usando selección uniforme", {
-          assetsLength: validAssets.length,
-          weightsLength: weights.length,
-        });
+        logAutopoiesis.debug(
+          "Longitud de pesos no coincide con assets, usando selección uniforme",
+          {
+            assetsLength: validAssets.length,
+            weightsLength: weights.length,
+          },
+        );
       }
       return validAssets[Math.floor(Math.random() * validAssets.length)];
     }
 
     // Validar pesos
-    const validWeights = weights.map((w) => (Number.isFinite(w) && w >= 0 ? w : 0));
+    const validWeights = weights.map((w) =>
+      Number.isFinite(w) && w >= 0 ? w : 0,
+    );
     const totalWeight = validWeights.reduce((sum, w) => sum + w, 0);
-    
+
     // Edge case: suma de pesos es cero o inválida
     if (totalWeight <= 0) {
-      logAutopoiesis.warn("⚠️ Suma de pesos inválida, usando selección uniforme", {
-        weights: validWeights,
-        totalWeight,
-      });
+      logAutopoiesis.warn(
+        "⚠️ Suma de pesos inválida, usando selección uniforme",
+        {
+          weights: validWeights,
+          totalWeight,
+        },
+      );
       return validAssets[Math.floor(Math.random() * validAssets.length)];
     }
 
@@ -778,20 +822,26 @@ export class TerrainGenerator {
 
     // Si no hay assets disponibles, usar fallbacks del bioma
     if (treeAssets.length === 0) {
-      logAutopoiesis.debug("⚠️ No hay assets de árboles para bioma, usando fallback", {
-        biome: biomeDef.id,
-      });
+      logAutopoiesis.debug(
+        "⚠️ No hay assets de árboles para bioma, usando fallback",
+        {
+          biome: biomeDef.id,
+        },
+      );
       treeAssets = this.getDefaultVegetationAssets(biomeDef.id);
     }
 
     const selectedAsset = this.selectAsset(treeAssets);
-    
+
     // Fallback final si selectAsset retorna null
     if (!selectedAsset && treeAssets.length > 0) {
-      logAutopoiesis.warn("⚠️ selectAsset retornó null, usando primer asset disponible", {
-        biome: biomeDef.id,
-        availableAssets: treeAssets,
-      });
+      logAutopoiesis.warn(
+        "⚠️ selectAsset retornó null, usando primer asset disponible",
+        {
+          biome: biomeDef.id,
+          availableAssets: treeAssets,
+        },
+      );
       return treeAssets[0];
     }
 
